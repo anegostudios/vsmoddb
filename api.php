@@ -1,0 +1,240 @@
+<?php
+header('Content-Type: application/json');
+
+//$basefileurl = "http://mods.vintagestory.at/files/";
+
+if (empty($urlparts)) {
+	fail("404");
+}
+
+$action = $urlparts[0];
+switch ($action) {
+	case "tags":
+		$rows = $con->getAll("select tagid, name, text, color from tag where assettypeid=1");
+		$rows = sortTags(1, $rows);
+		$tags = array();
+		foreach ($rows as $row) {
+			$tags[] = array(
+				"tagid" => intval($row["tagid"]),
+				"name" => $row['name'],
+				"color" => $row["color"]
+			);
+		}
+		good(array("statuscode" => 200, "tags" => $tags));
+		break;
+	case "gameversions":
+		$rows = $con->getAll("select tagid, name, text, color from tag where assettypeid=2");
+		$tags = array();
+		$rows = sortTags(2, $rows);
+		foreach ($rows as $row) {
+			$tags[] = array(
+				"tagid" => intval($row["tagid"]),
+				"name" => $row['name'],
+				"color" => $row["color"]
+			);
+		}
+		good(array("statuscode" => 200, "gameversions" => $tags));
+		break;
+		
+	case "mods":
+		listMods();
+		break;
+		
+	case "mod";
+		if (empty($urlparts[1])) {
+			fail("400");
+		}
+		listMod($urlparts[1]);
+		break;
+}
+
+
+fail("400");
+
+
+function fail($statuscode) {
+	exit(json_encode(array("statuscode" => $statuscode)));
+}
+
+function good($data) {
+	$data["statuscode"] = "200";
+	exit(json_encode($data));
+}
+
+function listMod($modid) {
+	global $con;
+	
+	if ($modid != "" . intval($modid)) {
+		$modid = $con->getOne("select modid from `release` where `release`.modidstr=?", array($modid));
+	}
+	
+	$row = $con->getRow("select 
+			asset.assetid, 
+			asset.name,
+			asset.text,
+			asset.tagscached,
+			user.name as author,
+			`mod`.*
+		from 
+			`mod` 
+			join asset on (`mod`.assetid = asset.assetid)
+			join user on (`asset`.createdbyuserid = user.userid)
+		where
+			asset.statusid=2
+			and modid=?
+	", array($modid));
+	
+	if (empty($row)) fail("404");
+	
+	$rrows = $con->getAll("
+		select 
+			`release`.*,
+			asset.*
+		from 
+			`release` 
+			join asset on (asset.assetid = `release`.assetid)
+		where modid=?
+		order by release.created desc
+	", array($row['modid']));
+
+	$releases = array();
+	foreach ($rrows as $release) {
+		$tags = resolveTags($release["tagscached"]);
+		$file = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
+		
+		$releases[] = array(
+			"mainfile" => "asset/{$file['assetid']}/" . $file["filename"],
+			"filename" => $file["filename"],
+			"fileid" => $file['fileid'],
+			"downloads" => $file["downloads"],
+			"tags" => $tags,
+			"modidstr" => $release['modidstr'],
+			"modversion" => $release['modversion'],
+			"created" => $release["created"]
+		);
+	}
+	
+	$mod = array(
+		"modid" => intval($row["modid"]),
+		"assetid" => intval($row["assetid"]),
+		"name" => $row['name'],
+		"text" => $row['text'],
+		"author" => $row['author'],
+		"logofilename" => "asset/{$row['assetid']}/" . $row['logofilename'],
+		"homepageurl" => $row['homepageurl'],
+		"sourcecodeurl" => $row['sourcecodeurl'],
+		"trailervideourl" => $row['trailervideourl'],
+		"downloads" => intval($row['downloads']),
+		"comments" => intval($row['comments']),
+		"side" => $row['side'],
+		"created" => $row['created'],
+		"lastmodified" => $row['lastmodified'],
+		"tags" => resolveTags($row['tagscached']),
+		"releases" => $releases
+	);
+	
+	good(array("statuscode" => 200, "mod" => $mod));
+}
+
+function listMods() {
+	global $con;
+	
+	$wheresql = array();
+	$wherevalues = array();
+	
+	if (!empty($_GET["text"])) {
+		$wheresql[] = "(asset.name like ? or asset.text like ?)";
+		$wherevalues[] = "%" . $_GET["text"] . "%";
+		$wherevalues[] = "%" . $_GET["text"] . "%";
+	}
+	
+	if(!empty($_GET["tagids"])) {
+		foreach($_GET["tagids"] as $tagid) {
+			$wheresql[] = "exists (select assettag.tagid from assettag where assettag.assetid=asset.assetid and assettag.tagid=?)";
+			$wherevalues[] = $tagid;
+		}		
+	}
+
+
+	if (!empty($_GET["gameversion"])) {
+		$wheresql[] = "exists (select assettag.tagid from assettag where assettag.assetid in (select assetid from `release` where `mod`.modid =`release`.modid) and assettag.tagid=?)";
+		$wherevalues[] = intval($_GET["gameversion"]);
+	}
+	
+	
+	$gvs = null;
+	if (!empty($_GET["gameversions"])) {
+		$gvs = $_GET["gameversions"];
+	}
+	if (!empty($_GET["gv"])) {
+		$gvs = $_GET["gv"];
+	}
+	
+	if ($gvs) {
+		$gamevers = array();
+		foreach($gvs as $gameversion) {
+			$gamevers[] = intval($gameversion);
+		}
+		$wheresql[] = "exists (select 1 from modversioncached where `mod`.modid =`modversioncached`.modid and modversioncached.tagid in (".implode(",", $gamevers)."))";
+	}
+
+	
+	$wheresql[] = "asset.statusid=2";
+	
+
+	$rows = $con->getAll("
+		select 
+			asset.assetid, 
+			`mod`.modid, 
+			asset.name,
+			logofilename, 
+			downloads, 
+			comments, 
+			tagscached,
+			group_concat(DISTINCT `release`.modidstr ORDER BY `release`.modidstr SEPARATOR ',') as modidstrs,
+			user.name as author
+		from 
+			`mod` 
+			join asset on (`mod`.assetid = asset.assetid)
+			join user on (`asset`.createdbyuserid = user.userid)
+			left join `release` on `release`.modid = `mod`.modid
+		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "
+		group by `mod`.modid
+		order by asset.created desc
+	", $wherevalues);
+	$mods = array();
+	foreach ($rows as $row) {
+		
+		$tags = resolveTags($row["tagscached"]);
+		
+		
+		
+		$mods[] = array(
+			"modid" => intval($row['modid']),
+			"assetid" => intval($row['assetid']),
+			"downloads" => intval($row['downloads']),
+			"comments" => intval($row['comments']),
+			"name" => $row['name'],
+			"modidstrs" => explode(",", $row['modidstrs']),
+			"author" => $row['author'],
+			"logo" => "files/asset/{$row['assetid']}/" . $row['logofilename'],
+			"tags" => $tags
+		);
+	}
+	
+	good(array("statuscode" => 200, "mods" => $mods));	
+}
+
+function resolveTags($tagscached) {
+	$tags = array();
+	$tagscached = trim($tagscached);
+	if (!empty($tagscached)) {
+		$tagdata = explode("\r\n", $tagscached);
+		foreach($tagdata as $tagrow) {
+			$parts = explode(",", $tagrow);
+			$tags[] = $parts[0];
+		}
+	}
+	
+	return $tags;
+}

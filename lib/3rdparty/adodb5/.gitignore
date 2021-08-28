@@ -1,0 +1,13 @@
+# IDE/Editor temporary files
+*~
+*.swp
+*.bak
+*.tmp
+.project
+.settings/
+/nbproject/
+.idea/
+
+# Composer
+/vendor/
+/composer.lock

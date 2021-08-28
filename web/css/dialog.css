@@ -1,0 +1,131 @@
+/****** Dialog box code ******/
+div#inactive {
+	position: absolute;
+	top:0px;
+	left:0px;
+	padding:0px;
+	margin:0px;
+	width:100%;
+	height:100%;
+}
+
+div#inactive.blocking {
+	position: fixed;
+	z-index: 10;
+	background: rgba(128,128,128, 0.3);
+}
+
+div.dlgBox {
+	background-color: #F6F8FE;
+	text-align:left;
+	position: fixed;
+	top:10%;
+	left: 50%;
+	visibility: visible;
+	border:1px solid black;
+	z-index:999;
+	border-radius:8px;
+	-moz-border-radius:8px;
+	color:black;
+	font-size:14px;
+	-webkit-box-shadow: 4px 4px 10px 0px rgba(0, 0, 0, 0.3);
+	-moz-box-shadow:    4px 4px 10px 0px rgba(0, 0, 0, 0.3);
+	box-shadow:         4px 4px 10px 0px rgba(0, 0, 0, 0.3);
+}
+
+div.dlgBox .loadingIcon {
+	display: none;
+	vertical-align: middle;
+	margin-right: 5px; 
+	margin-bottom: 2px;
+}
+
+div.dlgBox div.dlgContent {
+	padding:2px;
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
+div.dlgBox div.dlgTitle, div.dlgBox div.dlgTitle span {
+	background-color: #07273D;
+	cursor:move;
+	color:white;
+}
+
+div.dlgBox div.dlgTitle {
+	-moz-border-radius-topleft: 5px;
+	border-top-left-radius: 5px;
+	-moz-border-radius-topright: 5px;
+	border-top-right-radius: 5px;
+	
+	/*border:1px solid white;*/
+	padding:2px;
+	padding-left:5px;
+	padding-right:2px;
+	font-size:15px;
+}
+
+div.dlgBox.minimized div.dlgTitle {
+	-moz-border-radius: 8px;
+	border-radius: 8px;
+}
+
+div.dlgBox .dlgBtn {
+	float:right;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	/*text-shadow:#1994E5 1px 1px 1px;*/
+	width:17px;
+	height:15px;
+	color:white;
+	text-align:center;
+	cursor:default;
+	padding:1px;
+	padding-top:2px;
+	font-size:12px;
+	margin-left: 4px;
+}
+
+div.dlgBox .dlgBtn:hover {
+	border-top: 1px solid #ccc;
+	background-color:#0a3959;
+	/*padding:0px;*/
+	padding-top:1px;
+	background: -webkit-gradient(linear, left top, left bottom, from(#115B8F), to(#0a3959));
+	background: -webkit-linear-gradient(top, #115B8F, #0a3959);
+	background: -moz-linear-gradient(top, #115B8F, #0a3959);
+	background: -ms-linear-gradient(top, #115B8F, #0a3959);
+	background: -o-linear-gradient(top, #115B8F, #0a3959);
+	-webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;
+	-moz-box-shadow: rgba(0,0,0,1) 0 1px 0;
+	box-shadow: rgba(0,0,0,1) 0 1px 0;
+}
+
+div.dlgBox .dlgBtn:active {
+	transform: translate(0, 1px);
+	border-top: 1px solid #999;
+	-webkit-box-shadow: rgba(0,0,0,0.5) 0 1px 0;
+	-moz-box-shadow: rgba(0,0,0,0.5) 0 1px 0;
+	box-shadow: rgba(0,0,0,0.5) 0 1px 0;
+}
+
+/* Button container of the dialog */
+div.dlgBox div.dlgBtnContainer {
+	position:relative; 
+	bottom:3px; 
+	right:0px;
+	text-align:right;
+	padding-top:15px;
+	clear:both;
+}
+
+
+div.dlgBox hr.dlgSep {
+	height:0px; 
+	border-top:1px solid black; 
+	background:none repeat scroll 0 0 black;
+	margin:0px;
+	padding:0px;
+	width:100%;
+	margin-bottom:10px;
+}

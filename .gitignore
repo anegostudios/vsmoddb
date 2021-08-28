@@ -1,0 +1,9 @@
+/templates_c/*
+/files/*
+/db/model.mwb.bak
+/templates_c/*.tpl
+/tmp/*
+*.txt
+etc
+db/backup.sql
+lib/config.db.priv.php
