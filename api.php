@@ -124,6 +124,8 @@ function listMod($modid) {
 		"homepageurl" => $row['homepageurl'],
 		"sourcecodeurl" => $row['sourcecodeurl'],
 		"trailervideourl" => $row['trailervideourl'],
+		"issuetrackerurl" => $row['issuetrackerurl'],
+		"wikiurl" => $row['wikiurl'],
 		"downloads" => intval($row['downloads']),
 		"comments" => intval($row['comments']),
 		"side" => $row['side'],
