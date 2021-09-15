@@ -64,7 +64,7 @@
 		</div>
 
 		<div class="editbox" style="line-height:127%">
-			<label><abbr title="If set, your mod can be reached with this custom url. Only lower case letters are allowed.">URL Alias</a></label>
+			<label><abbr title="If set, your mod can be reached with this custom url. Only alphabetical letters are allowed.">URL Alias</abbr></label>
 			<span style="font-size:12px;">https://mods.vintagestory.at/</span><input type="text" name="urlalias" style="width: 80px;" value="{$asset['urlalias']}"/>
 		</div>
 		
