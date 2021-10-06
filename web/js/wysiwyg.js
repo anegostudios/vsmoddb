@@ -1,7 +1,7 @@
 	
 	var mentions = {
 		source: function(query, process, delimiter) {
-			$.getJSON('get-usernames?name=' + query, function(data) {
+			$.getJSON('/get-usernames?name=' + query, function(data) {
 				process(data);
 			});
 		},
