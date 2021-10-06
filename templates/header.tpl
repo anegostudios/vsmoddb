@@ -13,8 +13,9 @@
 	<meta name="msapplication-TileColor" content="#da532c">
 	<meta name="theme-color" content="#ffffff">
 
+	<script src="https://kit.fontawesome.com/1abebfb8d4.js" crossorigin="anonymous"></script>
 
-	<link href="/web/css/style.css?version=9" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=11" rel="stylesheet" type="text/css">
 	<link href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/dialog.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">
@@ -48,7 +49,6 @@
 	
 	<div class="content">
 		<a href="/" class="logo"><img src="/web/img/vsmoddb-logo-s.png" align="left"></a>
-		<!--<div class="betanotice">Beta!</div>-->
 		
 		<div class="navigation">
 			<ul>
@@ -70,11 +70,25 @@
 					</li>
 
 					{if ($user['rolecode'] == 'admin')}
-					<li class="mainmenuitem right {if in_array($urltarget, array('list/user', 'list/tag', 'list/connectiontype', 'list/stati', 'list/assettypes'))}active{/if}">
-						<a href="#">Admin</a>
+					<li class="mainmenuitem right  icon {if in_array($urltarget, array('list/user', 'list/tag', 'list/connectiontype', 'list/stati', 'list/assettypes'))}active{/if}">
+						<a href="#"><i style="color: white; font-size: 22px;" class="fa fa-users-cog"></i></a>
 						<ul class="submenu">
 							<li class="menuitem"><a href="/list/user">Users</a></li>
 							<li class="menuitem"><a href="/list/tag">Tags</a></li>
+						</ul>
+					</li>
+					<li class="mainmenuitem right icon" style="position:relative">
+						<a href="#">
+							<span class="notificationcount {if $notificationcount>0}visible{/if}">{$notificationcount}</span>
+							<i style="color: white; font-size: 22px;" class="fa fa-bell"></i>
+						</a>
+						<ul class="submenu notifications">
+						{foreach from=$notifications item=notification}
+							<li style="clear:both;" class="menuitem"><a href="{$notification['link']}">{$notification['text']}<br>{fancyDate($notification['created'])}</a><!--<a href="#" style="float:right"><i style="color: white; font-size: 22px;" class="fa fa-trash"></i></a>--></li>
+						{/foreach}
+						{if $notificationcount==0}
+							<li class="menuitem nolink" style="display:block;"><span>No new notifications, you're all caught up!</a></li>
+						{/if}
 						</ul>
 					</li>
 					{/if}

@@ -78,6 +78,10 @@ a:hover {
 	background-color: rgba(255, 255, 255, 0.2);
 }
 
+.mainmenuitem.icon a {
+	padding: 5px 10px;
+}
+
 .mainmenuitem.active {
 	background-color: rgba(255, 255, 255, 0.9);
 }
@@ -86,13 +90,34 @@ a:hover {
 	border-top-left-radius: 4px;
 }
 
-.mainmenuitem a {
+.mainmenuitem a, .menuitem.nolink span {
 	text-decoration: none;
 	display:inline-block;
 	color: white;
 	padding: 5px;
 	padding-left: 15px;
 	padding-right: 15px;
+	position: relative;
+}
+
+.notificationcount.visible {
+	display:inline-block;
+}
+
+.notificationcount {
+	display:none;
+	position: absolute;
+	top: -5px;
+	font-size: 13px;
+	color: #fff;
+	text-indent: 0%;
+	line-height: 18px;
+	padding: 0 6px;
+	border-radius: 8px;
+	z-index: 2;
+	font-weight: bold;
+	background: #91A357;
+	right: -1px;
 }
 
 .mainmenuitem.active > a {
@@ -104,6 +129,16 @@ a:hover {
 	float: right;
 }
 
+.submenu.notifications {
+	min-width:400px;
+	font-size:14px;
+	right:0px;
+}
+
+.comment:target {
+	background-color: #DDE5CB;
+	border-color: #abb29c;
+}
 
 ul.submenu {
 	position:absolute;

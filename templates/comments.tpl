@@ -14,7 +14,7 @@
 				</div>
 			
 				{foreach from=$comments item=comment}
-					<div class="editbox comment" data-timestamp="{strtotime($comment['created'])}" style="clear:both;">
+					<div id="cmt-{$comment['commentid']}" class="editbox comment" data-timestamp="{strtotime($comment['created'])}" style="clear:both;">
 						<div class="title">
 							{$comment['username']}, {fancyDate($comment['created'])} {if $comment['modifieddate']}(modified at {$comment['modifieddate']}){/if}
 							{if !empty($user) && $comment["userid"] == $user["userid"]}

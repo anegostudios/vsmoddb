@@ -20,7 +20,7 @@ if (empty($target)) {
 
 $urlparts = explode("/", $target);
 
-$typewhitelist = array("api", "updateversiontags", "files", "show", "download", "edit", "edit-comment", "delete-comment", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist");
+$typewhitelist = array("api", "updateversiontags", "files", "show", "download", "edit", "edit-comment", "delete-comment", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist", "notification");
 
 if (!in_array($urlparts[0], $typewhitelist)) {
 	$modid = $con->getOne("select assetid from `mod` where urlalias=?", array($urlparts[0]));
@@ -36,6 +36,10 @@ if (!in_array($urlparts[0], $typewhitelist)) {
 if ($urlparts[0] == "api") {
 	array_shift($urlparts);
 	include("api.php");
+	exit();
+}
+if ($urlparts[0] == "notification") {
+	include("notification.php");
 	exit();
 }
 

@@ -20,6 +20,12 @@ if (!empty($_POST["save"])) {
 		
 		$con->Execute("update `mod` set comments=(select count(*) from comment where assetid=?) where assetid=?", array($_POST["assetid"], $_POST["assetid"]));
 		
+		$touserid = $con->getOne("select createdbyuserid from `asset` where assetid=?", array($_POST['assetid']));
+		if ($user['userid'] != $touserid) {
+			$notid = insert("notification");
+			update("notification", $notid, array("userid" => $touserid, "type" => "newcomment", "recordid" => $commentid));
+		}
+		
 		logAssetChanges(array("Added a new comment."), $_POST["assetid"]);
 	} else {
 		$cmt = $con->getRow("select assetid, userid from comment where commentid=?", array($commentid));

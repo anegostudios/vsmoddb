@@ -91,7 +91,7 @@ $(document).ready(function() {
 				destroyEditor($('.editcommenteditor'));
 				
 				var $cmt = $(
-					'<div class="editbox comment" style="clear:both; width: 1007px; max-width: 1007px;">'+
+					'<div class="editbox comment" style="clear:both;">'+
 						'<div class="title">'+data.username +', '+data.created+getCmtLinks(commentid)+'</div>'+
 						'<div class="body">'+data.text+'</div>'+
 					'</div>'
@@ -114,7 +114,7 @@ $(document).ready(function() {
 			var data = $.parseJSON(response).comment;
 			
 			var $cmt = $(
-				'<div class="editbox comment" style="clear:both; width: 1007px; max-width: 1007px;">'+
+				'<div class="editbox comment" style="clear:both;">'+
 					'<div class="title">'+data.username+', '+data.created+getCmtLinks(data.commentid)+'</div>'+
 					'<div class="body">'+data.text+'</div>'+
 				'</div>'

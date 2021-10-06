@@ -33,7 +33,7 @@
 	$con = createADOConnection($config);
 	$view = new View();
 	
-	include($config["basepath"] . "lib/auth.php");
+	include($config["basepath"] . "lib/user.php");
 
 	
 	$ADODB_FETCH_MODE = ADODB_FETCH_ASSOC; 
@@ -224,9 +224,9 @@
 		}
 		
 		if (date("Y", $localtimestamp) != date("Y")) {
-			return '<span title="'.$strdate.'">' . date("M jS Y", $localtimestamp) . '</span>';
+			return '<span title="'.$strdate.'">' . date("M jS Y \\a\\t g:i A", $localtimestamp) . '</span>';
 		} else {
-			return '<span title="'.$strdate.'">' . date("M jS", $localtimestamp) . '</span>';
+			return '<span title="'.$strdate.'">' . date("M jS \\a\\t g:i A", $localtimestamp) . '</span>';
 		}
 	}
 	
