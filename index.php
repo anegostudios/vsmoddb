@@ -1,4 +1,7 @@
 <?php
+if (!empty($_SERVER['HTTP_ACCEPT']) && $_SERVER['REQUEST_METHOD'] == "GET") {
+	if(!strstr($_SERVER['HTTP_ACCEPT'], "text/html") && $_SERVER['HTTP_ACCEPT'] != "*/*") exit("not an image");
+}
 
 $config = array();
 $config["basepath"] = getcwd() . '/';

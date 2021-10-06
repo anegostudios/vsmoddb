@@ -3,6 +3,7 @@ error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
 
+
 if (empty($_GET['fileid'])) exit("missing fileid");
 $fileid = $_GET['fileid'];
 
@@ -28,6 +29,8 @@ downloadFile($file);
 exit();
 
 
+
+
 function downloadFile($file) {
 	$dir = "files/asset/{$file['assetid']}/";
 	$filepath = $dir . $file["filename"];
@@ -43,33 +46,3 @@ function downloadFile($file) {
 	flush();
 	readfile($filepath);//Absolute URL
 }
-
-function downloadAsZip($filename, $path) {
-	$zipfilename = "{$filename}.zip";
-
-	$d = dir($path);
-	while (false !== ( $entry = $d->read())) {
-		if (substr($entry, 0, 1) != "." && !is_dir($entry) && !strstr($entry, "_thumb."))  {
-			$files[] = $entry;
-		}
-	}
-
-	header( "Content-Type: application/x-zip" );
-	header( "Content-Disposition: attachment; filename=\"$zipfilename\"" );
-
-	$filespec = "";
-
-	foreach ($files as $entry) {
-		$filespec .= "\"$entry\" ";
-	}
-
-	chdir($path);
-
-	$stream = popen( "/usr/bin/zip -q - $filespec", "r");
-
-	if ($stream) {
-		fpassthru($stream);
-		fclose($stream);
-	}
-}
-
