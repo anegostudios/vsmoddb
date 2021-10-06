@@ -12,7 +12,9 @@ $commentid = empty($_POST["commentid"]) ? 0 : $_POST["commentid"];
 
 if (!empty($_POST["save"])) {
 	$isnew = false;
-	
+	$text = sanitizeHtml($_POST["text"], array('safe'=>1));
+
+
 	if (!$commentid) {
 		$isnew = true;
 		$commentid = insert("comment");
@@ -24,6 +26,18 @@ if (!empty($_POST["save"])) {
 		if ($user['userid'] != $touserid) {
 			$notid = insert("notification");
 			update("notification", $notid, array("userid" => $touserid, "type" => "newcomment", "recordid" => $commentid));
+		}
+		
+		
+		preg_match_all("#<span class=\"mention username\">(.*)</span>#Ui", $text, $matches);
+		
+		foreach ($matches[1] as $name) {
+			$userid = $con->getOne("select userid from user where name=?", array($name));
+			
+			if ($userid) {
+				$notid = insert("notification");
+				update("notification", $notid, array("userid" => $userid, "type" => "mentioncomment", "recordid" => $commentid));
+			}
 		}
 		
 		logAssetChanges(array("Added a new comment."), $_POST["assetid"]);
@@ -40,7 +54,6 @@ if (!empty($_POST["save"])) {
 	}
 	
 
-	$text = sanitizeHtml($_POST["text"], array('safe'=>1));
 	update("comment", $commentid, array("text" => $text));
 	
 	$row = $con->getRow("

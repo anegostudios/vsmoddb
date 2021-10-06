@@ -30,24 +30,28 @@ function loadNotifications() {
 	
 	$notifications = $con->getAll("select * from notification where userid=? and `read`=0 order by created desc limit 10", array($user['userid']));
 	foreach ($notifications as &$notification) {
+		$cmt = $con->getRow("
+			select 
+				asset.assetid,
+				asset.name as modname,
+				user.name as username,
+				`mod`.urlalias as modalias
+			from
+				comment 
+				join asset on (comment.assetid = asset.assetid)
+				join `mod` on (comment.assetid = `mod`.assetid)
+				join user on (comment.userid = user.userid)
+			where commentid=?
+		", $notification['recordid']);
+
 		if ($notification['type']=="newcomment") {
-			$cmt = $con->getRow("
-				select 
-					asset.assetid,
-					asset.name as modname,
-					user.name as username,
-					`mod`.urlalias as modalias
-				from
-					comment 
-					join asset on (comment.assetid = asset.assetid)
-					join `mod` on (comment.assetid = `mod`.assetid)
-					join user on (comment.userid = user.userid)
-				where commentid=?
-			", $notification['recordid']);
-			
 			$notification['text'] = "{$cmt['username']} commented on {$cmt['modname']}";
-			$notification['link'] = "/notification/{$notification['notificationid']}"; // $cmt['modalias'] ? "/" . $cmt['modalias'] : "show/mod/" . $cmt['assetid'];
 		}
+		if ($notification['type']=="mentioncomment") {
+			$notification['text'] = "{$cmt['username']} mentioned you in a comment on {$cmt['modname']}";
+		}
+		
+		$notification['link'] = "/notification/{$notification['notificationid']}";
 	}
 	$view->assign("notifications", $notifications);
 }
