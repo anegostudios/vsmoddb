@@ -75,6 +75,7 @@ $latestcomments = $con->getAll("
 		join user on (comment.userid = user.userid)
 		join asset on (comment.assetid = asset.assetid)
 		join assettype on (asset.assettypeid = assettype.assettypeid)
+	where asset.statusid=2
 	order by
 		comment.created desc
 	limit 20
