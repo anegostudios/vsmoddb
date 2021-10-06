@@ -30,6 +30,7 @@ if (empty($jsonresponse["valid"])) {
 		"name" => $account["playername"],
 		"email" => $account["email"],
 		"uid" => $account["uid"],
+		"actiontoken" => str_replace(array("=", "/", "+"), array("", "", ""), genShortToken()),
 		"sessiontoken" => $sessiontoken,
 		"sessiontokenvaliduntil" => date("Y-m-d H:i:s", time() + 14*24*3600)
 	));
@@ -38,3 +39,7 @@ if (empty($jsonresponse["valid"])) {
 	
 }
 
+
+function genShortToken() {
+	return base64_encode(openssl_random_pseudo_bytes(8));
+}	

@@ -1,6 +1,34 @@
 
 $(document).ready(function() {
+
+	$("a[href='#ordernewestfirst']").click(function() {
+	      var result = $('.comments > div').sort(function (a, b) {
+
+      	      var contentA = parseInt( $(a).attr('data-timestamp'));
+	      var contentB = parseInt( $(b).attr('data-timestamp'));
+	      return (contentA < contentB) ? 1 : (contentA > contentB) ? -1 : 0;
+	     });
+
+             $('.comments').html(result);
+	     $.cookie("commentsort", "newestfirst", { expires: 365 });
+
+	   return false;
+	});
 	
+	$("a[href='#orderoldestfirst']").click(function() {
+	      var result = $('.comments > div').sort(function (a, b) {
+      	      var contentA = parseInt( $(a).attr('data-timestamp'));
+	      var contentB = parseInt( $(b).attr('data-timestamp'));
+	      return (contentA < contentB) ? -1 : (contentA > contentB) ? 1 : 0;
+	    });
+
+             $('.comments').html(result);
+	     $.cookie("commentsort", "oldestfirst", { expires: 365 });
+   	    return false;
+	});
+
+	if ($.cookie("commentsort") == "oldestfirst") $("a[href='#orderoldestfirst']").trigger("click");
+
 	$("a[href='#addcomment']").click(function() {
 		$(".comments .comment.template").toggle();
 		$('form[name=commentformtemplate]').trigger('reinitialize.areYouSure');

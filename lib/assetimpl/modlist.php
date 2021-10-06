@@ -95,6 +95,11 @@ class ModList extends AssetList {
 		if (!empty($_GET["gv"])) {
 			$gvs = $_GET["gv"];
 		}
+		if (!empty($_GET['side']) && ($_GET['side']=='client' || $_GET['side']=='server' || $_GET['side']=='both')) {
+			$this->wheresql[] = "side=?";
+			$this->wherevalues[] = $_GET['side'];
+			$this->searchvalues['side'] = $_GET['side'];
+		}
 
 
 		if ($gvs) {

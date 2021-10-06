@@ -7,6 +7,15 @@
 		</div>
 
 		<div class="searchbox">
+			<label>Side</label>
+			<select name="side">
+				<option value="both">Both</option>
+				<option value="client" {if isset($searchvalues['side']) && $searchvalues['side']=='client'}selected="selected"{/if}>Client side mod</option>
+				<option value="server" {if isset($searchvalues['side']) && $searchvalues['side']=='server'}selected="selected"{/if}>Server side mod</option>
+			</select>
+		</div>
+
+		<div class="searchbox">
 			<label>Tags</label>
 			<select style="width:300px;" name="tagids[]" multiple>
 				<option value="">-</option>

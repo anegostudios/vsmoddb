@@ -692,6 +692,10 @@ input[type="submit"] {
 	float:right;
 }
 
+.comment {
+	width: 100%;
+}
+
 .comment .title {
 	min-height: 20px;
 	padding:4px;
@@ -773,7 +777,6 @@ a.add:before {
 
 .edit-asset h3 {
 	vertical-align:middle;
-	width: 1009px;
 	border-bottom: 1px solid #ccc;
 	margin-top: 40px;
 	font-size:120%;

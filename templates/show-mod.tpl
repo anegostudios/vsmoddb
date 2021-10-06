@@ -165,7 +165,7 @@ $(document).ready(function() {
 	});
 });
 </script>
-<script type="text/javascript" src="/web/js/comments.js" async></script>
+<script type="text/javascript" src="/web/js/comments.js?version=3" async></script>
 {/capture}
 
 {include file="footer"}

@@ -14,7 +14,7 @@
 	<meta name="theme-color" content="#ffffff">
 
 
-	<link href="/web/css/style.css?version=8" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=9" rel="stylesheet" type="text/css">
 	<link href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/dialog.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">
@@ -65,7 +65,7 @@
 						<a href="#">{$user["name"]}</a>
 						<ul class="submenu">
 							<li><a href="/accountsettings">Settings</a></li>
-							<li><a href="/logout">Logout</a></li>
+							<li><a href="/logout?at={$user['actiontoken']}">Logout</a></li>
 						</ul>
 					</li>
 
