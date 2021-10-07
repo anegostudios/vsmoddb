@@ -120,7 +120,7 @@
 							<td>
 								<div class="tags">
 								{foreach from=$release['tags'] item=tag}
-									<a href="/list/mod/?gameversion={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>
+									<a href="/list/mod/?gv[]={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>
 								{/foreach}
 								</div>
 						</td>
