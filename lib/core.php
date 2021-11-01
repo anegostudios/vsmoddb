@@ -368,11 +368,24 @@
 		global $con;
 		$modid = intval($modid);
 		
-		$tagids = $con->getCol("select distinct tag.tagid from `release` join assettag on (`release`.assetid = assettag.assetid) join `tag` on (assettag.tagid = tag.tagid) where modid=?", array($modid));
+		$tags = $con->getAll("select distinct tag.tagid, tag.name from `release` join assettag on (`release`.assetid = assettag.assetid) join `tag` on (assettag.tagid = tag.tagid) where modid=?", array($modid));
 		$inserts = array();
-		foreach ($tagids as $tagid) $inserts[] = "({$tagid}, {$modid})";
+		$majorversions = array();
+		foreach ($tags as $tag) {
+			$inserts[] = "({$tag['tagid']}, {$modid})";
+
+			$parts = explode(".", substr($tag['name'], 1));
+			$key = $parts[0] . "." . $parts[1] . ".x";
+			$majorversions[$key] = 1;
+		}
+		
+		
+		foreach ($majorversions as $majorversion=>$val) {
+			$mvid = $con->getOne("select majorversionid from majorversion where name=?", array($majorversion));
+			$con->Execute("INSERT IGNORE INTO majormodversioncached (majorversionid, modid) values (?,?)", array($mvid, $modid)); 
+		}
 		
 		$con->Execute("delete from modversioncached where modid=?", array($modid));
 		
-		if (count($tagids)>0) $con->Execute("insert into modversioncached values " . implode(",", $inserts));
+		if (count($tags)>0) $con->Execute("insert into modversioncached values " . implode(",", $inserts));
 	}

@@ -75,6 +75,11 @@ class ModList extends AssetList {
 		$versions = sortTags(2, $versions);
 		$view->assign("versions", $versions);
 		
+		$majorversions = $con->getAll("select * from majorversion");
+		$majorversions = sortTags(2, $majorversions);
+		$view->assign("majorversions", $majorversions);
+		
+		
 		$authors = $con->getAll("select user.userid, user.name from user join asset on asset.createdbyuserid = user.userid group by user.userid order by name asc");
 		$view->assign("authors", $authors);
 	}
@@ -100,6 +105,12 @@ class ModList extends AssetList {
 			$this->wherevalues[] = $_GET['side'];
 			$this->searchvalues['side'] = $_GET['side'];
 		}
+		
+		if (!empty($_GET['mv'])) {
+			$this->wheresql[] = "exists (select modid from majormodversioncached where majorversionid=? and majormodversioncached.modid=`mod`.modid)";
+			$this->wherevalues[] = $_GET['mv'];
+			$this->searchvalues["mv"] = $_GET['mv'];
+		}
 
 
 		if ($gvs) {
@@ -119,8 +130,5 @@ class ModList extends AssetList {
 		}
 
 	}
-	
-	
-
 	
 }

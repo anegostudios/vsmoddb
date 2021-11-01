@@ -1146,6 +1146,10 @@ div.betanotice {
 	cursor:pointer;
 }
 
+.stdtable.latestcomments .textCol pre {
+	white-space: break-spaces;
+}
+
 .stdtable.latestmods a {
 	display: block;
 }

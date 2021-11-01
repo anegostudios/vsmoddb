@@ -40,7 +40,8 @@
 			
 			$("select").each(function() {
 				if ($(this).parents(".template").length == 0) {
-					$(this).chosen({ placeholder_text_multiple: " " });
+					var ds = $(this).attr("noSearch") == 'noSearch';
+					$(this).chosen({ placeholder_text_multiple: " ", disable_search:ds, });
 				}
 			});
 			

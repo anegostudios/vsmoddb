@@ -40,7 +40,7 @@ Cheers,<br>
 <p><br></p>
 
 <h3>Latest 20 Comments</h3>
-<table class="stdtable latestcomments" style="min-width:50%;">
+<table class="stdtable latestcomments" style="width:100%;">
 	<thead>
 		<tr>
 			<th style="width:200px;">On</th>
@@ -54,7 +54,7 @@ Cheers,<br>
 		{foreach from=$latestcomments item=entry}
 			<tr>
 				<td><a href="/show/mod/{$entry['assetid']}">{$entry['assetname']}</a></td>
-				<td class="textCol"><div onclick="location.href='/show/mod/{$entry['assetid']}#comments'">{$entry['text']}</div></td>
+				<td class="textCol"><div onclick="location.href='/show/mod/{$entry['assetid']}#cmt-{$entry['commentid']}'">{$entry['text']}</div></td>
 				<td><a href="/show/mod/{$entry['assetid']}#comments">{$entry['username']}</a></td>
 				<td><a href="/show/mod/{$entry['assetid']}#comments">{fancyDate($entry['created'])}</a></td>
 			</tr>
