@@ -188,6 +188,9 @@ function listMods() {
 		select 
 			asset.assetid, 
 			`mod`.modid, 
+			`mod`.side,
+			`mod`.type,
+			`mod`.urlalias,
 			asset.name,
 			logofilename, 
 			downloads, 
@@ -219,6 +222,9 @@ function listMods() {
 			"name" => $row['name'],
 			"modidstrs" => explode(",", $row['modidstrs']),
 			"author" => $row['author'],
+			"urlalias" => $row['urlalias'],
+			"side" => $row['side'],
+			"type" => $row['type'],
 			"logo" => "files/asset/{$row['assetid']}/" . $row['logofilename'],
 			"tags" => $tags
 		);
