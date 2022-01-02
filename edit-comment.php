@@ -11,6 +11,12 @@ if (!$user['roleid']) {
 $commentid = empty($_POST["commentid"]) ? 0 : $_POST["commentid"];
 
 if (!empty($_POST["save"])) {
+	if ($user['actiontoken'] != $_REQUEST['at']) {
+		$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Tyron");
+		$view->display("400");
+		exit();
+	}
+	
 	$isnew = false;
 	$text = sanitizeHtml($_POST["text"], array('safe'=>1));
 

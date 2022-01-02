@@ -25,6 +25,7 @@
 	</form>
 
 	<form method="post" name="form1">
+		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="assetid" value="{$asset['assetid']}">
 		<input type="hidden" name="saveandback" value="0">
