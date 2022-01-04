@@ -41,7 +41,7 @@ $(document).ready(function() {
 		$self = $(this);
 		if (confirm("Really delete comment?")) {
 			var commentid = $self.attr("data-commentid");
-			$.post('/delete-comment', { commentid: commentid, delete: 1  }, function(response) {
+			$.post('/delete-comment', { commentid: commentid, at: actiontoken, delete: 1  }, function(response) {
 				var $elem = $self.parents(".comment");
 				$elem.remove();
 			});
@@ -85,7 +85,7 @@ $(document).ready(function() {
 		$("button[name='save']", $elem).click(function() {
 			var html = getEditorContents($('.editcommenteditor'));
 
-			$.post('/edit-comment', { commentid: commentid, text: html, save: 1  }, function(response) {
+			$.post('/edit-comment', { commentid: commentid, text: html, at: actiontoken, save: 1  }, function(response) {
 				var data = $.parseJSON(response).comment;
 				
 				destroyEditor($('.editcommenteditor'));
@@ -110,7 +110,7 @@ $(document).ready(function() {
 	$(".comments .comment.template button[name='save']").click(function() {
 		var $elem =  $(this).parents(".comment");
 		
-		$.post('/edit-comment', { assetid:assetid, text: getEditorContents($("textarea", $elem)), save: 1 }, function(response) {
+		$.post('/edit-comment', { assetid:assetid, text: getEditorContents($("textarea", $elem)), at: actiontoken, save: 1 }, function(response) {
 			var data = $.parseJSON(response).comment;
 			
 			var $cmt = $(

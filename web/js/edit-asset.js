@@ -31,7 +31,7 @@ $(document).ready(function() {
 		
 		if (confirm("Really delete " + filename +"?")) {
 			$(".okmessagepopup").html(filename + " deleted.");
-			$.post("/edit-deletefile", { fileid: fileid }).done(function() {
+			$.post("/edit-deletefile", { fileid: fileid, at: actiontoken }).done(function() {
 				showOkMessage();
 				$self.parent().remove();
 			});

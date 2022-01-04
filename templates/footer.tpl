@@ -34,6 +34,7 @@
 	<script type="text/javascript">
 		assetid = {if isset($asset['assetid'])}{$asset['assetid']}{else}0{/if};
 		assettypeid = {if isset($asset)}{$asset['assettypeid']}{else}0{/if};		
+		actiontoken = "{$user['actiontoken']}";
 		
 		$(document).ready(function() {
 			makeTabs();
