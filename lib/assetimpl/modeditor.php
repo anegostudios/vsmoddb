@@ -38,6 +38,13 @@ class ModEditor extends AssetEditor {
 		}
 	}
 	
+	function delete() {
+		global $con;
+		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
+		$con->Execute("delete from `release` where modid=?", array($modid));
+		parent::delete();
+	}
+	
 	function saveFromBrowser() {
 		global $con, $view, $typewhitelist;
 		
