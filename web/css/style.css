@@ -91,6 +91,14 @@ a:hover {
 .interactbox.off .on { display: none; }
 .interactbox.on .off { display: none; }
 
+.followed {
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	color: #5189ca;
+	text-shadow: rgba(0,0,0,0.5) 1px 1px 3px;
+}
+
 .mainmenuitem {
 	display:inline-block;
 	margin:0;
@@ -229,6 +237,7 @@ ul.submenu a {
 }
 
 .mods div.mod {
+	position: relative;
 	float: left;
 	background: white;
 	width: 300px;

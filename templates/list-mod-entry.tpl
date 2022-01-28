@@ -6,6 +6,7 @@
 		{else}
 			<img src="/files/asset/{$mod['assetid']}/{$mod['logofilename']}">
 		{/if}
+		{if !empty($mod['following'])}<i title="You are following this mod" class="followed fas fa-star"></i>{/if}
 	</a>
 	
 	<div class="moddesc">

@@ -21,7 +21,7 @@ class ModList extends AssetList {
 	}
 	
 	public function load() {
-		global $view, $con; 
+		global $view, $con, $user;
 		
 		$sortdefaults = array("lastreleased", "desc");
 		if (!empty($_COOKIE["vsmoddb_modlist_sort"])) {
@@ -83,7 +83,53 @@ class ModList extends AssetList {
 		
 		if ($sortby == "mod.trendingpoints") $this->orderby="trendingpoints {$sortdir}, `mod`.lastmodified {$sortdir}";
 		
-		parent::load();
+		$this->searchvalues = array("text" => "", "statusid" => null);
+		
+		$this->loadFilters();	
+		
+		$selfuserid = -1;
+		if (!empty($user)) $selfuserid = $user['userid'];
+		
+		$sql = "
+			select 
+				asset.*, 
+				`{$this->tablename}`.*,
+				user.name as `from`,
+				status.code as statuscode,
+				status.name as statusname{$this->extracolumns},
+				`follow`.userid as following
+			from 
+				asset 
+				join `{$this->tablename}` on asset.assetid = `{$this->tablename}`.assetid
+				left join user on asset.createdbyuserid = user.userid
+				left join status on asset.statusid = status.statusid
+				left join `follow` on `mod`.modid = follow.modid and follow.userid = {$selfuserid}
+			" . (count($this->wheresql) ? "where " . implode(" and ", $this->wheresql) : "") . "
+			order by {$this->orderby}
+		";
+		
+		$rows = $con->getAll($sql, $this->wherevalues);
+		$this->rows = array();
+
+		
+		foreach ($rows as $row) {
+			unset($row['text']);
+			$tags=array();
+			
+			$tagscached = trim($row["tagscached"]);
+			if (!empty($tagscached)) { 
+			
+				$tagdata = explode("\r\n", $tagscached);
+				
+				foreach($tagdata as $tagrow) {
+					$parts = explode(",", $tagrow);
+					$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagid' => $parts[2]);
+				}
+			
+				$row['tags'] = $tags;
+			}
+			$this->rows[] = $row;
+		}
 		
 		$versions = $con->getAll("select * from tag where assettypeid=?", array(2));
 		$versions = sortTags(2, $versions);
