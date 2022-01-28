@@ -45,22 +45,36 @@ class ModList extends AssetList {
 		
 		setcookie("vsmoddb_modlist_sort", $this->orderby, time() + 24*365*3600);
 		
-		$searchparams = "";
+		$searchparams = array();
 		if (isset($_GET['text'])) {
-			$searchparams.="text={$_GET['text']}";
+			$searchparams[] = "text={$_GET['text']}";
 		}
 		if (isset($_GET["tagids"])) {
 			foreach($_GET["tagids"] as $tagid) {
-				$searchparams .= "&tagids[]={$tagid}";
+				$searchparams[] = "tagids[]={$tagid}";
 			}
 		}
 		if (isset($_GET["gameversion"])) {
-			$searchparams .= "&gameversion[]={$_GET['gameversion']}";
+			$searchparams[] = "gameversion[]={$_GET['gameversion']}";
+		}
+		if (isset($_GET["gv"])) {
+			$searchparams[] = "gv[]={$_GET['gv']}";
 		}
 		if (isset($_GET["userid"])) {
-			$searchparams .= "&userid={$_GET['userid']}";
+			$searchparams[] = "userid={$_GET['userid']}";
 		}
-		$view->assign("searchparams", $searchparams);
+		if (isset($_GET['side']) && ($_GET['side']=='client' || $_GET['side']=='server' || $_GET['side']=='both')) {
+			$searchparams[] = "side={$_GET['side']}";
+		}
+		if (isset($_GET['mv'])) {
+			$searchparams[] = "mv={$_GET['mv']}";
+		}
+		
+		if (count($searchparams) > 0) {
+			$view->assign("searchparams", implode("&", $searchparams));
+		} else {
+			$view->assign("searchparams", "");
+		}
 		
 		if ($sortby == "name") $sortby = "asset." . $sortby;
 		else $sortby = "mod." . $sortby;

@@ -27,6 +27,16 @@ Cheers,<br>
 
 <p><br></p>
 
+{if !empty($followedmods)}
+	<h3>Followed Mods</h3>
+	<div class="mods">
+		{foreach from=$followedmods item=mod}{include file="list-mod-entry-followed"}{/foreach}
+	</div>
+{/if}
+
+<div style="clear:both;"></div>
+
+<p><br></p>
 
 {if !empty($latestentries)}
 	<h3>Latest 10 Mods</h3>

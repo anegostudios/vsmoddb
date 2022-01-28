@@ -13,20 +13,35 @@ if (empty($not)) {
 	exit();
 }
 
-$cmt = $con->getRow("
-	select 
-		commentid,
-		`mod`.urlalias as modalias
-	from
-		comment 
-		join `mod` on (comment.assetid = `mod`.assetid)
-	where commentid=?
-", array($not['recordid']));
-
 $con->Execute("update notification set `read`=1 where notificationid=?", array($not['notificationid']));
 
-$url = $cmt['modalias'] ? "/" . $cmt['modalias'] : "show/mod/" . $cmt['assetid'];
+if ($not['type'] == "newrelease") { 
+	
+	$row = $con->getRow("
+		select 
+			`mod`.assetid,
+			`mod`.urlalias as modalias
+		from
+			`mod`
+		where modid=?
+	", array($not['recordid']));
+
+	$url = $row['modalias'] ? "/" . $row['modalias'] : "show/mod/" . $row['assetid'];
+	header("Location: {$url}#tab-files");
+} else {
+
+	$cmt = $con->getRow("
+		select 
+			commentid,
+			`mod`.urlalias as modalias
+		from
+			comment 
+			join `mod` on (comment.assetid = `mod`.assetid)
+		where commentid=?
+	", array($not['recordid']));
+
+	$url = $cmt['modalias'] ? "/" . $cmt['modalias'] : "show/mod/" . $cmt['assetid'];
+	header("Location: {$url}#cmt-{$cmt['commentid']}");
+}
 
 
-
-header("Location: {$url}#cmt-{$cmt['commentid']}");

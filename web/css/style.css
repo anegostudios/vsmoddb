@@ -69,6 +69,28 @@ a:hover {
 }
 
 
+.interactbox {
+	display: inline-block;
+	text-decoration: none;
+}
+
+.interactbox .off, .interactbox .on {
+	text-decoration: underline;
+}
+
+.interactbox i {
+	padding-right: 5px;
+}
+
+.interactbox .count {
+	background: rgba(0,0,0,0.1);
+	border-radius: 5px;
+	padding: 3px;
+}
+
+.interactbox.off .on { display: none; }
+.interactbox.on .off { display: none; }
+
 .mainmenuitem {
 	display:inline-block;
 	margin:0;

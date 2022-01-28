@@ -30,28 +30,45 @@ function loadNotifications() {
 	
 	$notifications = $con->getAll("select * from notification where userid=? and `read`=0 order by created desc limit 10", array($user['userid']));
 	foreach ($notifications as &$notification) {
-		$cmt = $con->getRow("
-			select 
-				asset.assetid,
-				asset.name as modname,
-				user.name as username,
-				`mod`.urlalias as modalias
-			from
-				comment 
-				join asset on (comment.assetid = asset.assetid)
-				join `mod` on (comment.assetid = `mod`.assetid)
-				join user on (comment.userid = user.userid)
-			where commentid=?
-		", $notification['recordid']);
+		if ($notification['type']=="newrelease") {
+			$cmt = $con->getRow("
+				select 
+					`asset`.name as modname,
+					user.name as username
+				from
+					`mod`
+					join asset on (`mod`.assetid = asset.assetid)
+					join user on (asset.createdbyuserid = user.userid)
+				where modid=?
+			", $notification['recordid']);
+			
+			$notification['text'] = "{$cmt['username']} uploaded a new version of {$cmt['modname']}";
+			
+		} else {
+			$cmt = $con->getRow("
+				select 
+					asset.assetid,
+					asset.name as modname,
+					user.name as username,
+					`mod`.urlalias as modalias
+				from
+					comment 
+					join asset on (comment.assetid = asset.assetid)
+					join `mod` on (comment.assetid = `mod`.assetid)
+					join user on (comment.userid = user.userid)
+				where commentid=?
+			", $notification['recordid']);
 
-		if ($notification['type']=="newcomment") {
-			$notification['text'] = "{$cmt['username']} commented on {$cmt['modname']}";
-		}
-		if ($notification['type']=="mentioncomment") {
-			$notification['text'] = "{$cmt['username']} mentioned you in a comment on {$cmt['modname']}";
+			if ($notification['type']=="newcomment") {
+				$notification['text'] = "{$cmt['username']} commented on {$cmt['modname']}";
+			}
+			if ($notification['type']=="mentioncomment") {
+				$notification['text'] = "{$cmt['username']} mentioned you in a comment on {$cmt['modname']}";
+			}
 		}
 		
 		$notification['link'] = "/notification/{$notification['notificationid']}";
 	}
+	
 	$view->assign("notifications", $notifications);
 }
