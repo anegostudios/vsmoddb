@@ -63,7 +63,7 @@ if (!empty($user)) {
 			asset.statusid=2
 			and rd.created is null or rd.created = (select max(created) from `release` where `release`.modid = mod.modid)
 		order by
-			asset.created desc
+			releasedate desc
 	", array($user['userid']));
 	
 	

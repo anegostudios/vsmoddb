@@ -2,9 +2,9 @@
 	{if $mod['statuscode']=='draft'}<span class="draftnotice">Draft</span>{/if}
 	<a href="{if $mod['urlalias']}/{$mod['urlalias']}{else}/show/mod/{$mod['assetid']}{/if}">
 		{if (empty($mod['logofilename']))}
-			<img src="/web/img/mod-default.png">
+			<img src="/web/img/mod-default.png" loading="lazy">
 		{else}
-			<img src="/files/asset/{$mod['assetid']}/{$mod['logofilename']}">
+			<img src="/files/asset/{$mod['assetid']}/{$mod['logofilename']}" loading="lazy">
 		{/if}
 		{if !empty($mod['following'])}<i title="You are following this mod" class="followed fas fa-star"></i>{/if}
 	</a>
