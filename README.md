@@ -51,3 +51,22 @@ List all info for given mod. Modid can be either the numbered id as retrieved by
 Example: http://mods.vintagestory.at/api/mod/6<br>
 String example: http://mods.vintagestory.at/api/mod/carrycapacity
 
+
+# Development setup
+You can use the provided vscode devcontainer to get up an running without installing everything on your own.
+
+Requiered for that is docker installed aswell as docker-compose and vscode with the [Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
+Then you can open the [devcontainer.json](.devcontainer/devcontainer.json) in vscode and it should promt you 
+```
+Folder contains a Dev Container configuration file. Reopen folder to develop in a container ([learn more](https://aka.ms/vscode-remote/docker)).
+```
+Simply click reopen in container and it should start building the devcontainer and starting the mysql database aswell.
+
+Now edit the [config.php](lib/config.php) to match the settings in the [dockerdocker-compose.yml](.devcontainer/docker-compose.yml) for the db `MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD`
+and add `127.0.0.1	stage.mods.vintagestory.at`  to your hosts file on your local machine.
+
+To deploy the database to the mysql instance open the [model.mwb](db/model.mwb) in MySQL Workbench and `Database > Forward Engineer`.
+Finally fill the database with some default values by running [tables.sql](db/tables.sql) script.
+
+There is also a optional MySQL Workbench container that when enabled in the [dockerdocker-compose.yml](.devcontainer/docker-compose.yml) can be reached at [http://localhost:4444/](http://localhost:4444/). To connect to the mysql database from workbench container use `db` for the hostname.
+
