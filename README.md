@@ -65,8 +65,7 @@ Simply click reopen in container and it should start building the devcontainer a
 Now edit the [config.php](lib/config.php) to match the settings in the [dockerdocker-compose.yml](.devcontainer/docker-compose.yml) for the db `MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD`
 and add `127.0.0.1	stage.mods.vintagestory.at`  to your hosts file on your local machine.
 
-To deploy the database to the mysql instance open the [model.mwb](db/model.mwb) in MySQL Workbench and `Database > Forward Engineer`.
-Finally fill the database with some default values by running [tables.sql](db/tables.sql) script.
+To deploy the database to the mysql instance run the [tables.sql](db/tables.sql) script against the database. You can use MySQL WOrkbench or any other mysql tool. When connecting from your local machine use localhost and 3306 (default) port to connect.
 
 There is also a optional MySQL Workbench container that when enabled in the [dockerdocker-compose.yml](.devcontainer/docker-compose.yml) can be reached at [http://localhost:4444/](http://localhost:4444/). To connect to the mysql database from workbench container use `db` for the hostname.
 
