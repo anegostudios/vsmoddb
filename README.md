@@ -55,8 +55,8 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 # Development setup
 You can use the provided vscode devcontainer to get up an running without installing everything on your own.
 
-Requiered for that is docker installed aswell as docker-compose and vscode with the [Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
-Then you can open the [devcontainer.json](.devcontainer/devcontainer.json) in vscode and it should promt you 
+Required for that is docker installed aswell as docker-compose and vscode with the [Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
+Then you can open the [devcontainer.json](.devcontainer/devcontainer.json) in vscode and it should prompt you 
 ```
 Folder contains a Dev Container configuration file. Reopen folder to develop in a container ([learn more](https://aka.ms/vscode-remote/docker)).
 ```
