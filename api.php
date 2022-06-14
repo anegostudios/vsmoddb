@@ -105,8 +105,8 @@ function listMod($modid) {
 		$releases[] = array(
 			"mainfile" => "asset/{$file['assetid']}/" . $file["filename"],
 			"filename" => $file["filename"],
-			"fileid" => $file['fileid'],
-			"downloads" => $file["downloads"],
+			"fileid" => intval($file['fileid']),
+			"downloads" => intval($file["downloads"]),
 			"tags" => $tags,
 			"modidstr" => $release['modidstr'],
 			"modversion" => $release['modversion'],
