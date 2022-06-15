@@ -103,6 +103,7 @@ function listMod($modid) {
 		$file = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
 		
 		$releases[] = array(
+			"releaseid" => $release['releaseid'],
 			"mainfile" => "asset/{$file['assetid']}/" . $file["filename"],
 			"filename" => $file["filename"],
 			"fileid" => $file['fileid'],
