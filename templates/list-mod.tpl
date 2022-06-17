@@ -7,6 +7,16 @@
 		</div>
 
 		<div class="searchbox">
+			<label>Side</label>
+			<select name="side">
+				<option value="">Any</option>
+				<option value="both" {if isset($searchvalues['side']) && $searchvalues['side']=='both'}selected="selected"{/if}>Both</option>
+				<option value="client" {if isset($searchvalues['side']) && $searchvalues['side']=='client'}selected="selected"{/if}>Client side mod</option>
+				<option value="server" {if isset($searchvalues['side']) && $searchvalues['side']=='server'}selected="selected"{/if}>Server side mod</option>
+			</select>
+		</div>
+
+		<div class="searchbox">
 			<label>Tags</label>
 			<select style="width:300px;" name="tagids[]" multiple>
 				<option value="">-</option>
@@ -28,6 +38,16 @@
 		
 		<div class="searchbox">
 			<label>Game Version</label>
+			<select style="width:100px;" name="mv" noSearch="noSearch">
+				<option value="">-</option>
+				{foreach from=$majorversions item=majorversion}
+					<option value="{$majorversion['majorversionid']}" {if !empty($searchvalues['mv']) && $searchvalues['mv'] == $majorversion['majorversionid']}selected="selected"{/if}>{$majorversion['name']}</option>
+				{/foreach}
+			</select>
+		</div>
+		
+		<div class="searchbox">
+			<label>Game Version Exact</label>
 			<select style="width:300px;" name="gv[]" multiple>
 				<option value="">-</option>
 				{foreach from=$versions item=tag}

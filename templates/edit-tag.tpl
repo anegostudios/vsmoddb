@@ -21,10 +21,12 @@
 	{/if}
 
 	<form method="post" name="deleteform">
+		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="delete" value="1">
 	</form>
 
 	<form method="post" name="form1">
+		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="saveandback" value="0">
 		
@@ -42,16 +44,6 @@
 			<label>Color</label>
 			<input type="text" class="color" name="code" class="required" value="{$row['color']}"/>
 		</div>
-		
-		<!--<div class="editbox linebreak">
-			<label>Tag Type</label>
-			<select style="width:200px;" name="tagtypeid" class="required">
-				<option value="">-</option>
-				{foreach from=$tagtypes item=tagtype}
-					<option value="{$tagtype['tagtypeid']}" {if $tagtype['tagtypeid']==$row['tagtypeid']}selected="selected"{/if}>{$tagtype['name']}</option>
-				{/foreach}
-			</select>
-		</div>-->
 		
 		<div class="editbox linebreak">
 			<label>For Asset Types</label>
@@ -91,19 +83,6 @@
 
 {capture name="footerjs"}
 <script type="text/javascript" src="/web/js/jQueryColorPicker.min.js"></script>
-<script type="text/javascript">
-	$(document).ready(function() {
-	
-	/*	$myColorPicker = $('input.color').colorPicker({
-			customBG: '#222',
-			readOnly: true,
-			init: function(elm, colors) {
-				elm.style.backgroundColor = elm.value;
-				elm.style.color = colors.rgbaMixCustom.luminance > 0.22 ? '#222' : '#ddd';
-			}
-		});
-	});*/
-</script>
 <script type="text/javascript">
 
 	function submitForm(returntolist) {

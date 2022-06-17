@@ -1,3 +1,11 @@
 body {
 	font-size: 15px;
 }
+
+span.username:before {
+	content: "@"
+}
+
+span#autocomplete, span.username {
+    font-weight: bold;
+}

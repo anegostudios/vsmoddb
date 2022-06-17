@@ -37,6 +37,12 @@ class AssetEditor extends AssetController {
 		}
 		
 		if (!empty($_POST["delete"])) {
+			if ($user['actiontoken'] != $_REQUEST['at']) {
+				$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Tyron");
+				$view->display("400");
+				exit();
+			}
+		
 			$this->delete();
 			exit();
 		}
@@ -204,6 +210,12 @@ class AssetEditor extends AssetController {
 		
 		$oldstatusid = 0;
 		
+		if ($user['actiontoken'] != $_REQUEST['at']) {
+			$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Tyron");
+			$view->display("400");
+			exit();
+		}
+		
 		if (!$this->assetid) {
 			$this->assetid = insert("asset");
 			$this->recordid = insert($this->tablename);
@@ -242,11 +254,6 @@ class AssetEditor extends AssetController {
 			
 			$status = 'saved';
 		}
-		
-		/*if (!empty($this->asset) && $this->asset['numsaved'] > $_POST['numsaved']) {
-			$view->unsetVar("okmessage");
-			return 'conflict';
-		}*/
 		
 		$assetdata = array("editedbyuserid" => $user["userid"]);
 		$recorddata = array();

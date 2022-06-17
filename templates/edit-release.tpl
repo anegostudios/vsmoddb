@@ -25,10 +25,12 @@
 	{/if}
 
 	<form method="post" name="deleteform">
+		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="delete" value="1">
 	</form>
 
 	<form method="post" name="form1">
+		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="assetid" value="{$asset['assetid']}">
 		<input type="hidden" name="modid" value="{$mod['modid']}">
@@ -191,7 +193,6 @@
 	modtype='{$modtype}';
 	
 	if (modtype=='mod') {
-		console.log("setc");
 		onUploadFinished = function(file) {
 			if (file.modparse == "error") {
 				$("input[name='modidstr']").removeAttr("disabled");

@@ -15,7 +15,16 @@ $view->assign("entrysingular", "Connection type");
 
 $tagid = empty($_REQUEST["tagid"]) ? 0 : $_REQUEST["tagid"];
 
-if (!empty($_POST["save"])) {
+$save = !empty($_POST["save"]);
+$delete =!empty($_POST["delete"]);
+
+if (($save || $delete) && $user['actiontoken'] != $_REQUEST['at']) {
+	$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Tyron");
+	$view->display("400");
+	exit();
+}
+
+if ($save) {
 	$isnew = false;
 	
 	if (!$tagid) {
@@ -40,11 +49,10 @@ if (!empty($_POST["save"])) {
 	}
 }
 
-if (!empty($_POST["delete"])) {
+if ($delete) {
 	$con->Execute("delete from tag where tagid=?", array($tagid));
 	header("Location: /list/tag?deleted=1");
 	exit();
-	
 }
 
 if ($tagid) {

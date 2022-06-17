@@ -73,6 +73,11 @@
 				<span class="text-weak">Created:</span> {fancyDate($asset['created'])}<br>
 				<span class="text-weak">Last modified:</span> {fancyDate($asset['lastreleased'])}<br>
 				<span class="text-weak">Downloads:</span> {intval($asset['downloads'])}<br>
+				<a href="{if !empty($user)}#follow{else}/login{/if}" class="interactbox {if $isfollowing}on{else}off{/if}">
+					<span class="off"><i class="far fa-star"></i>Follow</span>
+					<span class="on"><i class="fas fa-star"></i>Unfollow</span>
+					<span class="count">{$asset["follows"]}</span>
+				</a>
 			</div>
 			
 			<div style="clear:both;"><br></div>
@@ -120,7 +125,7 @@
 							<td>
 								<div class="tags">
 								{foreach from=$release['tags'] item=tag}
-									<a href="/list/mod/?gameversion={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>
+									<a href="/list/mod/?gv[]={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>
 								{/foreach}
 								</div>
 						</td>
@@ -156,16 +161,33 @@
 <p style="clear:both;"><br></p>
 {capture name="footerjs"}
 <script type="text/javascript">
-$(document).ready(function() {
-	$("a[href='#showchangelog']").click(function() {
-		$self = $(this).parent().parent().find(".changelogtext");
-		$(".changelogtext").each(function() { if ($(this)[0] != $self[0]) $(this).hide(); }); // hide others
-		$self.toggle();
-		return true;
+	modid = {$asset['modid']};
+
+	$(document).ready(function() {
+		$("a[href='#showchangelog']").click(function() {
+			$self = $(this).parent().parent().find(".changelogtext");
+			$(".changelogtext").each(function() { if ($(this)[0] != $self[0]) $(this).hide(); }); // hide others
+			$self.toggle();
+			return true;
+		});
+		
+		$("a[href='#follow']").click(function() {
+			var op = "follow";
+			var cnt = parseInt($(".count", $(this)).html());		
+			if ($(this).hasClass("on")) {
+				op="unfollow";
+				$(this).removeClass("on").addClass("off");			
+				$(".count", $(this)).html(""+(cnt-1));
+			} else {
+				$(this).removeClass("off").addClass("on");
+				$(".count", $(this)).html(""+(cnt + 1));
+			}
+			
+			$.get("/set-follow", { op: op, modid: modid });
+		});
 	});
-});
 </script>
-<script type="text/javascript" src="/web/js/comments.js" async></script>
+<script type="text/javascript" src="/web/js/comments.js?version=5" async></script>
 {/capture}
 
 {include file="footer"}

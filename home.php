@@ -41,6 +41,38 @@ if (!empty($user)) {
 	$view->assign("mods", $ownmods);
 }
 
+if (!empty($user)) {
+
+	$followedmods = $con->getAll("
+		select 
+			asset.*,
+			`mod`.*,
+			user.name as `from`,
+			status.code as statuscode,
+			status.name as statusname,
+			rd.created as releasedate,
+			rd.modversion as releaseversion
+		from
+			asset
+			join `mod` on asset.assetid = `mod`.assetid
+			join user on (asset.createdbyuserid = user.userid)
+			join status on (asset.statusid = status.statusid)
+			join follow on (`mod`.modid = follow.modid and follow.userid=?)
+			left join (select * from `release`) rd on (rd.modid = `mod`.modid)
+		where
+			asset.statusid=2
+			and rd.created is null or rd.created = (select max(created) from `release` where `release`.modid = mod.modid)
+		order by
+			releasedate desc
+	", array($user['userid']));
+	
+	
+
+	$view->assign("followedmods", $followedmods);
+} else {
+	$view->assign("followedmods", array());
+}
+
 
 $latestentries = $con->getAll("
 	select 
@@ -75,8 +107,9 @@ $latestcomments = $con->getAll("
 		join user on (comment.userid = user.userid)
 		join asset on (comment.assetid = asset.assetid)
 		join assettype on (asset.assettypeid = assettype.assettypeid)
+	where asset.statusid=2
 	order by
-		comment.lastmodified desc
+		comment.created desc
 	limit 20
 ");
 

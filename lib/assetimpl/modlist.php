@@ -21,7 +21,7 @@ class ModList extends AssetList {
 	}
 	
 	public function load() {
-		global $view, $con; 
+		global $view, $con, $user;
 		
 		$sortdefaults = array("lastreleased", "desc");
 		if (!empty($_COOKIE["vsmoddb_modlist_sort"])) {
@@ -45,22 +45,36 @@ class ModList extends AssetList {
 		
 		setcookie("vsmoddb_modlist_sort", $this->orderby, time() + 24*365*3600);
 		
-		$searchparams = "";
+		$searchparams = array();
 		if (isset($_GET['text'])) {
-			$searchparams.="text={$_GET['text']}";
+			$searchparams[] = "text={$_GET['text']}";
 		}
 		if (isset($_GET["tagids"])) {
 			foreach($_GET["tagids"] as $tagid) {
-				$searchparams .= "&tagids[]={$tagid}";
+				$searchparams[] = "tagids[]={$tagid}";
 			}
 		}
 		if (isset($_GET["gameversion"])) {
-			$searchparams .= "&gameversion[]={$_GET['gameversion']}";
+			$searchparams[] = "gameversion[]={$_GET['gameversion']}";
+		}
+		if (isset($_GET["gv"])) {
+			$searchparams[] = "gv[]={$_GET['gv']}";
 		}
 		if (isset($_GET["userid"])) {
-			$searchparams .= "&userid={$_GET['userid']}";
+			$searchparams[] = "userid={$_GET['userid']}";
 		}
-		$view->assign("searchparams", $searchparams);
+		if (isset($_GET['side']) && ($_GET['side']=='client' || $_GET['side']=='server' || $_GET['side']=='both')) {
+			$searchparams[] = "side={$_GET['side']}";
+		}
+		if (isset($_GET['mv'])) {
+			$searchparams[] = "mv={$_GET['mv']}";
+		}
+		
+		if (count($searchparams) > 0) {
+			$view->assign("searchparams", implode("&", $searchparams));
+		} else {
+			$view->assign("searchparams", "");
+		}
 		
 		if ($sortby == "name") $sortby = "asset." . $sortby;
 		else $sortby = "mod." . $sortby;
@@ -69,11 +83,62 @@ class ModList extends AssetList {
 		
 		if ($sortby == "mod.trendingpoints") $this->orderby="trendingpoints {$sortdir}, `mod`.lastmodified {$sortdir}";
 		
-		parent::load();
+		$this->searchvalues = array("text" => "", "statusid" => null);
+		
+		$this->loadFilters();	
+		
+		$selfuserid = -1;
+		if (!empty($user)) $selfuserid = $user['userid'];
+		
+		$sql = "
+			select 
+				asset.*, 
+				`{$this->tablename}`.*,
+				user.name as `from`,
+				status.code as statuscode,
+				status.name as statusname{$this->extracolumns},
+				`follow`.userid as following
+			from 
+				asset 
+				join `{$this->tablename}` on asset.assetid = `{$this->tablename}`.assetid
+				left join user on asset.createdbyuserid = user.userid
+				left join status on asset.statusid = status.statusid
+				left join `follow` on `mod`.modid = follow.modid and follow.userid = {$selfuserid}
+			" . (count($this->wheresql) ? "where " . implode(" and ", $this->wheresql) : "") . "
+			order by {$this->orderby}
+		";
+		
+		$rows = $con->getAll($sql, $this->wherevalues);
+		$this->rows = array();
+
+		
+		foreach ($rows as $row) {
+			unset($row['text']);
+			$tags=array();
+			
+			$tagscached = trim($row["tagscached"]);
+			if (!empty($tagscached)) { 
+			
+				$tagdata = explode("\r\n", $tagscached);
+				
+				foreach($tagdata as $tagrow) {
+					$parts = explode(",", $tagrow);
+					$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagid' => $parts[2]);
+				}
+			
+				$row['tags'] = $tags;
+			}
+			$this->rows[] = $row;
+		}
 		
 		$versions = $con->getAll("select * from tag where assettypeid=?", array(2));
 		$versions = sortTags(2, $versions);
 		$view->assign("versions", $versions);
+		
+		$majorversions = $con->getAll("select * from majorversion");
+		$majorversions = sortTags(2, $majorversions);
+		$view->assign("majorversions", $majorversions);
+		
 		
 		$authors = $con->getAll("select user.userid, user.name from user join asset on asset.createdbyuserid = user.userid group by user.userid order by name asc");
 		$view->assign("authors", $authors);
@@ -95,6 +160,17 @@ class ModList extends AssetList {
 		if (!empty($_GET["gv"])) {
 			$gvs = $_GET["gv"];
 		}
+		if (!empty($_GET['side']) && ($_GET['side']=='client' || $_GET['side']=='server' || $_GET['side']=='both')) {
+			$this->wheresql[] = "side=?";
+			$this->wherevalues[] = $_GET['side'];
+			$this->searchvalues['side'] = $_GET['side'];
+		}
+		
+		if (!empty($_GET['mv'])) {
+			$this->wheresql[] = "exists (select modid from majormodversioncached where majorversionid=? and majormodversioncached.modid=`mod`.modid)";
+			$this->wherevalues[] = $_GET['mv'];
+			$this->searchvalues["mv"] = $_GET['mv'];
+		}
 
 
 		if ($gvs) {
@@ -114,8 +190,5 @@ class ModList extends AssetList {
 		}
 
 	}
-	
-	
-
 	
 }

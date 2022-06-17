@@ -111,6 +111,9 @@ $view->assign("assettypes", $con->getAll("select * from assettype order by name"
 $view->assign("tagtypes", $con->getAll("select * from tagtype order by name"));
 
 $view->assign("asset", $asset);
+
+$view->assign("isfollowing", empty($user) ? 0 : $con->getOne("select modid from `follow` where modid=? and userid=?", array($asset['modid'], $user['userid'])));
+
 $view->display("show-mod");
 
 

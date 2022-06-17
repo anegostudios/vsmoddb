@@ -38,10 +38,17 @@ class ModEditor extends AssetEditor {
 		}
 	}
 	
+	function delete() {
+		global $con;
+		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
+		$con->Execute("delete from `release` where modid=?", array($modid));
+		parent::delete();
+	}
+	
 	function saveFromBrowser() {
 		global $con, $view, $typewhitelist;
 		
-		$_POST['urlalias'] = preg_replace("/[^a-z]+/", "", $_POST['urlalias']);
+		$_POST['urlalias'] = preg_replace("/[^a-z]+/", "", strtolower($_POST['urlalias']));
 		if (!empty($_POST['urlalias'])) {
 			if ($con->getOne("select modid from `mod` where urlalias=? and assetid!=?", array($_POST['urlalias'], $this->assetid))) {
 				$view->assign("errormessage", "Not saved. This url alias is already taken. Please choose another.");

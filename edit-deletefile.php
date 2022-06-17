@@ -8,6 +8,12 @@ if (!$user['roleid']) {
 	exit();
 }
 
+if ($user['actiontoken'] != $_REQUEST['at']) {
+	$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Tyron");
+	$view->display("400");
+	exit();
+}
+
 if (!empty($_POST["fileid"])) {
 	$fileid = $_POST["fileid"];
 	$file = $con->getRow("select * from file where fileid=?", array($fileid));

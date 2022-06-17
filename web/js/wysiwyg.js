@@ -1,6 +1,17 @@
 	
+	var mentions = {
+		source: function(query, process, delimiter) {
+			$.getJSON('/get-usernames?name=' + query, function(data) {
+				process(data);
+			});
+		},
+		insert: function(item) {
+			return '<span class="mention username">' + item.name + '</span>';
+		}
+	};
+	
 	var tinymceSettings = {
-		plugins: 'paste print preview searchreplace autolink autoresize directionality visualblocks visualchars fullscreen image link media codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime emoticons advlist lists wordcount imagetools textpattern help spoiler',
+		plugins: 'paste print preview searchreplace autolink autoresize directionality visualblocks visualchars fullscreen image link media codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime emoticons advlist lists wordcount imagetools textpattern help spoiler mention',
 		toolbar: 'formatselect | bold italic strikethrough forecolor backcolor permanentpen formatpainter | link image media pageembed emoticons | alignleft aligncenter alignright alignjustify  | numlist bullist outdent indent | removeformat | spoiler-add spoiler-remove',
 		image_advtab: true,
 		importcss_append: true,
@@ -10,7 +21,7 @@
 		relative_urls:false,
 		remove_script_host:false,
 		tinycomments_mode: 'embedded',
-		content_css: "/web/css/editor_content.css",
+		content_css: "/web/css/editor_content.css?ver=2",
 		setup: function (editor) {
 			editor.on('change', function(e) { 
 				tinyMCE.triggerSave(); 
@@ -22,12 +33,13 @@
 				var $form = $("#" + e.target.id).parents("form");
 				$form.trigger('checkform.areYouSure');
 			 });
-		}
+		},
+		mentions: mentions
 	};
 	
 	var tinymceSettingsCmt = {
 		menubar: false,
-		plugins: 'paste searchreplace autolink autoresize directionality image link codesample charmap hr pagebreak nonbreaking anchor emoticons advlist lists wordcount imagetools textpattern help',
+		plugins: 'paste searchreplace autolink autoresize directionality image link codesample charmap hr pagebreak nonbreaking anchor emoticons advlist lists wordcount imagetools textpattern help mention',
 		toolbar: 'bold italic strikethrough | link image emoticons | alignleft aligncenter alignright alignjustify  | numlist bullist outdent indent | removeformat',
 		image_advtab: true,
 		importcss_append: true,
@@ -37,7 +49,8 @@
 		relative_urls:false,
 		remove_script_host:false,
 		tinycomments_mode: 'embedded',
-		content_css: "/web/css/editor_content.css"
+		content_css: "/web/css/editor_content.css?ver=2",
+		mentions: mentions
 	};
 	tinymceSettingsCmt.setup = tinymceSettings.setup;
 	

@@ -1,4 +1,7 @@
 <?php
+if (empty($user)) {
+	$view->display("404");
+}
 
 $view->assign("user", $user);
 

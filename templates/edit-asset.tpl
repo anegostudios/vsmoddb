@@ -21,10 +21,12 @@
 	{/if}
 
 	<form method="post" name="deleteform">
+		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="delete" value="1">
 	</form>
 
 	<form method="post" name="form1">
+		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="assetid" value="{$asset['assetid']}">
 		<input type="hidden" name="numsaved" value="{$asset['numsaved']}">
@@ -221,7 +223,7 @@
 		});
 		
 	</script>	
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=21" async></script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=22" async></script>
 {/capture}
 
 {include file="footer"}

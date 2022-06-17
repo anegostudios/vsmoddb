@@ -103,6 +103,7 @@ function listMod($modid) {
 		$file = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
 		
 		$releases[] = array(
+			"releaseid" => $release['releaseid'],
 			"mainfile" => "asset/{$file['assetid']}/" . $file["filename"],
 			"filename" => $file["filename"],
 			"fileid" => $file['fileid'],
@@ -120,13 +121,14 @@ function listMod($modid) {
 		"name" => $row['name'],
 		"text" => $row['text'],
 		"author" => $row['author'],
-		"logofilename" => "asset/{$row['assetid']}/" . $row['logofilename'],
+		"logofilename" => $row['logofilename'] ? "asset/{$row['assetid']}/" . $row['logofilename'] : null,
 		"homepageurl" => $row['homepageurl'],
 		"sourcecodeurl" => $row['sourcecodeurl'],
 		"trailervideourl" => $row['trailervideourl'],
 		"issuetrackerurl" => $row['issuetrackerurl'],
 		"wikiurl" => $row['wikiurl'],
 		"downloads" => intval($row['downloads']),
+		"follows" => intval($row['follows']),
 		"comments" => intval($row['comments']),
 		"side" => $row['side'],
 		"created" => $row['created'],
@@ -188,9 +190,13 @@ function listMods() {
 		select 
 			asset.assetid, 
 			`mod`.modid, 
+			`mod`.side,
+			`mod`.type,
+			`mod`.urlalias,
 			asset.name,
 			logofilename, 
 			downloads, 
+			follows,
 			comments, 
 			tagscached,
 			group_concat(DISTINCT `release`.modidstr ORDER BY `release`.modidstr SEPARATOR ',') as modidstrs,
@@ -215,10 +221,14 @@ function listMods() {
 			"modid" => intval($row['modid']),
 			"assetid" => intval($row['assetid']),
 			"downloads" => intval($row['downloads']),
+			"follows" => intval($row['follows']),
 			"comments" => intval($row['comments']),
 			"name" => $row['name'],
 			"modidstrs" => explode(",", $row['modidstrs']),
 			"author" => $row['author'],
+			"urlalias" => $row['urlalias'],
+			"side" => $row['side'],
+			"type" => $row['type'],
 			"logo" => "files/asset/{$row['assetid']}/" . $row['logofilename'],
 			"tags" => $tags
 		);

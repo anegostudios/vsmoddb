@@ -17,7 +17,7 @@
      <script type="text/javascript" src="/web/js/ays-beforeunload-shim.js"></script>
 	<script type="text/javascript" src="/web/js/jquery.cookie.js"></script>
 
-	<script type="text/javascript" src="/web/js/wysiwyg.js?version=21"></script>
+	<script type="text/javascript" src="/web/js/wysiwyg.js?version=23"></script>
 	<script type="text/javascript" src="/web/js/tinymce/tinymce.min.js"></script>
 
 	<script type="text/javascript" src="/web/js/jquery.filedrop.js"></script>
@@ -34,13 +34,15 @@
 	<script type="text/javascript">
 		assetid = {if isset($asset['assetid'])}{$asset['assetid']}{else}0{/if};
 		assettypeid = {if isset($asset)}{$asset['assettypeid']}{else}0{/if};		
+		actiontoken = "{$user['actiontoken']}";
 		
 		$(document).ready(function() {
 			makeTabs();
 			
 			$("select").each(function() {
 				if ($(this).parents(".template").length == 0) {
-					$(this).chosen({ placeholder_text_multiple: " " });
+					var ds = $(this).attr("noSearch") == 'noSearch';
+					$(this).chosen({ placeholder_text_multiple: " ", disable_search:ds, });
 				}
 			});
 			

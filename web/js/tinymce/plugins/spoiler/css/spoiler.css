@@ -8,10 +8,12 @@
 
 .spoiler-toggle::before {
   content: "►";
+  vertical-align: bottom;
 }
 
 .spoiler-toggle.expanded::before {
   content: "▼";
+  vertical-align: bottom;
 }
 
 .spoiler-toggle {

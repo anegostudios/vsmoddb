@@ -2,14 +2,13 @@
 	{if $mod['statuscode']=='draft'}<span class="draftnotice">Draft</span>{/if}
 	<a href="{if $mod['urlalias']}/{$mod['urlalias']}{else}/show/mod/{$mod['assetid']}{/if}">
 		{if (empty($mod['logofilename']))}
-			<img src="/web/img/mod-default.png" loading="lazy">
+			<img src="/web/img/mod-default.png">
 		{else}
-			<img src="/files/asset/{$mod['assetid']}/{$mod['logofilename']}" loading="lazy">
+			<img src="/files/asset/{$mod['assetid']}/{$mod['logofilename']}">
 		{/if}
-		{if !empty($mod['following'])}<i title="You are following this mod" class="followed fas fa-star"></i>{/if}
 	</a>
 	
-	<div class="moddesc">
+	<div class="moddesc" style="line-height:125%">
 		<p class="stats">
 			<a href="{if $mod['urlalias']}/{$mod['urlalias']}{else}/show/mod/{$mod['assetid']}{/if}#tab-files"><img src="/web/img/download.png"> {intval($mod['downloads'])}</a><br>
 			<a href="{if $mod['urlalias']}/{$mod['urlalias']}{else}/show/mod/{$mod['assetid']}{/if}#comments"><img src="/web/img/comments.png"> {intval($mod['comments'])}</a>
@@ -22,11 +21,8 @@
 			{/if}
 			<br>by {$mod['from']}
 		</a>
-		
-		<div class="tags">
-			{foreach from=$mod['tags'] item=tag}
-				<a href="/list/mod/?tagids[]={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>
-			{/foreach}
-		</div>
+		<br>
+		Latest version: <a href="/show/mod/{$mod['assetid']}#tab-files">v{$mod['releaseversion']} from
+		<br>{fancyDate($mod['releasedate'])}</A>
 	</div>
 </div>

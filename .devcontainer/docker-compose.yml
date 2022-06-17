@@ -1,0 +1,58 @@
+version: '3.8'
+
+services: 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Update 'VARIANT' to pick a version of PHP version: 8, 8.1, 8.0, 7, 7.4
+        # Append -bullseye or -buster to pin to an OS version.
+        # Use -bullseye variants on local arm64/Apple Silicon.
+        VARIANT: "7.4"
+        # Optional Node.js version
+        NODE_VERSION: "lts/*"
+    volumes:
+      - ..:/workspace:cached
+
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+    restart: unless-stopped
+
+    # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
+    network_mode: service:db
+
+    # Uncomment the next line to use a non-root user for all processes.
+    # user: vscode
+
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+  db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+    volumes:
+      - mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: moddb
+      MYSQL_USER: vsmoddb
+      MYSQL_PASSWORD: vsmoddb
+
+  # mysql-workbench:
+  #   image: lscr.io/linuxserver/mysql-workbench
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Europe/London
+  #   volumes:
+  #     - ../:/vsmoddb
+  #   ports:
+  #     - 4444:3000
+  #   cap_add:
+  #     - IPC_LOCK
+  #   restart: unless-stopped
+  
+volumes:
+  mysql-data:

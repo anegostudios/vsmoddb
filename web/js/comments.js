@@ -1,6 +1,34 @@
 
 $(document).ready(function() {
+
+	$("a[href='#ordernewestfirst']").click(function() {
+	      var result = $('.comments > div').sort(function (a, b) {
+
+      	      var contentA = parseInt( $(a).attr('data-timestamp'));
+	      var contentB = parseInt( $(b).attr('data-timestamp'));
+	      return (contentA < contentB) ? 1 : (contentA > contentB) ? -1 : 0;
+	     });
+
+             $('.comments').html(result);
+	     $.cookie("commentsort", "newestfirst", { expires: 365 });
+
+	   return false;
+	});
 	
+	$("a[href='#orderoldestfirst']").click(function() {
+	      var result = $('.comments > div').sort(function (a, b) {
+      	      var contentA = parseInt( $(a).attr('data-timestamp'));
+	      var contentB = parseInt( $(b).attr('data-timestamp'));
+	      return (contentA < contentB) ? -1 : (contentA > contentB) ? 1 : 0;
+	    });
+
+             $('.comments').html(result);
+	     $.cookie("commentsort", "oldestfirst", { expires: 365 });
+   	    return false;
+	});
+
+	if ($.cookie("commentsort") == "oldestfirst") $("a[href='#orderoldestfirst']").trigger("click");
+
 	$("a[href='#addcomment']").click(function() {
 		$(".comments .comment.template").toggle();
 		$('form[name=commentformtemplate]').trigger('reinitialize.areYouSure');
@@ -13,7 +41,7 @@ $(document).ready(function() {
 		$self = $(this);
 		if (confirm("Really delete comment?")) {
 			var commentid = $self.attr("data-commentid");
-			$.post('/delete-comment', { commentid: commentid, delete: 1  }, function(response) {
+			$.post('/delete-comment', { commentid: commentid, at: actiontoken, delete: 1  }, function(response) {
 				var $elem = $self.parents(".comment");
 				$elem.remove();
 			});
@@ -57,13 +85,13 @@ $(document).ready(function() {
 		$("button[name='save']", $elem).click(function() {
 			var html = getEditorContents($('.editcommenteditor'));
 
-			$.post('/edit-comment', { commentid: commentid, text: html, save: 1  }, function(response) {
+			$.post('/edit-comment', { commentid: commentid, text: html, at: actiontoken, save: 1  }, function(response) {
 				var data = $.parseJSON(response).comment;
 				
 				destroyEditor($('.editcommenteditor'));
 				
 				var $cmt = $(
-					'<div class="editbox comment" style="clear:both; width: 1007px; max-width: 1007px;">'+
+					'<div class="editbox comment" style="clear:both;">'+
 						'<div class="title">'+data.username +', '+data.created+getCmtLinks(commentid)+'</div>'+
 						'<div class="body">'+data.text+'</div>'+
 					'</div>'
@@ -82,11 +110,11 @@ $(document).ready(function() {
 	$(".comments .comment.template button[name='save']").click(function() {
 		var $elem =  $(this).parents(".comment");
 		
-		$.post('/edit-comment', { assetid:assetid, text: getEditorContents($("textarea", $elem)), save: 1 }, function(response) {
+		$.post('/edit-comment', { assetid:assetid, text: getEditorContents($("textarea", $elem)), at: actiontoken, save: 1 }, function(response) {
 			var data = $.parseJSON(response).comment;
 			
 			var $cmt = $(
-				'<div class="editbox comment" style="clear:both; width: 1007px; max-width: 1007px;">'+
+				'<div class="editbox comment" style="clear:both;">'+
 					'<div class="title">'+data.username+', '+data.created+getCmtLinks(data.commentid)+'</div>'+
 					'<div class="body">'+data.text+'</div>'+
 				'</div>'
