@@ -120,7 +120,7 @@ function listMod($modid) {
 		"name" => $row['name'],
 		"text" => $row['text'],
 		"author" => $row['author'],
-		"logofilename" => "asset/{$row['assetid']}/" . $row['logofilename'],
+		"logofilename" => $row['logofilename'] ? "asset/{$row['assetid']}/" . $row['logofilename'] : null,
 		"homepageurl" => $row['homepageurl'],
 		"sourcecodeurl" => $row['sourcecodeurl'],
 		"trailervideourl" => $row['trailervideourl'],
