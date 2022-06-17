@@ -169,7 +169,7 @@ function listMods() {
 		$gvs = $_GET["gameversions"];
 	}
 	if (!empty($_GET["gv"])) {
-		$gvs = $_GET["gv"];
+		$gvs = array($_GET["gv"]);
 	}
 	
 	if ($gvs) {
