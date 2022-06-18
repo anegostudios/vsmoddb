@@ -665,7 +665,7 @@ h2 .title {
 	padding-left:0px;
 	padding-top:0px;
     float:left;
-	min-height: 46px;
+	height: 59px;
 }
 
 .searchbox.linebreak {

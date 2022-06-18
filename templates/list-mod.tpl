@@ -28,7 +28,7 @@
 		
 		<div class="searchbox">
 			<label>Author</label>
-			<select style="width:300px;" name="userid">
+			<select style="width:150px;" name="userid">
 				<option value="">-</option>
 				{foreach from=$authors item=author}
 					<option value="{$author['userid']}" {if !empty($searchvalues['userid']) && $searchvalues['userid'] == $author['userid']}selected="selected"{/if}>{$author['name']}</option>
@@ -48,7 +48,7 @@
 		
 		<div class="searchbox">
 			<label>Game Version Exact</label>
-			<select style="width:300px;" name="gv[]" multiple>
+			<select style="width:160px;" name="gv[]" multiple>
 				<option value="">-</option>
 				{foreach from=$versions item=tag}
 					<option value="{$tag['tagid']}" {if !empty($searchvalues['gameversions'][$tag['tagid']])}selected="selected"{/if}>{$tag['name']}</option>
@@ -58,7 +58,7 @@
 
 		<div class="searchbox">
 			<p style="height:6px;"></p>
-			<button type="submit" name="">Search</button>
+			<button type="submit" name="" style="padding:6px 12px;">Search</button>
 		</div>
 	</form>
 	
