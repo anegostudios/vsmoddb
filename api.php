@@ -46,6 +46,50 @@ switch ($action) {
 		}
 		listMod($urlparts[1]);
 		break;
+		
+	case "authors":
+		$rows = $con->getAll("select userid, name from user");
+		$authors = array();
+		foreach ($rows as $row) {
+			$authors[] = array(
+				"userid" => intval($row["userid"]),
+				"name" => $row['name']
+			);
+		}
+		good(array("statuscode" => 200, "authors" => $authors));
+		break;
+
+	case "comments":
+		$rows = $con->getAll("select commentid, assetid, userid, text, created, lastmodified from comment");
+		$comments = array();
+		foreach ($rows as $row) {
+			$comments[] = array(
+				"commentid" => intval($row["commentid"]),
+				"assetid" => intval($row["assetid"]),
+				"userid" => intval($row["userid"]),
+				"text" => $row['text'],
+				"created" => $row['created'],
+				"lastmodified" => $row['lastmodified']
+			);
+		}
+		good(array("statuscode" => 200, "comments" => $comments));
+		break;
+
+	case "changelogs":
+		$rows = $con->getAll("select changelogid, assetid, userid, text, created, lastmodified from changelog");
+		$changelogs = array();
+		foreach ($rows as $row) {
+			$changelogs[] = array(
+				"changelogid" => intval($row["commentid"]),
+				"assetid" => intval($row["assetid"]),
+				"userid" => intval($row["userid"]),
+				"text" => $row['text'],
+				"created" => $row['created'],
+				"lastmodified" => $row['lastmodified']
+			);
+		}
+		good(array("statuscode" => 200, "changelogs" => $changelogs));
+		break;
 }
 
 
