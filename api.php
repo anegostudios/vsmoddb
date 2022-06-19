@@ -279,7 +279,7 @@ function listMods()
 			"urlalias" => $row['urlalias'],
 			"side" => $row['side'],
 			"type" => $row['type'],
-			"logo" => "files/asset/{$row['assetid']}/" . $row['logofilename'],
+			"logo" => $row['logofilename'] ? "files/asset/{$row['assetid']}/" . $row['logofilename'] : null,
 			"tags" => $tags
 		);
 	}
