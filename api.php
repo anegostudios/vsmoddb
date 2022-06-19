@@ -209,6 +209,10 @@ function listMods()
 		}
 	}
 
+	if (!empty($_GET["author"])) {
+		$wheresql[] = "userid=?";
+		$wherevalues[] = intval($_GET["author"]);
+	}
 
 	if (!empty($_GET["gameversion"])) {
 		$wheresql[] = "exists (select assettag.tagid from assettag where assettag.assetid in (select assetid from `release` where `mod`.modid =`release`.modid) and assettag.tagid=?)";
