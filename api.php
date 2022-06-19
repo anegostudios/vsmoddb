@@ -274,7 +274,7 @@ function listMods()
 			"follows" => intval($row['follows']),
 			"comments" => intval($row['comments']),
 			"name" => $row['name'],
-			"modidstrs" => explode(",", $row['modidstrs']),
+			"modidstrs" => !empty($row['modidstrs']) ? explode(",", $row['modidstrs']) : array(),
 			"author" => $row['author'],
 			"urlalias" => $row['urlalias'],
 			"side" => $row['side'],
