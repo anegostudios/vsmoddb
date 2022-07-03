@@ -35,16 +35,60 @@ switch ($action) {
 		}
 		good(array("statuscode" => 200, "gameversions" => $tags));
 		break;
-		
+
 	case "mods":
 		listMods();
 		break;
-		
+
 	case "mod";
 		if (empty($urlparts[1])) {
 			fail("400");
 		}
 		listMod($urlparts[1]);
+		break;
+
+	case "authors":
+		$rows = $con->getAll("select userid, name from user");
+		$authors = array();
+		foreach ($rows as $row) {
+			$authors[] = array(
+				"userid" => intval($row["userid"]),
+				"name" => $row['name']
+			);
+		}
+		good(array("statuscode" => 200, "authors" => $authors));
+		break;
+
+	case "comments":
+		$rows = $con->getAll("select commentid, assetid, userid, text, created, lastmodified from comment");
+		$comments = array();
+		foreach ($rows as $row) {
+			$comments[] = array(
+				"commentid" => intval($row["commentid"]),
+				"assetid" => intval($row["assetid"]),
+				"userid" => intval($row["userid"]),
+				"text" => $row['text'],
+				"created" => $row['created'],
+				"lastmodified" => $row['lastmodified']
+			);
+		}
+		good(array("statuscode" => 200, "comments" => $comments));
+		break;
+
+	case "changelogs":
+		$rows = $con->getAll("select changelogid, assetid, userid, text, created, lastmodified from changelog");
+		$changelogs = array();
+		foreach ($rows as $row) {
+			$changelogs[] = array(
+				"changelogid" => intval($row["changelogid"]),
+				"assetid" => intval($row["assetid"]),
+				"userid" => intval($row["userid"]),
+				"text" => $row['text'],
+				"created" => $row['created'],
+				"lastmodified" => $row['lastmodified']
+			);
+		}
+		good(array("statuscode" => 200, "changelogs" => $changelogs));
 		break;
 }
 
@@ -52,22 +96,25 @@ switch ($action) {
 fail("400");
 
 
-function fail($statuscode) {
+function fail($statuscode)
+{
 	exit(json_encode(array("statuscode" => $statuscode)));
 }
 
-function good($data) {
+function good($data)
+{
 	$data["statuscode"] = "200";
 	exit(json_encode($data));
 }
 
-function listMod($modid) {
+function listMod($modid)
+{
 	global $con;
-	
+
 	if ($modid != "" . intval($modid)) {
 		$modid = $con->getOne("select modid from `release` where `release`.modidstr=?", array($modid));
 	}
-	
+
 	$row = $con->getRow("select 
 			asset.assetid, 
 			asset.name,
@@ -83,9 +130,9 @@ function listMod($modid) {
 			asset.statusid=2
 			and modid=?
 	", array($modid));
-	
+
 	if (empty($row)) fail("404");
-	
+
 	$rrows = $con->getAll("
 		select 
 			`release`.*,
@@ -101,9 +148,9 @@ function listMod($modid) {
 	foreach ($rrows as $release) {
 		$tags = resolveTags($release["tagscached"]);
 		$file = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
-		
+
 		$releases[] = array(
-			"releaseid" => $release['releaseid'],
+			"releaseid" => intval($release['releaseid']),
 			"mainfile" => "asset/{$file['assetid']}/" . $file["filename"],
 			"filename" => $file["filename"],
 			"fileid" => $file['fileid'] ? intval($file['fileid']) : null,
@@ -114,13 +161,14 @@ function listMod($modid) {
 			"created" => $release["created"]
 		);
 	}
-	
+
 	$mod = array(
 		"modid" => intval($row["modid"]),
 		"assetid" => intval($row["assetid"]),
 		"name" => $row['name'],
 		"text" => $row['text'],
 		"author" => $row['author'],
+		"urlalias" => $row['urlalias'],
 		"logofilename" => $row['logofilename'] ? "asset/{$row['assetid']}/" . $row['logofilename'] : null,
 		"homepageurl" => $row['homepageurl'],
 		"sourcecodeurl" => $row['sourcecodeurl'],
@@ -131,41 +179,47 @@ function listMod($modid) {
 		"follows" => intval($row['follows']),
 		"comments" => intval($row['comments']),
 		"side" => $row['side'],
+		"type" => $row['type'],
 		"created" => $row['created'],
 		"lastmodified" => $row['lastmodified'],
 		"tags" => resolveTags($row['tagscached']),
 		"releases" => $releases
 	);
-	
+
 	good(array("statuscode" => 200, "mod" => $mod));
 }
 
-function listMods() {
+function listMods()
+{
 	global $con;
-	
+
 	$wheresql = array();
 	$wherevalues = array();
-	
+
 	if (!empty($_GET["text"])) {
 		$wheresql[] = "(asset.name like ? or asset.text like ?)";
 		$wherevalues[] = "%" . $_GET["text"] . "%";
 		$wherevalues[] = "%" . $_GET["text"] . "%";
 	}
-	
-	if(!empty($_GET["tagids"])) {
-		foreach($_GET["tagids"] as $tagid) {
+
+	if (!empty($_GET["tagids"])) {
+		foreach ($_GET["tagids"] as $tagid) {
 			$wheresql[] = "exists (select assettag.tagid from assettag where assettag.assetid=asset.assetid and assettag.tagid=?)";
 			$wherevalues[] = $tagid;
-		}		
+		}
 	}
 
+	if (!empty($_GET["author"])) {
+		$wheresql[] = "userid=?";
+		$wherevalues[] = intval($_GET["author"]);
+	}
 
 	if (!empty($_GET["gameversion"])) {
 		$wheresql[] = "exists (select assettag.tagid from assettag where assettag.assetid in (select assetid from `release` where `mod`.modid =`release`.modid) and assettag.tagid=?)";
 		$wherevalues[] = intval($_GET["gameversion"]);
 	}
-	
-	
+
+
 	$gvs = null;
 	if (!empty($_GET["gameversions"])) {
 		$gvs = $_GET["gameversions"];
@@ -173,18 +227,18 @@ function listMods() {
 	if (!empty($_GET["gv"])) {
 		$gvs = array($_GET["gv"]);
 	}
-	
+
 	if ($gvs) {
 		$gamevers = array();
-		foreach($gvs as $gameversion) {
+		foreach ($gvs as $gameversion) {
 			$gamevers[] = intval($gameversion);
 		}
-		$wheresql[] = "exists (select 1 from modversioncached where `mod`.modid =`modversioncached`.modid and modversioncached.tagid in (".implode(",", $gamevers)."))";
+		$wheresql[] = "exists (select 1 from modversioncached where `mod`.modid =`modversioncached`.modid and modversioncached.tagid in (" . implode(",", $gamevers) . "))";
 	}
 
-	
+
 	$wheresql[] = "asset.statusid=2";
-	
+
 
 	$rows = $con->getAll("
 		select 
@@ -212,11 +266,11 @@ function listMods() {
 	", $wherevalues);
 	$mods = array();
 	foreach ($rows as $row) {
-		
+
 		$tags = resolveTags($row["tagscached"]);
-		
-		
-		
+
+
+
 		$mods[] = array(
 			"modid" => intval($row['modid']),
 			"assetid" => intval($row['assetid']),
@@ -224,29 +278,30 @@ function listMods() {
 			"follows" => intval($row['follows']),
 			"comments" => intval($row['comments']),
 			"name" => $row['name'],
-			"modidstrs" => explode(",", $row['modidstrs']),
+			"modidstrs" => !empty($row['modidstrs']) ? explode(",", $row['modidstrs']) : array(),
 			"author" => $row['author'],
 			"urlalias" => $row['urlalias'],
 			"side" => $row['side'],
 			"type" => $row['type'],
-			"logo" => "files/asset/{$row['assetid']}/" . $row['logofilename'],
+			"logo" => $row['logofilename'] ? "files/asset/{$row['assetid']}/" . $row['logofilename'] : null,
 			"tags" => $tags
 		);
 	}
-	
-	good(array("statuscode" => 200, "mods" => $mods));	
+
+	good(array("statuscode" => 200, "mods" => $mods));
 }
 
-function resolveTags($tagscached) {
+function resolveTags($tagscached)
+{
 	$tags = array();
 	$tagscached = trim($tagscached);
 	if (!empty($tagscached)) {
 		$tagdata = explode("\r\n", $tagscached);
-		foreach($tagdata as $tagrow) {
+		foreach ($tagdata as $tagrow) {
 			$parts = explode(",", $tagrow);
 			$tags[] = $parts[0];
 		}
 	}
-	
+
 	return $tags;
 }

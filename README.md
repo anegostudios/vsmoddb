@@ -32,14 +32,31 @@ List all game version tags
 
 Example: http://mods.vintagestory.at/api/gameversions
 
+### /api/authors
+List all authors (users)
+
+Example: http://mods.vintagestory.at/api/authors
+
+### /api/comments
+List all comments
+
+Example: http://mods.vintagestory.at/api/comments
+
+### /api/changelogs
+List all changelogs
+
+Example: http://mods.vintagestory.at/api/changelogs
+
 ### /api/mods
 List all mods
 
 Example: http://mods.vintagestory.at/api/mods
 
 Get Parameters:<br>
-**tagids[]**: Filter by tag id<br>
-**gameversion**: Filter by game version id<br>
+**tagids[]**: Filter by tag id (AND)<br>
+**gameversion** or **gv**: Filter by game version id<br>
+**gameversions[]**: Filter by game version ids (OR)<br>
+**author**: Filter by author id<br>
 **text**: Search by mod text and title<br>
 
 Search Example: http://mods.vintagestory.at/api/mods?text=jack&tagids[]=7&tagids[]=8
