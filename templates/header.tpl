@@ -77,6 +77,7 @@
 							<li class="menuitem"><a href="/list/tag">Tags</a></li>
 						</ul>
 					</li>
+					{/if}
 					<li class="mainmenuitem right icon" style="position:relative">
 						<a href="#">
 							<span class="notificationcount {if $notificationcount>0}visible{/if}">{$notificationcount}</span>
@@ -84,14 +85,13 @@
 						</a>
 						<ul class="submenu notifications">
 						{foreach from=$notifications item=notification}
-							<li style="clear:both;" class="menuitem"><a href="{$notification['link']}">{$notification['text']}<br>{fancyDate($notification['created'])}</a><!--<a href="#" style="float:right"><i style="color: white; font-size: 22px;" class="fa fa-trash"></i></a>--></li>
+							<li style="clear:both;" class="menuitem"><a href="{$notification['link']}">{$notification['text']}{if $notification['type']!='clearall'}<br>{fancyDate($notification['created'])}{/if}</a></li>
 						{/foreach}
 						{if $notificationcount==0}
 							<li class="menuitem nolink" style="display:block;"><span>No new notifications, you're all caught up!</a></li>
 						{/if}
 						</ul>
 					</li>
-					{/if}
 					
 
 					

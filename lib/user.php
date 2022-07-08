@@ -69,6 +69,10 @@ function loadNotifications() {
 		
 		$notification['link'] = "/notification/{$notification['notificationid']}";
 	}
+
+	if (count($notifications)) {
+		$notifications[] = array('type' => 'clearall', 'text' => 'Clear all notifications', 'recorid'=>'clear', 'link' => '/notification/clearall');
+	}
 	
 	$view->assign("notifications", $notifications);
 }

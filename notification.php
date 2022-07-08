@@ -5,6 +5,11 @@ if (empty($user)) {
 	exit();
 }
 
+if ($urlparts[1] == 'clearall') {
+	$con->Execute("update notification set `read`=1 where userid=?", array($user['userid']));
+	header("Location: /");
+	exit();
+}
 
 $not = $con->getRow("select * from notification where notificationid=?", array($urlparts[1]));
 
@@ -13,7 +18,7 @@ if (empty($not)) {
 	exit();
 }
 
-$con->Execute("update notification set `read`=1 where notificationid=?", array($not['notificationid']));
+$con->Execute("update notification set `read`=1 where notificationid=? and userid=?", array($not['notificationid'], $user['userid']));
 
 if ($not['type'] == "newrelease") { 
 	
