@@ -24,4 +24,14 @@
 					<a href="/download?fileid={$file['fileid']}&at={$user['actiontoken']}" class="download">&#11123;</a>
 				</div>
 			{/foreach}
+			
+			{if !empty($formupload)}
+			<div class="file">
+				<div class="editbox">
+					<p>Upload new file (or drag and drop, max file size: {$fileuploadmaxsize} MB)</p>
+					<input type="file" name="newfile">
+				</div>
+			</div>
+			{/if}
+			
 		</div>

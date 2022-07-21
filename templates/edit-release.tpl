@@ -29,7 +29,7 @@
 		<input type="hidden" name="delete" value="1">
 	</form>
 
-	<form method="post" name="form1">
+	<form method="post" name="form1" enctype="multipart/form-data">
 		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="assetid" value="{$asset['assetid']}">
@@ -83,9 +83,9 @@
 		{/if}
 
 		<div style="clear:both;"></div>
-		<h3>Files<span style="float:right; font-size:70%;">(drag&drop to upload{if (count($files) > 0)}, <a href="/download?assetid={$asset['assetid']}">download all as zip</a>{/if})</span></h3>
+		<h3>Files{if (count($files) > 0)}<span style="float:right; font-size:70%;">(<a href="/download?assetid={$asset['assetid']}">download all as zip</a>)</span>{/if}</h3>
 
-		{include file="edit-asset-files.tpl"}
+		{include file="edit-asset-files.tpl" formupload="1"}
 		
 		</form>
 

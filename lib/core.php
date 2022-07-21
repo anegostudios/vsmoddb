@@ -1,5 +1,6 @@
 <?php
 	header('Content-Type: text/html; charset=utf-8');
+	header('X-Frame-Options: DENY');
 	
 	global $config, $con, $view;
 	error_reporting(E_ALL & ~E_DEPRECATED);
@@ -21,6 +22,7 @@
 	include($config["basepath"] . "lib/assetcontroller.php");
 	include($config["basepath"] . "lib/assetlist.php");
 	include($config["basepath"] . "lib/asseteditor.php");
+	include($config["basepath"] . "lib/fileupload.php");
 	
 	
 	$rd = opendir($config["basepath"] . "lib/assetimpl");
@@ -35,6 +37,7 @@
 	
 	include($config["basepath"] . "lib/user.php");
 
+	$view->assign("fileuploadmaxsize", round(file_upload_max_size() / 1024 / 1024, 1));
 	
 	$ADODB_FETCH_MODE = ADODB_FETCH_ASSOC; 
 	

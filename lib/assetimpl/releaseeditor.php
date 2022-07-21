@@ -3,8 +3,8 @@
 class ReleaseEditor extends AssetEditor {
 	
 	var $savestatus = null;
-	
-	
+	var $fileuploadstatus;
+
 	function __construct() {
 		$this->editTemplateFile = "edit-release";
 		
@@ -32,6 +32,13 @@ class ReleaseEditor extends AssetEditor {
 		$view->assign("modtype", $modtype);
 		
 		parent::load();
+		
+		if ($this->savestatus == "invalidfile") {
+			$view->assign("errormessage", $this->fileuploadstatus['errormessage']);
+		}
+		if ($this->savestatus == "onlyonefile") {
+			$view->assign("errormessage", "Can't save. Already a file uploaded. Please delete old file first");
+		}
 		
 		if ($this->assetid) {
 			$modid = $this->asset["modid"];
@@ -69,12 +76,27 @@ class ReleaseEditor extends AssetEditor {
 		
 		$modid = null;
 		$file=null;
-	
 		$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
+
+
+		if (!empty($_FILES["newfile"]) && $_FILES["newfile"]["error"] != 4) {
+			if ($this->assetid && $con->getRow("select * from file where assetid=?", array($this->assetid))) return "onlyonefile";
+		
+			$this->fileuploadstatus = processFileUpload($_FILES["newfile"], $assettypeid, 0);
+			
+			if ($this->fileuploadstatus["status"] != "ok") {
+				return "invalidfile";
+			}
+			
+			if ($this->assetid) {
+				update("file", $this->fileuploadstatus['fileid'], array("assetid" => $this->assetid));
+			}
+		}
+	
 		if ($this->assetid) $file = $con->getRow("select * from file where assetid=?", array($this->assetid));
 		if (!$file) $file = $con->getRow("select * from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
 		if (!$file) return "missingfile";
-		
+				
 		if ($this->assetid) {
 			$filepath = "files/asset/{$this->assetid}/{$file['filename']}";
 		} else {
@@ -83,19 +105,25 @@ class ReleaseEditor extends AssetEditor {
 		
 		if ($this->moddtype == "mod") {
 			$modinfo = getModInfo($filepath);
-			
+				
 			if ($modinfo['modparse'] == 'ok') {
 				$modidstr = $modinfo['modid']; 
 				$modversion = $modinfo['modversion'];
 			} else {
 				$view->assign("allowinfoedit", true);
 
-				if (empty($_POST['modidstr']) || empty($_POST['modversion'])) {
-					return 'missingmodinfo';
+				if ($this->assetid && (empty($_POST['modidstr']) || empty($_POST['modversion']))) {
+					$release = $con->getRow("select * from `release` where assetid=?", array($this->assetid));
+					$modidstr = $release['modidstr'];
+					$modversion = $release['modversion'];
+				} else {
+					$modidstr = $_POST['modidstr'];
+					$modversion = $_POST['modversion'];
 				}
 				
-				$modidstr = $_POST['modidstr'];
-				$modversion = $_POST['modversion'];
+				if (empty($modidstr) || empty($modversion)) {
+					return 'missingmodinfo';
+				}
 			}
 
 			
@@ -129,6 +157,18 @@ class ReleaseEditor extends AssetEditor {
 			} else {
 				update("release", $releaseid, array("detectedmodidstr" => null));
 			}
+		}
+		
+		if ($status == "invalidfile" || $status == "onlyonefile") {
+			foreach ($this->columns as $column) {
+				$col = $column["code"];
+				$val = null;
+				if (!empty($_POST[$col])) {
+					$this->asset[$col] = $_POST[$col];
+				}
+			}
+		
+			$view->assign("errormessage", $this->fileuploadstatus["errormessage"]);
 		}
 		
 		$modid = $con->getOne("select modid from `release` where assetid=?", array($this->assetid));
