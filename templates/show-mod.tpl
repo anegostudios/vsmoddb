@@ -1,4 +1,17 @@
-{include file="header"}
+{assign var="first" value="1"}
+{capture name="head"}
+<meta content="{$asset['name']}" property="og:title" />
+<meta content="{strip_tags($assetraw['text'])}" property="og:description" />
+<meta name="twitter:card" content="summary_large_image">
+{if (empty($asset['logofilename']))}
+<meta content="/web/img/mod-default.png" property="og:image" />
+{else}
+<meta content="/files/asset/{$asset['assetid']}/{$asset['logofilename']}" property="og:image" />
+{/if}
+<meta content="#91A357" data-react-helmet="true" name="theme-color" />
+{/capture}
+
+{include file="header" pagetitle="`$asset['name']` - "}
 
 <div class="edit-asset mods mod-{$asset['statuscode']}">
 	{if $asset['assetid']}
@@ -24,8 +37,8 @@
 	{/if}
 	
 	<ul class="tabs">
-		<li><a href="#description">Description</a></li>
-		<li><a href="#files">Files</a></li>
+		<li><a href="#tab-description">Description</a></li>
+		<li><a href="#tab-files">Files</a></li>
 		{if $asset['homepageurl']}
 			<li><a href="{$asset['homepageurl']}"><img src="/web/img/externallink.png" height="18"> Homepage</a></li>
 		{/if}

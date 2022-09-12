@@ -15,8 +15,8 @@ function makeTabs() {
 			return false;
 		}
 		
-		var activeTab = $(this).find("a").attr("href");
-		console.log(activeTab);
+		var activeTab = "#" + $(this).find("a").attr("href").substr(5);
+		
 		
 		if (activeTab.startsWith('http')) return true;
 		
@@ -35,6 +35,7 @@ function makeTabs() {
 	});
 	
 	if (location.hash.startsWith('#tab-')) {
-		$("a[href=#"+location.hash.substr(5)+"]").trigger("click");
+		$("a[href="+location.hash+"]").trigger("click");
+		window.scrollTo(0, 0);
 	}
 }

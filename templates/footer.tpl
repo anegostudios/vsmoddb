@@ -24,7 +24,7 @@
 	<script type="text/javascript" src="/web/js/datepicker.min.js"></script>
 	<script type="text/javascript" src="/web/js/i18n/datepicker.en.js"></script>
 	
-	<script type="text/javascript" src="/web/js/tabs.js"></script>
+	<script type="text/javascript" src="/web/js/tabs.js?version=5"></script>
 	
 	<script type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 	 

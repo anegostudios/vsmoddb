@@ -16,6 +16,7 @@
 				{foreach from=$comments item=comment}
 					<div id="cmt-{$comment['commentid']}" class="editbox comment" data-timestamp="{strtotime($comment['created'])}" style="clear:both;">
 						<div class="title">
+							<a style="text-decoration:none;" href="#cmt-{$comment['commentid']}">&#128172;</a>
 							{$comment['username']}, {fancyDate($comment['created'])} {if $comment['modifieddate']}(modified at {$comment['modifieddate']}){/if}
 							{if !empty($user) && $comment["userid"] == $user["userid"]}
 								<span class="buttonlinks">

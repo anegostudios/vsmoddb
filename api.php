@@ -8,6 +8,7 @@ if (empty($urlparts)) {
 }
 
 $action = $urlparts[0];
+
 switch ($action) {
 	case "tags":
 		$rows = $con->getAll("select tagid, name, text, color from tag where assettypeid=1");
@@ -22,6 +23,7 @@ switch ($action) {
 		}
 		good(array("statuscode" => 200, "tags" => $tags));
 		break;
+		
 	case "gameversions":
 		$rows = $con->getAll("select tagid, name, text, color from tag where assettypeid=2");
 		$tags = array();
