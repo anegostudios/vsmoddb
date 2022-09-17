@@ -43,6 +43,10 @@ a:hover {
 	height: 60px;
 }
 
+.whitetext {
+	color: white;
+}
+
 
 .logo img {
 	width: 280px; 
@@ -755,7 +759,7 @@ input[type="submit"] {
 	display:none;
 }
 .buttonlinks {
-	float:right;
+	display:inline-block;
 }
 
 .comment {

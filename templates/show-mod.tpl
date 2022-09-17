@@ -62,6 +62,11 @@
 						href="/edit/mod/?assetid=`$asset['assetid']`"
 						buttontext="Edit"
 					}
+					{include
+						file="button"
+						href="/edit/release/?modid=`$asset['modid']`"
+						buttontext="Add release"
+					}
 				{/if}
 			</div>
 		
@@ -200,7 +205,7 @@
 		});
 	});
 </script>
-<script type="text/javascript" src="/web/js/comments.js?version=5" async></script>
+<script type="text/javascript" src="/web/js/comments.js?version=7" async></script>
 {/capture}
 
 {include file="footer"}

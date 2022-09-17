@@ -17,7 +17,7 @@
      <script type="text/javascript" src="/web/js/ays-beforeunload-shim.js"></script>
 	<script type="text/javascript" src="/web/js/jquery.cookie.js"></script>
 
-	<script type="text/javascript" src="/web/js/wysiwyg.js?version=23"></script>
+	<script type="text/javascript" src="/web/js/wysiwyg.js?version=24"></script>
 	<script type="text/javascript" src="/web/js/tinymce/tinymce.min.js"></script>
 
 	<script type="text/javascript" src="/web/js/jquery.filedrop.js"></script>

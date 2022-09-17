@@ -1,10 +1,12 @@
 
+initialized=false;
+
 $(document).ready(function() {
 
 	$("a[href='#ordernewestfirst']").click(function() {
 	      var result = $('.comments > div').sort(function (a, b) {
 
-      	      var contentA = parseInt( $(a).attr('data-timestamp'));
+      	  var contentA = parseInt( $(a).attr('data-timestamp'));
 	      var contentB = parseInt( $(b).attr('data-timestamp'));
 	      return (contentA < contentB) ? 1 : (contentA > contentB) ? -1 : 0;
 	     });
@@ -16,26 +18,28 @@ $(document).ready(function() {
 	});
 	
 	$("a[href='#orderoldestfirst']").click(function() {
-	      var result = $('.comments > div').sort(function (a, b) {
-      	      var contentA = parseInt( $(a).attr('data-timestamp'));
+	    var result = $('.comments > div').sort(function (a, b) {
+      	  var contentA = parseInt( $(a).attr('data-timestamp'));
 	      var contentB = parseInt( $(b).attr('data-timestamp'));
 	      return (contentA < contentB) ? -1 : (contentA > contentB) ? 1 : 0;
 	    });
 
-             $('.comments').html(result);
-	     $.cookie("commentsort", "oldestfirst", { expires: 365 });
+        $('.comments').html(result);
+	    $.cookie("commentsort", "oldestfirst", { expires: 365 });
    	    return false;
 	});
 
 	if ($.cookie("commentsort") == "oldestfirst") $("a[href='#orderoldestfirst']").trigger("click");
 
-	$("a[href='#addcomment']").click(function() {
-		$(".comments .comment.template").toggle();
+	$(".comments .comment.template").toggle();
+	$(".comments .comment.template textarea").focus(function() {
+		if (initialized) return;
+		$(this).removeClass("whitetext");
+		initialized=true;
 		$('form[name=commentformtemplate]').trigger('reinitialize.areYouSure');
-		
 		createEditor($('.comment.template textarea[name=commenttext]'), tinymceSettingsCmt);
-		return false;
 	});
+	
 	
 	$(document).on("click", "a[href='#deletecomment']", function() {
 		$self = $(this);
@@ -73,14 +77,14 @@ $(document).ready(function() {
 		var commentid = $(this).attr("data-commentid");
 		
 		$elem.data("body", $(".body", $elem).html());
-		var $form = $('<form name="commentformedit"><textarea name="commenttext" class="editor editcommenteditor" data-editorname="editcomment" style="width: 994px; height: 135px;">'+$(".body", $elem).html()+'</textarea></form>');
+		var $form = $('<form name="commentformedit"><textarea name="commenttext" class="editor editcommenteditor" data-editorname="editcomment" style="width: 100%; height: 135px;">'+$(".body", $elem).html()+'</textarea></form>');
 		$(".body", $elem).html($form);
 		
 		$form.areYouSure();
 		
 		createEditor($('.editcommenteditor'), tinymceSettingsCmt);
 			
-		$elem.append($('<p class="updateCmt" style="margin-top:5px; margin-bottom:4px; float:right; clear:both; margin-right: 4px;"><button type="submit" name="save">Update Comment</button>'));
+		$elem.append($('<p class="updateCmt" style="margin:4px; margin-top:5px; clear:both;"><button type="submit" name="save">Update Comment</button>'));
 		
 		$("button[name='save']", $elem).click(function() {
 			var html = getEditorContents($('.editcommenteditor'));
