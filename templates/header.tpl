@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title>{$pagetitle}Vintage Story Mod DB</title>
+	<title>{if isset($pagetitle)}{$pagetitle}{/if}Vintage Story Mod DB</title>
 	
 
 	<link rel="apple-touch-icon" sizes="180x180" href="/web/favicon/apple-touch-icon.png">
@@ -15,7 +15,7 @@
 
 	<script src="https://kit.fontawesome.com/1abebfb8d4.js" crossorigin="anonymous"></script>
 
-	<link href="/web/css/style.css?version=17" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=18" rel="stylesheet" type="text/css">
 	<link href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/dialog.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">

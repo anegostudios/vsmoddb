@@ -1,17 +1,20 @@
 			<div style="clear:both;"><br></div>
 			<h3><a name="comments"></a>{count($comments)} Comments <span style="font-size:70%">(<a href="#orderoldestfirst">oldest first</a> | <a href="#ordernewestfirst">newest first</a>)</span></h3>
 			<div class="comments">
+				{if !empty($user)}
 				<div class="comment template editbox" style="clear:both;">
 					<div class="title">
-						{if !empty($user)}{$user['name']}, 0 seconds ago{/if}
+						{$user['name']}, 0 seconds ago
 					</div>
 					<div class="body">
+						
 						<form name="commentformtemplate">
 							<textarea name="commenttext" class="whitetext editor" data-editorname="comment" style="width: 100%; height: 50px;"></textarea>
 						</form>
 					</div>
 					<p style="margin:4px; margin-top:5px;"><button type="submit" name="save">Add Comment</button>
 				</div>
+				{/if}
 			
 				{foreach from=$comments item=comment}
 					<div id="cmt-{$comment['commentid']}" class="editbox comment" data-timestamp="{strtotime($comment['created'])}" style="clear:both;">

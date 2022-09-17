@@ -4,6 +4,7 @@ class ReleaseEditor extends AssetEditor {
 	
 	var $savestatus = null;
 	var $fileuploadstatus;
+	var $mod;
 
 	function __construct() {
 		$this->editTemplateFile = "edit-release";
@@ -67,8 +68,24 @@ class ReleaseEditor extends AssetEditor {
 	}
 	
 	function delete() {
-		parent::delete();
-		updateGameVersionsCached($modid);
+		global $con;
+		
+		$mod = $con->getRow("select `mod`.* from `mod` join `release` on (`release`.modid = `mod`.modid) where release.assetid=?", array($this->assetid));
+		
+		$con->Execute("delete from asset where assetid=?", array($this->assetid));
+		$con->Execute("delete from `{$this->tablename}` where {$this->tablename}id=?", array($this->recordid));
+
+		if (!empty($mod)) {
+			updateGameVersionsCached($mod['modid']);
+		
+			if ($mod['urlalias']) {
+				header("Location: /{$mod['urlalias']}#tab-files");
+			} else {
+				header("Location: /show/mod/{$mod['assetid']}#tab-files");
+			}
+		} else {
+			header("Location: /");
+		}
 	}
 	
 	function saveFromBrowser() {
@@ -143,6 +160,11 @@ class ReleaseEditor extends AssetEditor {
 			$userid = $con->getOne("select createdbyuserid from `asset` join `release` on (asset.assetid = `release`.assetid) where modidstr=? and createdbyuserid!=?", array($modidstr, $user['userid']));
 			if (!$this->assetid && $userid) {
 				$this->inUseByUser = $con->getRow("select * from user where userid=?", $userid);
+				return 'modidinuse';
+			}
+			
+			if ($modidstr == "game" || $modidstr == "creative" || $modidstr == "survival") {
+				$this->inUseByUser = array("userid"=>1, "name" => "the creators of this very game - gasp! And so");
 				return 'modidinuse';
 			}
 		}
