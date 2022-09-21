@@ -214,7 +214,7 @@ function listMod($modid)
 		"text" => $row['text'],
 		"author" => $row['author'],
 		"urlalias" => $row['urlalias'],
-		"logofilename" => $row['logofilename'] ? "asset/{$row['assetid']}/" . $row['logofilename'] : null,
+		"logo" => $row['logofilename'] ? "files/asset/{$row['assetid']}/" . $row['logofilename'] : null,
 		"homepageurl" => $row['homepageurl'],
 		"sourcecodeurl" => $row['sourcecodeurl'],
 		"trailervideourl" => $row['trailervideourl'],
