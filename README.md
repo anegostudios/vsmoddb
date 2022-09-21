@@ -37,13 +37,13 @@ List all authors (users)
 
 Example: http://mods.vintagestory.at/api/authors
 
-### /api/comments
-List all comments
+### /api/comments/[assetid]
+Lists all comments for given assetid or latest 100 if assetid is not specified
 
 Example: http://mods.vintagestory.at/api/comments
 
-### /api/changelogs
-List all changelogs
+### /api/changelogs/[assetid]
+Lists all changelogs for given assetid or latest 100 if assetid is not specified
 
 Example: http://mods.vintagestory.at/api/changelogs
 
@@ -58,8 +58,10 @@ Get Parameters:<br>
 **gameversions[]**: Filter by game version ids (OR)<br>
 **author**: Filter by author id<br>
 **text**: Search by mod text and title<br>
+**orderby**: Order by, one of: ``'asset.created', 'lastreleased', 'downloads', 'follows', 'comments', 'trendingpoints'`` (default: **asset.created**)<br>
+**orderdirection**: Order direction, one of: ``'desc', 'asc'`` (default: **desc**)
 
-Search Example: http://mods.vintagestory.at/api/mods?text=jack&tagids[]=7&tagids[]=8
+Search Example: http://mods.vintagestory.at/api/mods?text=jack&tagids[]=7&tagids[]=8&orderby=downloads
 
 
 ### /api/mod/[modid]
