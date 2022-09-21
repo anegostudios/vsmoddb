@@ -5,12 +5,13 @@ $sessiontoken = empty($_COOKIE['vs_websessionkey']) ? null : $_COOKIE['vs_webses
 $user = null;
 $cnt = 0;
 
-if ($sessiontoken) {
-	$user = $con->getRow("select user.*, role.code as rolecode from user left join role on (user.roleid = role.roleid) where sessiontoken=? and sessiontokenvaliduntil > now()", array($_COOKIE['vs_websessionkey']));
+// check `DEBUGUSER` first, $sessiontoken could be set by mods.vintagestory.at even if we're browsing stage.mods.vintagestory.at
+if (DEBUGUSER === 1) {
+    $user = $con->getRow("select user.*, role.code as rolecode from user left join role on (user.roleid = role.roleid)");
 }
 
-if (DEBUGUSER == 1) {
-	$user = $con->getRow("select user.*, role.code as rolecode from user left join role on (user.roleid = role.roleid)");
+if ($sessiontoken) {
+	$user = $con->getRow("select user.*, role.code as rolecode from user left join role on (user.roleid = role.roleid) where sessiontoken=? and sessiontokenvaliduntil > now()", array($_COOKIE['vs_websessionkey']));
 }
 
 if ($user) {
