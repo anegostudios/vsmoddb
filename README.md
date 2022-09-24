@@ -17,7 +17,7 @@ Response: Json. Every response contains a *statuscode* property which uses [HTTP
 http://mods.vintagestory.at/api
 
 *Base url for all returned files*
-http://mods.vintagestory.at/files/
+http://mods.vintagestory.at/
 
 
 ## Interfaces
