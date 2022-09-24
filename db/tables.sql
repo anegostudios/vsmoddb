@@ -385,4 +385,3 @@ INSERT INTO `moddb`.`role` (`roleid`, `code`, `name`, `created`, `sortorder`, `l
 INSERT INTO `moddb`.`role` (`roleid`, `code`, `name`, `created`, `sortorder`, `lastmodified`) VALUES (4, 'player_nc', 'Player (commenting disabled)', NULL, NULL, NULL);
 
 COMMIT;
-

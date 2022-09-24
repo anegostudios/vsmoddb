@@ -3,6 +3,7 @@
 /db/model.mwb.bak
 /templates_c/*.tpl
 /tmp/*
+/.idea
 *.txt
 etc
 db/backup.sql

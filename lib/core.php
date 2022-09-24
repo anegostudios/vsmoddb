@@ -315,7 +315,7 @@
 		
 		
 		
-	// Erstellt POST Request und übermittelt Parameter die aus $data ausgelesen werden
+	// Erstellt POST Request und ï¿½bermittelt Parameter die aus $data ausgelesen werden
 	function sendPostData($path, $data, $remoteurl = null) {
 		global $config;
 		
@@ -356,12 +356,20 @@
 		}
 		
 		if ($returncode != 0) {
-			return array("modparse" => "error", "parsemsg" => "Unable to find mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Tyron");
+			$error = array("modparse" => "error", "parsemsg" => "Unable to find mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Tyron");
 		}
 		
 		$parts = explode(":", $idver);
 		if (count($parts) != 2) {
-			return array("modparse" => "error", "parsemsg" => "Unable to determine mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Tyron");
+			$error = array("modparse" => "error", "parsemsg" => "Unable to determine mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Tyron");
+		}
+
+		// allow uploading files when DEBUG is set AND mono/windows is unavailable
+		if (isset($error)) {
+			if (DEBUG === 1) {
+				return array("modparse" => "ok", "modid" => "ExampleMod", "modversion" => "1.0.0");
+			}
+			return $error;
 		}
 		
 		return array("modparse" => "ok", "modid" => $parts[0], "modversion" => $parts[1]);

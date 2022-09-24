@@ -34,6 +34,7 @@ services:
     restart: unless-stopped
     volumes:
       - mysql-data:/var/lib/mysql
+      - ../db:/docker-entrypoint-initdb.d:ro
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: moddb

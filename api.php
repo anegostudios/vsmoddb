@@ -62,7 +62,17 @@ switch ($action) {
 		break;
 
 	case "comments":
-		$rows = $con->getAll("select commentid, assetid, userid, text, created, lastmodified from comment");
+		$wheresql = '';
+		$wherevalue = array();
+		$limit = 'limit 100';
+
+		if (intval($urlparts[1] ?? 0) > 0) {
+			$wheresql = 'where assetid=?';
+			$wherevalue = array(intval($urlparts[1]));
+			$limit = '';
+		}
+
+		$rows = $con->getAll("select commentid, assetid, userid, text, created, lastmodified from comment $wheresql order by lastmodified $limit", $wherevalue);
 		$comments = array();
 		foreach ($rows as $row) {
 			$comments[] = array(
@@ -78,7 +88,17 @@ switch ($action) {
 		break;
 
 	case "changelogs":
-		$rows = $con->getAll("select changelogid, assetid, userid, text, created, lastmodified from changelog");
+		$wheresql = '';
+		$wherevalue = array();
+		$limit = 'limit 100';
+
+		if (intval($urlparts[1] ?? 0) > 0) {
+			$wheresql = 'where assetid=?';
+			$wherevalue = array(intval($urlparts[1]));
+			$limit = '';
+		}
+
+		$rows = $con->getAll("select changelogid, assetid, userid, text, created, lastmodified from changelog $wheresql order by lastmodified $limit", $wherevalue);
 		$changelogs = array();
 		foreach ($rows as $row) {
 			$changelogs[] = array(
@@ -164,6 +184,29 @@ function listMod($modid)
 		);
 	}
 
+	$srows = $con->getAll("
+		select 
+			fileid,
+			assetid,
+			filename,
+			thumbnailfilename,
+			created
+		from 
+			`file` 
+		where assetid=?
+	", array($modid));
+
+	$screenshots = array();
+	foreach ($srows as $screenshot) {
+		$screenshots[] = array(
+			"fileid" => intval($screenshot["fileid"]),
+			"mainfile" => "asset/{$screenshot["assetid"]}/" . $screenshot["filename"],
+			"filename" => $screenshot["filename"],
+			"thumbnailfilename" => $screenshot["thumbnailfilename"],
+			"created" => $screenshot["created"]
+		);
+	}
+
 	$mod = array(
 		"modid" => intval($row["modid"]),
 		"assetid" => intval($row["assetid"]),
@@ -171,7 +214,7 @@ function listMod($modid)
 		"text" => $row['text'],
 		"author" => $row['author'],
 		"urlalias" => $row['urlalias'],
-		"logofilename" => $row['logofilename'] ? "asset/{$row['assetid']}/" . $row['logofilename'] : null,
+		"logo" => $row['logofilename'] ? "asset/{$row['assetid']}/" . $row['logofilename'] : null,
 		"homepageurl" => $row['homepageurl'],
 		"sourcecodeurl" => $row['sourcecodeurl'],
 		"trailervideourl" => $row['trailervideourl'],
@@ -179,13 +222,15 @@ function listMod($modid)
 		"wikiurl" => $row['wikiurl'],
 		"downloads" => intval($row['downloads']),
 		"follows" => intval($row['follows']),
+		"trendingpoints" => intval($row['trendingpoints']),
 		"comments" => intval($row['comments']),
 		"side" => $row['side'],
 		"type" => $row['type'],
 		"created" => $row['created'],
 		"lastmodified" => $row['lastmodified'],
 		"tags" => resolveTags($row['tagscached']),
-		"releases" => $releases
+		"releases" => $releases,
+		"screenshots" => $screenshots
 	);
 
 	good(array("statuscode" => 200, "mod" => $mod));
@@ -197,6 +242,17 @@ function listMods()
 
 	$wheresql = array();
 	$wherevalues = array();
+	$orderBy = 'asset.created';
+	$orderDirection = 'desc';
+	$allowedOrderBy = ['asset.created', 'lastreleased', 'downloads', 'follows', 'comments', 'trendingpoints'];
+
+	if (!empty($_GET["orderby"]) && in_array($_GET['orderby'], $allowedOrderBy, true)) {
+		$orderBy = $_GET['orderby'];
+	}
+
+	if (!empty($_GET['orderdirection'])) {
+		$orderDirection = $_GET['orderdirection'] === 'asc' ? $_GET['orderdirection'] : 'desc';
+	}
 
 	if (!empty($_GET["text"])) {
 		$wheresql[] = "(asset.name like ? or asset.text like ?)";
@@ -256,7 +312,9 @@ function listMods()
 			comments, 
 			tagscached,
 			group_concat(DISTINCT `release`.modidstr ORDER BY `release`.modidstr SEPARATOR ',') as modidstrs,
-			user.name as author
+			user.name as author,
+			`mod`.lastreleased,
+			`mod`.trendingpoints
 		from 
 			`mod` 
 			join asset on (`mod`.assetid = asset.assetid)
@@ -264,7 +322,7 @@ function listMods()
 			left join `release` on `release`.modid = `mod`.modid
 		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "
 		group by `mod`.modid
-		order by asset.created desc
+		order by $orderBy $orderDirection
 	", $wherevalues);
 	$mods = array();
 	foreach ($rows as $row) {
@@ -278,6 +336,7 @@ function listMods()
 			"assetid" => intval($row['assetid']),
 			"downloads" => intval($row['downloads']),
 			"follows" => intval($row['follows']),
+			"trendingpoints" => intval($row['trendingpoints']),
 			"comments" => intval($row['comments']),
 			"name" => $row['name'],
 			"modidstrs" => !empty($row['modidstrs']) ? explode(",", $row['modidstrs']) : array(),
@@ -285,8 +344,9 @@ function listMods()
 			"urlalias" => $row['urlalias'],
 			"side" => $row['side'],
 			"type" => $row['type'],
-			"logo" => $row['logofilename'] ? "files/asset/{$row['assetid']}/" . $row['logofilename'] : null,
-			"tags" => $tags
+			"logo" => $row['logofilename'] ? "asset/{$row['assetid']}/" . $row['logofilename'] : null,
+			"tags" => $tags,
+			"lastreleased" => $row['lastreleased']
 		);
 	}
 
