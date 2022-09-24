@@ -173,7 +173,7 @@ function listMod($modid)
 
 		$releases[] = array(
 			"releaseid" => intval($release['releaseid']),
-			"mainfile" => "asset/{$file['assetid']}/" . $file["filename"],
+			"mainfile" => "files/asset/{$file['assetid']}/" . $file["filename"],
 			"filename" => $file["filename"],
 			"fileid" => $file['fileid'] ? intval($file['fileid']) : null,
 			"downloads" => intval($file["downloads"]),
@@ -200,7 +200,7 @@ function listMod($modid)
 	foreach ($srows as $screenshot) {
 		$screenshots[] = array(
 			"fileid" => intval($screenshot["fileid"]),
-			"mainfile" => "asset/{$screenshot["assetid"]}/" . $screenshot["filename"],
+			"mainfile" => "files/asset/{$screenshot["assetid"]}/" . $screenshot["filename"],
 			"filename" => $screenshot["filename"],
 			"thumbnailfilename" => $screenshot["thumbnailfilename"],
 			"created" => $screenshot["created"]
@@ -214,7 +214,8 @@ function listMod($modid)
 		"text" => $row['text'],
 		"author" => $row['author'],
 		"urlalias" => $row['urlalias'],
-		"logo" => $row['logofilename'] ? "asset/{$row['assetid']}/" . $row['logofilename'] : null,
+		"logofilename" => $row['logofilename'] ? "files/asset/{$row['assetid']}/" . $row['logofilename'] : null, // deprecated
+		"logofile" => $row['logofilename'] ? "files/asset/{$row['assetid']}/" . $row['logofilename'] : null,
 		"homepageurl" => $row['homepageurl'],
 		"sourcecodeurl" => $row['sourcecodeurl'],
 		"trailervideourl" => $row['trailervideourl'],
@@ -344,7 +345,7 @@ function listMods()
 			"urlalias" => $row['urlalias'],
 			"side" => $row['side'],
 			"type" => $row['type'],
-			"logo" => $row['logofilename'] ? "asset/{$row['assetid']}/" . $row['logofilename'] : null,
+			"logo" => $row['logofilename'] ? "files/asset/{$row['assetid']}/" . $row['logofilename'] : null,
 			"tags" => $tags,
 			"lastreleased" => $row['lastreleased']
 		);

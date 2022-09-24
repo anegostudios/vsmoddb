@@ -315,7 +315,6 @@
 		
 		
 		
-	// Erstellt POST Request und �bermittelt Parameter die aus $data ausgelesen werden
 	function sendPostData($path, $data, $remoteurl = null) {
 		global $config;
 		
