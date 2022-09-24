@@ -55,7 +55,7 @@
 			<label>Tags</label>
 			<select name="tagids[]" style="width:300px;" multiple>
 				{foreach from=$tags item=tag}
-					<option value="{$tag['tagid']}" {if !empty($asset['tags'][$tag['tagid']])}selected="selected"{/if}>{$tag['name']}</option>
+					<option value="{$tag['tagid']}" title="{$tag['text']}" {if !empty($asset['tags'][$tag['tagid']])}selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
 			</select>
 		</div>
@@ -70,6 +70,11 @@
 			<span style="font-size:12px;">https://mods.vintagestory.at/</span><input type="text" name="urlalias" style="width: 80px;" value="{$asset['urlalias']}"/>
 		</div>
 		
+		<div class="editbox linebreak">
+			<label>Summary. Describe your mod in 100 characters or less.</label>
+			<input type="text" name="summary" style="width: 992px;" maxlength="100" class="required" value="{$asset['summary']}"/>
+		</div
+		>
 		<div class="editbox linebreak" style="width: 1000px; max-width:1000px">
 			<label>Text</label>
 			<textarea name="text" class="editor" data-editorname="text" style="width: 994px; height: auto;">{$asset['text']}</textarea>

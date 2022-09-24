@@ -13,7 +13,7 @@
 
 {include file="header" pagetitle="`$asset['name']` - "}
 
-<div class="edit-asset mods mod-{$asset['statuscode']}">
+<div class="edit-asset mod-{$asset['statuscode']}">
 	{if $asset['assetid']}
 		<h2>
 			<span class="assettype">
@@ -82,7 +82,7 @@
 			<div class="infobox{if empty($asset['trailervideourl']) && empty($files)} nomedia{/if}">
 				<span class="text-weak">Category:</span>
 					{foreach from=$tags item=tag}
-						<a href="/list/mod/?tagids[]={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>
+						<a href="/list/mod/?tagids[]={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}" title="{$tag['text']}">#{$tag['name']}</a>
 					{/foreach}
 				<br>
 				

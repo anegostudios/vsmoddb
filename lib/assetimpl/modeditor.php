@@ -20,6 +20,7 @@ class ModEditor extends AssetEditor {
 		$this->declareColumn(9, array("title" => "Logo image", "code" => "logofileid", "tablename" => "mod"));
 		$this->declareColumn(10, array("title" => "Mod Type", "code" => "type", "tablename" => "mod"));
 		$this->declareColumn(11, array("title" => "URL Alias", "code" => "urlalias", "tablename" => "mod"));
+		$this->declareColumn(12, array("title" => "Summary", "code" => "summary", "tablename" => "mod"));
 	}
 	
 	function load() {
@@ -47,6 +48,8 @@ class ModEditor extends AssetEditor {
 	
 	function saveFromBrowser() {
 		global $con, $view, $typewhitelist;
+		
+		$_POST['summary'] = substr(strip_tags($_POST['summary']), 0, 100);
 		
 		$_POST['urlalias'] = preg_replace("/[^a-z]+/", "", strtolower($_POST['urlalias']));
 		if (!empty($_POST['urlalias'])) {

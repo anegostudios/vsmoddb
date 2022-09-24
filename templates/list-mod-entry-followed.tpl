@@ -23,6 +23,7 @@
 		</a>
 		<br>
 		Latest version: <a href="/show/mod/{$mod['assetid']}#tab-files">v{$mod['releaseversion']} from
-		<br>{fancyDate($mod['releasedate'])}</A>
+		<br>{fancyDate($mod['releasedate'])}</a>
+		{if time()-strtotime($mod['created']) < 10*24*3600}<div class="ribbon-top">New!</div>{/if}
 	</div>
 </div>

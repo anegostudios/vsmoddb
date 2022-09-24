@@ -20,13 +20,11 @@
 			{else}
 				<strong>{substr($mod['name'], 0, 45)}...</strong>
 			{/if}
-			<br>by {$mod['from']}
+			<br>
+			{if $mod['summary']}{$mod['summary']}{else}
+			{foreach from=$mod['tags'] item=tag} {$tag['name']}{/foreach}
+			{/if}
+			{if time()-strtotime($mod['created']) < 10*24*3600}<div class="ribbon-top">New!</div>{/if}
 		</a>
-		
-		<div class="tags">
-			{foreach from=$mod['tags'] item=tag}
-				<a href="/list/mod/?tagids[]={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>
-			{/foreach}
-		</div>
 	</div>
 </div>

@@ -238,19 +238,25 @@ ul.submenu a {
 
 .mods {
 	clear:both;
+	display: flex;
+	/*justify-content: center;*/
+	flex-wrap: wrap;
 }
 
 .mods div.mod {
 	position: relative;
-	float: left;
+	flex-shrink: 0;
+	flex-grow: 1;
 	background: white;
 	width: 300px;
+	max-width: 375px;
 	height: 300px;
 	margin-right: 10px;
 	margin-bottom: 10px;
 	margin-top: 10px;
 	border-radius: .25rem;
 	border: 1px solid #e0e0e0;
+	box-shadow: 1px 1px 4px #999;
 }
 
 .mods div.mod a {
@@ -269,8 +275,8 @@ ul.submenu a {
 
 .mod.draft {
 	width: 300px;
-	height: 298px;
-	border: 2px dashed gray !important; 
+	height: 298px !important;
+	border: 1.5px dashed gray !important; 
 	position: relative;
 }
 
@@ -315,6 +321,7 @@ ul.submenu a {
 
 .mod .moddesc {
 	margin: 5px;
+	margin-top: 0px;
 }
 
 .mod .moddesc .stats {
@@ -1314,3 +1321,29 @@ span.username {
     filter: progid:DXImageTransform.Microsof;
 }
 
+
+.ribbon-top {
+  --d:4px; 
+  --w:100px;
+  --c:rgb(255, 227, 0);
+
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(29.29%, -100%) rotate(45deg); /* 29.29% = 100%*(1 - cos(45deg)) */
+  text-align: center;
+  width: var(--w);
+  transform-origin: bottom left;
+  padding:5px 0 calc(var(--d) + 5px);
+  background:
+    linear-gradient(rgba(0,0,0,0.6) 0 0) bottom/100% var(--d) no-repeat
+    var(--c);
+  clip-path:polygon(0 100%,0 calc(100% - var(--d)),50% calc(100% - var(--d) - var(--w)/2),100% calc(100% - var(--d)),100% 100%,calc(100% - var(--d)) calc(100% - var(--d)), var(--d) calc(100% - var(--d)))
+}
+
+.ribbon-top.left {
+  left:0;
+  right:auto;
+  transform: translate(-29.29%, -100%) rotate(-45deg);
+  transform-origin: bottom right;
+}

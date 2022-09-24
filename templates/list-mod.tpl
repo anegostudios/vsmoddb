@@ -21,7 +21,7 @@
 			<select style="width:300px;" name="tagids[]" multiple>
 				<option value="">-</option>
 				{foreach from=$tags item=tag}
-					<option value="{$tag['tagid']}" {if !empty($searchvalues['tagids'][$tag['tagid']])}selected="selected"{/if}>{$tag['name']}</option>
+					<option value="{$tag['tagid']}" title="{$tag['text']}" {if !empty($searchvalues['tagids'][$tag['tagid']])}selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
 			</select>
 		</div>
