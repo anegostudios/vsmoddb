@@ -15,7 +15,7 @@
 
 	<script src="https://kit.fontawesome.com/1abebfb8d4.js" crossorigin="anonymous"></script>
 
-	<link href="/web/css/style.css?version=23" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=25" rel="stylesheet" type="text/css">
 	<link href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/dialog.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">

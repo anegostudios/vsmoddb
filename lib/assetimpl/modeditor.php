@@ -20,7 +20,7 @@ class ModEditor extends AssetEditor {
 		$this->declareColumn(9, array("title" => "Logo image", "code" => "logofileid", "tablename" => "mod"));
 		$this->declareColumn(10, array("title" => "Mod Type", "code" => "type", "tablename" => "mod"));
 		$this->declareColumn(11, array("title" => "URL Alias", "code" => "urlalias", "tablename" => "mod"));
-		$this->declareColumn(12, array("title" => "Summary", "code" => "summary", "tablename" => "mod"));
+		$this->declareColumn(12, array("title" => "Summary", "code" => "summary", "tablename" => "mod", "datatype" => "name"));
 	}
 	
 	function load() {

@@ -135,9 +135,9 @@ class View {
 						$itemname = '$' . $matches[2];
 						$keyname = isset($matches[4]) ? '$' . $matches[4] . '=>' : null;
 						
-						$keyassign = isset($matches[4]) ? "\$view->assign(\"{$matches[4]}\",  \${$matches[4]});" : "";
+						$keyassign = isset($matches[4]) ? "\$view->assign(\"{$matches[4]}\",  \${$matches[4]}, null, true);" : "";
 						
-						return "<?php if (!empty({$arrayname})) { foreach({$arrayname} as {$keyname}{$itemname}) { {$keyassign} \$view->assign(\"{$matches[2]}\",  {$itemname}); ?>";
+						return "<?php if (!empty({$arrayname})) { foreach({$arrayname} as {$keyname}{$itemname}) { {$keyassign} \$view->assign(\"{$matches[2]}\",  {$itemname}, null, true); ?>";
 					}, $match );
 					
 					return $match;

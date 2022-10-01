@@ -13,7 +13,7 @@ class AssetEditor extends AssetController {
 		parent::__construct($classname);
 		
 		$this->columns = array(
-			array("title" => "Name", "code" => "name", "tablename" => "asset"),
+			array("title" => "Name", "code" => "name", "tablename" => "asset", "datatype" => "name"),
 			array("title" => "Text", "code" => "text", "tablename" => "asset"),
 			array("title" => "Status", "code" => "statusid", "tablename" => "asset"),
 		);
