@@ -104,7 +104,7 @@
 		global $config;
 		include_once($config["basepath"] . "lib/3rdparty/htmLawed.php");
 		
-		$text = preg_replace("#<iframe( src=\"//www.youtube.com.*)></iframe>#i", "<span class=\"__embed\">\\1</span>", $text);
+		$text = preg_replace("#<iframe( src=\"//www.youtube.com[^<>]*)></iframe>#i", "<span class=\"__embed\">\\1</span>", $text);
 		
 		$text = htmLawed($text, array('tidy' => 0, 'safe' => 1, 'elements'=>'* -script -object -applet -canvas -iframe -video -audio -embed'));
 		
