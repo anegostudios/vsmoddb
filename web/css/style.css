@@ -273,6 +273,10 @@ ul.submenu a {
 	border-top-right-radius: calc(.25rem - 1px);
 }
 
+.mod-draft {
+	position: relative;
+}
+
 .mod.draft {
 	width: 300px;
 	height: 298px !important;

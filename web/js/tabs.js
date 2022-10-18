@@ -15,10 +15,13 @@ function makeTabs() {
 			return false;
 		}
 		
-		var activeTab = "#" + $(this).find("a").attr("href").substr(5);
+		var href = $(this).find("a").attr("href");
+		
+		if (href.startsWith('http')) return true;
+		
+		var activeTab = "#" + href.substr(5);
 		
 		
-		if (activeTab.startsWith('http')) return true;
 		
 		var otherclasses = $(this).parent().attr("class").replace("tabs", "").trimStart().replace(" ", ".");
 		if (otherclasses.length > 0) otherclasses = "." + otherclasses;
@@ -27,7 +30,6 @@ function makeTabs() {
 		$(this).addClass("active");
 		
 		$(".tab_container"+otherclasses+" .tab_content").hide();
-		
 		
 		
 		$(activeTab).show();

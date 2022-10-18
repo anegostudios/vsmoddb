@@ -118,6 +118,11 @@
 			<label>Wiki Url</label>
 			<input type="text" name="wikiurl" style="width: 300px;" value="{$asset['wikiurl']}"/>
 		</div>
+		
+		<div class="editbox">
+			<label>Donate Url</label>
+			<input type="text" name="donateurl" style="width: 300px;" value="{$asset['donateurl']}"/>
+		</div>
 
 		<div class="editbox linebreak">
 			<label>Side</label>

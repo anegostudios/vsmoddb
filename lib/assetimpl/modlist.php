@@ -111,7 +111,6 @@ class ModList extends AssetList {
 		$rows = $con->getAll($sql, $this->wherevalues);
 		$this->rows = array();
 
-		
 		foreach ($rows as $row) {
 			unset($row['text']);
 			$tags=array();
@@ -128,8 +127,18 @@ class ModList extends AssetList {
 			
 				$row['tags'] = $tags;
 			}
+			
+			if (isset($_GET['text'])) {
+				$row['weight'] = $this->getModMatchWeight($row, $_GET['text']);
+			}
+			
 			$this->rows[] = $row;
 		}
+		
+		if (isset($_GET['text'])) {
+			usort($this->rows, 'modWeightCmp');
+		}
+		
 		
 		$versions = $con->getAll("select * from tag where assettypeid=?", array(2));
 		$versions = sortTags(2, $versions);
@@ -145,10 +154,48 @@ class ModList extends AssetList {
 	}
 	
 	
+	function getModMatchWeight($mod, $text) {
+		// Exact mod name match
+		if (strcasecmp($mod['name'], $text) == 0) return 1;
+		$pos = stripos($mod['name'], $text);
+		// Mod name starts with text
+		if ($pos === 0) return 2;
+		// Mod name contains text
+		if ($pos > 0) return 3;
+		// Summary contains text
+		if (strstr($mod['summary'], $text)) return 4;
+		// Contained somewhere
+		return 5;
+	}
+	
 	public function loadFilters() {
-		global $user;
-		parent::loadFilters();
+		global $user, $con;
 
+		if (!empty($_GET["text"])) {
+
+			$this->wheresql[] = "(asset.name like ? or asset.text like ? or `mod`.summary like ?)";
+			
+			$this->wherevalues[] = "%" . $_GET["text"] . "%";
+			$this->wherevalues[] = "%" . $_GET["text"] . "%";
+			$this->wherevalues[] = "%" . $_GET["text"] . "%";
+
+			$this->searchvalues["text"] = $_GET["text"];
+		}
+		
+		if(!empty($_GET["tagids"])) {
+			$wheresql = "";
+			foreach($_GET["tagids"] as $tagid) {
+				if (!empty($wheresql)) $wheresql .= " or ";
+				$wheresql .= "exists (select assettag.tagid from assettag where assettag.assetid=asset.assetid and assettag.tagid=?)";
+				$this->wherevalues[] = $tagid;
+			}
+			
+			$this->wheresql[] .= "(" . $wheresql . ")";
+			
+			$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
+			$this->searchvalues["tagids"] = array_combine($_GET["tagids"], array_fill(0, count($_GET["tagids"]), 1));
+		}
+		
 		if ($user['rolecode'] != 'admin' || empty($_GET['hidden'])) {
 			$this->wheresql[] = "asset.statusid=2";
 		}
@@ -190,5 +237,9 @@ class ModList extends AssetList {
 		}
 
 	}
-	
 }
+
+function modWeightCmp($moda, $modb) {
+	return $moda['weight'] <=> $modb['weight'];
+}
+

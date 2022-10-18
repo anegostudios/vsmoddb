@@ -16,6 +16,7 @@ class ModEditor extends AssetEditor {
 		$this->declareColumn(5, array("title" => "Trailer video url", "code" => "trailervideourl", "datatype" => "url", "tablename" => "mod"));
 		$this->declareColumn(6, array("title" => "Issue tracker url", "code" => "issuetrackerurl", "datatype" => "url", "tablename" => "mod"));
 		$this->declareColumn(7, array("title" => "Wiki url", "code" => "wikiurl", "datatype" => "url", "tablename" => "mod"));
+		$this->declareColumn(13, array("title" => "Donate url", "code" => "donateurl", "datatype" => "url", "tablename" => "mod"));
 		$this->declareColumn(8, array("title" => "Side", "code" => "side", "tablename" => "mod"));
 		$this->declareColumn(9, array("title" => "Logo image", "code" => "logofileid", "tablename" => "mod"));
 		$this->declareColumn(10, array("title" => "Mod Type", "code" => "type", "tablename" => "mod"));
