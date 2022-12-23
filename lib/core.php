@@ -271,6 +271,9 @@
 		// [spoiler] 
 		$html = preg_replace("/\[spoiler\]\s*(.*)\s*\[\/spoiler\]/Us", "<p><a href=\"#\" class=\"spoiler\">Spoiler</a></p><div class=\"spoiler\">\\1</div>" , $html);
 		
+		// Fix mention css issue caused by the editor
+		$html = preg_replace("/<span class=\"mention username\">([\w\d_\-]+)([^\w\d_\-])(.*)<\/span>/U", "<span class=\"mention username\">\\1</span>\\2\\3", $html);
+		
 		return $html;
 	}
 

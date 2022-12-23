@@ -1,6 +1,11 @@
 {include file="header"}
 	
 	<form method="get">
+		{if !empty($sortby)}
+			<input type="hidden" name="sortby" value="{$sortby}">
+			<input type="hidden" name="sortdir" value="{$sortdir}">
+		{/if}
+
 		<div class="searchbox">
 			<label>Text</label>
 			<input type="text" name="text" value="{$searchvalues['text']}">

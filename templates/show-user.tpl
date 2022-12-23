@@ -1,6 +1,6 @@
 {assign var="first" value="1"}
 {capture name="head"}
-<meta content="{$asset['name']}" property="og:title" />
+<meta content="{$showuser['name']}" property="og:title" />
 <meta content="{strip_tags($assetraw['text'])}" property="og:description" />
 <meta name="twitter:card" content="summary_large_image">
 {if (empty($asset['logofilename']))}
@@ -59,7 +59,7 @@
 	<div class="tab_container">
 		<div class="tab_content" id="description">
 			<div style="float: right;">
-				{if canEditAsset($asset, $user)}
+				{if !empty($user) && $user['userid'] == $asset['createdbyuserid']}
 					{include
 						file="button"
 						href="/edit/mod/?assetid=`$asset['assetid']`"
@@ -109,7 +109,7 @@
 		
 		<div class="tab_content" id="files">
 			<div style="float: right;">
-				{if canEditAsset($asset, $user)}
+				{if !empty($user) && $user['userid'] == $asset['createdbyuserid']}
 					{include
 						file="button"
 						href="/edit/release/?modid=`$asset['modid']`"
@@ -128,7 +128,7 @@
 						<th class="releasedate">Release date</th>
 						<th class="changelog">Changelog</th>
 						<th class="download">Download</th>
-						<!--<th><abbr title="Works only on Windows and only from game client version 1.17.9 onwards">1-click mod install*</abbr></th>-->
+						<th><abbr title="Works only on Windows and only from game client version 1.17.9 onwards">1-click mod install*</abbr></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -136,7 +136,7 @@
 					{foreach from=$releases item=release}
 						<tr data-assetid="{$release['assetid']}" {if !isset($first)} class="latest"{/if}>
 							<td>
-								{if canEditAsset($asset, $user)}
+								{if !empty($user) && $user['userid'] == $asset['createdbyuserid']}
 									<a style="display:block;" href="/edit/release?assetid={$release['assetid']}">v{$release['modversion']}</a>
 								{else}v{$release['modversion']}{/if}
 								<div class="changelogtext" style="display:none;">
@@ -154,13 +154,13 @@
 							<td>{if !empty($release['file'])}{intval($release['file']['downloads'])}{/if}</td>
 							<td>{fancyDate($release['created'])}</td>
 							<td><a href="#showchangelog">Show</a></td>
-							<td>{if !empty($release['file'])}<a class="downloadbutton" href="/download?fileid={$release['file']['fileid']}">{$release['file']['filename']}</a>{/if}</td>
-							<!--<td>{if !empty($release['modidstr'])}<a href="vintagestorymodinstall://-i {$release['modidstr']}@{$release['modversion']}">Install now</a>{/if}</td>-->
+							<td>{if !empty($release['file'])}<a style="display:block;" href="/download?fileid={$release['file']['fileid']}">{$release['file']['filename']}</a>{/if}</td>
+							<td>{if !empty($release['modidstr'])}<a href="vintagestorymodinstall://-i {$release['modidstr']}@{$release['modversion']}">Install now</a>{/if}</td>
 						</tr>
 						{assign var="first" value="1"}
 					{/foreach}
 				{else}
-					<td colspan="6"><i>No releases found</i></td>
+					<td colspan="{count($columns)}"><i>No releases found</i></td>
 				{/if}
 				</tbody>
 			</table>			

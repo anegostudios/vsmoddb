@@ -8,6 +8,7 @@ body {
 	
     font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
 	color: #333;
+	font-size:16px;
 	line-height: 22px;
 }
 
@@ -23,7 +24,7 @@ blockquote {
 }
 
 h1,h2,h3,h4,h5,h6 {
-	font-weight: normal;
+	/*font-weight: normal;*/
 }
 
 h2 {
@@ -58,7 +59,7 @@ a:hover {
 	font-size: 125%;
 	width: 100%;
 	background: rgb(31,26,21);
-	background: linear-gradient(0deg, rgba(31,26,21,0.65) 0%, rgba(100,86,68,0.65) 100%);
+	background: linear-gradient(0deg, rgba(104, 80, 55, 0.65) 0%, rgba(179, 154, 121, 0.65) 100%);
 	
 	box-sizing: border-box;
 	border-top-left-radius: 4px;
@@ -233,7 +234,7 @@ ul.submenu a {
 
 .innercontent {
 	padding: 15px;
-	background-color:  rgba(255, 255, 255, 0.9);
+	background-color: rgba(255, 252, 244, 0.98);
 }
 
 .mods {
@@ -245,9 +246,11 @@ ul.submenu a {
 
 .mods div.mod {
 	position: relative;
-	flex-shrink: 0;
+	flex-shrink: 1; /* Fix for mobile devices */
+	overflow: hidden;
+	
 	flex-grow: 1;
-	background: white;
+	background-color: rgba(255, 255, 255, 0.6);
 	width: 300px;
 	max-width: 375px;
 	height: 300px;
@@ -255,7 +258,7 @@ ul.submenu a {
 	margin-bottom: 10px;
 	margin-top: 10px;
 	border-radius: .25rem;
-	border: 1px solid #e0e0e0;
+	border: 1px solid #rgba(255,255,255,0.8);
 	box-shadow: 1px 1px 4px #999;
 }
 
@@ -353,10 +356,11 @@ ul.submenu a {
 
 .imageslideshow {
 	float: left;
+	max-width:100%;
+	margin-right: 20px;
 }
 
 .imageslideshow img {
-	
 	/*display:none;*/
 }
 
@@ -364,10 +368,17 @@ ul.submenu a {
 	/*display:inline-block;*/
 }
 
+.fotorama__stage {
+	background: rgba(166, 159, 125, 0.3);
+	border-radius: 0px;
+}
+
+
+
 .infobox {
 	float: left;
-	margin-left: 20px;
-	height: 300px;
+	
+	/*height: 300px;*/
 	line-height: 25px;
 }
 
@@ -398,8 +409,8 @@ ul.submenu a {
 	padding:2px;
 }
 
-.stdtable tbody tr:nth-child(odd)		{ background-color:#eee; }
-.stdtable tbody tr:nth-child(even)		{ background-color:#f9f9f9; }
+.stdtable tbody tr:nth-child(odd)		{ background: rgba(230, 223, 208, 0.9); }
+.stdtable tbody tr:nth-child(even)		{ background: rgba(255, 248, 234, 0.9); }
 
 .stdtable tbody tr:hover {
 	background-color:#ddd;
@@ -543,7 +554,7 @@ ul.tabs {
 	float: left;
 	list-style: none;
 	height: 32px; /*--Set height of tabs--*/
-	border-bottom: 1px solid #999;
+	border-bottom: 2px solid rgba(0,0,0,0.3);
 	width: 100%;
 }
 
@@ -558,7 +569,7 @@ ul.tabs li {
 	margin-bottom: -1px; /*--Pull the list item down 1px--*/
 	overflow: hidden;
 	position: relative;
-	background: #d0d0d0;
+	background: rgba(0,0,0,0.2);
 }
 
 ul.tabs li:first-child {
@@ -586,7 +597,7 @@ ul.tabs li a {
 	font-size: 1.0em;
     font-weight: bold;
 	padding: 0 20px;
-	border: 1px solid #fff; /*--Gives the bevel look with a 1px white border inside the list item--*/
+	border: 1px solid #fff;
 	
 	outline: none;
 	vertical-align: middle;
@@ -601,21 +612,23 @@ ul.tabs li:hover {
 }
 
 html ul.tabs li.active, html ul.tabs li.active:hover { /*--Makes sure that the active tab does not listen to the hover properties--*/
-	background: #f0f0f0;
-	border-bottom: 1px solid #f0f0f0;
+  /*background: rgba(255, 242, 211, 0.9);*/
+  border-bottom: 2px solid rgba(156, 145, 58, 0.2);
+  background: rgba(156, 145, 58, 0.2);
+  
 }
 
 .tab_container {
-	border: 1px solid #999;
+	border: 0px solid #999;
 	border-top:0px;
 	clear: both;
-	background-color: #f0f0f0;
+	/*background-color: rgba(255,255,255,0.6);*/
 	position: relative;
 	z-index: 2;
 }
 
 .tab_content {
-	padding:5px;
+	padding:10px 0px;
 }
 
 ul.tabs li.disabled a {
@@ -650,7 +663,7 @@ h2 .title {
 }
 
 .editbox {
-    background-color: #E4E0DC;
+    background-color: rgba(230, 223, 207, 0.9);
     margin: 2px 6px 7px 0px;
     padding: 4px;
     float:left;
@@ -673,10 +686,8 @@ h2 .title {
 
 
 
-
 .searchbox {
-    margin: 0px 20px 7px 0px;
-    padding: 4px;
+    margin: 0px 8px 0px 0px;
 	padding-left:0px;
 	padding-top:0px;
     float:left;
@@ -704,13 +715,12 @@ h2 .title {
 }
 
 .chosen-container-single .chosen-single {
-	height: 23px !important;
-	top: -1px;
+	height: 26px !important;
 	border-radius: 0px !important;
 }
 
 .searchbox .chosen-container-single .chosen-single {
-	height: 30px !important;
+	height: 28px !important;
 }
 
 .searchbox .chosen-container-single .chosen-single span {
@@ -720,7 +730,7 @@ h2 .title {
 
 
 
-.ck.ck-editor,  {
+.ck.ck-editor {
     width: 100%;
 }
 
@@ -805,6 +815,32 @@ p:last-child {
 
 .editbox.comment {
 	padding:0px;
+	background: rgba(219, 208, 182, 0.7);
+}
+
+input, select, textarea {
+	background-color: rgba(252, 245, 231, 0.9);
+	border: 1px solid rgba(0,0,0,0.4);
+	border-radius: 3px;
+}
+
+.chosen-container-single .chosen-single {
+	background: linear-gradient(#fff8 20%,#f6f6f688 50%,#eee8 52%,#f4f4f488 100%) !important;
+}
+
+.tox .tox-edit-area__iframe {
+	background-color: rgba(252, 245, 231, 0.9) !important;
+}
+.tox .tox-statusbar {
+	background-color: rgba(252, 245, 231, 0.9) !important;
+}
+.tox .tox-menubar, .tox .tox-toolbar {
+	background: left 0 top 0 rgba(252, 245, 231, 0.9) !important;
+}
+
+.chosen-container-multi .chosen-choices {
+  background: rgba(252, 245, 231, 0.9) !important;
+  cursor: text;
 }
 
 a.add {
@@ -821,6 +857,26 @@ a.add {
 	
 	background-color:#E4E0DC;
 	background: radial-gradient(ellipse at center, #E4E0DC 0%,#E4E0DC 54%,#90A2B8 100%);
+}
+
+
+a.downloadbutton:hover {
+  background-color: #5585d4;
+}
+
+a.downloadbutton {
+	background-image: url(/web/img/download-w.png);
+	background-repeat: no-repeat;
+	background-color: #4a75bb;
+	display: inline-block;
+	box-shadow: 1px 1px 3px #aaa;
+	padding: 4px 4px 4px 40px;
+	color: white;
+	font-size: 120%;
+	outline: 0;
+	text-decoration: none;
+	background-size: 20px;
+	background-position: 10px;
 }
 
 a.edit {
@@ -1219,6 +1275,7 @@ div.betanotice {
     font-weight: normal;
     box-shadow: 2px 2px 6px #666;
     z-index:99;
+	padding: 8px;
 }
 
 .changelogtext p:first-of-type {
@@ -1226,11 +1283,13 @@ div.betanotice {
 }
 
 span.username:before {
-	content: "@"
+	content: "@";
 }
 
 span.username {
-    font-weight: bold;
+	background-color: rgba(159, 207, 52, 0.5);
+	border-radius: 4px;
+	padding: 2px 3px;
 }
 
 

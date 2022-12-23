@@ -29,8 +29,8 @@ class AssetEditor extends AssetController {
 		if ($this->assetid) {
 			$this->recordid = $con->getOne("select {$this->tablename}id from `{$this->tablename}` where assetid=?", array($this->assetid));
 			
-			$createduserid = $con->getOne("select createdbyuserid from asset where assetid=?", array($this->assetid));
-			if ($createduserid != $user['userid'] && $user['rolecode'] != 'admin') {
+			$asset = $con->getRow("select * from asset where assetid=?", array($this->assetid));
+			if (!canEditAsset($asset, $user)) {
 				$view->display("403");
 				exit();
 			}
@@ -170,7 +170,6 @@ class AssetEditor extends AssetController {
 			}
 			return;
 		}
-		
 		
 		$this->asset = $con->getRow("
 			select 

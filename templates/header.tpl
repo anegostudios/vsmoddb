@@ -15,7 +15,7 @@
 
 	<script src="https://kit.fontawesome.com/1abebfb8d4.js" crossorigin="anonymous"></script>
 
-	<link href="/web/css/style.css?version=25" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=31" rel="stylesheet" type="text/css">
 	<link href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/dialog.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">
@@ -39,6 +39,10 @@
 	<div class="okmessagepopup messagepopup bg-success text-success" style="display:none;">
 		<div class="checkmark">&#10003;</div>
 		<div class="text">{if isset($okmessage)}{$okmessage}{/if}</div>
+	</div>
+	<div class="warningmessagepopup messagepopup bg-warning text-warning" style="display:none;">
+		<div class="checkmark">&#10006;</div>
+		<div class="text">{if isset($warningmessage)}{$warningmessage}{/if}</div>
 	</div>
 	<div class="errormessagepopup messagepopup bg-error text-error" style="display:none;">
 		<div class="checkmark">&#10006;</div>

@@ -32,13 +32,13 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 
 	
 	if ($parentassetid) {
-		$createdbyuserid = $con->getOne("select createdbyuserid from asset where assetid=?", array($parentassetid));
+		$asset = $con->getOne("select * from asset where assetid=?", array($parentassetid));
 		
-		if (!$createdbyuserid) {
+		if (!$asset) {
 			return array("status" => "error", "errormessage" => 'Asset does not exist (anymore)'); 
 		}
 		
-		if ($createdbyuserid != $user['userid'] && $user['rolecode'] != 'admin') {
+		if (!canEditAsset($asset, $user)) {
 			return array("status" => "error", "errormessage" => 'No privilege to upload files to this asset. You may need to login again'); 
 		}
 	}

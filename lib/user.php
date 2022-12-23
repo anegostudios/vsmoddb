@@ -22,7 +22,9 @@ if ($user) {
 	$view->assign("notificationcount", 0);
 }
 
-
+function canEditAsset($asset, $user) {
+	return isset($user['userid']) && ($user['userid'] == $asset['createdbyuserid'] || $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator");
+}
 
 function loadNotifications() {
 	global $con, $view, $user;

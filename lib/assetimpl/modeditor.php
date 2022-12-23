@@ -65,6 +65,13 @@ class ModEditor extends AssetEditor {
 			}
 		}
 		
+		$hasfiles = $con->getOne("select releaseid from `release` where assetid=?", array($this->assetid));
+		$statusreverted = false;
+		if ($_POST['statusid'] != 1 && !$hasfiles) {
+			$statusreverted = true;
+			$_POST['statusid']=1;
+		}
+		
 		$oldlogofileid = $con->getOne("select logofileid from `mod` where assetid=?", array($this->assetid));
 		$result = parent::saveFromBrowser();
 		$newlogofileid = $con->getOne("select logofileid from `mod` where assetid=?", array($this->assetid));
@@ -75,6 +82,12 @@ class ModEditor extends AssetEditor {
 		
 		if ($this->isnew) {
 			$con->Execute("update `mod` set lastreleased=now() where assetid=?", array($this->assetid));
+		}
+		
+		if ($statusreverted) {
+			$view->unsetVar("okmessage");
+			$view->assign("warningmessage", "Changes saved, but your mod remains in 'Draft' status. You must upload a playable mod/tool first.");
+			return "error";
 		}
 
 		return $result;

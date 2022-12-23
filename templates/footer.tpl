@@ -51,30 +51,23 @@
 		
 		$(document).ready(function() \{
 			{if isset($okmessage)}
-				showOkMessage();
+				showMessage($(".okmessagepopup"));
+			{/if}
+			{if isset($warningmessage)}
+				showMessage($(".warningmessagepopup"));
 			{/if}
 			{if isset($errormessage)}
-				showErrorMessage();
+				showMessage($(".errormessagepopup"));
 			{/if}
 		});
 
-		function showOkMessage() {
-			$(".okmessagepopup")
+		function showMessage(elem) {
+			elem
 				.css("bottom", "-200px")
 				.show()
 				.animate(\{bottom: "0px" }, 500)
-				.animate(\{bottom: "0px"}, 2000)
-				.animate(\{bottom: "-200px" }, 500, function() { $(this).hide(); })
-			;
-		}
-		
-		function showErrorMessage() {
-			$(".errormessagepopup")
-				.css("bottom", "-200px")
-				.show()
-				.animate(\{bottom: "0px" }, 500)
-				.animate(\{bottom: "0px"}, 12000)
-				.animate(\{bottom: "-200px" }, 500, function() { $(this).hide(); })
+				.animate(\{bottom: "0px"}, 4000)
+				.animate(\{bottom: "-200px" }, 100, function() { $(this).hide(); })
 			;
 		}
 	</script>

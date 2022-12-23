@@ -55,13 +55,15 @@ if ($assetid) {
 	
 	$view->assign("comments", $comments, null, true);
 	
+	$alltags = $con->getAssoc("select tagid, name from tag where tagtypeid=2");
+	
 	$tags = array();
 	$tagscached = trim($asset["tagscached"]);
 	if (!empty($tagscached)) {
 		$tagdata = explode("\r\n", $tagscached);
 		foreach($tagdata as $tagrow) {
 			$row = explode(",", $tagrow);
-			$tags[] = array('name' => $row[0], 'color' => $row[1], 'tagid' => $row[2]);
+			$tags[] = array('name' => $row[0], 'color' => $row[1], 'tagid' => $row[2], 'text'=> $alltags[$row[2]]);
 		}
 	}
 	
