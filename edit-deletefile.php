@@ -24,8 +24,8 @@ if (!empty($_POST["fileid"])) {
 
 		if ($assetid) {
 		
-			$userid = $con->getOne("select createdbyuserid from asset where assetid=?", array($assetid));
-			if ($userid != $user['userid'] && $user['rolecode'] != 'admin') {
+			$asset = $con->getRow("select * from asset where assetid=?", array($assetid));
+			if (!canEditAsset($asset, $user)) {
 				exit(json_encode(array("status" => "error", "errormessage" => 'No privilege to delete files from this asset. You may need to login again'))); 
 			}
 		
@@ -34,7 +34,7 @@ if (!empty($_POST["fileid"])) {
 		
 		} else {
 			if ($file['userid'] != $user['userid']  && $user['rolecode'] != 'admin') {
-                               exit(json_encode(array("status" => "error", "errormessage" => 'No privilege to delete files from this asset. You may need to login again')));
+				exit(json_encode(array("status" => "error", "errormessage" => 'No privilege to delete files from this asset. You may need to login again')));
 			}
 
 			$dir = "tmp/{$user['userid']}/";

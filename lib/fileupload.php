@@ -32,7 +32,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 
 	
 	if ($parentassetid) {
-		$asset = $con->getOne("select * from asset where assetid=?", array($parentassetid));
+		$asset = $con->getRow("select * from asset where assetid=?", array($parentassetid));
 		
 		if (!$asset) {
 			return array("status" => "error", "errormessage" => 'Asset does not exist (anymore)'); 

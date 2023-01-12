@@ -65,7 +65,8 @@ class ModEditor extends AssetEditor {
 			}
 		}
 		
-		$hasfiles = $con->getOne("select releaseid from `release` where assetid=?", array($this->assetid));
+		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
+		$hasfiles = $con->getOne("select releaseid from `release` where modid=?", array($modid));
 		$statusreverted = false;
 		if ($_POST['statusid'] != 1 && !$hasfiles) {
 			$statusreverted = true;
