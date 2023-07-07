@@ -128,7 +128,7 @@ switch ($action) {
 			$modWithVersions[$modid] = $modVersion;
 		}
 
-		listModNewestVersion($modWithVersions);
+		listOutOfDateMods($modWithVersions);
 		break;
 }
 
@@ -387,7 +387,7 @@ function resolveTags($tagscached)
 	return $tags;
 }
 
-function listModNewestVersion($modsWithVersions)
+function listOutOfDateMods($modsWithVersions)
 {
 	$outOfDateMods = array();
 	foreach($modsWithVersions as $modid => $version) {
@@ -396,7 +396,7 @@ function listModNewestVersion($modsWithVersions)
 			$outOfDateMods[$modid] = $latestRelease;
 		}
 	}
-	good(array("statuscode" => 200, "updates" => empty($outOfDateMods) ? null : $outOfDateMods));
+	good(array("statuscode" => 200, "updates" => $outOfDateMods));
 }
 
 function getLatestRelease($modid) {
