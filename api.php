@@ -120,7 +120,11 @@ switch ($action) {
 		$modsQueryStrings = explode(',', $_GET["mods"]);
 		$modWithVersions = array();
 		foreach($modsQueryStrings as $modWithVersion) {
-			[$modid, $modVersion] = explode('@', $modWithVersion);
+			$modVersionInfo = explode('@', $modWithVersion);
+			if (count($modVersionInfo) != 2) {
+				fail("400");
+			}
+			[$modid, $modVersion] = $modVersionInfo;
 			$modWithVersions[$modid] = $modVersion;
 		}
 
