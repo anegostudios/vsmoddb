@@ -112,6 +112,20 @@ switch ($action) {
 		}
 		good(array("statuscode" => 200, "changelogs" => $changelogs));
 		break;
+
+	case "updates":
+		if (empty($_GET["mods"])) {
+			fail("400");
+		}
+		$modsQueryStrings = explode(',', $_GET["mods"]);
+		$modWithVersions = array();
+		foreach($modsQueryStrings as $modWithVersion) {
+			[$modid, $modVersion] = explode('@', $modWithVersion);
+			$modWithVersions[$modid] = $modVersion;
+		}
+
+		listModNewestVersion($modWithVersions);
+		break;
 }
 
 
@@ -367,4 +381,52 @@ function resolveTags($tagscached)
 	}
 
 	return $tags;
+}
+
+function listModNewestVersion($modsWithVersions)
+{
+	$outOfDateMods = array();
+	foreach($modsWithVersions as $modid => $version) {
+		$latestRelease = getLatestRelease($modid);
+		if (!empty($latestRelease) && $latestRelease["modversion"] > $version) {
+			$outOfDateMods[$modid] = $latestRelease;
+		}
+	}
+	good(array("statuscode" => 200, "updates" => empty($outOfDateMods) ? null : $outOfDateMods));
+}
+
+function getLatestRelease($modid) {
+	global $con;
+
+	$latestRelease = $con->getRow("
+		select
+			`release`.*,
+			asset.*
+		from 
+			`release` 
+			join asset on (asset.assetid = `release`.assetid)
+		where modid=?
+		order by release.created desc
+	", array($modid));
+
+	if (empty($latestRelease)) {
+		return array();
+	}
+
+	$tags = resolveTags($latestRelease["tagscached"]);
+	$file = $con->getRow("select * from file where assetid=? limit 1", array($latestRelease['assetid']));
+
+	$latestReleaseInfo = array(
+		"releaseid" => intval($latestRelease['releaseid']),
+		"mainfile" => "files/asset/{$file['assetid']}/" . $file["filename"],
+		"filename" => $file["filename"],
+		"fileid" => $file['fileid'] ? intval($file['fileid']) : null,
+		"downloads" => intval($file["downloads"]),
+		"tags" => $tags,
+		"modidstr" => $latestRelease['modidstr'],
+		"modversion" => $latestRelease['modversion'],
+		"created" => $latestRelease["created"]
+	);
+
+	return $latestReleaseInfo;
 }
