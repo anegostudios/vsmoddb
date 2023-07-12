@@ -99,6 +99,13 @@
 					<span class="on"><i class="fas fa-star"></i>Unfollow</span>
 					<span class="count">{$asset["follows"]}</span>
 				</a>
+				{if count($releases)}
+					{if !empty($releases[0]['file'])}<p><span class="text-weak">Latest file for {$releases[0]['tags'][count($releases[0]['tags'])-1]['name']}:</span><br>
+					<a class="downloadbutton" href="/download?fileid={$releases[0]['file']['fileid']}">{$releases[0]['file']['filename']}</a>
+					{if !empty($releases[0]['modidstr'])}<a style="padding-left:10px;" href="vintagestorymodinstall://{$releases[0]['modidstr']}@{$releases[0]['modversion']}"><abbr title="Works only on Windows and v1.18.0-rc.1 or newer">1-click install</abbr></a>{/if}
+					</p>
+				{/if}
+				{/if}
 			</div>
 			
 			<div style="clear:both;"><br></div>
@@ -128,7 +135,7 @@
 						<th class="releasedate">Release date</th>
 						<th class="changelog">Changelog</th>
 						<th class="download">Download</th>
-						<!--<th><abbr title="Works only on Windows and only from game client version 1.17.9 onwards">1-click mod install*</abbr></th>-->
+						<th><abbr title="Works only on Windows and v1.18.0-rc.1 or newer">1-click mod install*</abbr></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -147,7 +154,8 @@
 							<td>
 								<div class="tags">
 								{foreach from=$release['tags'] item=tag}
-									<a href="/list/mod/?gv[]={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>
+									{if $tag['tagid']==0}<a href="#" class="tag" style="background-color:{$tag['color']}" title="{$tag['desc']}">{$tag['name']}*</a>
+									{else}<a href="/list/mod/?gv[]={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>{/if}
 								{/foreach}
 								</div>
 						</td>
@@ -155,7 +163,7 @@
 							<td>{fancyDate($release['created'])}</td>
 							<td><a href="#showchangelog">Show</a></td>
 							<td>{if !empty($release['file'])}<a class="downloadbutton" href="/download?fileid={$release['file']['fileid']}">{$release['file']['filename']}</a>{/if}</td>
-							<!--<td>{if !empty($release['modidstr'])}<a href="vintagestorymodinstall://-i {$release['modidstr']}@{$release['modversion']}">Install now</a>{/if}</td>-->
+							<td>{if !empty($release['modidstr'])}<a href="vintagestorymodinstall://{$release['modidstr']}@{$release['modversion']}">Install now</a>{/if}</td>
 						</tr>
 						{assign var="first" value="1"}
 					{/foreach}

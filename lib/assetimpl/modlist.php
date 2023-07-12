@@ -92,7 +92,15 @@ class ModList extends AssetList {
 		
 		$sql = "
 			select 
-				asset.*, 
+				asset.createdbyuserid,
+				asset.editedbyuserid,
+				asset.statusid,
+				asset.name,
+			 	asset.assettypeid,
+				asset.code,
+				asset.created,
+				asset.lastmodified,
+				asset.tagscached,
 				`{$this->tablename}`.*,
 				user.name as `from`,
 				status.code as statuscode,
@@ -107,6 +115,7 @@ class ModList extends AssetList {
 			" . (count($this->wheresql) ? "where " . implode(" and ", $this->wheresql) : "") . "
 			order by {$this->orderby}
 		";
+
 		
 		$rows = $con->getAll($sql, $this->wherevalues);
 		$this->rows = array();
@@ -135,7 +144,7 @@ class ModList extends AssetList {
 			$this->rows[] = $row;
 		}
 		
-		if (isset($_GET['text'])) {
+		if (!empty($_GET['text'])) {
 			usort($this->rows, 'modWeightCmp');
 		}
 		

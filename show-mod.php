@@ -96,6 +96,9 @@ if ($assetid) {
 		} else {
 			$releases[$idx]['highestver'] = ""; 
 		}
+		
+		$tags = groupMinorVersionTags($tags);
+		
 		$releases[$idx]['tags'] = $tags;
 		$releases[$idx]['file'] = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
 	}
@@ -125,3 +128,35 @@ function cmpReleases($r1, $r2) {
 	return $val;
 }
 
+function groupMinorVersionTags($tags) {
+	$mainvercnt = 0;
+	$curver = "0";
+	$gtags = array();
+	foreach ($tags as $idx=>$tag) {
+		$parts = explode(".", $tag['name']);
+		$mainver = $parts[0].".".$parts[1];
+		
+		if ($curver == $mainver) {
+			$mainvercnt++;
+		} else { 
+			$curver = $mainver; 
+			$mainvercnt=1;
+		}
+		
+		if ($mainvercnt == 3) {
+			$otag1 = array_pop($gtags);
+			$otag2 = array_pop($gtags);
+			$gtags[] = array('name' => "Various " . $curver.".x", 'desc' => $otag1['name'] . ", " . $otag2['name'], 'color' => $tag['color'], 'tagid' => 0);
+		}
+		
+		if ($mainvercnt > 3) {
+			$gtags[count($gtags)-1]['desc'] .= ", " . $tag['name'];	
+		}
+		
+		if ($mainvercnt < 3) {
+			$gtags[] = $tag;
+		}
+	}
+	
+	return $gtags;
+}
