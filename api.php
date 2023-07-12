@@ -387,25 +387,18 @@ function resolveTags($tagscached)
 	return $tags;
 }
 
-function listOutOfDateMods($modsWithVersions)
-{
-	$outOfDateMods = array();
-	$modids = array_keys($modsWithVersions);
-	$latestReleases = getLatestReleases($modids);
-	foreach($latestReleases as $latestRelease) {
-		$modid = $latestRelease["modidstr"];
-		$version = $modsWithVersions[$modid];
-		if (!empty($latestRelease) && $latestRelease["modversion"] > $version) {
-			$outOfDateMods[$modid] = $latestRelease;
-		}
-	}
-	good(array("statuscode" => 200, "updates" => $outOfDateMods));
-}
-
-function getLatestReleases($modids) {
+function listOutOfDateMods($modsWithVersions) {
 	global $con;
 
-	$latestReleaseInfo = array();
+	$modids = array_keys($modsWithVersions);
+	$versions = array_values($modsWithVersions);
+	$modidParams = implode(",", array_fill(0, count($modids), "?"));
+	$versionParams = implode(",", array_fill(0, count($versions), "?"));
+
+	// Since this query's join on `latestrelease` limits the output to only the latest release for each mod,
+	// We can filter out releases where the incoming version param is the same as the latest release
+	// This means we can use the query itself to fetch only mods which are not on the latest version :)
+	$outOfDateMods = array();
 	$latestReleases = $con->getAll("
 		select
 			`release`.*,
@@ -414,19 +407,15 @@ function getLatestReleases($modids) {
 			`release` 
 			join asset on (asset.assetid = `release`.assetid)
 			join (select max(created) as created, modid from `release` group by modid) latestrelease on (latestrelease.created = `release`.created)
-		where `release`.modid in (?)
+		where `release`.modidstr in ($modidParams) and `release`.modversion not in ($versionParams)
 		order by `release`.created desc
-	", array(implode(",", $modids)));
-
-	if (empty($latestReleases)) {
-		return $latestReleaseInfo;
-	}
+	", array_merge($modids, $versions));
 
 	foreach($latestReleases as $latestRelease) {
 		$tags = resolveTags($latestRelease["tagscached"]);
 		$file = $con->getRow("select * from file where assetid=? limit 1", array($latestRelease['assetid']));
 
-		$latestReleaseInfo[] = array(
+		$outOfDateMods[$latestRelease['modidstr']] = array(
 			"releaseid" => intval($latestRelease['releaseid']),
 			"mainfile" => "files/asset/{$file['assetid']}/" . $file["filename"],
 			"filename" => $file["filename"],
@@ -439,5 +428,5 @@ function getLatestReleases($modids) {
 		);
 	}
 
-	return $latestReleaseInfo;
+	good(array("statuscode" => 200, "updates" => $outOfDateMods));
 }
