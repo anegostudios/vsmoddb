@@ -112,6 +112,24 @@ switch ($action) {
 		}
 		good(array("statuscode" => 200, "changelogs" => $changelogs));
 		break;
+
+	case "updates":
+		if (empty($_GET["mods"])) {
+			fail("400");
+		}
+		$modsQueryStrings = explode(',', $_GET["mods"]);
+		$modWithVersions = array();
+		foreach($modsQueryStrings as $modWithVersion) {
+			$modVersionInfo = explode('@', $modWithVersion);
+			if (count($modVersionInfo) != 2) {
+				fail("400");
+			}
+			[$modid, $modVersion] = $modVersionInfo;
+			$modWithVersions[$modid] = $modVersion;
+		}
+
+		listOutOfDateMods($modWithVersions);
+		break;
 }
 
 
@@ -367,4 +385,59 @@ function resolveTags($tagscached)
 	}
 
 	return $tags;
+}
+
+function listOutOfDateMods($modsWithVersions)
+{
+	$outOfDateMods = array();
+	$modids = array_keys($modsWithVersions);
+	$latestReleases = getLatestReleases($modids);
+	foreach($latestReleases as $latestRelease) {
+		$modid = $latestRelease["modidstr"];
+		$version = $modsWithVersions[$modid];
+		if (!empty($latestRelease) && $latestRelease["modversion"] > $version) {
+			$outOfDateMods[$modid] = $latestRelease;
+		}
+	}
+	good(array("statuscode" => 200, "updates" => $outOfDateMods));
+}
+
+function getLatestReleases($modids) {
+	global $con;
+
+	$latestReleaseInfo = array();
+	$latestReleases = $con->getAll("
+		select
+			`release`.*,
+			asset.*
+		from 
+			`release` 
+			join asset on (asset.assetid = `release`.assetid)
+			join (select max(created) as created, modid from `release` group by modid) latestrelease on (latestrelease.created = `release`.created)
+		where `release`.modid in (?)
+		order by `release`.created desc
+	", array(implode(",", $modids)));
+
+	if (empty($latestReleases)) {
+		return $latestReleaseInfo;
+	}
+
+	foreach($latestReleases as $latestRelease) {
+		$tags = resolveTags($latestRelease["tagscached"]);
+		$file = $con->getRow("select * from file where assetid=? limit 1", array($latestRelease['assetid']));
+
+		$latestReleaseInfo[] = array(
+			"releaseid" => intval($latestRelease['releaseid']),
+			"mainfile" => "files/asset/{$file['assetid']}/" . $file["filename"],
+			"filename" => $file["filename"],
+			"fileid" => $file['fileid'] ? intval($file['fileid']) : null,
+			"downloads" => intval($file["downloads"]),
+			"tags" => $tags,
+			"modidstr" => $latestRelease['modidstr'],
+			"modversion" => $latestRelease['modversion'],
+			"created" => $latestRelease["created"]
+		);
+	}
+
+	return $latestReleaseInfo;
 }
