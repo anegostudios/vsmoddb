@@ -400,24 +400,42 @@ function listOutOfDateMods($modsWithVersions) {
 	$combinedParams = implode(",", array_fill(0, count($combined), "?"));
 	$modidParams = implode(",", array_fill(0, count($modids), "?"));
 
-	// Since this query's join on `latestrelease` limits the output to only the latest release for each mod,
-	// We can filter out releases where the incoming version param is the same as the latest release
-	// This means we can use the query itself to fetch only mods which are not on the latest version :)
 	$outOfDateMods = array();
 	$latestReleases = $con->getAll("
+		with latestrelease as (
+			select 
+				`release`.modid,
+				`release`.releaseid,
+				`release`.modidstr,
+				`release`.modversion,
+				`release`.created,
+				`release`.assetid,
+				max(`release`.modversion) 
+					OVER(
+						partition BY `release`.modid
+					) as latest, 
+				Row_number() 
+					OVER( 
+						partition BY `release`.modid 
+						ORDER BY `release`.modversion DESC
+					) as rn
+			from `release`
+		)
 		select
-			`release`.releaseid,
-			`release`.modidstr,
-			`release`.modversion,
-			`release`.created,
-			`release`.assetid,
+			latestrelease.modid,
+			latestrelease.releaseid,
+			latestrelease.modidstr,
+			latestrelease.modversion,
+			latestrelease.created,
+			latestrelease.assetid,
 			asset.tagscached
 		from 
-			`release` 
-			join asset on (asset.assetid = `release`.assetid)
-			join (select max(created) as created, modid from `release` group by modid) latestrelease on (latestrelease.created = `release`.created)
-		where `release`.modidstr in ($modidParams) and CONCAT(`release`.modidstr, '@', `release`.modversion) not in ($combinedParams)
-		order by `release`.created desc
+			latestrelease
+			join asset on (asset.assetid = latestrelease.assetid)
+		where rn = 1
+			and latestrelease.modidstr in ($modidParams) 
+			and CONCAT(latestrelease.modidstr, '@', latestrelease.modversion) not in ($combinedParams)
+		order by latestrelease.modversion desc
 	", array_merge($modids, $combined));
 
 	foreach($latestReleases as $latestRelease) {
