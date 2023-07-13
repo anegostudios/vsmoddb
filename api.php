@@ -390,10 +390,15 @@ function resolveTags($tagscached)
 function listOutOfDateMods($modsWithVersions) {
 	global $con;
 
+	$combine = function($modid, $version) {
+		return "$modid@$version";
+	};
+
 	$modids = array_keys($modsWithVersions);
 	$versions = array_values($modsWithVersions);
+	$combined = array_map($combine, $modids, $versions);
+	$combinedParams = implode(",", array_fill(0, count($combined), "?"));
 	$modidParams = implode(",", array_fill(0, count($modids), "?"));
-	$versionParams = implode(",", array_fill(0, count($versions), "?"));
 
 	// Since this query's join on `latestrelease` limits the output to only the latest release for each mod,
 	// We can filter out releases where the incoming version param is the same as the latest release
@@ -401,15 +406,19 @@ function listOutOfDateMods($modsWithVersions) {
 	$outOfDateMods = array();
 	$latestReleases = $con->getAll("
 		select
-			`release`.*,
-			asset.*
+			`release`.releaseid,
+			`release`.modidstr,
+			`release`.modversion,
+			`release`.created,
+			`release`.assetid,
+			asset.tagscached
 		from 
 			`release` 
 			join asset on (asset.assetid = `release`.assetid)
 			join (select max(created) as created, modid from `release` group by modid) latestrelease on (latestrelease.created = `release`.created)
-		where `release`.modidstr in ($modidParams) and `release`.modversion not in ($versionParams)
+		where `release`.modidstr in ($modidParams) and CONCAT(`release`.modidstr, '@', `release`.modversion) not in ($combinedParams)
 		order by `release`.created desc
-	", array_merge($modids, $versions));
+	", array_merge($modids, $combined));
 
 	foreach($latestReleases as $latestRelease) {
 		$tags = resolveTags($latestRelease["tagscached"]);
