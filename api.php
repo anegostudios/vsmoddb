@@ -117,18 +117,18 @@ switch ($action) {
 		if (empty($_GET["mods"])) {
 			fail("400");
 		}
-		$modsQueryStrings = explode(',', $_GET["mods"]);
-		$modWithVersions = array();
-		foreach($modsQueryStrings as $modWithVersion) {
+		$modsQueryString = explode(',', $_GET["mods"]);
+		$modidStrToVersionMap = array();
+		foreach($modsQueryString as $modWithVersion) {
 			$modVersionInfo = explode('@', $modWithVersion);
 			if (count($modVersionInfo) != 2) {
 				fail("400");
 			}
-			[$modid, $modVersion] = $modVersionInfo;
-			$modWithVersions[$modid] = $modVersion;
+			[$modidStr, $modVersion] = $modVersionInfo;
+			$modidStrToVersionMap[$modidStr] = $modVersion;
 		}
 
-		listOutOfDateMods($modWithVersions);
+		listOutOfDateMods($modidStrToVersionMap);
 		break;
 }
 
@@ -387,73 +387,114 @@ function resolveTags($tagscached)
 	return $tags;
 }
 
-function listOutOfDateMods($modsWithVersions) {
+function listOutOfDateMods($modidStrToVersionMap) {
 	global $con;
 
-	$combine = function($modid, $version) {
-		return "$modid@$version";
-	};
-
-	$modids = array_keys($modsWithVersions);
-	$versions = array_values($modsWithVersions);
-	$combined = array_map($combine, $modids, $versions);
-	$combinedParams = implode(",", array_fill(0, count($combined), "?"));
-	$modidParams = implode(",", array_fill(0, count($modids), "?"));
+	$modIdStrs = array_keys($modidStrToVersionMap);
+	$modIdStrParams = implode(",", array_fill(0, count($modIdStrs), "?"));
 
 	$outOfDateMods = array();
-	$latestReleases = $con->getAll("
-		with latestrelease as (
-			select 
-				`release`.modid,
-				`release`.releaseid,
-				`release`.modidstr,
-				`release`.modversion,
-				`release`.created,
-				`release`.assetid,
-				max(`release`.modversion) 
-					OVER(
-						partition BY `release`.modid
-					) as latest, 
-				Row_number() 
-					OVER( 
-						partition BY `release`.modid 
-						ORDER BY `release`.modversion DESC
-					) as rn
-			from `release`
-		)
+	$mods = $con->getAll("
 		select
-			latestrelease.modid,
-			latestrelease.releaseid,
-			latestrelease.modidstr,
-			latestrelease.modversion,
-			latestrelease.created,
-			latestrelease.assetid,
+			`release`.modid,
+			`release`.releaseid,
+			`release`.modidstr,
+			`release`.modversion,
+			`release`.created,
+			`release`.assetid,
 			asset.tagscached
 		from 
-			latestrelease
-			join asset on (asset.assetid = latestrelease.assetid)
-		where rn = 1
-			and latestrelease.modidstr in ($modidParams) 
-			and CONCAT(latestrelease.modidstr, '@', latestrelease.modversion) not in ($combinedParams)
-		order by latestrelease.modversion desc
-	", array_merge($modids, $combined));
+		`release`
+			join asset on (asset.assetid = `release`.assetid)
+		where `release`.modidstr in ($modIdStrParams)
+		order by `release`.modversion desc
+	", $modIdStrs);
 
-	foreach($latestReleases as $latestRelease) {
-		$tags = resolveTags($latestRelease["tagscached"]);
-		$file = $con->getRow("select * from file where assetid=? limit 1", array($latestRelease['assetid']));
+	$modidToReleasesMap = arrayGroupBy($mods, "modid");
 
-		$outOfDateMods[$latestRelease['modidstr']] = array(
-			"releaseid" => intval($latestRelease['releaseid']),
-			"mainfile" => "files/asset/{$file['assetid']}/" . $file["filename"],
-			"filename" => $file["filename"],
-			"fileid" => $file['fileid'] ? intval($file['fileid']) : null,
-			"downloads" => intval($file["downloads"]),
-			"tags" => $tags,
-			"modidstr" => $latestRelease['modidstr'],
-			"modversion" => $latestRelease['modversion'],
-			"created" => $latestRelease["created"]
-		);
+	$modidToVersionMap = convertVersionMap($modidToReleasesMap, $modidStrToVersionMap);
+
+	foreach($modidToReleasesMap as $modid => $modReleases) {
+		$latestRelease = getLatestRelease($modid, $modReleases, $modidToVersionMap, $con);
+		if ($latestRelease == null) {
+			continue;
+		}
+		$outOfDateMods[$latestRelease['modidstr']] = $latestRelease;
 	}
 
 	good(array("statuscode" => 200, "updates" => $outOfDateMods));
+}
+
+function getLatestRelease($modid, $modReleases, $modidToVersionMap, $con) {
+	usort($modReleases, "compareVersions");
+	$release = $modReleases[0];
+
+	$latestVersion = $release['modversion'];
+	$queryStringVersion = $modidToVersionMap[$modid];
+	if (cmpVersion($queryStringVersion, $latestVersion) != 1 || $queryStringVersion == $latestVersion) {
+		return;
+	}
+
+	$tags = resolveTags($release["tagscached"]);
+	$file = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
+
+	return array(
+		"releaseid" => intval($release['releaseid']),
+		"mainfile" => "files/asset/{$file['assetid']}/" . $file["filename"],
+		"filename" => $file["filename"],
+		"fileid" => $file['fileid'] ? intval($file['fileid']) : null,
+		"downloads" => intval($file["downloads"]),
+		"tags" => $tags,
+		"modidstr" => $release['modidstr'],
+		"modversion" => $release['modversion'],
+		"created" => $release["created"]
+	);
+}
+
+function arrayGroupBy($array, $key) {
+    $return = array();
+    foreach($array as $val) {
+        $return[$val[$key]][] = $val;
+    }
+    return $return;
+}
+
+function compareVersions($releaseA, $releaseB) {
+	$isversion = splitVersion($releaseA['modversion']);
+	$reqversion = splitVersion($releaseB['modversion']);
+	
+	$cnt = max($isversion, $reqversion);
+	
+	for ($i = 0; $i < $cnt; $i++) {
+		if ($i >= count($isversion)) return 1;
+		
+		if (intval($isversion[$i]) > intval($reqversion[$i])) return -1;
+		if (intval($isversion[$i]) < intval($reqversion[$i])) return 1;
+	}
+	
+	return 0;
+}
+
+// Convert ModIdStr VersionMap => ModId VersionMap
+function convertVersionMap($modidToReleasesMap, $modidStrToVersionMap) {
+	$modidToVersionMap = array();
+	$modidToModidStrMap = array_map("listModidStrsPerModid", $modidToReleasesMap);
+	foreach($modidToModidStrMap as $modid => $modidStrs) {
+		foreach($modidStrs as $modidStr) {
+			if (array_key_exists($modidStr, $modidStrToVersionMap)) {
+				$modidToVersionMap[$modid] = $modidStrToVersionMap[$modidStr];
+			}
+		}
+	}
+
+	return $modidToVersionMap;
+}
+
+function listModidStrsPerModid($releases) {
+	$modIdStrs = array_map("getModidStrs", $releases);
+	return array_unique($modIdStrs);
+}
+
+function getModidStrs($release) {
+	return $release['modidstr'];
 }
