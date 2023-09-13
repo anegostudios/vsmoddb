@@ -198,6 +198,8 @@ CREATE TABLE IF NOT EXISTS `moddb`.`mod` (
   `trailervideourl` VARCHAR(255) NULL,
   `issuetrackerurl` VARCHAR(255) NULL,
   `wikiurl` VARCHAR(255) NULL,
+  `donateurl` VARCHAR(255) NULL,
+  `summary` VARCHAR(100) NULL,
   `downloads` INT NULL DEFAULT 0,
   `follows` INT NULL DEFAULT 0,
   `trendingpoints` INT NOT NULL DEFAULT 0,
