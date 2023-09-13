@@ -72,7 +72,7 @@ switch ($action) {
 			$limit = '';
 		}
 
-		$rows = $con->getAll("select commentid, assetid, userid, text, created, lastmodified from comment $wheresql order by lastmodified $limit", $wherevalue);
+		$rows = $con->getAll("select commentid, assetid, userid, text, created, lastmodified from comment $wheresql order by lastmodified DESC $limit", $wherevalue);
 		$comments = array();
 		foreach ($rows as $row) {
 			$comments[] = array(
