@@ -8,14 +8,17 @@
 	"workspaceFolder": "/workspace",
 	
 	// Set *default* container specific settings.json values on container create.
-	"settings": { },
+	"customizations": { 
+		"vscode": { 
+			"extensions": [
+				"felixfbecker.php-debug",
+				"felixfbecker.php-intellisense",
+				"mrmlnc.vscode-apache"
+			]
+		} 
+	},
 
 	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [
-		"felixfbecker.php-debug",
-		"felixfbecker.php-intellisense",
-		"mrmlnc.vscode-apache"
-	],
 	// start the apache webserver
 	"postStartCommand": "apachectl start",
 

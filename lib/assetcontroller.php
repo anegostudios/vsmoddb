@@ -6,6 +6,7 @@ class AssetController {
 	var $tablename;	
 	var $namesingular;
 	var $nameplural;
+	var $columns;
 
 	function __construct($classname) {
 	
