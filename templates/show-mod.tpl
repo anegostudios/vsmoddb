@@ -52,7 +52,7 @@
 			<li><a href="{$asset['sourcecodeurl']}"><img src="/web/img/externallink.png" height="18"> Source</a></li>
 		{/if}
 		{if $asset['donateurl']}
-			<li><a href="{$asset['donateurl']}" target="_blank"><img src="/web/img/externallink.png" height="18"> Donate</a></li>
+			<li><a href="{$asset['donateurl']}"><img src="/web/img/externallink.png" height="18"> Donate</a></li>
 		{/if}
 	</ul>
 	

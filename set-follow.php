@@ -11,7 +11,7 @@ $exists = $con->getOne("select userid from `follow` where modid=? and userid=?",
 
 if ($_GET['op'] == 'follow') {
 	if (!$exists) {
-		$con->Execute("insert into `follow` (modid, userid) values (?, ?)", array($modid, $userid));
+		$con->Execute("insert into `follow` (modid, userid, created) values (?, ?, now())", array($modid, $userid));
 		$con->Execute("update `mod` set follows=follows+1 where modid=?", array($modid));
 	}
 } else {
