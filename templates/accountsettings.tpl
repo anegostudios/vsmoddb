@@ -13,6 +13,17 @@
 			<label>E-Mail</label>
 			<input type="text" name="email" value="{$user['email']}" style="width:290px;" disabled> (<a href="https://account.vintagestory.at/profile">edit</a>)
 		</div>
+		
+
+		<div class="editbox linebreak">
+			<label>Follow Discord Webhook</label>
+			<input type="text" name="followwebhook" value="{$user['followwebhook']}" style="width:290px;" >
+		</div>
+
+		<div class="editbox linebreak">
+			<label>Mention Discord Webhook</label>
+			<input type="text" name="mentionwebhook" value="{$user['mentionwebhook']}" style="width:290px;" >
+		</div>
 
 		<div class="editbox linebreak">
 			<label>Time Zone</label>

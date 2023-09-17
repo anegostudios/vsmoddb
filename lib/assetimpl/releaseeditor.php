@@ -5,6 +5,9 @@ class ReleaseEditor extends AssetEditor {
 	var $savestatus = null;
 	var $fileuploadstatus;
 	var $mod;
+	var $moddtype;
+	var $releaseIdDupl;
+	var $inUseByUser;
 
 	function __construct() {
 		$this->editTemplateFile = "edit-release";
@@ -89,7 +92,7 @@ class ReleaseEditor extends AssetEditor {
 	}
 	
 	function saveFromBrowser() {
-		global $con, $user, $view;
+		global $con, $user, $view, $config;
 		
 		$modid = null;
 		$file=null;
@@ -170,10 +173,10 @@ class ReleaseEditor extends AssetEditor {
 		}
 		
 		$status = parent::saveFromBrowser();
-		
+		$release = NULL;
 		if ($status == 'saved' || $status == 'savednew') {
-			$releaseid = $con->getOne("select releaseid from `release` where assetid=?", array($this->assetid));
-			
+			$release = $con->getRow("select releaseid,modid from `release` where assetid=?", array($this->assetid));
+			$releaseid = $release["releaseid"];
 			if ($modinfo['modparse'] == 'ok') {
 				update("release", $releaseid, array("detectedmodidstr" => $modidstr, "modidstr" => $modidstr, "modversion" => $modversion));
 			} else {
@@ -193,14 +196,34 @@ class ReleaseEditor extends AssetEditor {
 			$view->assign("errormessage", $this->fileuploadstatus["errormessage"]);
 		}
 		
-		$modid = $con->getOne("select modid from `release` where assetid=?", array($this->assetid));
-		
 		if ($status == 'savednew') {
+
+			$modid = $release["modid"];
+			$modAsset = $con->getRow("
+			select
+				modasset.name as assetname,
+				user.name as username,
+				file.fileid as fileid
+			from
+				`mod`
+				join `release` on (release.releaseid = {$release["releaseid"]})
+				join `asset` as modasset on (mod.assetid = modasset.assetid)
+				join `user` on (modasset.createdbyuserid = user.userid)
+				join `file` on (release.assetid = file.assetid)
+			where mod.modid=?", array($modid));
+			
+			$webhookdata =  createWebhookFollow($modAsset, $config, $modid, $modversion);
+
 			$con->Execute("update `mod` set lastreleased=now() where modid=?", array($modid));
 			
 			$userids = $con->getCol("select userid from `follow` where modid=?", array($modid));
 			foreach ($userids as $userid) {
 				$con->Execute("insert into notification (userid, type, recordid, created) values (?,?,?, now())", array($userid, 'newrelease', $modid));
+				$webhookurl = $con->getOne("select followwebhook from `user` where userid=?", array($userid));
+				if(!empty($webhookurl))
+				{
+					sendWebhook($webhookdata ,$webhookurl);
+				}
 			}
 		}
 	
@@ -245,4 +268,54 @@ class ReleaseEditor extends AssetEditor {
 		return "/show/mod/{$assetid}?saved=1#tab-files";
 	}
 		
+}
+
+function sendWebhook($data, $webhookUrl){
+
+	// Initialize cURL session
+	$ch = curl_init($webhookUrl);
+
+	// Set cURL options
+	curl_setopt($ch, CURLOPT_POST, 1);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data)); // Convert data to JSON
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json')); // Set the content type
+
+	// Execute cURL session and capture the response
+	$response = curl_exec($ch);
+	// Close cURL session
+	curl_close($ch);
+
+}
+
+function createWebhookFollow($modAsset, $config, $modid, $modversion){
+	return [
+		"content" => null, 
+		"embeds" => [
+			  [
+				 "title" => "New Mod Release", 
+				 "color" => 9544535, 
+				 "fields" => [
+					[
+					   "name" => "Mod:", 
+					   "value" => "[{$modAsset["assetname"]}]({$config["serverurl"]}/show/mod/{$modid})", 
+					   "inline" => true 
+					], 
+					[
+						"name" => "Author", 
+						"value" => $modAsset["username"], 
+						"inline" => true 
+					], 
+					[
+						"name" => "Version", 
+						"value" => "[{$modversion}]({$config["serverurl"]}/download?fileid={$modAsset["fileid"]})",
+						"inline" => true 
+					] 
+				 ], 
+				 "thumbnail" => [
+					"url" => "https://mods.vintagestory.at/web/img/vsmoddb-logo.png" 
+					]
+			  ] 
+		   ],
+		"attachments" => [] 
+	 ]; 
 }

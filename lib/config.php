@@ -9,11 +9,12 @@ if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
 	$config["database"] = "moddb";
 	$config["databasehost"] = "localhost";
 	$config["databaseuser"] = "root";
-	$config["databasepassword"] = "";
+	$config["serverurl"] = "http://stage.mods.vintagestory.at:8080";
 	define("DEBUG", 1);
 	define("DEBUGUSER", 1);
 } else {
 	$config["database"] = "moddb";
+	$config["serverurl"] = "https://mods.vintagestory.at";
 	
 	// Added this way so I can .gitignore this file.
 	$filepath = $config["basepath"] . "lib/config.db.priv.php";

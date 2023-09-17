@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS `moddb`.`user` (
   `actiontoken` VARCHAR(255) NULL,
   `sessiontoken` VARCHAR(255) NULL,
   `sessiontokenvaliduntil` DATETIME NULL,
+  `followwebhook` VARCHAR(255) NULL,
+  `mentionwebhook` VARCHAR(255) NULL,
   `timezone` VARCHAR(255) NULL,
   `created` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
