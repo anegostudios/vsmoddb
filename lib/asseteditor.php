@@ -8,6 +8,7 @@ class AssetEditor extends AssetController {
 	
 	var $editTemplateFile = "edit-asset";
 	var $isnew;
+	var $savestatus;
 	
 	function __construct($classname) {
 		parent::__construct($classname);
@@ -199,7 +200,7 @@ class AssetEditor extends AssetController {
 	
 	
 	function saveFromBrowser() {
-		global $con, $user, $view, $config;
+		global $con, $user, $view;
 		
 		$this->isnew = false;
 		$assetdb = array();
