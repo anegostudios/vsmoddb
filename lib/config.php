@@ -9,6 +9,7 @@ if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
 	$config["database"] = "moddb";
 	$config["databasehost"] = "localhost";
 	$config["databaseuser"] = "root";
+	$config["databasepassword"] = "";
 	$config["serverurl"] = "http://stage.mods.vintagestory.at:8080";
 	define("DEBUG", 1);
 	define("DEBUGUSER", 1);
