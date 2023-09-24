@@ -184,15 +184,16 @@ function createRelease($modId)
 
 	$data = json_decode($_POST["json"]);
 	$fileObject = $_FILES["file"];
-	$fileSize = strlen(fileContent);
+	$fileSize = $fileObject["size"];
 	if (empty($fileObject)) fail("400");
 	if ($fileSize > file_upload_max_size()) failWithMsg("400", "File size is too big");
 
-	$res = processFileUpload(fileObject, $assettypeid, $modId);
-	if ($res->status == "error") failWithMsg("400", $res->errormessage);
+	$res = processFileUpload($fileObject, $assettypeid, $modId);
+	if ($res["status"] == "error") failWithMsg("400", $res["errormessage"]);
 	$uploadedFile = $con->getRow("select * from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
 	if (!$uploadedFile) fail("500");
 
+	$filepath = "tmp/{$user['userid']}/{$fileObject['filename']}";
 	$modinfo = getModInfo($filepath);
 	if ($modinfo['modparse'] != 'ok') failWithMsg("400", "Mod id or version are incorrect"); //TODO Should we allow user to specify mod version and id like release editor does? I don't think so
 	$modidstr = $modinfo['modid'];
