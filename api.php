@@ -194,7 +194,7 @@ function createRelease($modId)
 	if (!$uploadedFile) fail("500");
 
 	$modinfo = getModInfo($filepath);
-	if ($modinfo['modparse'] != 'ok') failWithMsg("400", "Mod id or version are incorrect"); //TODO might be wrong logic, modparse may be related to something else
+	if ($modinfo['modparse'] != 'ok') failWithMsg("400", "Mod id or version are incorrect"); //TODO Should we allow user to specify mod version and id like release editor does? I don't think so
 	$modidstr = $modinfo['modid'];
 	$modversion = $modinfo['modversion'];
 	if (preg_match("/[^0-9a-zA-Z\-_]+/", $modidstr)) failWithMsg("400", "Mod id is incorrect");
@@ -205,30 +205,31 @@ function createRelease($modId)
 	if ($idIsTaken) failWithMsg("400", "Mod ID taken");
 	if ($modidstr == "game" || $modidstr == "creative" || $modidstr == "survival") fail("400");
 
+	$assetId = insert("asset");
+	$releaseId = insert("release");
 	$assetData = array(
 		"createdbyuserid" => $user["userid"],
 		"editedbyuserid" => $user["userid"],
 		"assettypeid" => $assettypeid,
-		"readydate" => date("Y-m-d H:i:s")
+		"numsaved" => 0
 	);
 	$releaseData = array(
-		"assetid" => $assetid,
+		"assetid" => $assetId,
 		"modid" => $modId,
 		"modidstr" => $modidstr,
 		"modversion" => $modversion,
 		"detectedmodidstr" => $modidstr,
-		"lastreleased" => date("Y-m-d H:i:s")
+		"detailtext" => $data->description
 	);
-	$assetId = insert("asset");
-	$releaseId = insert("release");
-	update("asset", $assetid, $assetData);
+	update("asset", $assetId, $assetData);
 	update("release", $releaseId, $releaseData);
+	$con->Execute("update `mod` set lastreleased=now() where modid=?", array($modId));
 
 	foreach ($data->versions as $gameVersion) {
-		$tag = $con->getRow("select * from tag where text=?", array($gameVersion)); //TODO is it text or name we are seeing in the GUI?
+		$tag = $con->getRow("select * from tag where name=? and tagtypeid=1", array($gameVersion));
 		$tagId = $tag["id"];
 
-		$assettagid = $con->getOne("select assettagid from assettag where assetid=? and tagid=?", array($assetid, $tagId));
+		$assettagid = $con->getOne("select assettagid from assettag where assetid=? and tagid=?", array($assetId, $tagId));
 		if (!$assettagid) {
 			$assettagid = insert("assettag");
 			update("assettag", $assettagid, array("assetid" => $assetId, "tagid" => $tagId));
@@ -257,9 +258,9 @@ function createRelease($modId)
 		}
 	}
 
-	$followersIds = $con->getCol("select userid from `follow` where modid=?", array($modid));
-	foreach ($followersIds as $userid) {
-		$con->Execute("insert into notification (userid, type, recordid, created) values (?,?,?, now())", array($userid, 'newrelease', $modid));
+	$followersIds = $con->getCol("select userid from `follow` where modid=?", array($modId));
+	foreach ($followersIds as $userId) {
+		$con->Execute("insert into notification (userid, type, recordid, created) values (?,?,?, now())", array($userId, 'newrelease', $modId));
 	}
 	updateGameVersionsCached($modId);
 
