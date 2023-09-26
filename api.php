@@ -163,7 +163,7 @@ function createRelease($modId)
 	$assettypeid = 2;
 
 	if (empty($user)) fail("401");
-	if (!$user['roleid']) fail("403"); //TODO Why do we need it? If at all
+	if (!$user['roleid']) fail("403");
 
 	if ($modId != "" . intval($modId)) {
 		$modId = $con->getOne("select modid from `release` where `release`.modidstr=?", array($modId));
@@ -195,7 +195,7 @@ function createRelease($modId)
 
 	$filepath = "tmp/{$user['userid']}/{$fileObject['filename']}";
 	$modinfo = getModInfo($filepath);
-	if ($modinfo['modparse'] != 'ok') failWithMsg("400", "Mod id or version are incorrect"); //TODO Should we allow user to specify mod version and id like release editor does? I don't think so
+	if ($modinfo['modparse'] != 'ok') failWithMsg("400", "Mod id or version are incorrect");
 	$modidstr = $modinfo['modid'];
 	$modversion = $modinfo['modversion'];
 	if (preg_match("/[^0-9a-zA-Z\-_]+/", $modidstr)) failWithMsg("400", "Mod id is incorrect");
@@ -237,26 +237,6 @@ function createRelease($modId)
 		}
 
 		unset($data->versions[$gameVersion]);
-	}
-
-	// TODO not sure if the code block directly bellow is even needed
-	$files = $con->getAll("select * from file where assetid is null and userid=? and assettypeid=?", array($user['userid'], $assettypeid));
-	if ($files) {
-		$dir = "files/asset/{$assetId}/";
-		if (!is_dir($dir)) {
-			mkdir($dir, 0755, true);
-		}
-
-		foreach ($files as $file) {
-			if (!empty($file['filename'])) {
-				rename("tmp/{$user['userid']}/{$file['filename']}", $dir . $file['filename']);
-				if ($file['thumbnailfilename']) {
-					rename("tmp/{$user['userid']}/{$file['thumbnailfilename']}", $dir . $file['thumbnailfilename']);
-				}
-			}
-
-			update("file", $file["fileid"], array("assetid" => $assetId));
-		}
 	}
 
 	$followersIds = $con->getCol("select userid from `follow` where modid=?", array($modId));
