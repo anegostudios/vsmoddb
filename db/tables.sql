@@ -134,6 +134,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`release` (
   `inprogress` TINYINT NULL,
   `detailtext` TEXT NULL,
   `releaseorder` INT NULL,
+  `hostedmodeallow` tinyint(1) NULL,
   `created` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`releaseid`),

@@ -198,7 +198,8 @@ function listMod($modid)
 			"tags" => $tags,
 			"modidstr" => $release['modidstr'],
 			"modversion" => $release['modversion'],
-			"created" => $release["created"]
+			"created" => $release["created"],
+			"hostedmodeallow" => $release["hostedmodeallow"] ? boolval($release["hostedmodeallow"]) : false
 		);
 	}
 

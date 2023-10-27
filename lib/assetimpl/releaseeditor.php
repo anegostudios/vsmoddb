@@ -5,6 +5,9 @@ class ReleaseEditor extends AssetEditor {
 	var $savestatus = null;
 	var $fileuploadstatus;
 	var $mod;
+	var $moddtype;
+	var $releaseIdDupl;
+	var $inUseByUser;
 
 	function __construct() {
 		$this->editTemplateFile = "edit-release";
