@@ -155,7 +155,7 @@ class ReleaseEditor extends AssetEditor {
 				return 'invalidmodversion';
 			}
 			
-			$this->releaseIdDupl = $con->getOne("select assetid from `release` where modidstr=? and modversion=? and assetid!=?", array($modidstr, $modversion, $this->assetid));
+			$this->releaseIdDupl = $con->getOne("select assetid from `release` where modidstr=? and assetid!=?", array($modidstr, $this->assetid)); // and modversion=?  - Tyron Sep 2023: why the eff were we checking for modversion here??
 			if ($this->releaseIdDupl) {
 				return 'duplicateid';
 			}
@@ -165,9 +165,10 @@ class ReleaseEditor extends AssetEditor {
 				$this->inUseByUser = $con->getRow("select * from user where userid=?", $userid);
 				return 'modidinuse';
 			}
+
 			
 			if ($modidstr == "game" || $modidstr == "creative" || $modidstr == "survival") {
-				$this->inUseByUser = array("userid"=>1, "name" => "the creators of this very game - gasp! And so");
+				$this->inUseByUser = array("userid"=>1, "name" => "the creators of this very game - gasp!");
 				return 'modidinuse';
 			}
 		}
