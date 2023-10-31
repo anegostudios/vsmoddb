@@ -11,9 +11,9 @@ if (!$user['roleid']) {
 $commentid = empty($_POST["commentid"]) ? 0 : $_POST["commentid"];
 
 if (!empty($_POST["delete"])) {
-	$cmt = $con->getRow("select assetid, userid from comment where commentid=?", array($commentid));
+	$cmt = $con->getRow("select assetid, userid, text from comment where commentid=?", array($commentid));
 	
-	if ($user['userid'] != $cmt['userid'] && $user['rolecode'] != 'admin') {
+	if ($user['userid'] != $cmt['userid'] && $user['rolecode'] != 'admin' && $user['rolecode'] != 'moderator') {
 		$view->display("403");
 		exit();
 	}
@@ -21,7 +21,12 @@ if (!empty($_POST["delete"])) {
 	$con->Execute("delete from comment where commentid=?", array($commentid));
 	$con->Execute("update `mod` set comments=(select count(*) from comment where assetid=?) where assetid=?", array($cmt["assetid"], $cmt["assetid"]));
 	
-	logAssetChanges(array("Deleted comment of user " . $user['userid']), $cmt['assetid']);
+	$changelog = array("Deleted own comment");
+	if ($user['userid'] != $cmt['userid']) {
+		$changelog = array("Deleted comment (".$cmt["text"].") of user " . $user['userid']);
+	}
+	
+	logAssetChanges($changelog, $cmt['assetid']);
 	
 	exit(json_encode(array("ok" => 1)));
 }

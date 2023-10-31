@@ -48,15 +48,20 @@ if (!empty($_POST["save"])) {
 		
 		logAssetChanges(array("Added a new comment."), $_POST["assetid"]);
 	} else {
-		$cmt = $con->getRow("select assetid, userid from comment where commentid=?", array($commentid));
+		$cmt = $con->getRow("select assetid, userid, text from comment where commentid=?", array($commentid));
 		$assetid = $cmt['assetid'];
 		
-		if ($user['userid'] != $cmt['userid'] && $user['rolecode'] != 'admin') {
+		if ($user['userid'] != $cmt['userid'] && $user['rolecode'] != 'admin' && $user['rolecode'] != 'moderator') {
 			$view->display("403");
 			exit();
 		}
 		
-		logAssetChanges(array("Modified his comment."), $assetid);
+		$changelog = array("Modified his comment.");
+		if ($user['userid'] != $cmt['userid']) {
+			$changelog = array("Modified someone else comment (".$cmt["text"].") => (".$text.")");
+		}
+		
+		logAssetChanges($changelog, $assetid);
 	}
 	
 
