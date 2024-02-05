@@ -87,6 +87,14 @@
 		echo "</pre>";
 	}
 
+	function dump_die($var) {
+		echo "<pre>";
+		var_dump($var);
+		echo "</pre>";
+
+		die();
+	}
+
 
 	function endsWith($string, $part) {
 		return preg_match("/(".preg_quote($part).")$/", $string);
@@ -191,7 +199,6 @@
 		fclose($fp);
 	}
 
-	
 	
 	function fullDate($sqldate) {
 		return date("M jS Y, H:i:s", strtotime($sqldate));
@@ -407,4 +414,35 @@
 		$con->Execute("delete from modversioncached where modid=?", array($modid));
 		
 		if (count($tags)>0) $con->Execute("insert into modversioncached values " . implode(",", $inserts));
+	}
+
+	function getUserToken($userid, $joindate) {
+		$paduserid = str_pad($userid, 8, '0', STR_PAD_LEFT);
+        $stringtoencode = "$joindate/$paduserid";
+        $entype = "rc4";
+        $magickey = "VintageStory";
+        $usertoken = openssl_encrypt($stringtoencode, $entype, $magickey);
+		return rtrim($usertoken, "==");
+	}
+
+	function getUserFromToken($usertoken, $dbcon) {
+		$returnuser = null;
+		$entype = "rc4";
+        $magickey = "VintageStory";
+		$unencodedstring = openssl_decrypt("$usertoken==", $entype, $magickey);
+		if ($unencodedstring === false) {
+			return $returnuser;
+		}
+		$userid = explode("/", $unencodedstring);
+		if (count($userid) > 1) {
+			$returnuser = $dbcon->getRow("
+			select
+				user.*
+			from
+				user
+			where 
+				user.userid = ?
+		", array($userid[1]));
+		}
+		return $returnuser;
 	}

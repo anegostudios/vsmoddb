@@ -14,6 +14,7 @@ if ($assetid) {
 			asset.*, 
 			`mod`.*,
 			createduser.userid as createduserid,
+			createduser.created as createduserjoindate,
 			createduser.name as createdusername,
 			editeduser.userid as editeduserid,
 			editeduser.name as editedusername,
@@ -33,6 +34,8 @@ if ($assetid) {
 		exit();
 	}
 	
+	$createdusertoken = getUserToken($asset['createduserid'], $asset['createduserjoindate']);
+	$view->assign("createdusertoken", $createdusertoken);
 	$files = $con->getAll("select * from file where assetid=?", array($assetid));
 	
 	foreach ($files as &$file) {
