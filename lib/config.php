@@ -7,9 +7,9 @@ $config["authserver"] = "auth.vintagestory.at";
 // adding "127.0.0.1	stage.mods.vintagestory.at"  to your hosts file
 if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
 	$config["database"] = "moddb";
-	$config["databasehost"] = "localhost";
-	$config["databaseuser"] = "root";
-	$config["databasepassword"] = "";
+	$config["databasehost"] = "127.0.0.1";
+	$config["databaseuser"] = "vsmoddb";
+	$config["databasepassword"] = "vsmoddb";
 	define("DEBUG", 1);
 	define("DEBUGUSER", 1);
 } else {

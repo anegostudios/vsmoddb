@@ -3,7 +3,8 @@
 $usertoken = $urlparts[2] ?? null;
 $shownuser = null;
 
-if (empty($usertoken) || empty($shownuser = getUserFromToken($usertoken, $con))) {
+if (empty($usertoken) || empty($shownuser = getUserByToken($usertoken, $dbcon)
+($usertoken, $con))) {
 	$view->display("404");
 	exit();
 }
