@@ -102,7 +102,7 @@
 				{if count($releases)}
 					{if !empty($releases[0]['file'])}<p><span class="text-weak">Latest file for {$releases[0]['tags'][count($releases[0]['tags'])-1]['name']}:</span><br>
 					<a class="downloadbutton" href="/download?fileid={$releases[0]['file']['fileid']}">{$releases[0]['file']['filename']}</a>
-					{if !empty($releases[0]['modidstr'])}<a style="padding-left:10px;" href="vintagestorymodinstall://{$releases[0]['modidstr']}@{$releases[0]['modversion']}"><abbr title="Works only on Windows and v1.18.0-rc.1 or newer">1-click install</abbr></a>{/if}
+					{if !empty($releases[0]['modidstr'])}<a style="padding-left:10px;" href="vintagestorymodinstall://{$releases[0]['modidstr']}@{$releases[0]['modversion']}"><abbr title="Works only on game version v1.18.0-rc.1 or newer. Requires MS Windows or using the AUR package on Linux">1-click install</abbr></a>{/if}
 					</p>
 				{/if}
 				{/if}
@@ -135,7 +135,7 @@
 						<th class="releasedate">Release date</th>
 						<th class="changelog">Changelog</th>
 						<th class="download">Download</th>
-						<th><abbr title="Works only on Windows and v1.18.0-rc.1 or newer">1-click mod install*</abbr></th>
+						<th><abbr title="Works only on game version v1.18.0-rc.1 or newer. Requires MS Windows or using the AUR package on Linux">1-click mod install*</abbr></th>
 					</tr>
 				</thead>
 				<tbody>
