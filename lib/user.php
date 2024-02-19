@@ -26,6 +26,10 @@ function canEditAsset($asset, $user) {
 	return isset($user['userid']) && ($user['userid'] == $asset['createdbyuserid'] || $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator");
 }
 
+function canEditProfile($shownuser, $user) {
+	return isset($user['userid']) && ($user['userid'] == $shownuser['userid'] || $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator");
+}
+
 function loadNotifications() {
 	global $con, $view, $user;
 	
