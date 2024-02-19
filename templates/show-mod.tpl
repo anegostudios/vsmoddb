@@ -89,7 +89,7 @@
 					{/foreach}
 				<br>
 				
-				<span class="text-weak">Author:</span> <a href="/list/mod?userid={$asset['createdbyuserid']}">{$asset['createdusername']}</a><br>
+				<span class="text-weak">Author:</span> <a href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a><br>
 				<span class="text-weak">Side:</span> {ucfirst($asset['side'])}<br>
 				<span class="text-weak">Created:</span> {fancyDate($asset['created'])}<br>
 				<span class="text-weak">Last modified:</span> {fancyDate($asset['lastreleased'])}<br>
