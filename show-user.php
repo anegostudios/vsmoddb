@@ -3,7 +3,12 @@
 $usertoken = $urlparts[2] ?? null;
 $shownuser = null;
 
-if (empty($usertoken) || empty($shownuser = getUserByToken($usertoken, $con))) {
+if (strlen($usertoken) > 20) {
+	$view->display("404");
+	exit();
+}
+
+if (empty($usertoken) || empty($shownuser = getUserByHash($usertoken, $con))) {
 	$view->display("404");
 	exit();
 }
