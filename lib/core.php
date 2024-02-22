@@ -464,10 +464,12 @@ function updateGameVersionsCached($modid)
 
 function getUserHash($userid)
 {
-	return substr(hash("sha512", $userid), 0, 20);
+	global $config;
+	return substr(hash("sha512", $userid . $config["hashsalt"]), 0, 20);
 }
 
 function getUserByHash($hashcode, $con)
 {
-	return $con->getRow("select * from user where sha2(user.userid, 512) like ?", array($hashcode . "%"));
+	global $config;
+	return $con->getRow("select * from user where sha2(concat(user.userid, '".$config["hashsalt"]."'), 512) like ?", array($hashcode . "%"));
 }
