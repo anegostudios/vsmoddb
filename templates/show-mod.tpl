@@ -100,36 +100,10 @@
 					<span class="count">{$asset["follows"]}</span>
 				</a><br>
 
-				<div class="dropdown">
-					<button class="dropbtn">test</button>
-					<div class="submenu">
-						<a href="#">Reporting</a>
- 					</div>
-				</div><br>
-
-				<div class="mainmenuitem icon>
-						<a href="#"><i style="color: black; font-size: 22px;" class="fa fa-flag-o"></i></a>
-						<ul class="submenu"
-						style="
-							background-color:yellow;
-							margin:0;
-							color: black;
-						">
-							<li><a href="/list/user">Users</a></li>
-							<li><a href="/list/tag" style="color:black;">Tags</a></li>
-						</ul>
-				</div>
-
 				<div class="dropdownmenu icon>
-						<a href="#"><i style="color: black; font-size: 22px;" class="fa fa-flag-o"></i></a>
-						<ul class="dropdownsubmenu"
-						style="
-							background-color:blue;
-							margin:0;
-							color: black;
-						">
-							<li><a href="/list/user" style="color:black;">Users</a></li>
-							<li><a href="/list/tag">Tags</a></li>
+						<a href="#"><i class="fa fa-ellipsis-h"></i></a>
+						<ul class="dropdowncontent">
+							<li><a href="#">Report</a></li>
 						</ul>
 				</div><br>
 
