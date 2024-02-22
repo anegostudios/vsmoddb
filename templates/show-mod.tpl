@@ -107,12 +107,22 @@
  					</div>
 				</div><br>
 
-				<div class="dropdownmenu icon
-					style="
-					color:black;
-				">
+				<div class="mainmenuitem icon>
 						<a href="#"><i style="color: black; font-size: 22px;" class="fa fa-flag-o"></i></a>
-						<ul class="dropdownmenu"
+						<ul class="submenu"
+						style="
+							background-color:yellow;
+							margin:0;
+							color: black;
+						">
+							<li><a href="/list/user">Users</a></li>
+							<li><a href="/list/tag" style="color:black;">Tags</a></li>
+						</ul>
+				</div>
+
+				<div class="dropdownmenu icon>
+						<a href="#"><i style="color: black; font-size: 22px;" class="fa fa-flag-o"></i></a>
+						<ul class="dropdownsubmenu"
 						style="
 							background-color:blue;
 							margin:0;
@@ -122,22 +132,6 @@
 							<li><a href="/list/tag">Tags</a></li>
 						</ul>
 				</div><br>
-
-				<div class="mainmenuitem icon
-					style="
-					color:black;
-				">
-						<a href="#"><i style="color: black; font-size: 22px;" class="fa fa-flag-o"></i></a>
-						<ul class="submenu"
-						style="
-							background-color:yellow;
-							margin:0;
-							color: black;
-						">
-							<li class="menuitem"><a href="/list/user">Users</a></li>
-							<li class="menuitem"><a href="/list/tag" style="color:black;">Tags</a></li>
-						</ul>
-				</div>
 
 				{if count($releases)}
 					{if !empty($releases[0]['file'])}<p><span class="text-weak">Latest file for {$releases[0]['tags'][count($releases[0]['tags'])-1]['name']}:</span><br>
