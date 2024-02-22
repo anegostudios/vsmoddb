@@ -11,21 +11,19 @@
 	{/if}
 </div>
 
-<h2><span class="title">{$shownuser['name']}</span></h2>
+<h2><span class="title">About {$shownuser['name']}</span></h2>
 
 {if !empty($shownuserraw['bio'])}
 	{$shownuserraw['bio']}
+{else}
+	<pre><i style="font-size:80%">User has not added a bio about himself yet</i></pre>
 {/if}
 
 <div style="clear:both;"></div>
 
 {if !empty($mods)}
 
-	{if $shownuser['userid'] == $user['userid']}
-	<h3>Your mods</h3>
-	{else}
-	<h3>Their mods</h3>
-	{/if}
+	<h3>Mod created by {$shownuser['name']}</h3>
 
 	<div class="mods">
 		{foreach from=$mods item=mod}

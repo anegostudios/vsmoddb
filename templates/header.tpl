@@ -68,7 +68,7 @@
 					><li class="mainmenuitem right {if in_array($urltarget, array('accountsettings'))}active{/if}" style="margin-left:10px;">
 						<a href="#">{$user["name"]}</a>
 						<ul class="submenu">
-							<li><a href="/show/user/{createUserToken($user["userid"], $user["created"])}">Profile</a></li>
+							<li><a href="/show/user/{getUserHash($user['userid'])}">Profile</a></li>
 							<li><a href="/accountsettings">Settings</a></li>
 							<li><a href="/logout?at={$user['actiontoken']}">Logout</a></li>
 						</ul>

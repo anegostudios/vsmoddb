@@ -462,35 +462,14 @@ function updateGameVersionsCached($modid)
 	if (count($tags) > 0) $con->Execute("insert into modversioncached values " . implode(",", $inserts));
 }
 
-function createUserToken($userid, $joindate)
+function getUserHash($userid)
 {
-	$paduserid = str_pad($userid, 8, '0', STR_PAD_LEFT);
-	$stringtoencode = "$joindate/$paduserid";
-	$entype = "rc4";
-	$magickey = "VintageStory";
-	$usertoken = openssl_encrypt($stringtoencode, $entype, $magickey);
-	return rtrim($usertoken, "==");
+	global $config;
+	return substr(hash("sha512", $userid . $config["hashsalt"]), 0, 20);
 }
 
-function getUserByToken($usertoken, $dbcon)
+function getUserByHash($hashcode, $con)
 {
-	$returnuser = null;
-	$entype = "rc4";
-	$magickey = "VintageStory";
-	$unencodedstring = openssl_decrypt("$usertoken==", $entype, $magickey);
-	if ($unencodedstring === false) {
-		return $returnuser;
-	}
-	$userid = explode("/", $unencodedstring);
-	if (count($userid) > 1) {
-		$returnuser = $dbcon->getRow("
-			select
-				user.*
-			from
-				user
-			where 
-				user.userid = ?
-		", array($userid[1]));
-	}
-	return $returnuser;
+	global $config;
+	return $con->getRow("select * from user where sha2(concat(user.userid, '".$config["hashsalt"]."'), 512) like ?", array($hashcode . "%"));
 }

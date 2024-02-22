@@ -2,6 +2,7 @@
 global $config;
 
 $config["authserver"] = "auth.vintagestory.at";
+$config["hashsalt"] = "randomizeme";
 
 // If you want to set up a local installation, I recommend
 // adding "127.0.0.1	stage.mods.vintagestory.at"  to your hosts file
