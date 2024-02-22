@@ -226,31 +226,24 @@ ul.submenu a {
 .dropdownmenu {
 	display:inline-block;
 	margin:0;
-	margin-right: 10px;
-	display: inline-block;
+	padding-top: 5px;
+	padding-right: 45px;
+	color: gray;
 	box-sizing: border-box;
 	background-color: rgba(255, 255, 255, 0.2);
-}
-
-.dropdownmenu.icon a {
-	padding: 5px 10px;
 }
 
 .dropdownmenu.active {
 	background-color: rgba(255, 255, 255, 0.9);
 }
 
-.dropdownmenu:first-child {
-	border-top-left-radius: 4px;
-}
-
 .dropdownmenu a, .menuitem.nolink span {
 	text-decoration: none;
 	display:inline-block;
 	color: white;
-	padding: 5px;
-	padding-left: 15px;
-	padding-right: 15px;
+	margin: 5px;
+	margin-left: 10px;
+	margin-right: 10px;
 	position: relative;
 }
 .dropdownmenu.active > a {
@@ -258,61 +251,37 @@ ul.submenu a {
 	color: #333;
 }
 
-.dropdownmenu.right {
-	float: right;
-}
-
-.dropdownsubmenu.notifications {
-	min-width:400px;
-	font-size:14px;
-	right:0px;
-}
-
-ul.dropdownsubmenu {
+ul.dropdowncontent {
 	position:absolute;
 	display:none;
+	list-style-type:none;
     background-color: rgba(100, 86, 68, 0.9);
-    padding: 0;
+    margin: 0;
+	padding-left: 0;
     z-index: 999;
 }
 
-.dropdownsubmenu li {
-    padding: 5px;
-}
-
-.dropdownsubmenu li:hover {
-    padding: 5px;
+.dropdowncontent li:hover {
 	background-color: rgba(255, 255, 255, 0.2);
 }
 
-ul.dropdownsubmenu a {
+ul.dropdowncontent a {
 	display:block;
 }
 
-.dropdownmenu:hover ul.dropdownsubmenu {
+.dropdownmenu:hover ul.dropdowncontent {
 	display:block;
 }
 
 .dropdownmenu:hover {
-	background-color: rgba(255, 255, 255, 0.4);
-}
-
-.dropdownmenu.active:hover {
-	background-color: rgba(255, 255, 255, 1);
-}
-
-.dropdownmenu.right {
-	float:right;
+	background-color: rgba(100, 86, 68, 0.2);
 }
 
 .dropdownmenu * {
 	vertical-align: middle;
 }
 
-.dropdownmenu img {
-	width: 18px;
-	margin-right: 5px;
-}
+
 
 .content {
 	margin:auto;
