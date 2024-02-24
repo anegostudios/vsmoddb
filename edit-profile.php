@@ -2,7 +2,7 @@
 $usertoken = $urlparts[2] ?? null;
 $shownuser = null;
 
-if (empty($usertoken) || empty($shownuser = getUserByToken($usertoken, $con))) {
+if (empty($usertoken) || empty($shownuser = getUserByHash($usertoken, $con))) {
 	$view->display("404");
 	exit();
 }
@@ -14,7 +14,7 @@ if (!canEditProfile($shownuser, $user))  {
 
 if (!empty($_POST["save"])) {	
 	$data = array(
-		"bio" => strip_tags($_POST["bio"]),
+		"bio" => sanitizeHtml($_POST["bio"]),
 	);
 	
 	update("user", $shownuser["userid"], $data);
