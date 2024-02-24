@@ -20,7 +20,7 @@ http://mods.vintagestory.at/api
 http://mods.vintagestory.at/
 
 
-## Interfaces
+## GET endpoints
 
 ### /api/tags
 List all mod tags
@@ -71,12 +71,24 @@ Example: http://mods.vintagestory.at/api/mod/6<br>
 String example: http://mods.vintagestory.at/api/mod/carrycapacity
 
 
+## POST endpoints
+
+### /api/mod/[modid]/releases
+Creates a new release for a given mod. Modid can be either the numbered id as retrieved by the mod list interface or the modid string from the modinfo.json.
+
+Request content type should be `multipart/form-data` and request body should look like this:<br>
+**file**: File to upload<br>
+**json**: Request body in JSON format:<br>
+- **versions**: Array of game version tags supported by mod. Example: `["v1.18.8", "v1.18.13"]`.<br>
+- **description**: Optional. Text description to attach to release.
+
+
 # Development setup
 ## VS Code - Remote Containers
 You can use the provided vscode devcontainer to get up a running without installing everything on your own.
 
 Required for that is docker installed aswell as docker-compose and vscode with the [Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
-Then you can open the [devcontainer.json](.devcontainer/devcontainer.json) in vscode, and it should prompt you 
+Then you can open the [devcontainer.json](.devcontainer/devcontainer.json) in vscode, and it should prompt you
 ```
 Folder contains a Dev Container configuration file. Reopen folder to develop in a container ([learn more](https://aka.ms/vscode-remote/docker)).
 ```
