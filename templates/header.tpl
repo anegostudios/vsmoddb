@@ -4,7 +4,6 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<title>{if isset($pagetitle)}{$pagetitle}{/if}Vintage Story Mod DB</title>
 	
-
 	<link rel="apple-touch-icon" sizes="180x180" href="/web/favicon/apple-touch-icon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="/web/favicon/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/web/favicon/favicon-16x16.png">
@@ -31,7 +30,6 @@
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
 	<link rel="preload" href="/web/css/editor_content.css" as="style">
 	
-
 	{if isset($head)}{$head}{/if}
 </head>
 
@@ -68,7 +66,7 @@
 					><li class="mainmenuitem right {if in_array($urltarget, array('accountsettings'))}active{/if}" style="margin-left:10px;">
 						<a href="#">{$user["name"]}</a>
 						<ul class="submenu">
-							<li><a href="/show/user/{getUserHash($user['userid'])}">Profile</a></li>
+							<li><a href="/show/user/{getUserHash($user['userid'], $user['created'])}">Profile</a></li>
 							<li><a href="/accountsettings">Settings</a></li>
 							<li><a href="/logout?at={$user['actiontoken']}">Logout</a></li>
 						</ul>

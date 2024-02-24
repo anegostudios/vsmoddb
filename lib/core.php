@@ -462,14 +462,14 @@ function updateGameVersionsCached($modid)
 	if (count($tags) > 0) $con->Execute("insert into modversioncached values " . implode(",", $inserts));
 }
 
-function getUserHash($userid)
+function getUserHash($userid, $joindate)
 {
 	global $config;
-	return substr(hash("sha512", $userid . $config["hashsalt"]), 0, 20);
+	return substr(hash("sha512", $userid . $joindate), 0, 20);
 }
 
 function getUserByHash($hashcode, $con)
 {
 	global $config;
-	return $con->getRow("select * from user where sha2(concat(user.userid, '".$config["hashsalt"]."'), 512) like ?", array($hashcode . "%"));
+	return $con->getRow("select * from user where sha2(concat(user.userid, user.created), 512) like ?", array($hashcode . "%"));
 }

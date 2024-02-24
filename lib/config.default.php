@@ -2,7 +2,6 @@
 global $config;
 
 $config["authserver"] = "auth.vintagestory.at";
-$config["hashsalt"] = "sakfjsahkdjfhas";
 
 if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
 	$config["database"] = "moddb";

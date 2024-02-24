@@ -34,7 +34,7 @@ if ($assetid) {
 		exit();
 	}
 	
-	$createdusertoken = getUserHash($asset['createduserid']);
+	$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);
 	$view->assign("createdusertoken", $createdusertoken);
 	$files = $con->getAll("select * from file where assetid=?", array($assetid));
 	
