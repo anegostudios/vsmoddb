@@ -39,6 +39,13 @@ $(document).ready(function() {
 		$('form[name=commentformtemplate]').trigger('reinitialize.areYouSure');
 		createEditor($('.comment.template textarea[name=commenttext]'), tinymceSettingsCmt);
 	});
+	$(".comments .comment.template reporttextarea").focus(function() {
+		if (initialized) return;
+		$(this).removeClass("whitetext");
+		initialized=true;
+		$('form[name=reportcommentformtemplate]').trigger('reinitialize.areYouSure');
+		createEditor($('.comment.template reporttextarea[name=reportcommenttext]'), tinymceSettingsCmt);
+	});
 	
 	
 	$(document).on("click", "a[href='#deletecomment']", function() {
@@ -104,6 +111,64 @@ $(document).ready(function() {
 				$elem.replaceWith($cmt);
 				$elem.data("editing", 0);
 			});
+			
+		});
+			
+		return false;
+	});
+
+	$(document).on("click", "a[href='#reportcomment']", function() {
+		var $elem = $(this).parents(".comment");
+		
+		if ($elem.data("reporting") == 1) {
+			if ($elem.find("form").hasClass("dirty")) {
+				var ok = confirm("Discard report data?");
+				if (!ok) return false;
+			}
+
+			destroyEditor($("reporttextarea", $elem));
+				
+			$(".updateCmt", $elem).remove();
+			
+			$("reporttextarea",  $elem).replaceWith($elem.data("body"));
+			
+			$elem.data("reporting", 0);
+			$('form[name=commentformreport]').trigger('reinitialize.areYouSure');
+			return false;
+		}
+		
+		$elem.data("reporting", 1);
+		
+		var commentid = $(this).attr("data-commentid");
+		
+		$elem.data("body", $(".body", $elem).html());
+		var $form = $('<form name="commentformreport"><textarea name="reportcommenttext" class="editor reportcommenteditor" data-editorname="reportcomment" style="width: 100%; height: 135px;">'+$(".body", $elem).html()+'</textarea></form>');
+		$(".body", $elem).html($form);
+		
+		$form.areYouSure();
+		
+		createEditor($('.reportcommenteditor'), tinymceSettingsCmt);
+			
+		$elem.append($('<p class="updateCmt" style="margin:4px; margin-top:5px; clear:both;"><button type="submit" name="report">Report Comment</button>'));
+		
+		$("button[name='report']", $elem).click(function() {
+			// var html = getEditorContents($('.editcommenteditor'));
+
+			// $.post('/edit-comment', { commentid: commentid, text: html, at: actiontoken, save: 1  }, function(response) {
+			// 	var data = $.parseJSON(response).comment;
+				
+			// 	destroyEditor($('.editcommenteditor'));
+				
+			// 	var $cmt = $(
+			// 		'<div class="editbox comment" style="clear:both;">'+
+			// 			'<div class="title">'+data.username +', '+data.created+getCmtLinks(commentid)+'</div>'+
+			// 			'<div class="body">'+data.text+'</div>'+
+			// 		'</div>'
+			// 	);
+				
+			// 	$elem.replaceWith($cmt);
+			// 	$elem.data("editing", 0);
+			// });
 			
 		});
 			

@@ -21,7 +21,7 @@
 						<div class="title">
 							<a style="text-decoration:none;" href="#cmt-{$comment['commentid']}">&#128172;</a>
 							{$comment['username']}{if !empty($comment["flaircode"])}<span class="flair flair-{$comment["flaircode"]}">{$comment["flairname"]}</span>{/if}, {fancyDate($comment['created'])} {if $comment['modifieddate']}(modified at {$comment['modifieddate']}){/if}
-							<span class="buttonlinks">(<a href="#editcomment" data-commentid="{$comment['commentid']}">report</a>)</span>
+							<span class="buttonlinks">(<a href="#reportcomment" data-commentid="{$comment['commentid']}">report</a>)</span>
 							{if !empty($user) && ($comment["userid"] == $user["userid"] || $user["rolecode"]=="admin" || $user["rolecode"]=="moderator")}
 								<span class="buttonlinks">(<a href="#editcomment" data-commentid="{$comment['commentid']}">edit comment</a> <a style="margin-left:5px;"  href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>)</span>
 							{/if}
