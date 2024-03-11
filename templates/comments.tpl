@@ -24,6 +24,9 @@
 							{if !empty($user) && ($comment["userid"] == $user["userid"] || $user["rolecode"]=="admin" || $user["rolecode"]=="moderator")}
 								<span class="buttonlinks">(<a href="#editcomment" data-commentid="{$comment['commentid']}">edit comment</a> <a style="margin-left:5px;"  href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>)</span>
 							{/if}
+                            				{if !empty($user) && $asset['createduserid'] == $user["userid"]}
+								<span class="buttonlinks">(<a href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>)</span>
+							{/if}
 						</div>
 						<div class="body">{autoFormat($comment['text'])}</div>
 					</div>
