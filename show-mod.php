@@ -75,7 +75,7 @@ if ($assetid) {
 	
 	$view->assign("comments", $comments, null, true);
 	
-	$alltags = $con->getAssoc("select tagid, name from tag where tagtypeid=2");
+	$alltags = $con->getAssoc("select tagid, name from tag where assettypeid=1");
 	
 	$tags = array();
 	$tagscached = trim($asset["tagscached"]);

@@ -335,7 +335,8 @@ function linkify($value, $showimg = 1, $protocols = array('http', 'mail', 'https
 							// Youtube
 							if ($showimg == 1) {
 								if (strpos($link, 'youtube.com') > 0 || strpos($link, 'youtu.be') > 0) {
-									$link = '<iframe width="100%" height="315" src="https://www.youtube.com/embed/' . end(explode('=', $link)) . '?rel=0&showinfo=0&color=orange&iv_load_policy=3" frameborder="0" allowfullscreen></iframe>';
+									$parts = explode('=', $link);
+									$link = '<iframe width="100%" height="315" src="https://www.youtube.com/embed/'.end($parts).'?rel=0&showinfo=0&color=orange&iv_load_policy=3" frameborder="0" allowfullscreen></iframe>';
 									return '<' . array_push($links, $link) . '></a>';
 								}
 								if (strpos($link, '.png') > 0 || strpos($link, '.jpg') > 0 || strpos($link, '.jpeg') > 0 || strpos($link, '.gif') > 0 || strpos($link, '.bmp') > 0) {

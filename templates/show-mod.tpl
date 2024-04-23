@@ -59,7 +59,7 @@
 	<div class="tab_container">
 		<div class="tab_content" id="description">
 			<div style="float: right;">
-				{if canEditAsset($asset, $user)}
+				{if isset($user) && canEditAsset($asset, $user)}
 					{include
 						file="button"
 						href="/edit/mod/?assetid=`$asset['assetid']`"
@@ -116,7 +116,7 @@
 		
 		<div class="tab_content" id="files">
 			<div style="float: right;">
-				{if canEditAsset($asset, $user)}
+				{if isset($user) && canEditAsset($asset, $user)}
 					{include
 						file="button"
 						href="/edit/release/?modid=`$asset['modid']`"
@@ -143,7 +143,7 @@
 					{foreach from=$releases item=release}
 						<tr data-assetid="{$release['assetid']}" {if !isset($first)} class="latest"{/if}>
 							<td>
-								{if canEditAsset($asset, $user)}
+								{if isset($user) && canEditAsset($asset, $user)}
 									<a style="display:block;" href="/edit/release?assetid={$release['assetid']}">v{$release['modversion']}</a>
 								{else}v{$release['modversion']}{/if}
 								<div class="changelogtext" style="display:none;">
