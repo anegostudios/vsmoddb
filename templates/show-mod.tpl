@@ -99,12 +99,15 @@
 					<span class="on"><i class="fas fa-star"></i>Unfollow</span>
 					<span class="count">{$asset["follows"]}</span>
 				</a>
-				{if count($releases)}
-					{if !empty($releases[0]['file'])}<p><span class="text-weak">Latest file for {$releases[0]['tags'][count($releases[0]['tags'])-1]['name']}:</span><br>
-					<a class="downloadbutton" href="/download?fileid={$releases[0]['file']['fileid']}">{$releases[0]['file']['filename']}</a>
-					{if !empty($releases[0]['modidstr'])}<a style="padding-left:10px;" href="vintagestorymodinstall://{$releases[0]['modidstr']}@{$releases[0]['modversion']}"><abbr title="Works only on game version v1.18.0-rc.1 or newer. Requires MS Windows or using the AUR package on Linux">1-click install</abbr></a>{/if}
+
+				{if count($releases) && !empty($releases[0]['file'])}
+					<p>
+						{if count($releases[0]['tags']) > 0}<span class="text-weak">Latest file for {$releases[0]['tags'][count($releases[0]['tags'])-1]['name']}:</span><br>
+						{else}<span class="text-weak">Latest version:</span><br>{/if}
+
+						<a class="downloadbutton" href="/download?fileid={$releases[0]['file']['fileid']}">{$releases[0]['file']['filename']}</a>
+						{if !empty($releases[0]['modidstr'])}<a style="padding-left:10px;" href="vintagestorymodinstall://{$releases[0]['modidstr']}@{$releases[0]['modversion']}"><abbr title="Works only on Windows and v1.18.0-rc.1 or newer">1-click install</abbr></a>{/if}
 					</p>
-				{/if}
 				{/if}
 			</div>
 			

@@ -191,10 +191,10 @@ function listMod($modid)
 
 		$releases[] = array(
 			"releaseid" => intval($release['releaseid']),
-			"mainfile" => "files/asset/{$file['assetid']}/" . $file["filename"],
-			"filename" => $file["filename"],
-			"fileid" => $file['fileid'] ? intval($file['fileid']) : null,
-			"downloads" => intval($file["downloads"]),
+			"mainfile" => empty($file) ? "" : "files/asset/{$file['assetid']}/" . $file["filename"],
+			"filename" => empty($file) ? 0 : $file["filename"],
+			"fileid" => isset($file['fileid']) ? intval($file['fileid']) : null,
+			"downloads" => empty($file) ? 0 : intval($file["downloads"]),
 			"tags" => $tags,
 			"modidstr" => $release['modidstr'],
 			"modversion" => $release['modversion'],
