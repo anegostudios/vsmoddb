@@ -23,7 +23,7 @@ switch ($action) {
 		}
 		good(array("statuscode" => 200, "tags" => $tags));
 		break;
-		
+
 	case "gameversions":
 		$rows = $con->getAll("select tagid, name, text, color from tag where assettypeid=2");
 		$tags = array();
@@ -43,10 +43,15 @@ switch ($action) {
 		break;
 
 	case "mod";
-		if (empty($urlparts[1])) {
+		$modId = $urlparts[1];
+		if (empty($modId)) {
 			fail("400");
 		}
-		listMod($urlparts[1]);
+		if ($urlparts[2] == "releases") {
+			if ($_SERVER['REQUEST_METHOD'] != "POST") fail("400");
+			createRelease($modId);
+		}
+		listMod($modId);
 		break;
 
 	case "authors":
@@ -141,10 +146,106 @@ function fail($statuscode)
 	exit(json_encode(array("statuscode" => $statuscode)));
 }
 
+function failWithMsg($statuscode, $message)
+{
+	exit(json_encode(array("statuscode" => $statuscode, "message" => $message)));
+}
+
 function good($data)
 {
 	$data["statuscode"] = "200";
 	exit(json_encode($data));
+}
+
+function createRelease($modId)
+{
+	global $con, $user;
+	$assettypeid = 2;
+
+	if (empty($user)) fail("401");
+	if (!$user['roleid']) fail("403");
+
+	if ($modId != "" . intval($modId)) {
+		$modId = $con->getOne("select modid from `release` where `release`.modidstr=?", array($modId));
+	}
+
+	$modAuthor = $con->getOne("select
+			asset.createdbyuserid
+		from
+			`mod`
+			join asset on (`mod`.assetid = asset.assetid)
+		where
+			modid=?
+	", array($modId));
+	if (empty($modAuthor)) fail("404");
+	if ($user["userid"] != $modAuthor) fail("403");
+	if ($_SERVER["HTTP_CONTENT_TYPE"] != "multipart/form-data") fail("400");
+	if (empty($_POST["json"])) fail("400");
+
+	$data = json_decode($_POST["json"]);
+	$fileObject = $_FILES["file"];
+	$fileSize = $fileObject["size"];
+	if (empty($fileObject)) fail("400");
+	if ($fileSize > file_upload_max_size()) failWithMsg("400", "File size is too big");
+
+	$res = processFileUpload($fileObject, $assettypeid, $modId);
+	if ($res["status"] == "error") failWithMsg("400", $res["errormessage"]);
+	$uploadedFile = $con->getRow("select * from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
+	if (!$uploadedFile) fail("500");
+
+	$filepath = "tmp/{$user['userid']}/{$fileObject['filename']}";
+	$modinfo = getModInfo($filepath);
+	if ($modinfo['modparse'] != 'ok') failWithMsg("400", "Mod id or version are incorrect");
+	$modidstr = $modinfo['modid'];
+	$modversion = $modinfo['modversion'];
+	if (preg_match("/[^0-9a-zA-Z\-_]+/", $modidstr)) failWithMsg("400", "Mod id is incorrect");
+	if (!preg_match("/^[0-9]{1,5}\.[0-9]{1,4}\.[0-9]{1,4}(-(rc|pre|dev)\.[0-9]{1,4})?$/", $modversion)) failWithMsg("400", "Mod version is incorrect");
+	$releaseIdDupl = $con->getOne("select assetid from `release` where modidstr=? and assetid!=?", array($modidstr, 0));
+	if ($releaseIdDupl) fail("400");
+	$idIsTaken = $con->getOne("select count() from `asset` join `release` on (asset.assetid = `release`.assetid) where modidstr=? and createdbyuserid!=?", array($modidstr, $user['userid']));
+	if ($idIsTaken) failWithMsg("400", "Mod ID taken");
+	if ($modidstr == "game" || $modidstr == "creative" || $modidstr == "survival") fail("400");
+
+	$assetId = insert("asset");
+	$releaseId = insert("release");
+	$assetData = array(
+		"createdbyuserid" => $user["userid"],
+		"editedbyuserid" => $user["userid"],
+		"assettypeid" => $assettypeid,
+		"numsaved" => 0
+	);
+	$releaseData = array(
+		"assetid" => $assetId,
+		"modid" => $modId,
+		"modidstr" => $modidstr,
+		"modversion" => $modversion,
+		"detectedmodidstr" => $modidstr,
+		"detailtext" => $data->description
+	);
+	update("asset", $assetId, $assetData);
+	update("release", $releaseId, $releaseData);
+	$con->Execute("update `mod` set lastreleased=now() where modid=?", array($modId));
+
+	foreach ($data->versions as $gameVersion) {
+		$tag = $con->getRow("select * from tag where name=? and tagtypeid=1", array($gameVersion));
+		$tagId = $tag["id"];
+
+		$assettagid = $con->getOne("select assettagid from assettag where assetid=? and tagid=?", array($assetId, $tagId));
+		if (!$assettagid) {
+			$assettagid = insert("assettag");
+			update("assettag", $assettagid, array("assetid" => $assetId, "tagid" => $tagId));
+		}
+
+		unset($data->versions[$gameVersion]);
+	}
+
+	$followersIds = $con->getCol("select userid from `follow` where modid=?", array($modId));
+	foreach ($followersIds as $userId) {
+		$con->Execute("insert into notification (userid, type, recordid, created) values (?,?,?, now())", array($userId, 'newrelease', $modId));
+	}
+	updateGameVersionsCached($modId);
+
+	good($releaseData);
 }
 
 function listMod($modid)
@@ -155,15 +256,15 @@ function listMod($modid)
 		$modid = $con->getOne("select modid from `release` where `release`.modidstr=?", array($modid));
 	}
 
-	$row = $con->getRow("select 
-			asset.assetid, 
+	$row = $con->getRow("select
+			asset.assetid,
 			asset.name,
 			asset.text,
 			asset.tagscached,
 			user.name as author,
 			`mod`.*
-		from 
-			`mod` 
+		from
+			`mod`
 			join asset on (`mod`.assetid = asset.assetid)
 			join user on (`asset`.createdbyuserid = user.userid)
 		where
@@ -174,11 +275,11 @@ function listMod($modid)
 	if (empty($row)) fail("404");
 
 	$rrows = $con->getAll("
-		select 
+		select
 			`release`.*,
 			asset.*
-		from 
-			`release` 
+		from
+			`release`
 			join asset on (asset.assetid = `release`.assetid)
 		where modid=?
 		order by release.created desc
@@ -203,14 +304,14 @@ function listMod($modid)
 	}
 
 	$srows = $con->getAll("
-		select 
+		select
 			fileid,
 			assetid,
 			filename,
 			thumbnailfilename,
 			created
-		from 
-			`file` 
+		from
+			`file`
 		where assetid=?
 	", array($modid));
 
@@ -318,25 +419,25 @@ function listMods()
 
 
 	$rows = $con->getAll("
-		select 
-			asset.assetid, 
-			`mod`.modid, 
+		select
+			asset.assetid,
+			`mod`.modid,
 			`mod`.side,
 			`mod`.type,
 			`mod`.urlalias,
 			asset.name,
-			logofilename, 
-			downloads, 
+			logofilename,
+			downloads,
 			follows,
-			comments, 
+			comments,
 			tagscached,
 			summary,
 			group_concat(DISTINCT `release`.modidstr ORDER BY `release`.modidstr SEPARATOR ',') as modidstrs,
 			user.name as author,
 			`mod`.lastreleased,
 			`mod`.trendingpoints
-		from 
-			`mod` 
+		from
+			`mod`
 			join asset on (`mod`.assetid = asset.assetid)
 			join user on (`asset`.createdbyuserid = user.userid)
 			left join `release` on `release`.modid = `mod`.modid
@@ -405,7 +506,7 @@ function listOutOfDateMods($modidStrToVersionMap) {
 			`release`.created,
 			`release`.assetid,
 			asset.tagscached
-		from 
+		from
 		`release`
 			join asset on (asset.assetid = `release`.assetid)
 		where `release`.modidstr in ($modIdStrParams)
@@ -464,16 +565,16 @@ function arrayGroupBy($array, $key) {
 function compareVersions($releaseA, $releaseB) {
 	$isversion = splitVersion($releaseA['modversion']);
 	$reqversion = splitVersion($releaseB['modversion']);
-	
+
 	$cnt = max($isversion, $reqversion);
-	
+
 	for ($i = 0; $i < $cnt; $i++) {
 		if ($i >= count($isversion)) return 1;
-		
+
 		if (intval($isversion[$i]) > intval($reqversion[$i])) return -1;
 		if (intval($isversion[$i]) < intval($reqversion[$i])) return 1;
 	}
-	
+
 	return 0;
 }
 
