@@ -12,7 +12,7 @@
 	<meta name="msapplication-TileColor" content="#da532c">
 	<meta name="theme-color" content="#ffffff">
 
-	<script src="https://kit.fontawesome.com/1abebfb8d4.js" crossorigin="anonymous"></script>
+	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
 	<link href="/web/css/style.css?version=33" rel="stylesheet" type="text/css">
 	<link href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
@@ -74,7 +74,7 @@
 
 					{if ($user['rolecode'] == 'admin')}
 					<li class="mainmenuitem right  icon {if in_array($urltarget, array('list/user', 'list/tag', 'list/connectiontype', 'list/stati', 'list/assettypes'))}active{/if}">
-						<a href="#"><i style="color: white; font-size: 22px;" class="fa fa-users-cog"></i></a>
+						<a href="#"><i style="color: white; font-size: 22px;" class="bx bxs-cog"></i></a>
 						<ul class="submenu">
 							<li class="menuitem"><a href="/list/user">Users</a></li>
 							<li class="menuitem"><a href="/list/tag">Tags</a></li>
@@ -84,7 +84,7 @@
 					<li class="mainmenuitem right icon" style="position:relative">
 						<a href="#">
 							<span class="notificationcount {if $notificationcount>0}visible{/if}">{$notificationcount}</span>
-							<i style="color: white; font-size: 22px;" class="fa fa-bell"></i>
+							<i style="color: white; font-size: 22px;" class="bx bxs-bell"></i>
 						</a>
 						<ul class="submenu notifications">
 						{foreach from=$notifications item=notification}
