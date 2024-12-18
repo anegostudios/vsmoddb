@@ -95,8 +95,8 @@
 				<span class="text-weak">Last modified:</span> {fancyDate($asset['lastreleased'])}<br>
 				<span class="text-weak">Downloads:</span> {intval($asset['downloads'])}<br>
 				<a href="{if !empty($user)}#follow{else}/login{/if}" class="interactbox {if $isfollowing}on{else}off{/if}">
-					<span class="off"><i class="far fa-star"></i>Follow</span>
-					<span class="on"><i class="fas fa-star"></i>Unfollow</span>
+					<span class="off"><i class="bx bx-star"></i>Follow</span>
+					<span class="on"><i class="bx bxs-star"></i>Unfollow</span>
 					<span class="count">{$asset["follows"]}</span>
 				</a>
 
