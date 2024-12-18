@@ -11,8 +11,6 @@
 
 </div>
 
-	<script type="text/javascript" src="/web/js/jquery-1.11.1.min.js"></script>
-	<script type="text/javascript" src="/web/js/chosen/chosen.jquery.min.js"></script>
 	<script type="text/javascript" src="/web/js/jquery.are-you-sure.js"></script>
      <script type="text/javascript" src="/web/js/ays-beforeunload-shim.js"></script>
 	<script type="text/javascript" src="/web/js/jquery.cookie.js"></script>

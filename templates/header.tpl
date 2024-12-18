@@ -25,11 +25,13 @@
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/skin.mobile.min.css" as="style">
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/content.mobile.min.css" as="style">
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/fonts/tinymce-mobile.woff?8x92w3" as="font">
-	
+
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/skin.min.css" as="style">
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
 	<link rel="preload" href="/web/css/editor_content.css" as="style">
 	
+	<script type="text/javascript" src="/web/js/jquery-1.11.1.min.js"></script>
+	<script type="text/javascript" src="/web/js/chosen/chosen.jquery.min.js"></script>
 	{if isset($head)}{$head}{/if}
 </head>
 

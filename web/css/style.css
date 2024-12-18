@@ -738,7 +738,7 @@ h2 .title {
 	min-height:100px;
 }
 
-input[type="text"], input[type="password"] {
+input[type="text"]:not(.chosen-search-input), input[type="password"] {
 	min-width: 250px;
 }
 
