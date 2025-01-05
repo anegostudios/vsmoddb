@@ -16,7 +16,7 @@
 {if !empty($shownuserraw['bio'])}
 	{$shownuserraw['bio']}
 {else}
-	<pre><i style="font-size:80%">User has not added a bio about himself yet</i></pre>
+	<pre><i style="font-size:80%">User has not added a bio about themself yet</i></pre>
 {/if}
 
 <div style="clear:both;"></div>
