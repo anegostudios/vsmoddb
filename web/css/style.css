@@ -738,7 +738,7 @@ h2 .title {
 	min-height:100px;
 }
 
-input[type="text"], input[type="password"] {
+input[type="text"]:not(.chosen-search-input), input[type="password"] {
 	min-width: 250px;
 }
 
@@ -1414,4 +1414,32 @@ span.username {
   right:auto;
   transform: translate(-29.29%, -100%) rotate(-45deg);
   transform-origin: bottom right;
+}
+
+.flair {
+	margin-left: 5px;
+	padding: 1px 2px;
+	border: 1px solid #3E372F;
+	border-radius: 5px;
+	unicode-bidi: isolate;
+	font-size: 75%;
+	vertical-align:bottom;
+  
+	background: #f5f5f5;
+	color: #555;
+}
+
+.flair-moderator {
+	background: #2a6b6f;
+	color: white;
+}
+
+.flair-admin {
+	background: #0e7239;
+	color: white;
+}
+
+.flair-author {
+	background: #535c88;
+	color: white;	
 }

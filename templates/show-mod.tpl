@@ -52,14 +52,14 @@
 			<li><a href="{$asset['sourcecodeurl']}"><img src="/web/img/externallink.png" height="18"> Source</a></li>
 		{/if}
 		{if $asset['donateurl']}
-			<li><a href="{$asset['donateurl']}" target="_blank"><img src="/web/img/externallink.png" height="18"> Donate</a></li>
+			<li><a href="{$asset['donateurl']}"><img src="/web/img/externallink.png" height="18"> Donate</a></li>
 		{/if}
 	</ul>
 	
 	<div class="tab_container">
 		<div class="tab_content" id="description">
 			<div style="float: right;">
-				{if canEditAsset($asset, $user)}
+				{if isset($user) && canEditAsset($asset, $user)}
 					{include
 						file="button"
 						href="/edit/mod/?assetid=`$asset['assetid']`"
@@ -89,22 +89,25 @@
 					{/foreach}
 				<br>
 				
-				<span class="text-weak">Author:</span> <a href="/list/mod?userid={$asset['createdbyuserid']}">{$asset['createdusername']}</a><br>
+				<span class="text-weak">Author:</span> <a href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a><br>
 				<span class="text-weak">Side:</span> {ucfirst($asset['side'])}<br>
 				<span class="text-weak">Created:</span> {fancyDate($asset['created'])}<br>
 				<span class="text-weak">Last modified:</span> {fancyDate($asset['lastreleased'])}<br>
 				<span class="text-weak">Downloads:</span> {intval($asset['downloads'])}<br>
 				<a href="{if !empty($user)}#follow{else}/login{/if}" class="interactbox {if $isfollowing}on{else}off{/if}">
-					<span class="off"><i class="far fa-star"></i>Follow</span>
-					<span class="on"><i class="fas fa-star"></i>Unfollow</span>
+					<span class="off"><i class="bx bx-star"></i>Follow</span>
+					<span class="on"><i class="bx bxs-star"></i>Unfollow</span>
 					<span class="count">{$asset["follows"]}</span>
 				</a>
-				{if count($releases)}
-					{if !empty($releases[0]['file'])}<p><span class="text-weak">Latest file for {$releases[0]['tags'][count($releases[0]['tags'])-1]['name']}:</span><br>
-					<a class="downloadbutton" href="/download?fileid={$releases[0]['file']['fileid']}">{$releases[0]['file']['filename']}</a>
-					{if !empty($releases[0]['modidstr'])}<a style="padding-left:10px;" href="vintagestorymodinstall://{$releases[0]['modidstr']}@{$releases[0]['modversion']}"><abbr title="Works only on Windows and v1.18.0-rc.1 or newer">1-click install</abbr></a>{/if}
+
+				{if count($releases) && !empty($releases[0]['file'])}
+					<p>
+						{if count($releases[0]['tags']) > 0}<span class="text-weak">Latest file for {$releases[0]['tags'][count($releases[0]['tags'])-1]['name']}:</span><br>
+						{else}<span class="text-weak">Latest version:</span><br>{/if}
+
+						<a class="downloadbutton" href="/download?fileid={$releases[0]['file']['fileid']}">{$releases[0]['file']['filename']}</a>
+						{if !empty($releases[0]['modidstr'])}<a style="padding-left:10px;" href="vintagestorymodinstall://{$releases[0]['modidstr']}@{$releases[0]['modversion']}"><abbr title="Works only on Windows and v1.18.0-rc.1 or newer">1-click install</abbr></a>{/if}
 					</p>
-				{/if}
 				{/if}
 			</div>
 			
@@ -116,7 +119,7 @@
 		
 		<div class="tab_content" id="files">
 			<div style="float: right;">
-				{if canEditAsset($asset, $user)}
+				{if isset($user) && canEditAsset($asset, $user)}
 					{include
 						file="button"
 						href="/edit/release/?modid=`$asset['modid']`"
@@ -135,7 +138,7 @@
 						<th class="releasedate">Release date</th>
 						<th class="changelog">Changelog</th>
 						<th class="download">Download</th>
-						<th><abbr title="Works only on Windows and v1.18.0-rc.1 or newer">1-click mod install*</abbr></th>
+						<th><abbr title="Works only on game version v1.18.0-rc.1 or newer. Requires MS Windows or using the AUR package on Linux">1-click mod install*</abbr></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -143,7 +146,7 @@
 					{foreach from=$releases item=release}
 						<tr data-assetid="{$release['assetid']}" {if !isset($first)} class="latest"{/if}>
 							<td>
-								{if canEditAsset($asset, $user)}
+								{if isset($user) && canEditAsset($asset, $user)}
 									<a style="display:block;" href="/edit/release?assetid={$release['assetid']}">v{$release['modversion']}</a>
 								{else}v{$release['modversion']}{/if}
 								<div class="changelogtext" style="display:none;">

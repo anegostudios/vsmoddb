@@ -44,7 +44,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	}
 	
 	if ($file['size'] / 1024 > $assettype['maxfilesizekb']) {
-		return array("status" => "error", "errormessage" => 'File too large! Limit is ' . $asset['maxfilesizekb'] . " KB");
+		return array("status" => "error", "errormessage" => 'File too large! Limit is ' . $assettype['maxfilesizekb'] . " KB");
 	}
 	
 	$ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));

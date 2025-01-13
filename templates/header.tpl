@@ -4,7 +4,6 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<title>{if isset($pagetitle)}{$pagetitle}{/if}Vintage Story Mod DB</title>
 	
-
 	<link rel="apple-touch-icon" sizes="180x180" href="/web/favicon/apple-touch-icon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="/web/favicon/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/web/favicon/favicon-16x16.png">
@@ -13,9 +12,9 @@
 	<meta name="msapplication-TileColor" content="#da532c">
 	<meta name="theme-color" content="#ffffff">
 
-	<script src="https://kit.fontawesome.com/1abebfb8d4.js" crossorigin="anonymous"></script>
+	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
-	<link href="/web/css/style.css?version=32" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=33" rel="stylesheet" type="text/css">
 	<link href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/dialog.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">
@@ -26,12 +25,13 @@
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/skin.mobile.min.css" as="style">
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/content.mobile.min.css" as="style">
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/fonts/tinymce-mobile.woff?8x92w3" as="font">
-	
+
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/skin.min.css" as="style">
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
 	<link rel="preload" href="/web/css/editor_content.css" as="style">
 	
-
+	<script type="text/javascript" src="/web/js/jquery-1.11.1.min.js"></script>
+	<script type="text/javascript" src="/web/js/chosen/chosen.jquery.min.js"></script>
 	{if isset($head)}{$head}{/if}
 </head>
 
@@ -68,6 +68,7 @@
 					><li class="mainmenuitem right {if in_array($urltarget, array('accountsettings'))}active{/if}" style="margin-left:10px;">
 						<a href="#">{$user["name"]}</a>
 						<ul class="submenu">
+							<li><a href="/show/user/{getUserHash($user['userid'], $user['created'])}">Profile</a></li>
 							<li><a href="/accountsettings">Settings</a></li>
 							<li><a href="/logout?at={$user['actiontoken']}">Logout</a></li>
 						</ul>
@@ -75,7 +76,7 @@
 
 					{if ($user['rolecode'] == 'admin')}
 					<li class="mainmenuitem right  icon {if in_array($urltarget, array('list/user', 'list/tag', 'list/connectiontype', 'list/stati', 'list/assettypes'))}active{/if}">
-						<a href="#"><i style="color: white; font-size: 22px;" class="fa fa-users-cog"></i></a>
+						<a href="#"><i style="color: white; font-size: 22px;" class="bx bxs-cog"></i></a>
 						<ul class="submenu">
 							<li class="menuitem"><a href="/list/user">Users</a></li>
 							<li class="menuitem"><a href="/list/tag">Tags</a></li>
@@ -85,7 +86,7 @@
 					<li class="mainmenuitem right icon" style="position:relative">
 						<a href="#">
 							<span class="notificationcount {if $notificationcount>0}visible{/if}">{$notificationcount}</span>
-							<i style="color: white; font-size: 22px;" class="fa fa-bell"></i>
+							<i style="color: white; font-size: 22px;" class="bx bxs-bell"></i>
 						</a>
 						<ul class="submenu notifications">
 						{foreach from=$notifications item=notification}

@@ -75,9 +75,9 @@
 			<input type="text" name="summary" style="width: 992px;" maxlength="100" class="required" value="{$asset['summary']}"/>
 		</div
 		>
-		<div class="editbox linebreak" style="width: 1000px; max-width:1000px">
+		<div class="editbox linebreak" style="width: 95%; min-width: 350px;">
 			<label>Text</label>
-			<textarea name="text" class="editor" data-editorname="text" style="width: 994px; height: auto;">{$asset['text']}</textarea>
+			<textarea name="text" class="editor" data-editorname="text" style="width: 100%; height: auto;">{$asset['text']}</textarea>
 		</div>
 		
 		{if file_exists("templates/edit-asset-$entrycode.tpl")}

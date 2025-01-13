@@ -20,8 +20,8 @@
 					<div id="cmt-{$comment['commentid']}" class="editbox comment" data-timestamp="{strtotime($comment['created'])}" style="clear:both;">
 						<div class="title">
 							<a style="text-decoration:none;" href="#cmt-{$comment['commentid']}">&#128172;</a>
-							{$comment['username']}, {fancyDate($comment['created'])} {if $comment['modifieddate']}(modified at {$comment['modifieddate']}){/if}
-							{if !empty($user) && $comment["userid"] == $user["userid"]}
+							{$comment['username']}{if !empty($comment["flaircode"])}<span class="flair flair-{$comment["flaircode"]}">{$comment["flairname"]}</span>{/if}, {fancyDate($comment['created'])} {if $comment['modifieddate']}(modified at {$comment['modifieddate']}){/if}
+							{if !empty($user) && ($comment["userid"] == $user["userid"] || $user["rolecode"]=="admin" || $user["rolecode"]=="moderator")}
 								<span class="buttonlinks">(<a href="#editcomment" data-commentid="{$comment['commentid']}">edit comment</a> <a style="margin-left:5px;"  href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>)</span>
 							{/if}
 						</div>
@@ -30,6 +30,6 @@
 				{/foreach}
 			</div>
 			
-			<span class="buttonlinks template">(<a href="#editcomment" data-commentid="0">edit comment</a> <a style="margin-left:5px;" href="#deletecomment" data-commentid="0">delete</a>)</div>
+			<span class="buttonlinks template"> (<a href="#editcomment" data-commentid="0">edit comment</a> <a style="margin-left:5px;" href="#deletecomment" data-commentid="0">delete</a>)</div>
 			
 			<div style="clear:both;"></div>

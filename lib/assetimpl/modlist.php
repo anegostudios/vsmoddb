@@ -51,14 +51,18 @@ class ModList extends AssetList {
 		}
 		if (isset($_GET["tagids"])) {
 			foreach($_GET["tagids"] as $tagid) {
-				$searchparams[] = "tagids[]={$tagid}";
+				if (!empty($tagid)) {
+					$searchparams[] = "tagids[]={$tagid}";
+				}
 			}
 		}
 		if (isset($_GET["gameversion"])) {
 			$searchparams[] = "gameversion[]={$_GET['gameversion']}";
 		}
 		if (isset($_GET["gv"])) {
-			$searchparams[] = "gv[]={$_GET['gv']}";
+			if (is_array($_GET['gv'])) {
+				foreach ($_GET['gv'] as $gv) $searchparams[] = "gv[]={$gv}";
+			}
 		}
 		if (isset($_GET["userid"])) {
 			$searchparams[] = "userid={$_GET['userid']}";
@@ -124,19 +128,6 @@ class ModList extends AssetList {
 			unset($row['text']);
 			$tags=array();
 			
-			$tagscached = trim($row["tagscached"]);
-			if (!empty($tagscached)) { 
-			
-				$tagdata = explode("\r\n", $tagscached);
-				
-				foreach($tagdata as $tagrow) {
-					$parts = explode(",", $tagrow);
-					$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagid' => $parts[2]);
-				}
-			
-				$row['tags'] = $tags;
-			}
-			
 			if (isset($_GET['text'])) {
 				$row['weight'] = $this->getModMatchWeight($row, $_GET['text']);
 			}
@@ -164,6 +155,8 @@ class ModList extends AssetList {
 	
 	
 	function getModMatchWeight($mod, $text) {
+		if (empty($text)) return 5;
+		
 		// Exact mod name match
 		if (strcasecmp($mod['name'], $text) == 0) return 1;
 		$pos = stripos($mod['name'], $text);
@@ -194,18 +187,21 @@ class ModList extends AssetList {
 		if(!empty($_GET["tagids"])) {
 			$wheresql = "";
 			foreach($_GET["tagids"] as $tagid) {
+				if (empty($tagid)) continue;
 				if (!empty($wheresql)) $wheresql .= " or ";
 				$wheresql .= "exists (select assettag.tagid from assettag where assettag.assetid=asset.assetid and assettag.tagid=?)";
 				$this->wherevalues[] = $tagid;
 			}
 			
-			$this->wheresql[] .= "(" . $wheresql . ")";
-			
-			$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
-			$this->searchvalues["tagids"] = array_combine($_GET["tagids"], array_fill(0, count($_GET["tagids"]), 1));
+			if (!empty($wheresql)) {
+				$this->wheresql[] .= "(" . $wheresql . ")";
+				
+				$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
+				$this->searchvalues["tagids"] = array_combine($_GET["tagids"], array_fill(0, count($_GET["tagids"]), 1));
+			}
 		}
 		
-		if ($user['rolecode'] != 'admin' || empty($_GET['hidden'])) {
+		if (empty($user) || $user['rolecode'] != 'admin' || empty($_GET['hidden'])) {
 			$this->wheresql[] = "asset.statusid=2";
 		}
 

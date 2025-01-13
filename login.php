@@ -26,6 +26,9 @@ if (empty($jsonresponse["valid"])) {
 	$userid = $con->getOne("select userid from user where uid=?", array($account['uid']));
 	if (!$userid) $userid = insert("user");
 	
+	// If a user buys 2 accounts and switches emails, the below update will error due to duplicate email
+	$con->Execute("update user set email='outdated' where email=? and uid!=?", array($account["email"], $account['uid']));
+	
 	update("user", $userid, array(
 		"name" => $account["playername"],
 		"email" => $account["email"],

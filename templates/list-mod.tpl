@@ -67,7 +67,7 @@
 		</div>
 	</form>
 	
-	<div class="sort" style="font-size: 84%; clear:both";>
+	<div class="sort" style="font-size: 84%; clear:both;">
 		Sort by: 
 		{foreach from=$sortbys item=sbnames key=sortbyname}
 			<span style="margin-right: 5px;">
@@ -80,6 +80,17 @@
 		{/foreach}
 	</div>
 
+	<script type="text/javascript">
+		//$(window).load(function(){
+			$("select").each(function() {
+				if ($(this).parents(".template").length == 0) {
+					var ds = $(this).attr("noSearch") == 'noSearch';
+					$(this).chosen({ placeholder_text_multiple: " ", disable_search:ds, });
+				}
+			});
+		//});	
+	</script>
+
 	{if !empty($rows)}
 		<p style="margin-bottom:0px;">{count($rows)} mods, sorted by {$sortbypretty}</p>
 		<div class="mods">
@@ -90,7 +101,5 @@
 		No mods found :(
 	{/if}
 	
-
-
 
 {include file="footer"}

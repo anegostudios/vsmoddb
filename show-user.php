@@ -1,48 +1,57 @@
 <?php
 
-$showuserid = $urlparts[2];
+$usertoken = $urlparts[2] ?? null;
+$shownuser = null;
 
-if ($showuserid) {
-	$showuser = $con->getRow("
-		select 
-			user.*, 
-		from 
-			user
-		where
-			user.userid = ?
-	", array($showuserid));
-
-	if (!$user) {
-		$view->display("404");
-		exit();
-	}
-	
-	$commentcount = $con->getAll("
-		select 
-			count(*),
-		from 
-			comment 
-		where userid=?
-	", array($showuserid));
-	
-	$modcount = $con->getAll("
-		select count(*)
-		from
-			asset
-			join assettype on (asset.assetypeid = assetype.assetypeid)
-		where 
-			assert.userid=?
-			and assetype.code = 'mod'
-	", array($showuserid));
-	
-	$view->assign("commentcount", $commentcount, null, true);	
-	$view->assign("modcount", $modcount, null, true);	
-	$view->assign("showuser", $showuser, null, true);
-	
-} else {
-	$showuser = array("modid" => 0, "name" => "", "text" => "", "color" => "", "assettypeid" => "", "tagtypeid" => "");
+if (strlen($usertoken) > 20) {
+	$view->display("404");
+	exit();
 }
 
-$view->assign("showuser", $showuser);
-$view->display("user");
+if (empty($usertoken) || empty($shownuser = getUserByHash($usertoken, $con))) {
+	$view->display("404");
+	exit();
+}
 
+$view->assign("usertoken", $usertoken);
+
+$sql = "
+			select 
+				asset.*, 
+				`mod`.*,
+				status.code as statuscode
+			from 
+				asset 
+				join `mod` on asset.assetid = `mod`.assetid
+				left join status on asset.statusid = status.statusid
+			where
+				asset.createdbyuserid = ?
+			order by asset.created desc
+		";
+
+$authormods = $con->getAll($sql, array($shownuser['userid']));
+
+foreach ($authormods as &$row) {
+	unset($row['text']);
+	$row["tags"] = array();
+	$row['from'] = $shownuser['name'];
+
+	$tagscached = trim($row["tagscached"]);
+	if (empty($tagscached)) continue;
+
+	$tagdata = explode("\r\n", $tagscached);
+	$tags = array();
+
+	foreach ($tagdata as $tagrow) {
+		$parts = explode(",", $tagrow);
+		$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagid' => $parts[2]);
+	}
+
+	$row['tags'] = $tags;
+}
+
+unset($row);
+$view->assign("mods", $authormods);
+$view->assign("user", $user);
+$view->assign("shownuser", $shownuser);
+$view->display("show-user");

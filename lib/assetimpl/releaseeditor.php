@@ -8,6 +8,7 @@ class ReleaseEditor extends AssetEditor {
 	var $moddtype;
 	var $releaseIdDupl;
 	var $inUseByUser;
+    var $modid;
 
 	function __construct() {
 		$this->editTemplateFile = "edit-release";
@@ -27,9 +28,9 @@ class ReleaseEditor extends AssetEditor {
 		
 		$this->assetid = empty($_REQUEST["assetid"]) ? 0 : $_REQUEST["assetid"];
 		if ($this->assetid) {
-			$modid = $con->getOne("select modid from `release` where assetid=?", array($this->assetid));
+			$this->modid = $modid = $con->getOne("select modid from `release` where assetid=?", array($this->assetid));
 		} else {
-			$modid = $_REQUEST['modid'];
+			$this->modid = $modid = $_REQUEST['modid'];
 		}
 		
 		$this->moddtype = $modtype = $con->getOne("select `type` from `mod` where modid=?", array($modid));
@@ -155,19 +156,28 @@ class ReleaseEditor extends AssetEditor {
 				return 'invalidmodversion';
 			}
 			
+			// Make sure there isn't an exact duplicate of this
 			$this->releaseIdDupl = $con->getOne("select assetid from `release` where modidstr=? and modversion=? and assetid!=?", array($modidstr, $modversion, $this->assetid));
 			if ($this->releaseIdDupl) {
 				return 'duplicateid';
 			}
-			
+
+			// Make sure another user doesn't use this modid
 			$userid = $con->getOne("select createdbyuserid from `asset` join `release` on (asset.assetid = `release`.assetid) where modidstr=? and createdbyuserid!=?", array($modidstr, $user['userid']));
 			if (!$this->assetid && $userid) {
 				$this->inUseByUser = $con->getRow("select * from user where userid=?", $userid);
 				return 'modidinuse';
 			}
-			
+
+			// Make sure another mod (but same user) doesn't use this modid
+			$modIdDupl = $con->getOne("select modid from `release` where modidstr=? and modid!=?", array($modidstr, $this->modid));
+			if ($modIdDupl) {
+				$this->modAssetIdDupl = $con->getOne("select assetid from `mod` where `modid`=?", array($modIdDupl));
+				return 'duplicatemod';
+			}
+
 			if ($modidstr == "game" || $modidstr == "creative" || $modidstr == "survival") {
-				$this->inUseByUser = array("userid"=>1, "name" => "the creators of this very game - gasp! And so");
+				$this->inUseByUser = array("userid"=>1, "name" => "the creators of this very game - gasp!");
 				return 'modidinuse';
 			}
 		}
@@ -195,7 +205,7 @@ class ReleaseEditor extends AssetEditor {
 		
 			$view->assign("errormessage", $this->fileuploadstatus["errormessage"]);
 		}
-		
+
 		if ($status == 'savednew') {
 
 			$modid = $release["modid"];
@@ -211,7 +221,7 @@ class ReleaseEditor extends AssetEditor {
 				join `user` on (modasset.createdbyuserid = user.userid)
 				join `file` on (release.assetid = file.assetid)
 			where mod.modid=?", array($modid));
-			
+
 			$webhookdata =  createWebhookFollow($modAsset, $config, $modid, $modversion);
 
 			$con->Execute("update `mod` set lastreleased=now() where modid=?", array($modid));
@@ -239,6 +249,9 @@ class ReleaseEditor extends AssetEditor {
 		
 		if ($this->savestatus == 'duplicateid') {
 			$view->assign("errormessage", "Cannot save release, there already exists a <a href=\"/edit/release/?assetid={$this->releaseIdDupl}\">release</a> with this mod id and version - please ensure a unique modid and avoid uploading of duplicate version numbers.", null, true);
+		}
+		if ($this->savestatus == 'duplicatemod') {
+			$view->assign("errormessage", "Cannot save release, there already exists <a href=\"/show/mod/{$this->modAssetIdDupl}\">another mod</a> that uses this mod id - please ensure a unique modid.", null, true);
 		}
 		if ($this->savestatus == 'modidinuse') {
 			$name = $this->inUseByUser['name'];
@@ -289,33 +302,33 @@ function sendWebhook($data, $webhookUrl){
 
 function createWebhookFollow($modAsset, $config, $modid, $modversion){
 	return [
-		"content" => null, 
+		"content" => null,
 		"embeds" => [
 			  [
-				 "title" => "New Mod Release", 
-				 "color" => 9544535, 
+				 "title" => "New Mod Release",
+				 "color" => 9544535,
 				 "fields" => [
 					[
-					   "name" => "Mod:", 
-					   "value" => "[{$modAsset["assetname"]}]({$config["serverurl"]}/show/mod/{$modid})", 
-					   "inline" => true 
-					], 
+					   "name" => "Mod:",
+					   "value" => "[{$modAsset["assetname"]}]({$config["serverurl"]}/show/mod/{$modid})",
+					   "inline" => true
+					],
 					[
-						"name" => "Author", 
-						"value" => $modAsset["username"], 
-						"inline" => true 
-					], 
+						"name" => "Author",
+						"value" => $modAsset["username"],
+						"inline" => true
+					],
 					[
-						"name" => "Version", 
+						"name" => "Version",
 						"value" => "[{$modversion}]({$config["serverurl"]}/download?fileid={$modAsset["fileid"]})",
-						"inline" => true 
-					] 
-				 ], 
-				 "thumbnail" => [
-					"url" => "https://mods.vintagestory.at/web/img/vsmoddb-logo.png" 
+						"inline" => true
 					]
-			  ] 
+				 ],
+				 "thumbnail" => [
+					"url" => "https://mods.vintagestory.at/web/img/vsmoddb-logo.png"
+					]
+			  ]
 		   ],
-		"attachments" => [] 
-	 ]; 
+		"attachments" => []
+	 ];
 }

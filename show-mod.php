@@ -14,6 +14,7 @@ if ($assetid) {
 			asset.*, 
 			`mod`.*,
 			createduser.userid as createduserid,
+			createduser.created as createduserjoindate,
 			createduser.name as createdusername,
 			editeduser.userid as editeduserid,
 			editeduser.name as editedusername,
@@ -33,6 +34,8 @@ if ($assetid) {
 		exit();
 	}
 	
+	$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);
+	$view->assign("createdusertoken", $createdusertoken);
 	$files = $con->getAll("select * from file where assetid=?", array($assetid));
 	
 	foreach ($files as &$file) {
@@ -45,17 +48,34 @@ if ($assetid) {
 	$comments = $con->getAll("
 		select 
 			comment.*,
-			user.name as username
+			user.name as username,
+			user.roleid as roleid,
+			role.code as rolecode,
+			role.name as rolename
 		from 
 			comment 
 			join user on (comment.userid = user.userid)
+			left join role on (user.roleid = role.roleid)
 		where assetid=?
 		order by comment.created desc
 	", array($assetid));
 	
+	foreach ($comments as $idx => $comment) {
+		if ($asset['createduserid'] == $comment["userid"]) {
+			$comments[$idx]["flaircode"] = "author";
+			$comments[$idx]["flairname"] = "Author";
+		}
+		
+		// player, player_nc
+		if ($comment["roleid"] != 3 && $comment["roleid"] != 4) {
+			$comments[$idx]["flaircode"] = $comment["rolecode"];
+			$comments[$idx]["flairname"] = $comment["rolename"];
+		}
+	}
+	
 	$view->assign("comments", $comments, null, true);
 	
-	$alltags = $con->getAssoc("select tagid, name from tag where tagtypeid=2");
+	$alltags = $con->getAssoc("select tagid, name from tag where assettypeid=1");
 	
 	$tags = array();
 	$tagscached = trim($asset["tagscached"]);
@@ -128,6 +148,7 @@ function cmpReleases($r1, $r2) {
 	return $val;
 }
 
+
 function groupMinorVersionTags($tags) {
 	$mainvercnt = 0;
 	$curver = "0";
@@ -146,7 +167,8 @@ function groupMinorVersionTags($tags) {
 		if ($mainvercnt == 3) {
 			$otag1 = array_pop($gtags);
 			$otag2 = array_pop($gtags);
-			$gtags[] = array('name' => "Various " . $curver.".x", 'desc' => $otag1['name'] . ", " . $otag2['name'], 'color' => $tag['color'], 'tagid' => 0);
+			$otag3 = $tag;
+			$gtags[] = array('name' => "Various " . $curver.".x", 'desc' => $otag1['name'] . ", " . $otag2['name'] . ", " . $otag3['name'], 'color' => $tag['color'], 'tagid' => 0);
 		}
 		
 		if ($mainvercnt > 3) {
@@ -155,6 +177,14 @@ function groupMinorVersionTags($tags) {
 		
 		if ($mainvercnt < 3) {
 			$gtags[] = $tag;
+		}
+	}
+	
+	foreach ($gtags as $idx=>$tag) {
+		if (strstr($tag["name"], "Various")) {
+			$vers = explode(", ", $tag["desc"]);
+			usort($vers, "cmpVersion");
+			$gtags[$idx]["desc"] = implode(", ", array_reverse($vers));
 		}
 	}
 	
