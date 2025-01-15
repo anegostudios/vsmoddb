@@ -24,7 +24,7 @@ if (!empty($_POST["delete"])) {
 	
 	$changelog = array("Deleted own comment");
 	if ($user['userid'] != $cmt['userid']) {
-		$changelog = array("Deleted comment (".$cmt["text"].") of user " . $user['userid']);
+		$changelog = array("Deleted comment (".$cmt["text"].") of user " . $user['userid'] . "\nComment text was:\n" . $cmt["text"]);
 	}
 	
 	logAssetChanges($changelog, $cmt['assetid']);
