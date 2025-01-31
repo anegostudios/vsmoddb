@@ -21,9 +21,13 @@
 						<div class="title">
 							<a style="text-decoration:none;" href="#cmt-{$comment['commentid']}">&#128172;</a>
 							{$comment['username']}{if !empty($comment["flaircode"])}<span class="flair flair-{$comment["flaircode"]}">{$comment["flairname"]}</span>{/if}, {fancyDate($comment['created'])} {if $comment['modifieddate']}(modified at {$comment['modifieddate']}){/if}
-							{if !empty($user) && ($comment["userid"] == $user["userid"] || $user["rolecode"]=="admin" || $user["rolecode"]=="moderator")}
-								<span class="buttonlinks">(<a href="#editcomment" data-commentid="{$comment['commentid']}">edit comment</a> <a style="margin-left:5px;"  href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>)</span>
-							{/if}
+                            {if !empty($user) && ($asset['createduserid'] == $user["userid"] || $comment["userid"] == $user["userid"] || $user["rolecode"]=="admin" || $user["rolecode"]=="moderator")}
+                                {if !empty($user) && $asset['createduserid'] == $user["userid"] && !($comment["userid"] == $user["userid"])}
+                                    <span class="buttonlinks">(<a href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>)</span>
+                                {else}
+                                    <span class="buttonlinks">(<a href="#editcomment" data-commentid="{$comment['commentid']}">edit comment</a> <a style="margin-left:5px;"  href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>)</span>
+                                {/if}                                
+                			{/if}
 						</div>
 						<div class="body">{autoFormat($comment['text'])}</div>
 					</div>

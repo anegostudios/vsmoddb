@@ -13,9 +13,10 @@ $commentid = empty($_POST["commentid"]) ? 0 : $_POST["commentid"];
 
 if (!empty($_POST["delete"])) {
 	$cmt = $con->getRow("select assetid, userid, text from comment where commentid=?", array($commentid));
-	
-	if ($user['userid'] != $cmt['userid'] && $user['rolecode'] != 'admin' && $user['rolecode'] != 'moderator') {
-		$view->display("403");
+	$asset = $con->getRow("SELECT assetid, createdbyuserid FROM asset WHERE assetid=?", array($cmt['assetid']));
+
+	if ($user['userid'] != $asset['createdbyuserid'] && $user['userid'] != $cmt['userid'] && $user['rolecode'] != 'admin' && $user['rolecode'] != 'moderator') {
+    		$view->display("403");
 		exit();
 	}
 
@@ -25,7 +26,7 @@ if (!empty($_POST["delete"])) {
 	
 	$changelog = array("Deleted own comment");
 	if ($user['userid'] != $cmt['userid']) {
-		$changelog = array("Deleted comment (".$cmt["text"].") of user " . $user['userid']);
+		$changelog = array("Deleted comment (".$cmt["text"].") of user " . $user['userid'] . "\nComment text was:\n" . $cmt["text"]);
 	}
 	
 	logAssetChanges($changelog, $cmt['assetid']);

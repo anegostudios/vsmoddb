@@ -56,16 +56,16 @@
 		
 		<div class="navigation">
 			<ul>
-				<li class="mainmenuitem {if in_array($urltarget, array('home'))}active{/if}"><a href="/home">Home</a></li
+				<li class="mainmenuitem {if in_array($urltarget, array('home'))}active{/if}"><a href="/home">Home</a></li>
+				<li class="mainmenuitem {if in_array($urltarget, array('list/mod'))}active{/if}"><a style="padding: 5px 30px;" href="/list/mod">All Mods</a></li>
+				{if (!empty($user))}
+					<li class="mainmenuitem"><a href="/edit/mod"><img src="/web/img/upload.png"><span>Submit a mod</span></a></li>
+				{/if}
+				<li class="mainmenuitem" style="margin-left: 70px;"><a style="padding: 5px 10px; font-size:90%;" href="https://wiki.vintagestory.at/Troubleshooting_Mods" target="_blank">Mod Troubleshooting</a></li>
 				
-				><li class="mainmenuitem {if in_array($urltarget, array('list/mod'))}active{/if}"><a style="padding: 5px 30px;" href="/list/mod">All Mods</a></li
 				
-				>{if (!empty($user))}<li class="mainmenuitem">
-				
-						<a href="/edit/mod"><img src="/web/img/upload.png"><span>Submit a mod</span></a>
-					</li
-					
-					><li class="mainmenuitem right {if in_array($urltarget, array('accountsettings'))}active{/if}" style="margin-left:10px;">
+				{if (!empty($user))}
+					<li class="mainmenuitem right {if in_array($urltarget, array('accountsettings'))}active{/if}" style="margin-left:10px;">
 						<a href="#">{$user["name"]}</a>
 						<ul class="submenu">
 							<li><a href="/show/user/{getUserHash($user['userid'], $user['created'])}">Profile</a></li>
