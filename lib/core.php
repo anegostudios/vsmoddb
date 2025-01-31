@@ -199,6 +199,20 @@ function logAssetChanges($changes, $assetid)
 	}
 }
 
+
+/**
+ * @param int              $targetuserid
+ * @param int              $moderatoruserid
+ * @param string|date|null $until
+ * @param string|null      $reason
+ */
+function logModeratorAction($targetuserid, $moderatoruserid, $until, $reason)
+{
+	global $con;
+	$con->Execute("insert into moderationrecord (targetuserid, until, moderatorid, reason) values (?, ?, ?, ?)", array($targetuserid, $moderatoruserid, $until, $reason));
+}
+
+
 function logError($str)
 {
 	logLine($str, "logs/error.txt");

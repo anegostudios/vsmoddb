@@ -51,9 +51,27 @@ CREATE TABLE IF NOT EXISTS `moddb`.`user` (
   `created` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `lastonline` DATETIME NULL,
+  `banneduntil` DATETIME NULL,
   PRIMARY KEY (`userid`),
   UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE,
   INDEX `uid` (`uid` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `moddb`.`moderationrecord`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `moddb`.`moderationrecord` (
+  `actionid` INT NOT NULL AUTO_INCREMENT,
+  `targetuserid` INT NOT NULL,
+  `until` DATETIME NULL,
+  `moderatorid` INT NOT NULL,
+  `reason` TEXT NULL,
+  PRIMARY KEY `actionid`,
+  UNIQUE KEY (`targetuserid`, `until`),
+	INDEX `moderatorid_index` (`moderatorid`),
+  FOREIGN KEY (`targetuserid`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE RESTRICT,
+  FOREIGN KEY (`moderatorid`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE RESTRICT)
 ENGINE = InnoDB;
 
 
@@ -102,7 +120,10 @@ CREATE TABLE IF NOT EXISTS `moddb`.`comment` (
   `created` DATETIME NULL,
   `modifieddate` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`commentid`))
+  `lastmodaction` INT NULL,
+  `deleted` BOOL NOT NULL DEFAULT 0,
+  PRIMARY KEY (`commentid`),
+  FOREIGN KEY (`lastmodaction`) REFERENCES `moderationrecord`(`actionid`) ON UPDATE CASCADE ON DELETE RESTRICT)
 ENGINE = InnoDB;
 
 
