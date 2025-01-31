@@ -1,4 +1,5 @@
 <?php
+global $timezones, $view;
 if (empty($user)) {
 	$view->display("404");
 }
@@ -17,10 +18,10 @@ if (!empty($_POST["save"])) {
 		}
 	}
 
-	$mentionwebhook = NULL;
-	if (!empty($_POST["mentionwebhook"])) {
-		if(isValidHttpUrl($_POST["mentionwebhook"])){
-			$mentionwebhook = $_POST["mentionwebhook"];
+	$commentwebhook = NULL;
+	if (!empty($_POST["commentwebhook"])) {
+		if(isValidHttpUrl($_POST["commentwebhook"])){
+			$commentwebhook = $_POST["commentwebhook"];
 		} else {
 			if(!isset($errormessage)){
 				$errormessage = "";
@@ -38,7 +39,7 @@ if (!empty($_POST["save"])) {
 		//"name" => strip_tags($_POST["name"]),
 		//"email" =>strip_tags($_POST["email"]),
 		"followwebhook" => $followwebhook,
-		"mentionwebhook" => $mentionwebhook,
+		"commentwebhook" => $commentwebhook,
 		"timezone" => array_keys($timezones)[intval($_POST["timezone"])],
 	);
 

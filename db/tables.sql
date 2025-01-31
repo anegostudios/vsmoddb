@@ -48,7 +48,9 @@ CREATE TABLE IF NOT EXISTS `moddb`.`user` (
   `sessiontoken` VARCHAR(255) NULL,
   `sessiontokenvaliduntil` DATETIME NULL,
   `followwebhook` VARCHAR(255) NULL,
-  `mentionwebhook` VARCHAR(255) NULL,
+  `fwhFails` INT NOT NULL DEFAULT 0,
+  `commentwebhook` VARCHAR(255) NULL,
+  `cwhFails` INT NOT NULL DEFAULT 0,
   `timezone` VARCHAR(255) NULL,
   `created` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -326,6 +328,34 @@ CREATE TABLE IF NOT EXISTS `moddb`.`follow` (
   `userid` INT NULL,
   UNIQUE INDEX `modiduserid` (`modid` ASC, `userid` ASC) VISIBLE,
   INDEX `userid` (`userid` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `moddb`.`webhook`
+-- -----------------------------------------------------
+-- $webhookdata = createWebhookComment($modAsset["modname"], $modAsset["modid"], $user["name"], $commentid, "New Mention");
+CREATE TABLE IF NOT EXISTS `moddb`.`commentwebhook` (
+    `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `userid` INT NULL,
+    `linkurl` VARCHAR(512) NOT NULL,
+    `username` VARCHAR(128) NOT NULL,
+    `isComment` BOOL NOT NULL)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `moddb`.`webhook`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `moddb`.`followwebhook` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `data` VARCHAR(2048) NOT NULL,
+    PRIMARY KEY (`id`) )
+ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `moddb`.`followwebhookuser` (
+   `followwebhookid` INT NULL,
+   `userid` INT NULL)
 ENGINE = InnoDB;
 
 

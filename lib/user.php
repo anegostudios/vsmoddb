@@ -1,5 +1,6 @@
 <?php
-	
+
+global $view, $con;
 $sessiontoken = empty($_COOKIE['vs_websessionkey']) ? null : $_COOKIE['vs_websessionkey'];
 
 $user = null;

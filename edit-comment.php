@@ -1,4 +1,5 @@
 <?php
+global $config, $view, $con;
 if (empty($user)) {
 	header("Location: /login");
 	exit();
@@ -19,7 +20,9 @@ if (!empty($_POST["save"])) {
 	
 	$isnew = false;
 	$text = sanitizeHtml($_POST["text"], array('safe'=>1));
-
+    if(empty($text)){
+        exit();
+    }
 
 	if (!$commentid) {
 		$isnew = true;
@@ -34,13 +37,13 @@ if (!empty($_POST["save"])) {
 			$notid = insert("notification");
 			update("notification", $notid, array("userid" => $touserid, "type" => "newcomment", "recordid" => $commentid));
 			
-			$webhookurl = $con->getone("select mentionwebhook from user where userid=?", array($touserid));
+			$webhookurl = $con->getone("select commentwebhook from user where userid=?", array($touserid));
 			$modAsset = getModIdAndName($con, $_POST["assetid"]);
 
-			if(!empty($webhookurl))
+			if(!empty($webhookurl) && $user["cwhFails"] < 5)
 			{
-				$webhookdata = createWebhookComment($modAsset, $config, $user, $commentid);
-				sendWebhook($webhookdata, $webhookurl);
+                $linkurl = "[{$modAsset["modname"]}]({$config["serverurl"]}/show/mod/{$modAsset["modid"]}/#cmt-$commentid)";
+                saveCommentWebhook($touserid, $linkurl, $user["name"], true);
 			}
 		}
 		
@@ -48,19 +51,19 @@ if (!empty($_POST["save"])) {
 		preg_match_all("#<span class=\"mention username\">(.*)</span>#Ui", $text, $matches);
 		
 		foreach ($matches[1] as $name) {
-			$mentionedUser = $con->getRow("select userid,mentionwebhook from user where name=?", array($name));
+			$mentionedUser = $con->getRow("select userid,commentwebhook from user where name=?", array($name));
 			$mentionUserID = $mentionedUser["userid"];
 			if ($mentionUserID) {
 				$notid = insert("notification");
 				update("notification", $notid, array("userid" => $mentionUserID, "type" => "mentioncomment", "recordid" => $commentid));
 
-				$webhookurl = $mentionedUser["mentionwebhook"];
+				$webhookurl = $mentionedUser["commentwebhook"];
 				$modAsset = getModIdAndName($con, $_POST["assetid"]);
 				
-				if(!empty($webhookurl))
+				if(!empty($webhookurl) && $mentionedUser["cwhFails"] < 5)
 				{
-					$webhookdata = createWebhookComment($modAsset, $config, $user, $commentid, "New Mention");
-					sendWebhook($webhookdata, $webhookurl);
+                    $linkurl = "[{$modAsset["modname"]}]({$config["serverurl"]}/show/mod/{$modAsset["modid"]}/#cmt-$commentid)";
+                    saveCommentWebhook($mentionUserID, $linkurl, $user["name"], false);
 				}
 			}
 		}
@@ -111,32 +114,4 @@ function getModIdAndName($con, $assetit){
 		`asset`
 		join `mod` on (asset.assetid = mod.assetid)
 	where asset.assetid=?", array($assetit));
-}
-
-function createWebhookComment($modAsset, $config, $user, $commentid, $title = "New Comment"){
-	return [
-		"content" => null, 
-		"embeds" => [
-			  [
-				 "title" => $title, 
-				 "color" => 9544535, 
-				 "fields" => [
-					[
-					   "name" => "Mod:", 
-					   "value" => "[{$modAsset["modname"]}]({$config["serverurl"]}/show/mod/{$modAsset["modid"]}/#cmt-{$commentid})",
-					   "inline" => true 
-					], 
-					[
-						"name" => "From:", 
-						"value" => $user["name"], 
-						"inline" => true 
-					] 
-				 ], 
-				 "thumbnail" => [
-							 "url" => "https://mods.vintagestory.at/web/img/vsmoddb-logo.png" 
-						  ] 
-			  ] 
-		   ], 
-		"attachments" => [ ] 
-	 ];
 }

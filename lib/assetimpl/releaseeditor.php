@@ -224,15 +224,21 @@ class ReleaseEditor extends AssetEditor {
 
 			$webhookdata =  createWebhookFollow($modAsset, $config, $modid, $modversion);
 
+            $modurl = "[{$modAsset["assetname"]}]({$config["serverurl"]}/show/mod/$modid)";
+            $versionurl = "[$modversion]({$config["serverurl"]}/download?fileid={$modAsset["fileid"]})";
+            $username = $modAsset["username"];
+			$webhookdata =  createWebhookFollow($modurl, $versionurl, $username);
+            $followWebhookId = saveFollowWebhook($webhookdata);
+
 			$con->Execute("update `mod` set lastreleased=now() where modid=?", array($modid));
-			
+
 			$userids = $con->getCol("select userid from `follow` where modid=?", array($modid));
 			foreach ($userids as $userid) {
 				$con->Execute("insert into notification (userid, type, recordid, created) values (?,?,?, now())", array($userid, 'newrelease', $modid));
 				$webhookurl = $con->getOne("select followwebhook from `user` where userid=?", array($userid));
 				if(!empty($webhookurl))
 				{
-					sendWebhook($webhookdata ,$webhookurl);
+                    $con->Execute("insert into followwebhookuser (followwebhookid, userid) values (?, ?)", array($followWebhookId, $userid));
 				}
 			}
 		}
@@ -275,32 +281,26 @@ class ReleaseEditor extends AssetEditor {
 	}
 	
 
-	function getBackLink() {
-		global $con;
-		$assetid = $con->getOne("select `mod`.assetid from `mod` join `release` on (`mod`.modid = `release`.modid) where `release`.assetid=?", array($this->assetid));
-		return "/show/mod/{$assetid}?saved=1#tab-files";
-	}
-		
+	function getBackLink()
+    {
+        global $con;
+        $assetid = $con->getOne("select `mod`.assetid from `mod` join `release` on (`mod`.modid = `release`.modid) where `release`.assetid=?", array($this->assetid));
+        return "/show/mod/{$assetid}?saved=1#tab-files";
+    }
 }
 
-function sendWebhook($data, $webhookUrl){
-
-	// Initialize cURL session
-	$ch = curl_init($webhookUrl);
-
-	// Set cURL options
-	curl_setopt($ch, CURLOPT_POST, 1);
-	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data)); // Convert data to JSON
-	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json')); // Set the content type
-
-	// Execute cURL session and capture the response
-	$response = curl_exec($ch);
-	// Close cURL session
-	curl_close($ch);
-
+function saveCommentWebhook($touserid, $linkurl, $username, $isComment){
+    global $con;
+    $con->Execute("insert into commentwebhook (userid, linkurl, username, isComment) values (?, ?, ?, ?)", array($touserid, $linkurl, $username, $isComment));
 }
 
-function createWebhookFollow($modAsset, $config, $modid, $modversion){
+function saveFollowWebhook($data) : int {
+    global $con;
+    $con->Execute("insert into followwebhook (id, data) values (?, ?)", array(NULL, json_encode($data)));
+    return $con->Insert_ID();
+}
+
+function createWebhookFollow($modurl, $versionurl, $username){
 	return [
 		"content" => null,
 		"embeds" => [
@@ -309,21 +309,21 @@ function createWebhookFollow($modAsset, $config, $modid, $modversion){
 				 "color" => 9544535,
 				 "fields" => [
 					[
-					   "name" => "Mod:",
-					   "value" => "[{$modAsset["assetname"]}]({$config["serverurl"]}/show/mod/{$modid})",
-					   "inline" => true
-					],
+					   "name" => "Mod:", 
+					   "value" => $modurl,
+					   "inline" => true 
+					], 
 					[
-						"name" => "Author",
-						"value" => $modAsset["username"],
-						"inline" => true
-					],
+						"name" => "Author", 
+						"value" => $username,
+						"inline" => true 
+					], 
 					[
-						"name" => "Version",
-						"value" => "[{$modversion}]({$config["serverurl"]}/download?fileid={$modAsset["fileid"]})",
-						"inline" => true
-					]
-				 ],
+						"name" => "Version", 
+						"value" => $versionurl,
+						"inline" => true 
+					] 
+				 ], 
 				 "thumbnail" => [
 					"url" => "https://mods.vintagestory.at/web/img/vsmoddb-logo.png"
 					]

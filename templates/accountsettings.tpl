@@ -21,8 +21,8 @@
 		</div>
 
 		<div class="editbox linebreak">
-			<label>Mention Discord Webhook</label>
-			<input type="text" name="mentionwebhook" value="{$user['mentionwebhook']}" style="width:290px;" >
+			<label>Comment Discord Webhook</label>
+			<input type="text" name="commentwebhook" value="{$user['commentwebhook']}" style="width:290px;" >
 		</div>
 
 		<div class="editbox linebreak">
