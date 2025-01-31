@@ -29,7 +29,7 @@ if (!empty($_POST["delete"])) {
 	}
 	else {
 		$modreason = $_POST["modreason"] ?: null;
-		$modactionid = logModeratorAction($cmt['userid'], $user['userid'], null, $modreason);
+		$modactionid = logModeratorAction($cmt['userid'], $user['userid'], MODACTION_KIND_DELETE, null, $modreason);
 
 		$con->Execute("update comment set deleted=1, lastmodaction=? where commentid=?", array($modactionid, $commentid));
 		$con->Execute("update `mod` set comments=(select count(*) from comment where assetid=? and deleted=0) where assetid=?", array($cmt["assetid"], $cmt["assetid"]));

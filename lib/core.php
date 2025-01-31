@@ -200,16 +200,27 @@ function logAssetChanges($changes, $assetid)
 }
 
 
+const MODACTION_KIND_BAN    = 1;
+const MODACTION_KIND_DELETE = 2;
+const MODACTION_KIND_EDIT   = 3;
+
+const MAX_SQL_DATE = (new DateTimeImmutable())->setDate(9999, 12, 31);
+const SQL_DATE_FORMAT = "Y-m-d H:i:s";
+
+
 /**
  * @param int              $targetuserid
  * @param int              $moderatoruserid
+ * @param MODACTION_KIND   $kind
  * @param string|date|null $until
  * @param string|null      $reason
+ * @return int generated modaction id
  */
-function logModeratorAction($targetuserid, $moderatoruserid, $until, $reason)
+function logModeratorAction($targetuserid, $moderatoruserid, $kind, $until, $reason)
 {
 	global $con;
-	$con->Execute("insert into moderationrecord (targetuserid, until, moderatorid, reason) values (?, ?, ?, ?)", array($targetuserid, $moderatoruserid, $until, $reason));
+	$con->Execute("insert into moderationrecord (targetuserid, moderatorid, kind, until, reason) values (?, ?, ?, ?, ?)", array($targetuserid, $moderatoruserid, $kind, $until, $reason));
+	return intval($con->getOne("select LAST_INSERT_ID()"));
 }
 
 

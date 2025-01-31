@@ -51,16 +51,20 @@ if (!empty($_POST["save"])) {
 		$cmt = $con->getRow("select assetid, userid, text from comment where commentid=?", array($commentid));
 		$assetid = $cmt['assetid'];
 		
-		if ($user['userid'] != $cmt['userid'] && $user['rolecode'] != 'admin' && $user['rolecode'] != 'moderator') {
+		$wasmodaction = $user['userid'] != $cmt['userid'];
+		if ($wasmodaction && $user['rolecode'] != 'admin' && $user['rolecode'] != 'moderator') {
 			$view->display("403");
 			exit();
 		}
 		
 		$changelog = array("Modified his comment.");
-		if ($user['userid'] != $cmt['userid']) {
+		if ($wasmodaction) {
 			$changelog = array("Modified someone else comment (".$cmt["text"].") => (".$text.")");
+
+			$modreason = $_POST["modreason"] ?: null;
+			logModeratorAction($cmt['userid'], $user['userid'], MODACTION_KIND_EDIT, NULL, $modreason);
 		}
-		
+
 		logAssetChanges($changelog, $assetid);
 	}
 	

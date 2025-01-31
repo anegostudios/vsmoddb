@@ -22,7 +22,7 @@ if (empty($target)) {
 
 $urlparts = explode("/", $target);
 
-$typewhitelist = array("terms", "api", "updateversiontags", "files", "show", "download", "edit", "edit-comment", "delete-comment", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist", "get-usernames", "notification", "set-follow");
+$typewhitelist = array("terms", "api", "updateversiontags", "files", "show", "download", "edit", "edit-comment", "delete-comment", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist", "get-usernames", "notification", "set-follow", "ban");
 
 if (!in_array($urlparts[0], $typewhitelist)) {
 	$modid = $con->getOne("select assetid from `mod` where urlalias=?", array($urlparts[0]));
@@ -45,6 +45,8 @@ if ($urlparts[0] == "notification") {
 	exit();
 }
 
+// Try to compose filename from the first two segemnts of the url:
+// edit/profile -> edit-profile.php 
 $filename = implode("-", array_slice($urlparts, 0, 2)) . ".php";
 
 if (file_exists($filename)) {

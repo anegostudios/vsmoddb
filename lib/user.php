@@ -27,7 +27,15 @@ function canEditAsset($asset, $user) {
 }
 
 function canEditProfile($shownuser, $user) {
-	return isset($user['userid']) && ($user['userid'] == $shownuser['userid'] || $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator");
+	return isset($user['userid']) && ($user['userid'] == $shownuser['userid'] || canModerate($shownuser, $user));
+}
+
+/**
+ * @param array $shownuser  the moderation target (ignored for now)
+ * @param array $user       the permission source 
+ */
+function canModerate($shownuser, $user) {
+	return $user['rolecode'] == 'admin' || $user['rolecode'] == 'moderator';
 }
 
 function loadNotifications() {

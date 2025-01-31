@@ -9,6 +9,13 @@
 			buttontext="Edit"
 		}
 	{/if}
+	{if canModerate($shownuser, $user)}
+		{include
+			file="button"
+			href="/ban/$usertoken"
+			buttontext="Edit"
+		}
+	{/if}
 </div>
 
 <h2><span class="title">About {$shownuser['name']}</span></h2>
