@@ -7,18 +7,34 @@ $cnt = 0;
 
 // check `DEBUGUSER` first, $sessiontoken could be set by mods.vintagestory.at even if we're browsing stage.mods.vintagestory.at
 if (DEBUGUSER === 1) {
-	$user = $con->getRow("select user.*, role.code as rolecode from user left join role on (user.roleid = role.roleid)");
+	$user = $con->getRow("
+		select user.*, role.code as rolecode, rec.reason as bannedreason
+		from user 
+		left join role on (user.roleid = role.roleid)
+		left join moderationrecord as rec on (rec.kind = ".MODACTION_KIND_BAN." and rec.targetuserid = user.userid and rec.until = user.banneduntil and rec.until >= NOW())
+	");
 }
 
 if ($sessiontoken) {
-	$user = $con->getRow("select user.*, role.code as rolecode from user left join role on (user.roleid = role.roleid) where sessiontoken=? and sessiontokenvaliduntil > now()", array($_COOKIE['vs_websessionkey']));
+	$user = $con->getRow("
+		select user.*, role.code as rolecode, rec.reason as bannedreason
+		from user 
+		left join role on (user.roleid = role.roleid) 
+		left join moderationrecord as rec on (rec.kind = ".MODACTION_KIND_BAN." and rec.targetuserid = user.userid and rec.until = user.banneduntil and rec.until >= NOW())
+		where sessiontoken=? and sessiontokenvaliduntil > now()
+	",
+		array($_COOKIE['vs_websessionkey'])
+	);
 }
 
 if ($user) {
+	$user['banneduntil'] = parseSqlDateTime($user['banneduntil']);
+	$user['isbanned'] = isCurrentlyBanned($user); //TODO(Rennorb) @cleanup: move to sql? 
 	loadNotifications();
 
 	$view->assign("user", $user);
 } else {
+	$user['isbanned'] = false;
 	$view->assign("notificationcount", 0);
 }
 
@@ -30,9 +46,13 @@ function canEditProfile($shownuser, $user) {
 	return isset($user['userid']) && ($user['userid'] == $shownuser['userid'] || canModerate($shownuser, $user));
 }
 
+function isCurrentlyBanned($user) {
+	return $user['banneduntil'] && $user['banneduntil'] >= new \DateTimeImmutable("now");
+}
+
 /**
- * @param array $shownuser  the moderation target (ignored for now)
- * @param array $user       the permission source 
+ * @param unused $shownuser  the moderation target (ignored for now, moderators are global for now)
+ * @param array  $user       the permission source 
  */
 function canModerate($shownuser, $user) {
 	return $user['rolecode'] == 'admin' || $user['rolecode'] == 'moderator';

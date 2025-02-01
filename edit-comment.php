@@ -8,6 +8,13 @@ if (!$user['roleid']) {
 	exit();
 }
 
+if($user['isbanned']) {
+	http_response_code(403);
+	$view->assign('reason', 'You are currently banned.');
+	$view->display("403");
+	exit();
+}
+
 $commentid = empty($_POST["commentid"]) ? 0 : $_POST["commentid"];
 
 if (!empty($_POST["save"])) {
@@ -20,6 +27,7 @@ if (!empty($_POST["save"])) {
 	$isnew = false;
 	$text = sanitizeHtml($_POST["text"], array('safe'=>1));
 
+	$commentchanges = array("text" => $text);
 
 	if (!$commentid) {
 		$isnew = true;
@@ -61,15 +69,15 @@ if (!empty($_POST["save"])) {
 		if ($wasmodaction) {
 			$changelog = array("Modified someone else comment (".$cmt["text"].") => (".$text.")");
 
-			$modreason = $_POST["modreason"] ?: null;
-			logModeratorAction($cmt['userid'], $user['userid'], MODACTION_KIND_EDIT, NULL, $modreason);
+			$modreason = $_POST["modreason"] ?? null; //TODO(Rennorb): diff the strings and add the diff to the comemnt
+			$commentchanges["lastmodaction"] = logModeratorAction($cmt['userid'], $user['userid'], MODACTION_KIND_EDIT, SQL_DATE_FOREVER, $modreason);
 		}
 
 		logAssetChanges($changelog, $assetid);
 	}
 	
 
-	update("comment", $commentid, array("text" => $text));
+	update("comment", $commentid, $commentchanges);
 	
 	$row = $con->getRow("
 		select 

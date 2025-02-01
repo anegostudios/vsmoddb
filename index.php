@@ -22,7 +22,7 @@ if (empty($target)) {
 
 $urlparts = explode("/", $target);
 
-$typewhitelist = array("terms", "api", "updateversiontags", "files", "show", "download", "edit", "edit-comment", "delete-comment", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist", "get-usernames", "notification", "set-follow", "ban");
+$typewhitelist = array("terms", "api", "updateversiontags", "files", "show", "download", "edit", "edit-comment", "delete-comment", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist", "get-usernames", "notification", "set-follow", "moderate");
 
 if (!in_array($urlparts[0], $typewhitelist)) {
 	$modid = $con->getOne("select assetid from `mod` where urlalias=?", array($urlparts[0]));
@@ -56,7 +56,6 @@ if (file_exists($filename)) {
 
 
 $filename = $urlparts[0] . ".php";
-
 
 if (count($urlparts) > 1) {
 	$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($urlparts[1]));

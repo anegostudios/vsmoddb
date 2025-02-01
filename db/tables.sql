@@ -63,12 +63,14 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `moddb`.`moderationrecord` (
   `actionid` INT NOT NULL AUTO_INCREMENT,
+  `created` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
   `targetuserid` INT NOT NULL,
+  `kind` INT NOT NULL,
   `until` DATETIME NULL,
   `moderatorid` INT NOT NULL,
   `reason` TEXT NULL,
-  PRIMARY KEY `actionid`,
-  UNIQUE KEY (`targetuserid`, `until`),
+  PRIMARY KEY (`actionid`),
+  KEY id_until (`targetuserid`, `kind`, `until`),
 	INDEX `moderatorid_index` (`moderatorid`),
   FOREIGN KEY (`targetuserid`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE RESTRICT,
   FOREIGN KEY (`moderatorid`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE RESTRICT)

@@ -2,17 +2,18 @@
 {include file="header"}
 
 <div style="float: right;">
+	{if canModerate($shownuser, $user)}
+		{include
+			file="button"
+			href="/moderate/user/$shownuserid"
+			buttontext="Ban User"
+			class="flair-moderator"
+		}
+	{/if}
 	{if canEditProfile($shownuser, $user)}
 		{include
 			file="button"
 			href="/edit/profile/$usertoken"
-			buttontext="Edit"
-		}
-	{/if}
-	{if canModerate($shownuser, $user)}
-		{include
-			file="button"
-			href="/ban/$usertoken"
 			buttontext="Edit"
 		}
 	{/if}

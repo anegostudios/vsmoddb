@@ -56,7 +56,7 @@ if ($assetid) {
 			comment 
 			join user on (comment.userid = user.userid)
 			left join role on (user.roleid = role.roleid)
-		where assetid=?
+		where assetid=? and comment.deleted = 0
 		order by comment.created desc
 	", array($assetid));
 	
