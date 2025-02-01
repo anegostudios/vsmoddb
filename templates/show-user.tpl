@@ -5,7 +5,7 @@
 	{if canModerate($shownuser, $user)}
 		{include
 			file="button"
-			href="/moderate/user/$shownuserid"
+			href="/moderate/user/$usertoken"
 			buttontext="Ban User"
 			class="flair-moderator"
 		}

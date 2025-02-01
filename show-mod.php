@@ -50,6 +50,7 @@ if ($assetid) {
 			comment.*,
 			user.name as username,
 			user.roleid as roleid,
+			substring(sha2(concat(user.userid, user.created), 512), 1, 20) as usertoken,
 			role.code as rolecode,
 			role.name as rolename
 		from 

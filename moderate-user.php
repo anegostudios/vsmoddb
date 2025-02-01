@@ -1,12 +1,15 @@
 <?php
 
-//TODO(Rennorb): using user hashes
-if(empty($targetuserid = $urlparts[2] ?? null)) {
-	$view->display("400");
+$usertoken = $urlparts[2] ?? null;
+
+if(empty($usertoken) || empty($targetuser = getUserByHash($usertoken, $con))) {
+	http_response_code(404);
+	$view->display("404");
 	exit();
 }
 
-if(!canModerate($targetuserid, $user)) {
+if(!canModerate($targetuser, $user)) {
+	http_response_code(403);
 	$view->display("403");
 	exit();
 }
@@ -40,7 +43,7 @@ if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 		$view->assign('errormessage', "Missing $errorreasons for ban.");
 	}
 	else {
-		logModeratorAction($targetuserid, $user['userid'], MODACTION_KIND_BAN, $until, $fpost['modreason']);
+		logModeratorAction($targetuser['userid'], $user['userid'], MODACTION_KIND_BAN, $until, $fpost['modreason']);
 
 		forceRedirectAfterPOST();
 		exit();
@@ -58,14 +61,14 @@ else if(isset($_POST['submit']) && $_POST['submit'] == 'redeem') {
 			set until = NOW()
 			where kind = ".MODACTION_KIND_BAN." and until > NOW()
 		");
-		logModeratorAction($targetuserid, $user['userid'], MODACTION_KIND_REDEEM, SQL_DATE_FOREVER, $reason);
+		logModeratorAction($targetuser['userid'], $user['userid'], MODACTION_KIND_REDEEM, SQL_DATE_FOREVER, $reason);
 
 		forceRedirectAfterPOST();
 		exit();
 	}
 }
 
-$shownuser = $con->getRow("select * from user where userid = ?", array($targetuserid));
+$shownuser = $con->getRow("select * from user where userid = ?", array($targetuser['userid']));
 
 $sql = "
 			select rec.created, rec.kind, rec.until, moderator.name as moderatorname, rec.reason
@@ -74,7 +77,7 @@ $sql = "
 			where rec.targetuserid = ?
 			order by rec.created desc
 		";
-$moderationrecord = $con->getAll($sql, array($targetuserid));
+$moderationrecord = $con->getAll($sql, array($targetuser['userid']));
 
 foreach($moderationrecord as &$row) {
 	$row['until'] = parseSqlDateTime($row['until']);
@@ -84,6 +87,8 @@ unset($row);
 $sourcecommentid = $_GET['source-comment'] ?? null;
 $banreasonautocomplete = $sourcecommentid == null ? '' 
 	: 'Offensive comment: '.strip_tags($con->getOne("select text from comment where commentid = ?", array($sourcecommentid)));
+
+$view->assign('pagetitle', "Moderate {$shownuser['name']}");
 
 $view->assign("shownuser", $shownuser);
 $view->assign("moderationrecord", $moderationrecord);

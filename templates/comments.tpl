@@ -25,7 +25,7 @@
 										{if $comment["userid"] == $user["userid"]}
 												<span class="buttonlinks strikethrough-when-banned">(<a href="#editcomment" data-commentid="{$comment['commentid']}">edit comment</a> <a style="margin-left:5px;"  href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>)</span>
 										{elseif canModerate($comment['userid'], $user) && !($comment["userid"] == $user["userid"])}
-												<span class="buttonlinks strikethrough-when-banned">(<a href="#editcomment" data-commentid="{$comment['commentid']}">edit comment</a> <a style="margin-left:5px;"  href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a> <a style="margin-left:5px;"  href="/moderate/user/{$comment['userid']}?source-comment={$comment['commentid']}">ban user</a>)</span>
+												<span class="buttonlinks strikethrough-when-banned">(<a href="#editcomment" data-commentid="{$comment['commentid']}">edit comment</a> <a style="margin-left:5px;"  href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a> <a style="margin-left:5px;"  href="/moderate/user/{$comment['usertoken']}?source-comment={$comment['commentid']}">ban user</a>)</span>
 										{elseif $assert['createduserid'] == $user['userid']}
 												<span class="buttonlinks strikethrough-when-banned">(<a href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>)</span>
 										{/if}

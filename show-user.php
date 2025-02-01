@@ -14,7 +14,6 @@ if (empty($usertoken) || empty($shownuser = getUserByHash($usertoken, $con))) {
 }
 
 $view->assign("usertoken", $usertoken);
-$view->assign("shownuserid", $shownuser['userid']);
 
 $sql = "
 			select 
