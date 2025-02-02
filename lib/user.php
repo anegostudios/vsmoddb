@@ -7,12 +7,14 @@ $cnt = 0;
 
 // check `DEBUGUSER` first, $sessiontoken could be set by mods.vintagestory.at even if we're browsing stage.mods.vintagestory.at
 if (DEBUGUSER === 1) {
+	$userid = empty($_GET['showas']) ? 1 : (intval($_GET['showas']) ?: 1); // append ?showas=<id> to view the page as a different user
 	$user = $con->getRow("
 		select user.*, role.code as rolecode, rec.reason as bannedreason
 		from user 
 		left join role on (user.roleid = role.roleid)
 		left join moderationrecord as rec on (rec.kind = ".MODACTION_KIND_BAN." and rec.targetuserid = user.userid and rec.until = user.banneduntil and rec.until >= NOW())
-	");
+		where user.userid = ?
+	", array($userid));
 }
 
 if ($sessiontoken) {
