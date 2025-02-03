@@ -1,5 +1,6 @@
 <?php
-	
+
+global $view, $con;
 $sessiontoken = empty($_COOKIE['vs_websessionkey']) ? null : $_COOKIE['vs_websessionkey'];
 
 $user = null;
@@ -7,7 +8,8 @@ $cnt = 0;
 
 // check `DEBUGUSER` first, $sessiontoken could be set by mods.vintagestory.at even if we're browsing stage.mods.vintagestory.at
 if (DEBUGUSER === 1) {
-	$user = $con->getRow("select user.*, role.code as rolecode from user left join role on (user.roleid = role.roleid)");
+	$user = $con->getRow("select user.*, role.code as rolecode from user left join role on (user.roleid = role.roleid) where user.name='Test User'");
+	//$user = $con->getRow("select user.*, role.code as rolecode from user left join role on (user.roleid = role.roleid) where user.name='Example User'");
 }
 
 if ($sessiontoken) {

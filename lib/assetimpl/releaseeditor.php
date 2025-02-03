@@ -5,8 +5,10 @@ class ReleaseEditor extends AssetEditor {
 	var $savestatus = null;
 	var $fileuploadstatus;
 	var $mod;
-	
-	var $modid;
+	var $moddtype;
+	var $releaseIdDupl;
+	var $inUseByUser;
+    var $modid;
 
 	function __construct() {
 		$this->editTemplateFile = "edit-release";
@@ -91,7 +93,7 @@ class ReleaseEditor extends AssetEditor {
 	}
 	
 	function saveFromBrowser() {
-		global $con, $user, $view;
+		global $con, $user, $view, $config;
 		
 		$modid = null;
 		$file=null;
@@ -167,13 +169,13 @@ class ReleaseEditor extends AssetEditor {
 				return 'modidinuse';
 			}
 
-			// Make sure another mod (but same user) doesn't use this modid 
+			// Make sure another mod (but same user) doesn't use this modid
 			$modIdDupl = $con->getOne("select modid from `release` where modidstr=? and modid!=?", array($modidstr, $this->modid));
 			if ($modIdDupl) {
 				$this->modAssetIdDupl = $con->getOne("select assetid from `mod` where `modid`=?", array($modIdDupl));
 				return 'duplicatemod';
 			}
-			
+
 			if ($modidstr == "game" || $modidstr == "creative" || $modidstr == "survival") {
 				$this->inUseByUser = array("userid"=>1, "name" => "the creators of this very game - gasp!");
 				return 'modidinuse';
@@ -181,10 +183,10 @@ class ReleaseEditor extends AssetEditor {
 		}
 		
 		$status = parent::saveFromBrowser();
-		
+		$release = NULL;
 		if ($status == 'saved' || $status == 'savednew') {
-			$releaseid = $con->getOne("select releaseid from `release` where assetid=?", array($this->assetid));
-			
+			$release = $con->getRow("select releaseid,modid from `release` where assetid=?", array($this->assetid));
+			$releaseid = $release["releaseid"];
 			if ($modinfo['modparse'] == 'ok') {
 				update("release", $releaseid, array("detectedmodidstr" => $modidstr, "modidstr" => $modidstr, "modversion" => $modversion));
 			} else {
@@ -203,15 +205,41 @@ class ReleaseEditor extends AssetEditor {
 		
 			$view->assign("errormessage", $this->fileuploadstatus["errormessage"]);
 		}
-		
-		$modid = $con->getOne("select modid from `release` where assetid=?", array($this->assetid));
-		
+
 		if ($status == 'savednew') {
+
+			$modid = $release["modid"];
+			$modAsset = $con->getRow("
+			select
+				modasset.name as assetname,
+				user.name as username,
+				file.fileid as fileid
+			from
+				`mod`
+				join `release` on (release.releaseid = {$release["releaseid"]})
+				join `asset` as modasset on (mod.assetid = modasset.assetid)
+				join `user` on (modasset.createdbyuserid = user.userid)
+				join `file` on (release.assetid = file.assetid)
+			where mod.modid=?", array($modid));
+
+			$webhookdata =  createWebhookFollow($modAsset, $config, $modid, $modversion);
+
+            $modurl = "[{$modAsset["assetname"]}]({$config["serverurl"]}/show/mod/$modid)";
+            $versionurl = "[$modversion]({$config["serverurl"]}/download?fileid={$modAsset["fileid"]})";
+            $username = $modAsset["username"];
+			$webhookdata =  createWebhookFollow($modurl, $versionurl, $username);
+            $followWebhookId = saveFollowWebhook($webhookdata);
+
 			$con->Execute("update `mod` set lastreleased=now() where modid=?", array($modid));
-			
+
 			$userids = $con->getCol("select userid from `follow` where modid=?", array($modid));
 			foreach ($userids as $userid) {
 				$con->Execute("insert into notification (userid, type, recordid, created) values (?,?,?, now())", array($userid, 'newrelease', $modid));
+				$webhookurl = $con->getOne("select followwebhook from `user` where userid=?", array($userid));
+				if(!empty($webhookurl))
+				{
+                    $con->Execute("insert into followwebhookuser (followwebhookid, userid) values (?, ?)", array($followWebhookId, $userid));
+				}
 			}
 		}
 	
@@ -230,7 +258,7 @@ class ReleaseEditor extends AssetEditor {
 		}
 		if ($this->savestatus == 'duplicatemod') {
 			$view->assign("errormessage", "Cannot save release, there already exists <a href=\"/show/mod/{$this->modAssetIdDupl}\">another mod</a> that uses this mod id - please ensure a unique modid.", null, true);
-		}		
+		}
 		if ($this->savestatus == 'modidinuse') {
 			$name = $this->inUseByUser['name'];
 			$view->assign("errormessage", "Cannot save release, this mod id has been claimed by {$name}, please choose another one.", null, true);
@@ -253,10 +281,54 @@ class ReleaseEditor extends AssetEditor {
 	}
 	
 
-	function getBackLink() {
-		global $con;
-		$assetid = $con->getOne("select `mod`.assetid from `mod` join `release` on (`mod`.modid = `release`.modid) where `release`.assetid=?", array($this->assetid));
-		return "/show/mod/{$assetid}?saved=1#tab-files";
-	}
-		
+	function getBackLink()
+    {
+        global $con;
+        $assetid = $con->getOne("select `mod`.assetid from `mod` join `release` on (`mod`.modid = `release`.modid) where `release`.assetid=?", array($this->assetid));
+        return "/show/mod/{$assetid}?saved=1#tab-files";
+    }
+}
+
+function saveCommentWebhook($touserid, $linkurl, $username, $isComment){
+    global $con;
+    $con->Execute("insert into commentwebhook (userid, linkurl, username, isComment) values (?, ?, ?, ?)", array($touserid, $linkurl, $username, $isComment));
+}
+
+function saveFollowWebhook($data) : int {
+    global $con;
+    $con->Execute("insert into followwebhook (id, data) values (?, ?)", array(NULL, json_encode($data)));
+    return $con->Insert_ID();
+}
+
+function createWebhookFollow($modurl, $versionurl, $username){
+	return [
+		"content" => null,
+		"embeds" => [
+			  [
+				 "title" => "New Mod Release",
+				 "color" => 9544535,
+				 "fields" => [
+					[
+					   "name" => "Mod:", 
+					   "value" => $modurl,
+					   "inline" => true 
+					], 
+					[
+						"name" => "Author", 
+						"value" => $username,
+						"inline" => true 
+					], 
+					[
+						"name" => "Version", 
+						"value" => $versionurl,
+						"inline" => true 
+					] 
+				 ], 
+				 "thumbnail" => [
+					"url" => "https://mods.vintagestory.at/web/img/vsmoddb-logo.png"
+					]
+			  ]
+		   ],
+		"attachments" => []
+	 ];
 }

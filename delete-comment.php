@@ -1,4 +1,5 @@
 <?php
+global $view, $con;
 if (empty($user)) {
 	header("Location: /login");
 	exit();
@@ -18,8 +19,9 @@ if (!empty($_POST["delete"])) {
     		$view->display("403");
 		exit();
 	}
-	
-	$con->Execute("delete from comment where commentid=?", array($commentid));
+
+    $con->Execute("delete from comment where commentid=?", array($commentid));
+    $con->Execute("delete from notification where recordid=?", array($commentid));
 	$con->Execute("update `mod` set comments=(select count(*) from comment where assetid=?) where assetid=?", array($cmt["assetid"], $cmt["assetid"]));
 	
 	$changelog = array("Deleted own comment");

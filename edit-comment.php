@@ -1,4 +1,5 @@
 <?php
+global $config, $view, $con;
 if (empty($user)) {
 	header("Location: /login");
 	exit();
@@ -19,7 +20,9 @@ if (!empty($_POST["save"])) {
 	
 	$isnew = false;
 	$text = sanitizeHtml($_POST["text"], array('safe'=>1));
-
+    if(empty($text)){
+        exit();
+    }
 
 	if (!$commentid) {
 		$isnew = true;
@@ -27,22 +30,41 @@ if (!empty($_POST["save"])) {
 		update("comment", $commentid, array("userid" => $user['userid'], "assetid" => $_POST["assetid"]));
 		
 		$con->Execute("update `mod` set comments=(select count(*) from comment where assetid=?) where assetid=?", array($_POST["assetid"], $_POST["assetid"]));
-		
+
 		$touserid = $con->getOne("select createdbyuserid from `asset` where assetid=?", array($_POST['assetid']));
+		
 		if ($user['userid'] != $touserid) {
 			$notid = insert("notification");
 			update("notification", $notid, array("userid" => $touserid, "type" => "newcomment", "recordid" => $commentid));
+			
+			$webhookurl = $con->getone("select commentwebhook from user where userid=?", array($touserid));
+			$modAsset = getModIdAndName($con, $_POST["assetid"]);
+
+			if(!empty($webhookurl) && $user["cwhFails"] < 5)
+			{
+                $linkurl = "[{$modAsset["modname"]}]({$config["serverurl"]}/show/mod/{$modAsset["modid"]}/#cmt-$commentid)";
+                saveCommentWebhook($touserid, $linkurl, $user["name"], true);
+			}
 		}
 		
 		
 		preg_match_all("#<span class=\"mention username\">(.*)</span>#Ui", $text, $matches);
 		
 		foreach ($matches[1] as $name) {
-			$userid = $con->getOne("select userid from user where name=?", array($name));
-			
-			if ($userid) {
+			$mentionedUser = $con->getRow("select userid,commentwebhook from user where name=?", array($name));
+			$mentionUserID = $mentionedUser["userid"];
+			if ($mentionUserID) {
 				$notid = insert("notification");
-				update("notification", $notid, array("userid" => $userid, "type" => "mentioncomment", "recordid" => $commentid));
+				update("notification", $notid, array("userid" => $mentionUserID, "type" => "mentioncomment", "recordid" => $commentid));
+
+				$webhookurl = $mentionedUser["commentwebhook"];
+				$modAsset = getModIdAndName($con, $_POST["assetid"]);
+				
+				if(!empty($webhookurl) && $mentionedUser["cwhFails"] < 5)
+				{
+                    $linkurl = "[{$modAsset["modname"]}]({$config["serverurl"]}/show/mod/{$modAsset["modid"]}/#cmt-$commentid)";
+                    saveCommentWebhook($mentionUserID, $linkurl, $user["name"], false);
+				}
 			}
 		}
 		
@@ -83,3 +105,13 @@ if (!empty($_POST["save"])) {
 }
 
 
+function getModIdAndName($con, $assetit){
+	return $con->getRow("
+	select
+		mod.modid as modid,
+		asset.name as modname 
+	from
+		`asset`
+		join `mod` on (asset.assetid = mod.assetid)
+	where asset.assetid=?", array($assetit));
+}
