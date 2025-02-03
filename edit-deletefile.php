@@ -50,7 +50,9 @@ if (!empty($_POST["fileid"])) {
 		logAssetChanges(array("Deleted file '{$file['filename']}'"), $assetid);
 		
 		exit(json_encode(array("status" => "ok")));
+	} else {
+		exit(json_encode(array("status" => "error", "errormessage" => "file not found")));
 	}
 }
 
-exit(json_encode(array("status" => "error")));
+exit(json_encode(array("status" => "error", "errormessage" => "no file id")));

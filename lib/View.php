@@ -90,22 +90,14 @@ class View {
 		$str = file_get_contents($this->templatedir. $viewfilename);
 		
 		$str = $this->parseTemplate($str);
-		
-		
-		if (!is_dir(dirname($this->compiledir . $viewfilename))) {
-			mkdir(dirname($this->compiledir . $viewfilename), 0755, true);
-		}
-		
-		file_put_contents($this->compiledir . $viewfilename, $str);
 
 		if ($fetch) {
 			ob_start();
-			include($this->compiledir . $viewfilename);
-			$str = ob_get_contents();
+			echo $str;
 			ob_end_clean();
 			return $str;
 		} else {
-			include($this->compiledir . $viewfilename);
+			eval('?>' . $str . '<?php');
 		}
 	}
 	

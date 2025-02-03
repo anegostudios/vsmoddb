@@ -47,6 +47,10 @@ class ModList extends AssetList {
 		
 		$searchparams = array();
 		if (isset($_GET['text'])) {
+			$view->assign("search", 1);
+		}
+		
+		if (isset($_GET['text'])) {
 			$searchparams[] = "text={$_GET['text']}";
 		}
 		if (isset($_GET["tagids"])) {
