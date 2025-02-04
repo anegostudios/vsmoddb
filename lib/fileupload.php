@@ -98,8 +98,8 @@ function uploadFileTemporary($file, $assettypeid, $ismod) {
 			unlink($dir . $filename);
 		}
 	
-		$filename = copyImageResized($dir . $filename, 55, 60);
-		$data["thumbnailfilename"] = basename($filename);
+		$thumbnailfilename = copyImageResized($dir . $filename, 55, 60);
+		$data["thumbnailfilename"] = basename($thumbnailfilename);
 	}
 	
 	
@@ -149,8 +149,8 @@ function uploadFile($file, $assetid, $ismod) {
 			unlink($dir . $filename);
 		}
 	
-		$filename = copyImageResized($dir . $filename, 55, 60);
-		$data["thumbnailfilename"] = basename($filename);
+		$thumbnailfilename = copyImageResized($dir . $filename, 55, 60);
+		$data["thumbnailfilename"] = basename($thumbnailfilename);
 	}
 	
 	$fileid = insert("file");
