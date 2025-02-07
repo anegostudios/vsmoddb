@@ -7,11 +7,12 @@
 
 <form method="POST" autocomplete="off">
 	<label for="modreason">Reason for this ban:</label><br/>
-	<textarea id="modreason" name="modreason" style="display: block; width: 100%; margin-bottom: 1em;">{$banreasonautocomplete}</textarea>
-	<label for="until">Ban until: <input id="until" type="datetime-local" name="until" /></label> <label for="forever" style="user-select: none;"><input id="forever" type="checkbox" name="forever" /> Forever</label>
-	<div style="float: right;">
-		<button type="submit" name="submit" value="ban" style="background-color: darkred;color: white;">Ban User!</button>
-		<button type="submit" name="submit" value="redeem" style="background-color: darkgreen;color: white;">Redeem User!</button>
+	<textarea id="modreason" name="modreason" style="display: block; width: 100%; min-height:150px; margin-bottom: 1em;">{$banreasonautocomplete}</textarea>
+	<p><label for="until">Ban until: <input id="until" type="datetime-local" name="until" /></label> <label for="forever" style="user-select: none;"><input id="forever" type="checkbox" name="forever" /> Forever</label></p>
+		
+	<div>
+		<button class="button submit" type="submit" name="submit" value="ban" style="background-color: darkred;color: white;">Ban User</button>
+		<button class="button submit" type="submit" name="submit" value="redeem" style="background-color: darkgreen;color: white;">Redeem User</button>
 	</div>
 <form>
 
