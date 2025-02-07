@@ -245,7 +245,8 @@ function submitForm(returntolist) {
 }
 
 function submitDelete() {
-	if (confirm("Really delete this entry?")) {
+	var cf = prompt("Really delete this entry? Type DELETE to confirm");
+	if (cf == "DELETE") {
 		document['deleteform'].submit();
 	}
 }

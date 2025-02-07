@@ -14,7 +14,7 @@
 
 	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
-	<link href="/web/css/style.css?version=33" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=34" rel="stylesheet" type="text/css">
 	<link href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/dialog.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">

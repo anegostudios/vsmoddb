@@ -219,12 +219,14 @@
 }
 
 {if $asset['assetid']}
-	<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+	<span style="float:right;">
 	{include
 		file="button"
+		class="btndelete"
 		href="javascript:submitDelete()"
 		buttontext="Delete `$entrysingular`"
 	}
+	</span>
 {/if}
 
 <p style="clear:both;"><br></p>
@@ -237,7 +239,7 @@
 		});
 		
 	</script>	
-	<script type="text/javascript" src="/web/js/edit-asset.js" async></script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=5" async></script>
 {/capture}
 
 {include file="footer"}

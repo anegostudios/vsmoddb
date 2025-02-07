@@ -470,6 +470,10 @@ fieldset {
 	background: #9bc45e;
 }
 
+.button.btndelete {
+  background: #c45e5e;
+}
+
 .button  {
 	text-decoration:none;
 	text-align:center;
