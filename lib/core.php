@@ -35,8 +35,6 @@ while (($file = readdir($rd))) {
 $con = createADOConnection($config);
 $view = new View();
 
-include($config["basepath"] . "lib/user.php");
-
 $view->assign("fileuploadmaxsize", round(file_upload_max_size() / 1024 / 1024, 1));
 
 $ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;
@@ -101,9 +99,14 @@ function dump_die($var)
 }
 
 
-function endsWith($string, $part)
+function endsWith($string, $part) //TODO(Rennorb)  @perf: use str_ends_with() instead, if we can get a newer version of php
 {
 	return preg_match("/(" . preg_quote($part) . ")$/", $string);
+}
+
+function startsWith($string, $part) //TODO(Rennorb)  @perf: use str_starts_with() instead, if we can get a newer version of php
+{
+	return mb_substr($string, 0, mb_strlen($part)) == $part;
 }
 
 function isNumber($val)
@@ -163,6 +166,11 @@ function getURLPath()
 	return $urlcode;
 }
 
+function forceRedirectAfterPOST()
+{
+	header('Location: '.$_SERVER['REQUEST_URI'], true, 303);
+}
+
 
 function genToken()
 {
@@ -203,6 +211,48 @@ function logAssetChanges($changes, $assetid)
 	}
 }
 
+
+const MODACTION_KIND_BAN    = 1;
+const MODACTION_KIND_DELETE = 2;
+const MODACTION_KIND_EDIT   = 3;
+const MODACTION_KIND_REDEEM = 4;
+
+
+/**
+ * @param int kind
+ * @return string
+ */
+function stringifyModactionKind($kind)
+{
+	switch($kind) {
+		case MODACTION_KIND_BAN   : return "Ban";
+		case MODACTION_KIND_DELETE: return "Delete";
+		case MODACTION_KIND_EDIT  : return "Edit";
+		case MODACTION_KIND_REDEEM: return "Redeem";
+		default: return strval($kind);
+	}
+}
+
+const SQL_DATE_FOREVER = "9999-12-31";
+const SQL_DATE_FORMAT = "Y-m-d H:i:s";
+
+
+/**
+ * @param int            $targetuserid
+ * @param int            $moderatoruserid
+ * @param MODACTION_KIND $kind
+ * @param string         $until
+ * @param string|null    $reason
+ * @return int generated modaction id
+ */
+function logModeratorAction($targetuserid, $moderatoruserid, $kind, $until, $reason)
+{
+	global $con;
+	$con->Execute("insert into moderationrecord (targetuserid, moderatorid, kind, until, reason) values (?, ?, ?, ?, ?)", array($targetuserid, $moderatoruserid, $kind, $until, $reason));
+	return intval($con->getOne("select LAST_INSERT_ID()"));
+}
+
+
 function logError($str)
 {
 	logLine($str, "logs/error.txt");
@@ -231,7 +281,32 @@ function timelessDate($sqldate)
 	return date("M jS Y", strtotime($sqldate));
 }
 
-function fancyDate($sqldate)
+/**
+ * @param string $str
+ * @return DateTimeImmutable|false
+ * 
+ * Expects the string to be in current timezone, SQL_DATE_FORMAT.
+ */
+function parseSqlDateTime($str)
+{
+	return DateTimeImmutable::createFromFormat(SQL_DATE_FORMAT, $str);
+}
+
+/**
+ * @param DateTimeInterface $date
+ * @param string $format
+ * @param string $forevertext
+ * @return string
+ * 
+ * Used for formatting moderation related dates. a user might be banned "forever" which is represented as the year 9999.
+ */
+function formatDateWhichMightBeForever($date, $format = "M jS Y, H:i:s", $forevertext = "forever")
+{
+	$year = $date->format("Y"); // unfortunately no way to get the year directly.
+	return startsWith($year, "9999") ? $forevertext : $date->format($format);
+}
+
+function fancyDate($sqldate) //TODO(Rennorb): support for future dates
 {
 	if (empty($sqldate)) return "-";
 	$timestamp = strtotime($sqldate);
@@ -476,5 +551,9 @@ function getUserHash($userid, $joindate)
 function getUserByHash($hashcode, $con)
 {
 	global $config;
-	return $con->getRow("select * from user where sha2(concat(user.userid, user.created), 512) like ?", array($hashcode . "%"));
+	return $con->getRow("select * from user where sha2(concat(user.userid, user.created), 512) like ?", array($hashcode . "%")); //TODO(Rennorb) @perf @correctness
 }
+
+
+// Loads after other function deffinitions so we can use them during global init.
+include($config["basepath"] . "lib/user.php");

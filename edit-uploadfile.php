@@ -8,6 +8,13 @@ if (!$user['roleid']) {
 	exit();
 }
 
+if ($user['isbanned']) {
+	http_response_code(403);
+	$view->assign('reason', 'You are currently banned.');
+	$view->display("403");
+	exit();
+}
+
 if (!empty($_POST["upload"]) && @$_FILES["file"]) {
 	$file = $_FILES["file"];
 	

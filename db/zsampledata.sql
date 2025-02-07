@@ -21,6 +21,8 @@ COMMIT;
 START TRANSACTION;
 USE `moddb`;
 INSERT INTO `moddb`.`user` (roleid, uid, name, password, email, actiontoken, sessiontoken, sessiontokenvaliduntil, timezone, created, lastmodified, lastonline) VALUES (3, NULL, 'Example User', NULL, 'example.user@example.com', NULL, NULL, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL);
+INSERT INTO `moddb`.`user` (userid, name, created, banneduntil, email) VALUES (2, 'Evil User', NOW(), '9999-12-31', '2+void@localhost');
+INSERT INTO `moddb`.`user` (userid, roleid, name, created, email) VALUES (3, 2, 'Moderator User', NOW(), '3+void@localhost');
 
 COMMIT;
 
@@ -49,7 +51,7 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `moddb`;
-INSERT INTO `moddb`.`asset` (createdbyuserid, editedbyuserid, statusid, assettypeid, code, name, text, tagscached, created, lastmodified, numsaved) VALUES (1,1,2,1,NULL,'Example Mod 1', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>', '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1);
+INSERT INTO `moddb`.`asset` (createdbyuserid, editedbyuserid, statusid, assettypeid, code, name, text, tagscached, created, lastmodified, numsaved) VALUES (2,1,2,1,NULL,'Example Mod 1', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>', '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1);
 INSERT INTO `moddb`.`asset` (createdbyuserid, editedbyuserid, statusid, assettypeid, code, name, text, tagscached, created, lastmodified, numsaved) VALUES (1,1,2,1,NULL,'Example Mod 2', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>', '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1);
 INSERT INTO `moddb`.`asset` (createdbyuserid, editedbyuserid, statusid, assettypeid, code, name, text, tagscached, created, lastmodified, numsaved) VALUES (1,1,2,1,NULL,'Example Mod 3', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>', '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1);
 INSERT INTO `moddb`.`asset` (createdbyuserid, editedbyuserid, statusid, assettypeid, code, name, text, tagscached, created, lastmodified, numsaved) VALUES (1,1,2,1,NULL,'Example Mod 4', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>', '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1);
@@ -59,5 +61,27 @@ INSERT INTO `moddb`.`asset` (createdbyuserid, editedbyuserid, statusid, assettyp
 INSERT INTO `moddb`.`asset` (createdbyuserid, editedbyuserid, statusid, assettypeid, code, name, text, tagscached, created, lastmodified, numsaved) VALUES (1,1,2,1,NULL,'Example Mod 8', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>', '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1);
 INSERT INTO `moddb`.`asset` (createdbyuserid, editedbyuserid, statusid, assettypeid, code, name, text, tagscached, created, lastmodified, numsaved) VALUES (1,1,2,1,NULL,'Example Mod 9', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>', '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1);
 INSERT INTO `moddb`.`asset` (createdbyuserid, editedbyuserid, statusid, assettypeid, code, name, text, tagscached, created, lastmodified, numsaved) VALUES (1,1,2,1,NULL,'Example Mod 10', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>', '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1);
+
+COMMIT;
+
+-- -----------------------------------------------------
+-- Data for table `moddb`.`moderationrecord`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `moddb`;
+INSERT INTO  `moddb`.`moderationrecord` (targetuserid, kind, until, moderatorid, reason) VALUES (2, 2, '9999-12-31', 3, '');
+INSERT INTO  `moddb`.`moderationrecord` (targetuserid, kind, until, moderatorid, reason) VALUES (2, 1, '9999-12-31', 3, 'Comment: bad comment');
+
+COMMIT;
+
+-- -----------------------------------------------------
+-- Data for table `moddb`.`comment`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `moddb`;
+
+INSERT INTO  `moddb`.`comment` (assetid, userid, text, created) VALUES (1, 2, 'normal comment', NOW());
+INSERT INTO  `moddb`.`comment` (assetid, userid, text, created) VALUES (1, 2, 'ok comment', NOW());
+INSERT INTO  `moddb`.`comment` (assetid, userid, text, created, lastmodaction, deleted) VALUES (1, 2, 'bad comment', NOW(), 1, 1);
 
 COMMIT;

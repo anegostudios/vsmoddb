@@ -64,11 +64,13 @@
 						file="button"
 						href="/edit/mod/?assetid=`$asset['assetid']`"
 						buttontext="Edit"
+						class="strikethrough-when-banned"
 					}
 					{include
 						file="button"
 						href="/edit/release/?modid=`$asset['modid']`"
 						buttontext="Add release"
+						class="strikethrough-when-banned"
 					}
 				{/if}
 			</div>
@@ -124,6 +126,7 @@
 						file="button"
 						href="/edit/release/?modid=`$asset['modid']`"
 						buttontext="Add release"
+						class="strikethrough-when-banned"
 					}
 				{/if}
 			</div>

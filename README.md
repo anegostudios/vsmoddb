@@ -105,3 +105,5 @@ Result:
 
 Note: the mysql container is set up to automatically execute the provided [DB structure + sample data](db/tables.sql).
 
+Note: in staging environments oyu can append `?showas=<id>` to any url to load the page the user with that id. This can be used debugging and testing role related features. 
+

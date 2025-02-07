@@ -35,7 +35,7 @@
 	{if isset($head)}{$head}{/if}
 </head>
 
-<body>
+<body{if $user['isbanned']} class="banned"{/if}>
 	<div class="okmessagepopup messagepopup bg-success text-success" style="display:none;">
 		<div class="checkmark">&#10003;</div>
 		<div class="text">{if isset($okmessage)}{$okmessage}{/if}</div>
@@ -105,12 +105,20 @@
 						<a href="/login"><img src="/web/img/login.png"><span>Log in</span></a>
 					</li>
 				{/if}
-				
 
 
+				{if !empty($user) && $user['isbanned']}
+					<div class="ban-notification" style="padding: 0.5em 1em; border: solid red 2px;">
+						<h3 style="text-align: center;">You are currently banned until {formatDateWhichMightBeForever($user['banneduntil'], 'M jS Y, H:i:s', 'further notice')}.</h3>
+						<p>
+							<h4 style="margin-bottom: 0.25em;">Reason:</h4>
+							{$user['bannedreason']}
+						</p>
+					</div>
+				{/if}
 				
 				{if isset($mainmenuext)}{$mainmenuext}{/if}
-				
+
 			</ul>
 		</div>
 

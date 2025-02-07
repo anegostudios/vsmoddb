@@ -50,13 +50,14 @@ if ($assetid) {
 			comment.*,
 			user.name as username,
 			user.roleid as roleid,
+			substring(sha2(concat(user.userid, user.created), 512), 1, 20) as usertoken,
 			role.code as rolecode,
 			role.name as rolename
 		from 
 			comment 
 			join user on (comment.userid = user.userid)
 			left join role on (user.roleid = role.roleid)
-		where assetid=?
+		where assetid=? and comment.deleted = 0
 		order by comment.created desc
 	", array($assetid));
 	
