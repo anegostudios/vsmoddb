@@ -8,6 +8,11 @@ class ReleaseEditor extends AssetEditor {
 	
 	var $modid;
 
+	var $moddtype;
+	var $releaseIdDupl;
+	var $modAssetIdDupl;
+	var $inUseByUser;
+
 	function __construct() {
 		$this->editTemplateFile = "edit-release";
 		
