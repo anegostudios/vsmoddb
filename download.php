@@ -5,7 +5,7 @@ ini_set("display_errors", 1);
 
 /*if (isset($_GET['assetid'])) {
 	$assetid = intval($_GET['assetid']);
-	downloadAsZip("asset-".$assetid, "files/asset/{$assetid}/");
+	downloadAsZip("asset-".$assetid, "files/asset/{$assetid}/"); // :ZipDownloadDisabled
 	exit();
 } else {*/
 

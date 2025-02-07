@@ -8,7 +8,9 @@ class AssetEditor extends AssetController {
 	
 	var $editTemplateFile = "edit-asset";
 	var $isnew;
-	
+
+	var $savestatus;
+
 	function __construct($classname) {
 		parent::__construct($classname);
 		
@@ -21,7 +23,7 @@ class AssetEditor extends AssetController {
 	
 	
 	public function load() {
-		global $con, $user, $view;
+		global $con, $user, $view, $config;
 		
 		$this->assetid = empty($_REQUEST["assetid"]) ? 0 : $_REQUEST["assetid"];
 		$this->recordid = null;
@@ -58,7 +60,7 @@ class AssetEditor extends AssetController {
 					exit();
 				} else {
 					if ($status == 'savednew') {
-						header("Location: /edit/{$this->classname}?assetid=$this->assetid");
+						header("Location: /edit/{$this->classname}?assetid={$this->assetid}");
 						exit();
 					}
 				}
@@ -79,7 +81,6 @@ class AssetEditor extends AssetController {
 		if ($status != 'saved' && $status != 'savednew') {
 			foreach ($this->columns as $column) {
 				$col = $column["code"];
-				$val = null;
 				if (!empty($_POST[$col])) {
 					$this->asset[$col] = $_POST[$col];
 				}
@@ -102,15 +103,15 @@ class AssetEditor extends AssetController {
 			$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
 			
 			$files = $con->getAll("select * from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
-			
 		}
 		
 		foreach ($files as &$file) {
-			$file["ending"] = substr($file["filename"], strrpos($file["filename"], ".")+1);
 			$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
+			$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
+			$file["url"] = formatUrl($file);
 		}
-		
 		unset($file);
+		
 		$view->assign("files", $files);
 		
 		
@@ -229,22 +230,9 @@ class AssetEditor extends AssetController {
 			update($this->tablename, $this->recordid, array("assetid" => $this->assetid));
 			
 			$files = $con->getAll("select * from file where assetid is null and userid=? and assettypeid=?", array($user['userid'], $assettypeid));
-			if ($files) {
-				$dir = "files/asset/{$this->assetid}/";
-				if (!is_dir($dir)) {
-					mkdir($dir, 0755, true);
-				}
-				
-				foreach ($files as $file) {
-					if (!empty($file['filename'])) {
-						rename("tmp/{$user['userid']}/{$file['filename']}", $dir . $file['filename']);
-						if ($file['thumbnailfilename']) {
-							rename("tmp/{$user['userid']}/{$file['thumbnailfilename']}", $dir . $file['thumbnailfilename']);
-						}
-					}
-					
-					update("file", $file["fileid"], array("assetid" => $this->assetid));
-				}
+			if (!empty($files)) {
+				// @security: We just grabbed the ids two lines above from the database, direct interpolation is fine.
+				$con->execute('update file set assetid = ? where fileid in ('.implode(array_map(function($f) { return $f['fileid']; }, $files)).')', $this->assetid);
 			}
 			
 			$view->assign("okmessage", $this->namesingular . " created.");

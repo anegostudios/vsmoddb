@@ -39,8 +39,9 @@ if ($assetid) {
 	$files = $con->getAll("select * from file where assetid=?", array($assetid));
 	
 	foreach ($files as &$file) {
-		$file["ending"] = substr($file["filename"], strrpos($file["filename"], ".")+1);
 		$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
+		$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
+		$file["url"] = formatUrl($file);
 	}
 	unset($file);
 	$view->assign("files", $files);

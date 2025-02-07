@@ -36,6 +36,7 @@ $con = createADOConnection($config);
 $view = new View();
 
 $view->assign("fileuploadmaxsize", round(file_upload_max_size() / 1024 / 1024, 1));
+$view->assign("assetserver", $config['assetserver']);
 
 $ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;
 
@@ -484,8 +485,10 @@ function sendPostData($path, $data, $remoteurl = null)
 }
 
 
-
-
+/**
+ * @param string $filepath
+ * @return array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:string}
+ */
 function getModInfo($filepath)
 {
 	$returncode = null;
@@ -555,5 +558,13 @@ function getUserByHash($hashcode, $con)
 }
 
 
-// Loads after other function deffinitions so we can use them during global init.
+// Loads after other function deffinitions so we can use them during global userstate init.
 include($config["basepath"] . "lib/user.php");
+
+
+if($config['CDN'] == 'bunny') {
+	include($config["basepath"] . "lib/cdn/bunny.php");
+}
+else {
+	include($config["basepath"] . "lib/cdn/none.php");
+}

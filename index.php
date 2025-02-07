@@ -49,6 +49,8 @@ if ($urlparts[0] == "notification") {
 // edit/profile -> edit-profile.php 
 $filename = implode("-", array_slice($urlparts, 0, 2)) . ".php";
 
+
+
 if (file_exists($filename)) {
 	include($filename);
 	exit();

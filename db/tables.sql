@@ -87,15 +87,15 @@ CREATE TABLE IF NOT EXISTS `moddb`.`file` (
   `userid` INT NULL,
   `downloads` INT NULL DEFAULT 0,
   `filename` VARCHAR(255) NULL,
-  `thumbnailfilename` VARCHAR(255) NULL,
+  `cdnpath` VARCHAR(255) NULL,
   `type` ENUM('portrait', 'asset', 'shape', 'texture', 'sound') NULL,
+  `hasthumbnail` BOOL NOT NULL DEFAULT 0, -- could maybe be merged with type
   `created` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`fileid`),
   INDEX `assetid` (`assetid` ASC) VISIBLE,
   INDEX `tempuploadtoken` (`userid` ASC) VISIBLE)
 ENGINE = InnoDB;
-
 
 -- -----------------------------------------------------
 -- Table `moddb`.`status`

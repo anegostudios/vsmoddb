@@ -32,6 +32,7 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 			break;
 		
 		default:
+			return false;
 			break;
 	}
 	
@@ -59,13 +60,13 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 		$final_width = $width_old;
 		$final_height = $height_old;
 	}
-	
+
 	switch ($info[2]) {
 	  case IMAGETYPE_GIF:
 		$image = imagecreatefromgif($file);
 	  break;
 	  case IMAGETYPE_JPEG:
-		$image = imagecreatefromjpeg($file);
+		$image = imagecreatefromjpeg($file); //TODO(Rennorb) @bug: undefined function. php version? missing lib?
 	  break;
 	  case IMAGETYPE_PNG:
 		$image = imagecreatefrompng($file);
@@ -126,25 +127,27 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 			fastimagecopyresampled($image_resized, $image, 0, 0, 0, 0, $final_width, $final_height, $width_old, $height_old);
 		}
 	}
- 
 
 	switch ($info[2]) {
 		case IMAGETYPE_GIF:
-			imagegif($image_resized, $filename);
+			if(!imagegif($image_resized, $filename))
+				return false;
 			break;
 			
 		case IMAGETYPE_JPEG:
-			imagejpeg($image_resized, $filename, 95);
+			if(!imagejpeg($image_resized, $filename, 95))
+				return false;
 			break;
 			
 		case IMAGETYPE_PNG:
-			imagepng($image_resized, $filename);
+			if(!imagepng($image_resized, $filename))
+				return false;
 			break;
 			
 		default:
 			return null;
 	}
- 
+
 	if (strtolower($output) == 'file') {
 		@chmod($filename, 0664);
 		return $filename;

@@ -32,7 +32,7 @@ $(document).ready(function() {
 		if (confirm("Really delete " + filename +"?")) {
 			$(".okmessagepopup").html(filename + " deleted.");
 			$.post("/edit-deletefile", { fileid: fileid, at: actiontoken }).done(function() {
-				showOkMessage();
+				//showOkMessage(); //TODO(Rennorb) @cleanup: this fn is not defined
 				$self.parent().remove();
 			});
 		}
