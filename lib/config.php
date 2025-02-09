@@ -14,7 +14,7 @@ if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
 		include($filepath); 
 	}
 	else {
-		$config["CDN"] = "none";
+		define("CDN", "none");
 		$config["assetserver"] = "";
 		$config["database"] = "moddb";
 		$config["databasehost"] = "db";
@@ -25,7 +25,7 @@ if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
 	define("DEBUGUSER", 1);
 } else {
 	$config["database"] = "moddb";
-	$config["CDN"] = "bunny";
+	define("CDN", "bunny");
 	
 	// Added this way so I can .gitignore this file.
 	$filepath = $config["basepath"] . "lib/config.db.priv.php";

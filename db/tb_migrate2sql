@@ -16,6 +16,18 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 		ALTER TABLE moddb.mod  DROP COLUMN logofilename;
 END IF;
 
+-- -----------------------------------------------------
+-- Table `moddb`.`modpeek_result`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `moddb`.`modpeek_result` (
+  `fileid` INT NOT NULL,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `detectedmodidstr` VARCHAR(255),
+  `detectedmodversion` VARCHAR(255),
+  PRIMARY KEY (`fileid`))
+ENGINE = InnoDB;
+
 
 END $$
 

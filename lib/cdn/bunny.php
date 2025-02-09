@@ -37,7 +37,7 @@ $config["bunnykey"] = "aaaaaaaa-bbbb-cccc-dddddddddddd-eeee-ffff";
  * @param string $originalfilebasename
  * @return string
  */
-function generateCdnFileBasename($userid, $localpath, $originalfilebasename)
+function generateCdnFileBasenameWithPath($userid, $localpath, $originalfilebasename)
 {
 	$h = hash_init('md5', HASH_HMAC, $userid);
 	hash_update_file($h, $localpath);

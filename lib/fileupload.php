@@ -1,7 +1,16 @@
 <?php
 
+/**
+ * @param array $file
+ * @param int   $assettypeid
+ * @param int   $parentassetid
+ * @return array{status:'error', errormessage:string}|(
+ *   array{status:'ok', fileid:int, thumbnailfilepath:string, filename:string, uploaddate:string, releaseid?:int}
+ *  &(array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:string})
+ * )
+ */
 function processFileUpload($file, $assettypeid, $parentassetid) {
-	global $con, $user;
+	global $con, $user, $config;
 	
 	switch($file['error']) {
 		case 0: break;
@@ -19,7 +28,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	}
 
 	if (!$file["tmp_name"]) return array("status" =>"error", "errormessage" => "unknown error");
-	
+
 	$assettype = $con->getRow("
 		select
 			maxfiles, 
@@ -47,7 +56,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 		return array("status" => "error", "errormessage" => 'File too large! Limit is ' . $assettype['maxfilesizekb'] . " KB");
 	}
 
-	$ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+	splitOffExtension($file["name"], $filebasename, $ext);
 	$exts = explode("|", $assettype["allowedfiletypes"]);
 	
 	if (!in_array($ext, $exts)) {
@@ -63,26 +72,11 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	if ($quantityfiles + 1 > $assettype['maxfiles']) {
 		return array("status" => "error", "errormessage" => 'Too many files! The limit is ' . $assettype['maxfiles'] . " for this asset");
 	}
-	
-	$ismod = $assettype['code'] == 'release';
-	
-	return uploadFile($file, $parentassetid, $assettypeid, $ismod);
-}
 
-/**
- * @param array $file
- * @param int   $parentassetid
- * @param int   $assettypeid
- * @param bool  $ismod
- * @return array
- */
-function uploadFile($file, $parentassetid, $assettypeid, $ismod) {
-	global $user, $config;
-	
+
 	$localpath = $file["tmp_name"];
-	$filenameinfo = pathinfo($file["name"]);
-	$cdnbasepath = generateCdnFileBasename($user['userid'], $localpath, $filenameinfo['filename']);
-	$cdnfilepath = "{$cdnbasepath}.{$filenameinfo['extension']}";
+	$cdnbasepath = generateCdnFileBasenameWithPath($user['userid'], $localpath, $filebasename);
+	$cdnfilepath = "{$cdnbasepath}.{$ext}";
 
 	$data = $parentassetid
 		? array("filename" => $file['name'], "cdnpath" => $cdnfilepath, "assetid" => $parentassetid)
@@ -95,19 +89,15 @@ function uploadFile($file, $parentassetid, $assettypeid, $ismod) {
 			return array("status" => "error", "errormessage" => 'Image too large! Limit is 1920x1080 pixels');
 		}
 
-		$tmpdir = "/tmp/{$user['userid']}/"; 
-		if (!is_dir($tmpdir)) {
-			mkdir($tmpdir, 0777, true);
-		}
-	
 		$localthumbnailfilename = tempnam(sys_get_temp_dir(), '');
 
 		$resizeresult = copyImageResized($localpath, 55, 60, true, 'file', '', $localthumbnailfilename);
 		if(!$resizeresult) {
+			@unlink($localthumbnailfilename);
 			return array("status" => "error", "errormessage" => 'Failed to resize image for thumbnail.');
 		}
 
-		$cdnthumbnailpath = "{$cdnbasepath}_55_60.{$filenameinfo['extension']}";
+		$cdnthumbnailpath = "{$cdnbasepath}_55_60.{$ext}";
 		$uploadresult = uploadToCdn($localthumbnailfilename, $cdnthumbnailpath);
 		unlink($localthumbnailfilename);
 		if($uploadresult['error']) {
@@ -134,13 +124,18 @@ function uploadFile($file, $parentassetid, $assettypeid, $ismod) {
 	$data = array(
 		"status" => "ok",
 		"fileid" => $fileid,
-		"thumbnailfilepath" => isset($cdnthumbnailpath) ? "{$config['assetserver']}/$cdnthumbnailpath" : null,
+		"thumbnailfilepath" => isset($cdnthumbnailpath) ? formatUrlFromCdnPath($cdnthumbnailpath) : null,
 		"filename" => $file["name"],
 		"uploaddate" => date("M jS Y, H:i:s")
 	);
 
-	if ($ismod) {
+	if ($assettype['code'] == 'release') {
 		$info = getModInfo($localpath);
+
+		if($info['modparse'] === 'ok') {
+			$con->Execute('insert into modpeek_result (fileid, detectedmodidstr, detectedmodversion) VALUES (?,?,?)', [$fileid, $info['modid'], $info['modversion']]);
+		}
+
 		$data = array_merge($data, $info);
 	}
 

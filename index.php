@@ -1,14 +1,21 @@
 <?php
 header_remove('X-Powered-By');
 
+$config = array();
+$config["basepath"] = getcwd() . '/';
+include("lib/config.php");
+
+// The none cdn does request handling for assets directly, so it needs ty bypass this check.
+if(CDN === 'none') include("lib/core.php");
+
 if (!empty($_SERVER['HTTP_ACCEPT']) && $_SERVER['REQUEST_METHOD'] == "GET") {
 	if(!strstr($_SERVER['HTTP_ACCEPT'], "text/html") && !strstr($_SERVER['HTTP_ACCEPT'], "application/json") && $_SERVER['HTTP_ACCEPT'] != "*/*") exit("not an image");
 }
 
-$config = array();
-$config["basepath"] = getcwd() . '/';
+// This is the more desirable point to initialize.
+if(CDN !== 'none') include("lib/core.php");
 
-include("lib/core.php");
+
 
 $urlpath = getURLPath();
 $target = explode("?", $urlpath)[0];

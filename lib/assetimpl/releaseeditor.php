@@ -110,37 +110,30 @@ class ReleaseEditor extends AssetEditor {
 		if (!empty($_FILES["newfile"]) && $_FILES["newfile"]["error"] != 4) {
 			if ($this->assetid && $con->getRow("select * from file where assetid=?", array($this->assetid))) return "onlyonefile";
 		
-			$this->fileuploadstatus = processFileUpload($_FILES["newfile"], $assettypeid, 0);
+			$this->fileuploadstatus = processFileUpload($_FILES["newfile"], $assettypeid, $this->assetid ?? 0);
 			
 			if ($this->fileuploadstatus["status"] != "ok") {
 				return "invalidfile";
 			}
-			
-			if ($this->assetid) {
-				update("file", $this->fileuploadstatus['fileid'], array("assetid" => $this->assetid));
-			}
 		}
-	
-		if ($this->assetid) $file = $con->getRow("select * from file where assetid=?", array($this->assetid));
-		if (!$file) $file = $con->getRow("select * from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
+
+		$sql_join_with_modpeek = "left join modpeek_result mpr on mpr.fileid = file.fileid";
+		if ($this->assetid) $file = $con->getRow("select * from file $sql_join_with_modpeek where assetid=?", array($this->assetid));
+		if (!$file) $file = $con->getRow("select * from file $sql_join_with_modpeek where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
 		if (!$file) return "missingfile";
 				
-		if ($this->assetid) {
-			$filepath = "files/asset/{$this->assetid}/{$file['filename']}";
-		} else {
-			$filepath = "tmp/{$user['userid']}/{$file['filename']}";
-		}
-		
 		if ($this->moddtype == "mod") {
-			$modinfo = getModInfo($filepath);
-				
-			if ($modinfo['modparse'] == 'ok') {
-				$modidstr = $modinfo['modid']; 
-				$modversion = $modinfo['modversion'];
-			} else {
+
+			if(!empty($file['detectedmodidstr']) && !empty($file['detectedmodversion'])) {
+				$modidstr = $file['detectedmodidstr'];
+				$modversion = $file['detectedmodversion'];
+			}
+			else {
 				$view->assign("allowinfoedit", true);
 
-				if ($this->assetid && (empty($_POST['modidstr']) || empty($_POST['modversion']))) {
+				if ($this->assetid && (!empty($_POST['modidstr']) && !empty($_POST['modversion']))) {
+					// If we are editing a release and upload a malformed file we can get release information form the old release data.
+					//TODO(Rennorb) @correctness: Is this even desirable? Doesn't that mean we upload a bogus file during edit and it still thinks the version is ok?
 					$release = $con->getRow("select * from `release` where assetid=?", array($this->assetid));
 					$modidstr = $release['modidstr'];
 					$modversion = $release['modversion'];

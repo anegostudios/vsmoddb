@@ -83,7 +83,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `moddb`.`file` (
   `fileid` INT NOT NULL AUTO_INCREMENT,
   `assetid` INT NULL,
-  `assettypeid` INT NULL COMMENT 'Required for assets that don\'t exist yet, otherwise we cannot verify if the right assettypeid was passed on during asset creation',
+  `assettypeid` INT NULL COMMENT 'Required for assets that don''t exist yet, otherwise we cannot verify if the right assettypeid was passed on during asset creation',
   `userid` INT NULL,
   `downloads` INT NULL DEFAULT 0,
   `filename` VARCHAR(255) NULL,
@@ -95,6 +95,18 @@ CREATE TABLE IF NOT EXISTS `moddb`.`file` (
   PRIMARY KEY (`fileid`),
   INDEX `assetid` (`assetid` ASC) VISIBLE,
   INDEX `tempuploadtoken` (`userid` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+-- -----------------------------------------------------
+-- Table `moddb`.`modpeek_result`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `moddb`.`modpeek_result` (
+  `fileid` INT NOT NULL,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `detectedmodidstr` VARCHAR(255),
+  `detectedmodversion` VARCHAR(255),
+  PRIMARY KEY (`fileid`))
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------

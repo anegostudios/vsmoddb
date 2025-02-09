@@ -5,8 +5,6 @@ header('X-Frame-Options: DENY');
 global $config, $con, $view;
 error_reporting(E_ALL & ~E_DEPRECATED);
 
-include($config["basepath"] . "lib/config.php");
-
 include($config["basepath"] . "lib/ErrorHandler.php");
 ErrorHandler::setupErrorHandling();
 
@@ -582,7 +580,7 @@ function splitOffExtension($path, &$out_noext, &$out_ext)
 include($config["basepath"] . "lib/user.php");
 
 
-if($config['CDN'] == 'bunny') {
+if(CDN == 'bunny') {
 	include($config["basepath"] . "lib/cdn/bunny.php");
 }
 else {
