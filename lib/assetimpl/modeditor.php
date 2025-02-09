@@ -108,7 +108,7 @@ class ModEditor extends AssetEditor {
 		//TODO(Rennorb): @perf: Find a way to do this without re-downloading the image.
 
 		$localpath = tempnam(sys_get_temp_dir(), '');
-		$originalfile = @file_get_contents(formatUrl($file));
+		$originalfile = @file_get_contents(formatCdnUrl($file));
 		if(!file_put_contents($localpath, $originalfile)) {
 			unlink($localpath);
 			return array("status" => "error", "errormessage" => 'The logo file seems to be gone.');

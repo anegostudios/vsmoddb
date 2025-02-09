@@ -3,7 +3,7 @@
 				<div class="file">
 					{if $file['hasthumbnail']}
 						<a data-fancybox="gallery" href="{$file['url']}" class="editbox">
-							<img src="{formatUrl($file, '_55_60')}"/>
+							<img src="{formatCdnUrl($file, '_55_60')}"/>
 							<div class="filename">{$file["filename"]}</div><br>
 							<div class="uploaddate">{$file["created"]}</div>
 						</a>
@@ -17,7 +17,7 @@
 						</a>
 					{/if}
 					<a href="" class="delete" data-fileid="{$file['fileid']}"></a>
-					<a href="{formatDownloadUrl($file)}" class="download">&#11123;</a>
+					<a href="{formatCdnDownloadUrl($file)}" class="download">&#11123;</a>
 				</div>
 			{/foreach}
 			

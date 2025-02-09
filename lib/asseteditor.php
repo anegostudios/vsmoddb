@@ -108,7 +108,7 @@ class AssetEditor extends AssetController {
 		foreach ($files as &$file) {
 			$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
 			$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
-			$file["url"] = formatUrl($file);
+			$file["url"] = formatCdnUrl($file);
 		}
 		unset($file);
 		

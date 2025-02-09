@@ -193,7 +193,7 @@ function listMod($modid)
 
 		$releases[] = array(
 			"releaseid"  => intval($release['releaseid']),
-			"mainfile"   => empty($file) ? "" : formatUrl($file),
+			"mainfile"   => empty($file) ? "" : formatCdnUrl($file),
 			"filename"   => empty($file) ? 0 : $file["filename"],
 			"fileid"     => isset($file['fileid']) ? intval($file['fileid']) : null,
 			"downloads"  => empty($file) ? 0 : intval($file["downloads"]),
@@ -221,14 +221,14 @@ function listMod($modid)
 	foreach ($srows as $screenshot) {
 		$screenshots[] = array(
 			"fileid"            => intval($screenshot["fileid"]),
-			"mainfile"          => formatUrl($screenshot),
+			"mainfile"          => formatCdnUrl($screenshot),
 			"filename"          => $screenshot["filename"],
-			"thumbnailfilename" => $screenshot["hasthumbnail"] ? formatUrl($screenshot, '_55_60') : null,
+			"thumbnailfilename" => $screenshot["hasthumbnail"] ? formatCdnUrl($screenshot, '_55_60') : null,
 			"created"           => $screenshot["created"]
 		);
 	}
 
-	$logourl = $row['logocdnpath'] ? formatUrlFromCdnPath($row['logocdnpath']) : null;
+	$logourl = $row['logocdnpath'] ? formatCdnUrlFromCdnPath($row['logocdnpath']) : null;
 	$mod = array(
 		"modid"           => intval($row["modid"]),
 		"assetid"         => intval($row["assetid"]),
@@ -367,7 +367,7 @@ function listMods()
 			"urlalias"       => $row['urlalias'],
 			"side"           => $row['side'],
 			"type"           => $row['type'],
-			"logo"           => $row['logocdnpath'] ? formatUrlFromCdnPath($row['logocdnpath']) : null,
+			"logo"           => $row['logocdnpath'] ? formatCdnUrlFromCdnPath($row['logocdnpath']) : null,
 			"tags"           => $tags,
 			"lastreleased"   => $row['lastreleased']
 		);
@@ -444,7 +444,7 @@ function getLatestRelease($modid, $modReleases, $modidToVersionMap, $con) {
 
 	return array(
 		"releaseid"  => intval($release['releaseid']),
-		"mainfile"   => formatUrl($file),
+		"mainfile"   => formatCdnUrl($file),
 		"filename"   => $file["filename"],
 		"fileid"     => $file['fileid'] ? intval($file['fileid']) : null,
 		"downloads"  => intval($file["downloads"]),

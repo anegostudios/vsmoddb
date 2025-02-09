@@ -7,6 +7,7 @@
 
 /**
  * Generates a unique, reproducible and immutable filename for storage on the cdn.
+ * This returns an _almost_ complete storage path, which is still missing the extension. This is useful because we often generate multiple variants of a file, and we would need to split the returned path otherwise. We therefore simply return a path without extension, and the caller assembles the final path(s).
  * 
  * @param int    $userid The id of the user that owns the file.
  * @param string $localpath
@@ -16,6 +17,7 @@
 function generateCdnFileBasenameWithPath($userid, $localpath, $originalfilebasename)
 {
 	//NOTE(Rennorb): For local storage we just use the filename, no need to do magic and it makes it easier to track and test things.
+	// In theory this can cause collisions, but we don't really care for testing and simplicity is a priority.
 	return "$userid/$originalfilebasename";
 }
 
@@ -56,8 +58,8 @@ function deleteFromCdn($cdnpath) {
  * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */
-function formatUrl($file, $filenamepostfix = '') {
-	return formatUrlFromCdnPath($file['cdnpath'], $filenamepostfix);
+function formatCdnUrl($file, $filenamepostfix = '') {
+	return formatCdnUrlFromCdnPath($file['cdnpath'], $filenamepostfix);
 }
 
 /**
@@ -68,7 +70,7 @@ function formatUrl($file, $filenamepostfix = '') {
  * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */
-function formatUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
+function formatCdnUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
 	$basepath = '/cdnfile';
 
 	if($filenamepostfix) {
@@ -91,7 +93,7 @@ function formatUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
  * @param array{cdnpath: string, filename:string} $file
  * @return string
  */
-function formatDownloadUrl($file) {
+function formatCdnDownloadUrl($file) {
 	return "/download/{$file['cdnpath']}";
 }
 

@@ -37,7 +37,7 @@ if ($assetid) {
 	}
 
 	if(!empty($asset['logourl'])) {
-		$asset['logourl'] = formatUrlFromCdnPath($asset['logourl']);
+		$asset['logourl'] = formatCdnUrlFromCdnPath($asset['logourl']);
 	}
 	
 	$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);
@@ -47,7 +47,7 @@ if ($assetid) {
 	foreach ($files as &$file) {
 		$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
 		$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
-		$file["url"] = formatUrl($file);
+		$file["url"] = formatCdnUrl($file);
 	}
 	unset($file);
 	$view->assign("files", $files);

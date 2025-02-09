@@ -4,7 +4,7 @@
 		{if (empty($mod['logocdnpath']))}
 			<img src="/web/img/mod-default.png" loading="lazy">
 		{else}
-			<img src="{formatUrlFromCdnPath($mod['logocdnpath'])}" loading="lazy">
+			<img src="{formatCdnUrlFromCdnPath($mod['logocdnpath'])}" loading="lazy">
 		{/if}
 		{if !empty($mod['following'])}<i title="You are following this mod" class="followed fas fa-star"></i>{/if}
 	</a>

@@ -124,7 +124,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	$data = array(
 		"status" => "ok",
 		"fileid" => $fileid,
-		"thumbnailfilepath" => isset($cdnthumbnailpath) ? formatUrlFromCdnPath($cdnthumbnailpath) : null,
+		"thumbnailfilepath" => isset($cdnthumbnailpath) ? formatCdnUrlFromCdnPath($cdnthumbnailpath) : null,
 		"filename" => $file["name"],
 		"uploaddate" => date("M jS Y, H:i:s")
 	);
