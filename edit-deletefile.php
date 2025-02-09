@@ -42,12 +42,14 @@ if ($assetid) {
 
 splitOffExtension($file['cdnpath'], $noext, $ext);
 //TODO(Rennorb) @correctness: Could try and figure out if there is a difference between a "generic error" response and "this file does not exist" and then decided on whether or not this should be an error.
-// For now we ignore errors here, even if we fail to delete from cdn we still continue deleting the table entry. 
+// For now we ignore errors here, even if we fail to delete from cdn we still continue deleting the table entry because wo otherwise block user interaction because of third party issues (no-go).
 deleteFromCdn($file['cdnpath']);
 if($file['hasthumbnail']) deleteFromCdn("{$noext}_55_60.{$ext}");
 
+//TODO(Rennorb) @correctness: Logos might not get deleted properly, needs investigation. Logos are generated from files, so they wont get deleted directly.
 $con->Execute("update `mod` set logofileid=NULL where logofileid=?", array($fileid));
 
+$con->Execute("delete from modpeek_result where fileid=?", array($fileid));
 $con->Execute("delete from file where fileid=?", array($fileid));
 
 logAssetChanges(array("Deleted file '{$file['filename']}'"), $assetid);

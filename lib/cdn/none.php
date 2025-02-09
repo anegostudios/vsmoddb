@@ -59,7 +59,17 @@ function deleteFromCdn($cdnpath) {
  * @return string
  */
 function formatCdnUrl($file, $filenamepostfix = '') {
-	return formatCdnUrlFromCdnPath($file['cdnpath'], $filenamepostfix);
+	$url = formatCdnUrlFromCdnPath($file['cdnpath'], $filenamepostfix);
+
+	// Evil hackery to test for the case where we use this internally to feed get_file_contents, where we cannot just pass a url fragment.
+	$trace = debug_backtrace(0, 2);
+	$caller = $trace[1];
+	if($caller === 'generateLogoImage') {
+		global $config;
+		return $config['basepath'].'files/'.substr($url, 7 /* cdnpath */);
+	}
+
+	return $url;
 }
 
 /**
