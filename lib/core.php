@@ -557,6 +557,26 @@ function getUserByHash($hashcode, $con)
 	return $con->getRow("select * from user where sha2(concat(user.userid, user.created), 512) like ?", array($hashcode . "%")); //TODO(Rennorb) @perf @correctness
 }
 
+/**
+ * Splits of the last extension from a path, gives back the whole path without extension and the extension.
+ * More light-weight than pathinfo.
+ * 
+ * @param string &$out_noext
+ * @param string &$out_ext
+ * @param string $path
+ */
+function splitOffExtension($path, &$out_noext, &$out_ext)
+{
+	$lastdot = strrpos($path, '.');
+	if($lastdot === false) {
+		$out_noext = $path;
+		$out_ext = '';
+	}
+
+	$out_noext = substr($path, 0, $lastdot);
+	$out_ext = substr($path, $lastdot + 1);
+}
+
 
 // Loads after other function deffinitions so we can use them during global userstate init.
 include($config["basepath"] . "lib/user.php");

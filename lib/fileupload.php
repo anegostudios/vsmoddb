@@ -82,10 +82,11 @@ function uploadFile($file, $parentassetid, $assettypeid, $ismod) {
 	$localpath = $file["tmp_name"];
 	$filenameinfo = pathinfo($file["name"]);
 	$cdnbasepath = generateCdnFileBasename($user['userid'], $localpath, $filenameinfo['filename']);
+	$cdnfilepath = "{$cdnbasepath}.{$filenameinfo['extension']}";
 
 	$data = $parentassetid
-		? array("filename" => $file['name'], "cdnpath" => $cdnbasepath, "assetid" => $parentassetid)
-		: array("filename" => $file["name"], "cdnpath" => $cdnbasepath, "assettypeid" => $assettypeid, "userid" => $user['userid']);
+		? array("filename" => $file['name'], "cdnpath" => $cdnfilepath, "assetid" => $parentassetid)
+		: array("filename" => $file["name"], "cdnpath" => $cdnfilepath, "assettypeid" => $assettypeid, "userid" => $user['userid']);
 
 	list($width, $height, $type, $attr) = getimagesize($file["tmp_name"]);
 	if ($type == IMAGETYPE_GIF || $type == IMAGETYPE_JPEG || $type == IMAGETYPE_PNG) {
@@ -99,7 +100,7 @@ function uploadFile($file, $parentassetid, $assettypeid, $ismod) {
 			mkdir($tmpdir, 0777, true);
 		}
 	
-		$localthumbnailfilename = tempnam(sys_get_temp_dir(), $file['name'].'.55_60');
+		$localthumbnailfilename = tempnam(sys_get_temp_dir(), '');
 
 		$resizeresult = copyImageResized($localpath, 55, 60, true, 'file', '', $localthumbnailfilename);
 		if(!$resizeresult) {
@@ -118,7 +119,7 @@ function uploadFile($file, $parentassetid, $assettypeid, $ismod) {
 	}
 
 	// Do this upload after analyzing the image, that way we don't needlessly upload files should resizing fail.
-	$uploadresult = uploadToCdn($localpath, "{$cdnbasepath}.{$filenameinfo['extension']}");
+	$uploadresult = uploadToCdn($localpath, $cdnfilepath);
 	if($uploadresult['error']) {
 		unlink($localpath);
 		return array("status" => "error", "errormessage" => 'CDN Error: '.$uploadresult['error']);

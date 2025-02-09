@@ -35,7 +35,6 @@ $config["bunnykey"] = "aaaaaaaa-bbbb-cccc-dddddddddddd-eeee-ffff";
  * @param int    $userid The id of the user that owns the file.
  * @param string $localpath
  * @param string $originalfilebasename
- * @param string $originalfileextension
  * @return string
  */
 function generateCdnFileBasename($userid, $localpath, $originalfilebasename)
@@ -120,26 +119,47 @@ function deleteFromCdn($cdnpath) {
  * Formats a "normal" url to the file.
  * This url is meant to be used for in-browser resources, e.g. a image to be placed onto a page, as compared to a download link for that image.
  * 
- * @param array{cdnpath: string, ext: string} $file
+ * @param string|array{cdnpath: string} $file Either a file database row or the cdnpath directly;
  * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */
 function formatUrl($file, $filenamepostfix = '') {
+	return formatUrlFromCdnPath($file['cdnpath'], $filenamepostfix);
+}
+
+/**
+ * Formats a "normal" url to the file.
+ * This url is meant to be used for in-browser resources, e.g. a image to be placed onto a page, as compared to a download link for that image.
+ * 
+ * @param string|array{cdnpath: string} $file Either a file database row or the cdnpath directly;
+ * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
+ * @return string
+ */
+function formatUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
 	global $config;
 
-	return "{$config['assetserver']}/{$file['cdnpath']}{$filenamepostfix}.{$file["ext"]}";
+	if($filenamepostfix) {
+		splitOffExtension($cdnpath, $pathnoext, $ext);
+		if($ext === '') {
+			return "{$config['assetserver']}/{$cdnpath}{$filenamepostfix}"; // should never happen in reality, but just in case
+		}
+
+		return "{$config['assetserver']}/{$pathnoext}{$filenamepostfix}.{$ext}";
+	}
+	else {
+		return "{$config['assetserver']}/{$cdnpath}";
+	}
 }
 
 /**
  * Formats a download link to the file.
  * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser.
  * 
- * @param array{cdnpath: string, ext: string, filename:string} $file
- * @param string $actiontoken TODO, probably deprecated
+ * @param array{cdnpath: string, filename:string} $file
  * @return string
  */
-function formatDownloadUrl($file, $actiontoken) {
+function formatDownloadUrl($file) {
 	global $config;
 
-	return "{$config['assetserver']}/{$file['cdnpath']}.{$file["ext"]}?dl={$file['filename']}&at=$actiontoken";
+	return "{$config['assetserver']}/{$file['cdnpath']}?dl={$file['filename']}";
 }

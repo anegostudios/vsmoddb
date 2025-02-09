@@ -201,7 +201,9 @@ class AssetEditor extends AssetController {
 	}
 	
 	
-	
+	/**
+	 * @return 'savednew'|'saved'|'error'
+	 */
 	function saveFromBrowser() {
 		global $con, $user, $view, $config;
 		

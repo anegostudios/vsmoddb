@@ -95,14 +95,18 @@ class ReleaseEditor extends AssetEditor {
 		}
 	}
 	
+	/**
+	 * @return 'invalidfile'|'missingfile'|'missingmodinfo'|'invalidmodid'|'invalidmodversion'|'duplicateid'|'modidinuse'|'duplicatemod'|'onlyonefile'|'savednew'|'saved'|'error'
+	 */
 	function saveFromBrowser() {
 		global $con, $user, $view;
 		
 		$modid = null;
-		$file=null;
+		$file  = null;
 		$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
 
 
+		//TODO(Rennorb) @cleanup: This only exists for the case that the user used the "Browse" button instead of drag and drop, because that doesn't immediately upload the file. 
 		if (!empty($_FILES["newfile"]) && $_FILES["newfile"]["error"] != 4) {
 			if ($this->assetid && $con->getRow("select * from file where assetid=?", array($this->assetid))) return "onlyonefile";
 		
@@ -197,7 +201,7 @@ class ReleaseEditor extends AssetEditor {
 			}
 		}
 		
-		if ($status == "invalidfile" || $status == "onlyonefile") {
+		if ($status == "invalidfile" || $status == "onlyonefile") { //TODO(Rennorb) @cleanup: Pretty sure this branch is unreachable
 			foreach ($this->columns as $column) {
 				$col = $column["code"];
 				$val = null;

@@ -41,8 +41,12 @@ if ($assetid) {
 }
 
 $ext = pathinfo($file['filename'], PATHINFO_EXTENSION);
+//TODO(Rennorb) @correctness: Could try and figure out if there is a difference between a "generic error" response and "this file does not exist" and then decided on whether or not this should be an error.
+// For now we ignore errors here, even if we fail to delete from cdn we still continue deleting the table entry. 
 deleteFromCdn("{$file['cdnpath']}.{$ext}");
 if($file['hasthumbnail']) deleteFromCdn("{$file['cdnpath']}_55_60.{$ext}");
+
+$con->Execute("update `mod` set logofileid=NULL where logofileid=?", array($fileid));
 
 $con->Execute("delete from file where fileid=?", array($fileid));
 

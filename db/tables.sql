@@ -215,7 +215,6 @@ CREATE TABLE IF NOT EXISTS `moddb`.`mod` (
   `assetid` INT NULL,
   `urlalias` VARCHAR(45) NULL,
   `logofileid` INT NULL,
-  `logofilename` VARCHAR(255) NULL,
   `homepageurl` VARCHAR(255) NULL,
   `sourcecodeurl` VARCHAR(255) NULL,
   `trailervideourl` VARCHAR(255) NULL,

@@ -13,6 +13,7 @@ if ($assetid) {
 		select 
 			asset.*, 
 			`mod`.*,
+			logofile.cdnpath as logourl,
 			createduser.userid as createduserid,
 			createduser.created as createduserjoindate,
 			createduser.name as createdusername,
@@ -25,6 +26,7 @@ if ($assetid) {
 			left join user as createduser on asset.createdbyuserid = createduser.userid
 			left join user as editeduser on asset.editedbyuserid = editeduser.userid
 			left join status on asset.statusid = status.statusid
+			left join file as logofile on mod.logofileid = logofile.fileid
 		where
 			asset.assetid = ?
 	", array($assetid));
@@ -32,6 +34,10 @@ if ($assetid) {
 	if (!$asset) {
 		$view->display("404");
 		exit();
+	}
+
+	if(!empty($asset['logourl'])) {
+		$asset['logourl'] = formatUrlFromCdnPath($asset['logourl']);
 	}
 	
 	$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);

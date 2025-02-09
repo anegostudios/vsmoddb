@@ -5,11 +5,13 @@ if (!empty($user)) {
 		select 
 			asset.*, 
 			`mod`.*,
+			logofile.cdnpath as logocdnpath,
 			status.code as statuscode
 		from 
 			asset 
 			join `mod` on asset.assetid = `mod`.assetid
 			left join status on asset.statusid = status.statusid
+			left join file as logofile on `mod`.logofileid = logofile.fileid
 		where
 			asset.createdbyuserid = ?
 		order by asset.created desc
@@ -47,6 +49,7 @@ if (!empty($user)) {
 		select 
 			asset.*,
 			`mod`.*,
+			logofile.cdnpath as logocdnpath,
 			user.name as `from`,
 			status.code as statuscode,
 			status.name as statusname,
@@ -58,6 +61,7 @@ if (!empty($user)) {
 			join user on (asset.createdbyuserid = user.userid)
 			join status on (asset.statusid = status.statusid)
 			join follow on (`mod`.modid = follow.modid and follow.userid=?)
+			left join file as logofile on `mod`.logofileid = logofile.fileid
 			left join (select * from `release`) rd on (rd.modid = `mod`.modid)
 		where
 			asset.statusid=2
@@ -65,7 +69,7 @@ if (!empty($user)) {
 		order by
 			releasedate desc
 	", array($user['userid']));
-	
+
 	
 
 	$view->assign("followedmods", $followedmods);
@@ -78,6 +82,7 @@ $latestentries = $con->getAll("
 	select 
 		asset.*,
 		`mod`.*,
+		logofile.cdnpath as logocdnpath,
 		user.name as `from`,
 		status.code as statuscode,
 		status.name as statusname
@@ -86,6 +91,7 @@ $latestentries = $con->getAll("
 		join `mod` on asset.assetid = `mod`.assetid
 		join user on (asset.createdbyuserid = user.userid)
 		join status on (asset.statusid = status.statusid)
+		left join file as logofile on mod.logofileid = logofile.fileid
 	where
 		asset.statusid=2
 		and `mod`.created > date_sub(now(), interval 30 day)

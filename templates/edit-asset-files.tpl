@@ -17,7 +17,7 @@
 						</a>
 					{/if}
 					<a href="" class="delete" data-fileid="{$file['fileid']}"></a>
-					<a href="{formatDownloadUrl($file, $user['actiontoken'])}" class="download">&#11123;</a>
+					<a href="{formatDownloadUrl($file)}" class="download">&#11123;</a>
 				</div>
 			{/foreach}
 			
