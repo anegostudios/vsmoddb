@@ -164,15 +164,13 @@ CREATE TABLE IF NOT EXISTS `moddb`.`release` (
   `modid` INT NULL,
   `modidstr` VARCHAR(255) NULL,
   `modversion` VARCHAR(50) NULL,
-  `detectedmodidstr` VARCHAR(255) NULL,
   `releasedate` VARCHAR(255) NULL,
   `inprogress` TINYINT NULL,
   `detailtext` TEXT NULL,
   `releaseorder` INT NULL,
   `created` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`releaseid`),
-  UNIQUE INDEX `modidstr` (`modidstr` ASC, `modversion` ASC) VISIBLE)
+  PRIMARY KEY (`releaseid`))
 ENGINE = InnoDB;
 
 

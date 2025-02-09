@@ -131,18 +131,10 @@ class ReleaseEditor extends AssetEditor {
 			else {
 				$view->assign("allowinfoedit", true);
 
-				if ($this->assetid && (!empty($_POST['modidstr']) && !empty($_POST['modversion']))) {
-					// If we are editing a release and upload a malformed file we can get release information form the old release data.
-					//TODO(Rennorb) @correctness: Is this even desirable? Doesn't that mean we upload a bogus file during edit and it still thinks the version is ok?
-					$release = $con->getRow("select * from `release` where assetid=?", array($this->assetid));
-					$modidstr = $release['modidstr'];
-					$modversion = $release['modversion'];
-				} else {
+				if (!empty($_POST['modidstr']) && !empty($_POST['modversion'])) {
 					$modidstr = $_POST['modidstr'];
 					$modversion = $_POST['modversion'];
-				}
-				
-				if (empty($modidstr) || empty($modversion)) {
+				} else {
 					return 'missingmodinfo';
 				}
 			}
@@ -176,6 +168,7 @@ class ReleaseEditor extends AssetEditor {
 				return 'duplicatemod';
 			}
 			
+			// Reserve special mod ids
 			if ($modidstr == "game" || $modidstr == "creative" || $modidstr == "survival") {
 				$this->inUseByUser = array("userid"=>1, "name" => "the creators of this very game - gasp!");
 				return 'modidinuse';
@@ -187,25 +180,13 @@ class ReleaseEditor extends AssetEditor {
 		if ($status == 'saved' || $status == 'savednew') {
 			$releaseid = $con->getOne("select releaseid from `release` where assetid=?", array($this->assetid));
 			
-			if ($modinfo['modparse'] == 'ok') {
+			if (!empty($file['detectedmodidstr']) && !empty($file['detectedmodversion'])) {
 				update("release", $releaseid, array("detectedmodidstr" => $modidstr, "modidstr" => $modidstr, "modversion" => $modversion));
 			} else {
 				update("release", $releaseid, array("detectedmodidstr" => null));
 			}
 		}
-		
-		if ($status == "invalidfile" || $status == "onlyonefile") { //TODO(Rennorb) @cleanup: Pretty sure this branch is unreachable
-			foreach ($this->columns as $column) {
-				$col = $column["code"];
-				$val = null;
-				if (!empty($_POST[$col])) {
-					$this->asset[$col] = $_POST[$col];
-				}
-			}
-		
-			$view->assign("errormessage", $this->fileuploadstatus["errormessage"]);
-		}
-		
+
 		$modid = $con->getOne("select modid from `release` where assetid=?", array($this->assetid));
 		
 		if ($status == 'savednew') {
