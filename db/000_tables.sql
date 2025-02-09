@@ -103,7 +103,6 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `moddb`.`modpeek_result` (
   `fileid` INT NOT NULL,
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `detectedmodidstr` VARCHAR(255),
   `detectedmodversion` VARCHAR(255),
   PRIMARY KEY (`fileid`))
@@ -170,7 +169,8 @@ CREATE TABLE IF NOT EXISTS `moddb`.`release` (
   `releaseorder` INT NULL,
   `created` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`releaseid`))
+  PRIMARY KEY (`releaseid`),
+  UNIQUE INDEX `modidstr` (`modidstr` ASC, `modversion` ASC) VISIBLE)
 ENGINE = InnoDB;
 
 
