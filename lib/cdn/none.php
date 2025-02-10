@@ -104,7 +104,7 @@ function formatCdnUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
  * @return string
  */
 function formatCdnDownloadUrl($file) {
-	return "/download/{$file['cdnpath']}";
+	return "/cdndl/{$file['cdnpath']}";
 }
 
 
@@ -116,7 +116,7 @@ function formatCdnDownloadUrl($file) {
 
 {
 	$path_parts = explode('/', substr(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), 1), 2);
-	if($path_parts[0] === 'download') {
+	if($path_parts[0] === 'cdndl') {
 		$filepath = $config["basepath"] . "files/" . $path_parts[1]; // easy path traversal, we don't care. :NoneCDN_NoSecurity
 		
 		// copy paste from the old dl code

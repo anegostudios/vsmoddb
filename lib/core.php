@@ -586,3 +586,16 @@ if(CDN == 'bunny') {
 else {
 	include($config["basepath"] . "lib/cdn/none.php");
 }
+
+
+/**
+ * Formats a download tracking link to the file.
+ * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser.
+ * 
+ * @param array{filename:string, fileid:int} $file
+ * @return string
+ */
+function formatDownloadUrl($file)
+{
+	return "/download/{$file['fileid']}/{$file['filename']}";
+}

@@ -22,19 +22,30 @@ $target = explode("?", $urlpath)[0];
 
 $view->assign("urltarget", $target);
 
-if (preg_match("/[^-\/\w+]/", $target)) $target="dashboard";
+if (preg_match("/[^-\/\w+\.]/", $target)) $target="dashboard";
 if (empty($target)) {
 	$target = "home";
 }
 
 $urlparts = explode("/", $target);
 
-if ($urlparts[0] == "dl-pingback") {
-	include("dl-pingback.php");
+if ($urlparts[0] == "download" && count($urlparts) >= 2) {
+	include("download.php");
 	exit();
 }
 
-$typewhitelist = array("terms", "api", "updateversiontags", "files", "show", "edit", "edit-comment", "delete-comment", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist", "get-usernames", "notification", "set-follow", "moderate");
+if ($urlparts[0] == "api") {
+	array_shift($urlparts);
+	include("api.php");
+	exit();
+}
+
+if ($urlparts[0] == "notification") {
+	include("notification.php");
+	exit();
+}
+
+$typewhitelist = array("terms", "updateversiontags", "files", "show", "edit", "edit-comment", "delete-comment", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist", "get-usernames", "set-follow", "moderate");
 
 if (!in_array($urlparts[0], $typewhitelist)) {
 	$modid = $con->getOne("select assetid from `mod` where urlalias=?", array($urlparts[0]));
@@ -47,21 +58,9 @@ if (!in_array($urlparts[0], $typewhitelist)) {
 	}
 }
 
-if ($urlparts[0] == "api") {
-	array_shift($urlparts);
-	include("api.php");
-	exit();
-}
-if ($urlparts[0] == "notification") {
-	include("notification.php");
-	exit();
-}
-
 // Try to compose filename from the first two segemnts of the url:
 // edit/profile -> edit-profile.php 
 $filename = implode("-", array_slice($urlparts, 0, 2)) . ".php";
-
-
 
 if (file_exists($filename)) {
 	include($filename);
