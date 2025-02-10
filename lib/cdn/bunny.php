@@ -10,7 +10,9 @@ $config["assetserver"] = "https://abcd.b-cdn.net";
 // otherwise {uk, ny, la, sg, se, br, jh}.storage.bunnycdn.com
 $config["bunnyendpoint"] = "storage.bunnycdn.com";
 $config["bunnyzone"] = "abcd";
+$config["bunnyzoneid"] = "12345"; // for log processing
 $config["bunnykey"] = "aaaaaaaa-bbbb-cccc-dddddddddddd-eeee-ffff";
+$config["bunnyapikey"] = "aaaaaaaa-bbbb-cccc-ddddddddddddxxxxxxxxxxxxxxxxxx-eeee-ffff"; // for log processing
 
 */
 
