@@ -100,7 +100,7 @@ function dump_die($var)
 
 function endsWith($string, $part) //TODO(Rennorb)  @perf: use str_ends_with() instead, if we can get a newer version of php
 {
-	return preg_match("/(" . preg_quote($part) . ")$/", $string);
+	return mb_strlen($string) >= mb_strlen($part) && mb_substr($string, mb_strlen($string) - mb_strlen($part)) == $part;
 }
 
 function startsWith($string, $part) //TODO(Rennorb)  @perf: use str_starts_with() instead, if we can get a newer version of php

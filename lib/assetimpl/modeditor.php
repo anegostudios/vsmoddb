@@ -100,9 +100,9 @@ class ModEditor extends AssetEditor {
 		$file = $con->getRow("select * from file where fileid=?", array($logofileid));
 		if (empty($file)) return;
 
-		$locallogofilename = tempnam(sys_get_temp_dir(), $file['filename'].'.55_60');
+		$locallogofilename = tempnam(sys_get_temp_dir(), '');
 
-		// Since we don't have teh files locally anymore we unfortunately have to do this stunt and re-download the image thats supposed to be used as a logo.
+		// Since we don't have the files locally anymore we unfortunately have to do this stunt and re-download the image thats supposed to be used as a logo.
 		// Upload happens asynchronously during drag-n-drop, so when the user saves the asset the files already don't exist locally anymore.
 		// Since changing the logo is not a action repeated very often this is ok for now, especially since the alternative would be to keep files around, but not abandon them if hte user just navigates away from the asset editor.
 

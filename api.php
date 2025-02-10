@@ -189,7 +189,7 @@ function listMod($modid)
 	$releases = array();
 	foreach ($rrows as $release) {
 		$tags = resolveTags($release["tagscached"]);
-		$file = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid'])); //TODO(Rennorb) @correctness @explain: Does this actually produce the correct result? 
+		$file = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
 
 		$releases[] = array(
 			"releaseid"  => intval($release['releaseid']),
