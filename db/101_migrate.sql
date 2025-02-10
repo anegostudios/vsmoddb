@@ -111,6 +111,7 @@ BEGIN
 IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND TABLE_NAME='file'
 	AND COLUMN_NAME='cdnpath') ) THEN
 		ALTER TABLE moddb.file  RENAME COLUMN thumbnailfilename to cdnpath;
+    ALTER TABLE moddb.file ADD INDEX `cdnpathidx` (`cdnpath`) VISIBLE; -- used for fast download pingback
 END IF;
 
 IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND TABLE_NAME='mod'

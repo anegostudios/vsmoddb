@@ -26,6 +26,7 @@ $config["bunnykey"] = "aaaaaaaa-bbbb-cccc-dddddddddddd-eeee-ffff";
 	- Query String matches ?dl=*
 */
 // otherwise download links will not work properly.
+// Additionally set the expiration date to Never. Files are immutable.
 
 
 /**
@@ -157,11 +158,73 @@ function formatCdnUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
  * Formats a download link to the file.
  * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser.
  * 
- * @param array{cdnpath: string, filename:string} $file
+ * @param array{cdnpath: string, filename:string, fileid:int} $file
  * @return string
  */
 function formatCdnDownloadUrl($file) {
 	global $config;
 
+	// dl -> used for download name in edge rules
 	return "{$config['assetserver']}/{$file['cdnpath']}?dl={$file['filename']}";
+}
+
+
+/**
+ * @param DateTimeImmutable $date
+ */
+function bunny_pullLogsAndUpdateDownloadNumbers($date)
+{
+	global $con, $config;
+
+	$curl = curl_init("https://logging.bunnycdn.com/".$date->format('m-d-y')."/{$config['bunnyzoneid']}.log");
+	curl_setopt_array($curl, [
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_HTTPHEADER => [ 'AccessKey: '.$config['bunnyapikey'] ],
+	]);
+
+	$response = curl_exec($curl);
+	
+	if(!$response) {
+		curl_close($curl);
+		return;
+	}
+	curl_close($curl);
+
+
+	//HIT|200|1739040399423|303521|3304896|87.139.167.0|https://rennorb-test.b-cdn.net/|https://rennorb-test.b-cdn.net/chad_.png|DE|Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0|db940c5b26d2ec2beb26fe007b00d917|DE
+	// https://support.bunny.net/hc/en-us/articles/115001917451-bunny-net-CDN-raw-log-format-explained
+	foreach(explode('\n', $response) as $line) {
+		$parts = explode('|', $line);
+		
+		$statuscode = $parts[1];
+		if($statuscode != 200) continue;
+
+		$url = parse_url($parts[5]);
+		if(!startsWith($url['query'], '?dl=')) continue;
+		
+		$cdnpath = substr($url['path'], 1);
+		$time = intval($parts[2]) / 1000;
+		$date = date(SQL_DATE_FORMAT, $time);
+		$remoteip = $parts[3];
+
+
+		$file = $con->getRow("select * from file where cdnpath=?", array($cdnpath));
+		if (!$file) exit("file not found");
+		$fileid = $file['fileid'];
+
+		$olddate = $con->getOne("select date from downloadip where fileid=? and ipaddress=?", array($fileid, $remoteip));
+		$docount = false;
+		if (!$olddate) {
+			$docount = true;
+			$con->Execute("insert into downloadip values (?, ?, ?)", array($remoteip, $fileid, $date));
+		} else if (strtotime($olddate) + 24*3600 < $time) {
+			$docount = true;
+			$con->Execute("update downloadip set date=? where fileid=? and ipaddress=?", array($date, $fileid, $remoteip));
+		}
+
+		if ($docount) {
+			$con->Execute("update file set downloads=downloads+1 where fileid=?", array($fileid));
+			$con->Execute("update `mod` set downloads=downloads+1 where modid=(select `release`.modid from `release` where `release`.assetid=?)", array($file['assetid']));
+		}
+	}
 }

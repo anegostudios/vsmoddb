@@ -94,7 +94,8 @@ CREATE TABLE IF NOT EXISTS `moddb`.`file` (
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`fileid`),
   INDEX `assetid` (`assetid` ASC) VISIBLE,
-  INDEX `tempuploadtoken` (`userid` ASC) VISIBLE)
+  INDEX `tempuploadtoken` (`userid` ASC) VISIBLE,
+  INDEX `cdnpathidx` (`cdnpath`) VISIBLE) -- used for fast download pingback
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
