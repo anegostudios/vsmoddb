@@ -166,10 +166,12 @@ if (isset($_GET['acceptteaminvite'])) {
 		switch ($_GET['acceptteaminvite']) {
 			case 1:
 				$con->Execute("update teammembers set accepted=1 where modid=? and userid=?", array($asset['modid'], $user['userid']));
+				$con->Execute("update notification set `read` = 1 where userid=? and type='teaminvite' and recordid=?", array($user['userid'], $asset['modid']));
 				header('Location: /' . $asset['urlalias']);
 				break;
 			case 0:
 				$con->Execute("delete from teammembers where modid=? and userid=?", array($asset['modid'], $user['userid']));
+				$con->Execute("update notification set `read` = 1 where userid=? and type='teaminvite' and recordid=?", array($user['userid'], $asset['modid']));
 				header('Location: /' . $asset['urlalias']);
 				break;
 			default:

@@ -370,6 +370,8 @@ class AssetEditor extends AssetController
 				"members" => $teammembers,
 				"ownerid" => $this->asset['createdbyuserid']
 			]);
+
+			$view->assign("users", $con->getAll("select * from user where userid != ?", array($user['userid']))); 
 		}
 
 		$this->displayTemplate($this->editTemplateFile);

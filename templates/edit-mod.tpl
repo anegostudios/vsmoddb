@@ -65,7 +65,7 @@
 			</select>
 		</div>
 
-		{if $asset['createdbyuserid'] == $user['userid']}	
+		{if $asset['createdbyuserid'] == $user['userid']}
 			<div class="editbox linebreak" style="min-height: 85px;">
 				<label>Team Members</label>
 				<select name="teammemberids[]" style="width:300px;" multiple class="teammembers ajax-autocomplete"
@@ -82,14 +82,15 @@
 			</div>
 		{/if}
 
-		{if $asset['createdbyuserid'] == $user['userid']}	
+		{if $asset['createdbyuserid'] == $user['userid']}
 			{if isset($teammembers) && count($teammembers['members']) > 0}
 				<div class="editbox" style="min-height: 85px;">
 					<label>Team Members with edit permissions</label>
 					<select name="teammembereditids[]" style="width:300px;" multiple class="teammembers-edit">
 						{foreach from=$teammembers['members'] item=teammember}
-							<option {if $teammember['canedit'] == 1}selected{/if} {if $teammember['userid'] == $teammembers['ownerid']}disabled{/if}
-								value="{$teammember['userid']}" title="{$teammember['name']}">
+							<option {if $teammember['canedit'] == 1}selected{/if}
+								{if $teammember['userid'] == $teammembers['ownerid']}disabled{/if} value="{$teammember['userid']}"
+								title="{$teammember['name']}">
 								{$teammember['name']}
 							</option>
 						{/foreach}
@@ -188,6 +189,26 @@
 				{/foreach}
 			</select>
 		</div>
+
+		{if $asset['createdbyuserid'] == $user['userid']}
+			<div style="clear:both;"></div>
+			<h3>Ownership transfer</h3>
+			
+			<div class="editbox linebreak">
+				<label>Select new owner</label>
+				<small>Only the current owner can change the owner.</small>
+				<small>This action cannot be undone!</small>
+			
+				<div>
+					<select name="newownerid" style="width:300px;">
+						<option value="" selected="selected">--- Select new owner ---</option>
+						{foreach from=$users item=user}
+							<option value="{$user['userid']}">{$user['name']}</option>
+						{/foreach}
+					</select>
+				</div>
+			</div>
+		{/if}
 </div>
 
 <div class="file template">
@@ -235,11 +256,11 @@
 {if $asset['assetid'] && canDeleteAsset($asset, $user)}
 	<span style="float:right;">
 		{include
-			file="button"
-			class="btndelete"
-			href="javascript:submitDelete()"
-			buttontext="Delete `$entrysingular`"
-		}
+					file="button"
+					class="btndelete"
+					href="javascript:submitDelete()"
+					buttontext="Delete `$entrysingular`"
+				}
 	</span>
 {/if}
 
