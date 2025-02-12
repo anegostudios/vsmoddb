@@ -65,40 +65,6 @@
 			</select>
 		</div>
 
-		{if $asset['createdbyuserid'] == $user['userid']}
-			<div class="editbox linebreak" style="min-height: 85px;">
-				<label>Team Members</label>
-				<select name="teammemberids[]" style="width:300px;" multiple class="teammembers ajax-autocomplete"
-					data-url="/api/authors" data-ownerid="{$teammembers['ownerid']}">
-					{if isset($teammembers) && count($teammembers['members']) > 0}
-						{foreach from=$teammembers['members'] item=teammember}
-							<option selected {if $teammember['userid'] == $teammembers['ownerid']}disabled{/if}
-								value="{$teammember['userid']}" title="{$teammember['name']}">
-								{$teammember['name']}
-							</option>
-						{/foreach}
-					{/if}
-				</select>
-			</div>
-		{/if}
-
-		{if $asset['createdbyuserid'] == $user['userid']}
-			{if isset($teammembers) && count($teammembers['members']) > 0}
-				<div class="editbox" style="min-height: 85px;">
-					<label>Team Members with edit permissions</label>
-					<select name="teammembereditids[]" style="width:300px;" multiple class="teammembers-edit">
-						{foreach from=$teammembers['members'] item=teammember}
-							<option {if $teammember['canedit'] == 1}selected{/if}
-								{if $teammember['userid'] == $teammembers['ownerid']}disabled{/if} value="{$teammember['userid']}"
-								title="{$teammember['name']}">
-								{$teammember['name']}
-							</option>
-						{/foreach}
-					</select>
-				</div>
-			{/if}
-		{/if}
-
 		<div class="editbox linebreak">
 			<label>Name</label>
 			<input type="text" name="name" style="width: 400px;" class="required" value="{$asset['name']}" />
@@ -125,6 +91,45 @@
 
 		{if file_exists("templates/edit-asset-$entrycode.tpl")}
 			{include file="edit-asset-`$entrycode`.tpl"}
+		{/if}
+
+		{if ($asset['createdbyuserid'] == $user['userid']) || $asset['assetid'] === 0}
+			<div style="clear:both;"></div>
+			<h3>Team members</h3>
+
+			{if $asset['assetid'] === 0}
+				<p>Team members can be added after the mod has been created.</p>
+			{else}
+				<div class="editbox linebreak" style="min-height: 85px;">
+					<label>Team Members</label>
+					<select name="teammemberids[]" style="width:300px;" multiple class="teammembers ajax-autocomplete"
+						data-url="/api/authors" data-ownerid="{if $asset['assetid'] > 0}{$teammembers['ownerid']}{else}{$user['userid']}{/if}">
+						{if isset($teammembers) && count($teammembers['members']) > 0 && $asset['assetid'] > 0}
+							{foreach from=$teammembers['members'] item=teammember}
+								<option selected {if $teammember['userid'] == $teammembers['ownerid']}disabled{/if}
+									value="{$teammember['userid']}" title="{$teammember['name']}">
+									{$teammember['name']}
+								</option>
+							{/foreach}
+						{/if}
+					</select>
+				</div>
+			{/if}
+
+			{if (isset($teammembers) && count($teammembers['members']) > 0) && $asset['assetid'] > 0}
+				<div class="editbox" style="min-height: 85px;">
+					<label>Team Members with edit permissions</label>
+					<select name="teammembereditids[]" style="width:300px;" multiple class="teammembers-edit">
+						{foreach from=$teammembers['members'] item=teammember}
+							<option {if $teammember['canedit'] == 1}selected{/if}
+								{if $teammember['userid'] == $teammembers['ownerid']}disabled{/if} value="{$teammember['userid']}"
+								title="{$teammember['name']}">
+								{$teammember['name']}
+							</option>
+						{/foreach}
+					</select>
+				</div>
+			{/if}
 		{/if}
 
 		<div style="clear:both;"></div>
@@ -193,12 +198,12 @@
 		{if $asset['createdbyuserid'] == $user['userid']}
 			<div style="clear:both;"></div>
 			<h3>Ownership transfer</h3>
-			
+
 			<div class="editbox linebreak">
 				<label>Select new owner</label>
 				<small>Only the current owner can change the owner.</small>
 				<small>This action cannot be undone!</small>
-			
+
 				<div>
 					<select name="newownerid" style="width:300px;">
 						<option value="" selected="selected">--- Select new owner ---</option>

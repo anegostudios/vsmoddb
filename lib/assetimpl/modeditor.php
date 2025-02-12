@@ -128,7 +128,7 @@ class ModEditor extends AssetEditor
 	{
 		global $con, $user;
 
-		if ($this->asset['createdbyuserid'] !== $user['userid']) {
+		if (($this->asset['createdbyuserid'] !== $user['userid']) && $this->assetid > 0) {
 			return array();
 		}
 
@@ -211,21 +211,16 @@ class ModEditor extends AssetEditor
 		$newOwnerId = (int) $_POST['newownerid'];
 		$oldOwnerId = $this->asset['createdbyuserid'];
 
-		// Update the owner of the asset
 		$con->Execute("UPDATE asset SET createdbyuserid = ? WHERE assetid = ?", array($newOwnerId, $assetId));
 
-		// Check if the new owner is already a team member
 		$isTeamMember = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $newOwnerId));
 
 		if ($isTeamMember) {
-			// If the new owner is a team member, delete the team member record
 			$con->Execute("DELETE FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $newOwnerId));
 		}
 
-		// Check if the old owner is already a team member
 		$isOldOwnerTeamMember = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $oldOwnerId));
 		if (!$isOldOwnerTeamMember) {
-			// Add the old owner as a team member with edit permissions
 			$con->Execute("INSERT INTO teammembers (modid, userid, canedit, accepted, created) VALUES (?, ?, 1, 1, ?)", array($assetId, $oldOwnerId, date("Y-m-d H:i:s")));
 		}
 	}
