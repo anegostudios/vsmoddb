@@ -1,4 +1,4 @@
-
+-- NOTE(Rennorb): This file ends in .manual as to prevent automatic execution. This is because it purposefully terminates the sql connection, which would likely prevent the sampledata to be loaded afterwards. 
 
 
 -- This migration is destructive and should only be run to completion as the last step of migration from a previous version.
