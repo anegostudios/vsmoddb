@@ -48,7 +48,7 @@ if ($not['type'] == "newrelease") {
 
 	$url = "/" . $row['modalias'] . "?teaminvite=1";
 
-	$con->Execute("update notification set `read`= 1 where userid=? and recordid = ?", array($user['userid'], $not['recordid']));
+	$con->Execute("update notification set `read`= 1 where userid=? and notificationid = ?", array($user['userid'], $not['notificationid']));
 
 	header("Location: " . $url);
 } else {

@@ -65,20 +65,38 @@
 			</select>
 		</div>
 
-		<div class="editbox">
-			<label>Team Members</label>
-			<select name="teammemberids[]" style="width:300px;" multiple class="teammembers ajax-autocomplete"
-				data-url="/api/authors" data-ownerid="{$teammembers['ownerid']}"> 
-				{if isset($teammembers) && count($teammembers['members']) > 0}
-					{foreach from=$teammembers['members'] item=teammember}
-						<option selected {if $teammember['userid'] == $teammembers['ownerid']}disabled{/if}
-							value="{$teammember['userid']}" title="{$teammember['name']}">
-							{$teammember['name']}
-						</option>
-					{/foreach}
-				{/if}
-			</select>
-		</div>
+		{if $asset['createdbyuserid'] == $user['userid']}	
+			<div class="editbox linebreak" style="min-height: 85px;">
+				<label>Team Members</label>
+				<select name="teammemberids[]" style="width:300px;" multiple class="teammembers ajax-autocomplete"
+					data-url="/api/authors" data-ownerid="{$teammembers['ownerid']}">
+					{if isset($teammembers) && count($teammembers['members']) > 0}
+						{foreach from=$teammembers['members'] item=teammember}
+							<option selected {if $teammember['userid'] == $teammembers['ownerid']}disabled{/if}
+								value="{$teammember['userid']}" title="{$teammember['name']}">
+								{$teammember['name']}
+							</option>
+						{/foreach}
+					{/if}
+				</select>
+			</div>
+		{/if}
+
+		{if $asset['createdbyuserid'] == $user['userid']}	
+			{if isset($teammembers) && count($teammembers['members']) > 0}
+				<div class="editbox" style="min-height: 85px;">
+					<label>Team Members with edit permissions</label>
+					<select name="teammembereditids[]" style="width:300px;" multiple class="teammembers-edit">
+						{foreach from=$teammembers['members'] item=teammember}
+							<option {if $teammember['canedit'] == 1}selected{/if} {if $teammember['userid'] == $teammembers['ownerid']}disabled{/if}
+								value="{$teammember['userid']}" title="{$teammember['name']}">
+								{$teammember['name']}
+							</option>
+						{/foreach}
+					</select>
+				</div>
+			{/if}
+		{/if}
 
 		<div class="editbox linebreak">
 			<label>Name</label>
@@ -170,158 +188,71 @@
 				{/foreach}
 			</select>
 		</div>
-
-
-		<!--<div style="clear:both;"></div>
-								<h3>Dependencies <a href="#addconnection" class="add" title="Add a connection"></a></h3>
-
-								<div class="connections">
-									{foreach from=$connections item=connection}
-																<div class="connection editbox" style="clear:both;">
-																	<input type="hidden" name="connectionid[]" value="{$connection['connectionid']}">
-																	<select name="connectiontypeid[]" class="required" style="width:150px;">
-
-
-
-
-
-
-				{foreach from=$connectiontypes item=connectiontype}
-																									<option value="{$connectiontype['connectiontypeid']}" 
-
-
-
-
-
-					{if $connection['connectiontypeid'] == $connectiontype['connectiontypeid']}selected="selected"
-
-
-
-
-
-					{/if}>{$connectiontype['name']}</option>
-
-
-
-
-
-
-				{/foreach}
-																	</select>
-
-																	<select name="assettypeid[]" class="required" style="width: 150px">
-																		<option value="">-</option>
-
-
-
-
-
-
-				{foreach from=$assettypes item=assettype}
-																									<option value="{$assettype['assettypeid']}" 
-
-
-
-
-
-					{if $connection['asset']['assettypeid'] == $assettype['assettypeid']}selected="selected"
-
-
-
-
-
-					{/if}>{$assettype['name']}</option>
-
-
-
-
-
-
-				{/foreach}
-																	</select>
-
-																	<select name="toassetid[]" class="required" style="width: 300px">
-																		<option value="{$connection['asset']['assetid']}">{$connection['asset']['name']}</option>
-																	</select>
-
-																	<a href="#" class="delete"></a>
-																</div>
-
-
-
-
-
-
-			{/foreach}
-								</div>
-								</form>-->
-
-
-	</div>
-
-	<div class="file template">
-		<input type="hidden" name="fileids[]" value="" />
-		<a href="#" class="editbox">
-			<div class="fi">
-				<div class="fi-content"></div>
-			</div>
-			<img src="" style="display:none;" />
-			<div class="filename"></div><br>
-			<div class="uploaddate"></div><br>
-			<div class="uploadprogress"></div>
-		</a>
-	</div>
-
-	<div class="connection template editbox" style="clear:both;">
-		<input type="hidden" name="connectionid[]" value="">
-		<select name="connectiontypeid[]" class="required" style="width:150px;">
-			{foreach from=$connectiontypes item=connectiontype}
-				<option value="{$connectiontype['connectiontypeid']}">{$connectiontype['name']}</option>
-			{/foreach}
-		</select>
-
-		<select name="assettypeid[]" class="required" style="width: 150px">
-			<option value="">-</option>
-			{foreach from=$assettypes item=assettype}
-				<option value="{$assettype['assettypeid']}">{$assettype['name']}</option>
-			{/foreach}
-		</select>
-
-		<select name="toassetid[]" class="required" style="width: 300px">
-		</select>
-
-		<a href="#" class="delete"></a>
-	</div>
-
-	<p style="clear:both;"><br></p>
-
-	{include
-							file="submitbutton"
-							href="javascript:submitForm(0)"
-							buttontext="Save"
-						}
-
-	{if $asset['assetid']}
-		<span style="float:right;">
-			{include
-														file="button"
-														class="btndelete"
-														href="javascript:submitDelete()"
-														buttontext="Delete `$entrysingular`"
-													}
-		</span>
-	{/if}
-
-	<p style="clear:both;"><br></p>
-
-
-	{capture name="footerjs"}
-		<script type="text/javascript">
-			$(document).ready(function() {
-				$('form[name=commentformtemplate]').areYouSure();
-			});
-		</script>
-		<script type="text/javascript" src="/web/js/edit-asset.js?version=5" async></script>
-	{/capture}
-
-	{include file="footer"}
+</div>
+
+<div class="file template">
+	<input type="hidden" name="fileids[]" value="" />
+	<a href="#" class="editbox">
+		<div class="fi">
+			<div class="fi-content"></div>
+		</div>
+		<img src="" style="display:none;" />
+		<div class="filename"></div><br>
+		<div class="uploaddate"></div><br>
+		<div class="uploadprogress"></div>
+	</a>
+</div>
+
+<div class="connection template editbox" style="clear:both;">
+	<input type="hidden" name="connectionid[]" value="">
+	<select name="connectiontypeid[]" class="required" style="width:150px;">
+		{foreach from=$connectiontypes item=connectiontype}
+			<option value="{$connectiontype['connectiontypeid']}">{$connectiontype['name']}</option>
+		{/foreach}
+	</select>
+
+	<select name="assettypeid[]" class="required" style="width: 150px">
+		<option value="">-</option>
+		{foreach from=$assettypes item=assettype}
+			<option value="{$assettype['assettypeid']}">{$assettype['name']}</option>
+		{/foreach}
+	</select>
+
+	<select name="toassetid[]" class="required" style="width: 300px">
+	</select>
+
+	<a href="#" class="delete"></a>
+</div>
+
+<p style="clear:both;"><br></p>
+
+{include
+	file="submitbutton"
+	href="javascript:submitForm(0)"
+	buttontext="Save"
+}
+
+{if $asset['assetid'] && canDeleteAsset($asset, $user)}
+	<span style="float:right;">
+		{include
+			file="button"
+			class="btndelete"
+			href="javascript:submitDelete()"
+			buttontext="Delete `$entrysingular`"
+		}
+	</span>
+{/if}
+
+<p style="clear:both;"><br></p>
+
+
+{capture name="footerjs"}
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$('form[name=commentformtemplate]').areYouSure();
+		});
+	</script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=5" async></script>
+{/capture}
+
+{include file="footer"}

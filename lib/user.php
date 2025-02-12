@@ -8,7 +8,7 @@ $cnt = 0;
 // check `DEBUGUSER` first, $sessiontoken could be set by mods.vintagestory.at even if we're browsing stage.mods.vintagestory.at
 if (DEBUGUSER === 1) {
 	$userid = empty($_GET['showas']) ? 1 : (intval($_GET['showas']) ?: 1); // append ?showas=<id> to view the page as a different user
-	$userid = 3;
+	// $userid = 5;
 	$user = $con->getRow("
 		select user.*, role.code as rolecode, rec.reason as bannedreason
 		from user 
@@ -43,6 +43,15 @@ if ($user) {
 }
 
 function canEditAsset($asset, $user)
+{
+	global $con;
+
+	$canEditAsTeamMember = $con->getOne("select count(*) from teammembers where canedit = 1 and accepted = 1 and modid=? and userid=?", array(isset($asset['modid']) && $asset['modid'] ? $asset['modid'] : $asset['assetid'], $user['userid']));
+
+	return isset($user['userid']) && ($user['userid'] == $asset['createdbyuserid'] || $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator" || $canEditAsTeamMember);
+}
+
+function canDeleteAsset($asset, $user)
 {
 	return isset($user['userid']) && ($user['userid'] == $asset['createdbyuserid'] || $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator");
 }

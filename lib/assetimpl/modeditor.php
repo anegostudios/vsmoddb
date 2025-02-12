@@ -53,8 +53,6 @@ class ModEditor extends AssetEditor
 
 	function saveFromBrowser()
 	{
-		$this->updateTeamMembers($this->assetid);
-
 		global $con, $view, $typewhitelist;
 
 		$_POST['summary'] = substr(strip_tags($_POST['summary']), 0, 100);
@@ -92,6 +90,9 @@ class ModEditor extends AssetEditor
 			$con->Execute("update `mod` set lastreleased=now() where assetid=?", array($this->assetid));
 		}
 
+		$this->updateTeamMembers($this->assetid);
+		$this->updateTeamMembersPermissions($this->assetid);
+
 		if ($statusreverted) {
 			$view->unsetVar("okmessage");
 			$view->assign("warningmessage", "Changes saved, but your mod remains in 'Draft' status. You must upload a playable mod/tool first.");
@@ -124,7 +125,12 @@ class ModEditor extends AssetEditor
 
 	function updateTeamMembers($assetid)
 	{
-		global $con;
+		global $con, $user;
+
+		if ($this->asset['createdbyuserid'] !== $user['userid'])
+		{
+			return array();
+		}
 
 		$rows = $con->getCol("select userid from teammembers where modid = ? and userid != (select createdbyuserid from asset where assetid = ?)", array($assetid, $assetid));
 		$teammemberids = array_combine($rows, array_fill(0, count($rows), 1));
@@ -152,6 +158,42 @@ class ModEditor extends AssetEditor
 			$changes[] = "Deleted team member '{$userid}'";
 		}
 
+		return $changes;
+	}
+
+	function updateTeamMembersPermissions($assetid)
+	{
+		global $con, $user;
+
+		if ($this->asset['createdbyuserid'] !== $user['userid'])
+		{
+			return array();
+		}
+	
+		$rows = $con->getCol("select userid from teammembers where modid = ? and userid != (select createdbyuserid from asset where assetid = ?)", array($assetid, $assetid));
+		$teammemberids = array_combine($rows, array_fill(0, count($rows), 1));
+		$changes = array();
+	
+		$teammembers = $_POST["teammembereditids"];
+	
+		if ($teammembers) {
+			foreach ($teammembers as $userid) {
+				$teammemberid = $con->getOne("select teammemberid from teammembers where modid=? and userid=?", array($assetid, $userid));
+	
+				if ($teammemberid) {
+					$con->Execute("UPDATE teammembers SET canedit = 1 WHERE modid = ? AND userid = ?", array($assetid, $userid));
+					$changes[] = "Granted edit permission for '{$userid}' in the mod: '{$assetid}'";
+				}
+	
+				unset($teammemberids[$userid]);
+			}
+		}
+	
+		foreach ($teammemberids as $userid => $one) {
+			$con->Execute("UPDATE teammembers SET canedit = 0 WHERE modid = ? AND userid = ?", array($assetid, $userid));
+			$changes[] = "Deleted edit permissions for user '{$userid}' in mod '{$assetid}'";
+		}
+	
 		return $changes;
 	}
 }

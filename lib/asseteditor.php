@@ -33,6 +33,7 @@ class AssetEditor extends AssetController
 			$this->recordid = $con->getOne("select {$this->tablename}id from `{$this->tablename}` where assetid=?", array($this->assetid));
 
 			$asset = $con->getRow("select * from asset where assetid=?", array($this->assetid));
+
 			if (!canEditAsset($asset, $user)) {
 				$view->display("403");
 				exit();
@@ -359,15 +360,17 @@ class AssetEditor extends AssetController
 		$tags = $con->getAll("select * from tag where assettypeid=?", array($assettypeid));
 		$tags = sortTags($assettypeid, $tags);
 
-		$teammembers = $con->getAll("select * from user where userid IN (select userid from teammembers where modid=?)", array($this->assetid));
-		$ownerid = $con->getOne("select createdbyuserid as ownerid from asset where assetid=?", array($this->assetid));
-
 		$view->assign("tags", $tags);
 		$view->assign("asset", $this->asset);
-		$view->assign("teammembers", [
-			"members" => $teammembers,
-			"ownerid" => $ownerid
-		]);
+
+		if ($this->asset['createdbyuserid'] === $user['userid'])
+		{
+			$teammembers = $con->getAll("select u.*, t.canedit from user u join teammembers t on u.userid = t.userid where t.modid = ?", array($this->assetid));
+			$view->assign("teammembers", [
+				"members" => $teammembers,
+				"ownerid" => $this->asset['createdbyuserid']
+			]);
+		}
 
 		$this->displayTemplate($this->editTemplateFile);
 	}

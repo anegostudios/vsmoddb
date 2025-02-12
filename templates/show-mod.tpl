@@ -18,8 +18,10 @@
 		<span>You have been invited to join the team of this mod</span>
 
 		<div class="buttons">
-			<a title="Click here to join to the team of this mod" class="button submit" href="{$asset['urlalias']}?acceptteaminvite=1">Click here to accept</a>
-			<a title="Click here to decline the invitation to the team" class="button btndelete" href="{$asset['urlalias']}?acceptteaminvite=0">Click here to decline</a>
+			<a title="Click here to join to the team of this mod" class="button submit"
+				href="{$asset['urlalias']}?acceptteaminvite=1">Click here to accept</a>
+			<a title="Click here to decline the invitation to the team" class="button btndelete"
+				href="{$asset['urlalias']}?acceptteaminvite=0">Click here to decline</a>
 		</div>
 	</div>
 {/if}
@@ -74,17 +76,17 @@
 			<div style="float: right;">
 				{if isset($user) && canEditAsset($asset, $user)}
 					{include
-													file="button"
-													href="/edit/mod/?assetid=`$asset['assetid']`"
-													buttontext="Edit"
-													class="strikethrough-when-banned"
-												}
+																file="button"
+																href="/edit/mod/?assetid=`$asset['assetid']`"
+																buttontext="Edit"
+																class="strikethrough-when-banned"
+															}
 					{include
-													file="button"
-													href="/edit/release/?modid=`$asset['modid']`"
-													buttontext="Add release"
-													class="strikethrough-when-banned"
-												}
+																file="button"
+																href="/edit/release/?modid=`$asset['modid']`"
+																buttontext="Add release"
+																class="strikethrough-when-banned"
+															}
 				{/if}
 			</div>
 
@@ -158,11 +160,11 @@
 			<div style="float: right;">
 				{if isset($user) && canEditAsset($asset, $user)}
 					{include
-													file="button"
-													href="/edit/release/?modid=`$asset['modid']`"
-													buttontext="Add release"
-													class="strikethrough-when-banned"
-												}
+						file="button"
+						href="/edit/release/?modid=`$asset['modid']`"
+						buttontext="Add release"
+						class="strikethrough-when-banned"
+					}
 				{/if}
 			</div>
 
