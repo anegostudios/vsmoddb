@@ -1,4 +1,5 @@
 <?php
+
 header_remove('X-Powered-By');
 
 if (!empty($_SERVER['HTTP_ACCEPT']) && $_SERVER['REQUEST_METHOD'] == "GET") {

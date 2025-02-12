@@ -308,7 +308,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`notification` (
   `notificationid` INT NOT NULL AUTO_INCREMENT,
   `read` TINYINT NOT NULL DEFAULT 0,
   `userid` VARCHAR(255) NULL,
-  `type` ENUM('newcomment', 'mentioncomment', 'newrelease') NULL,
+  `type` ENUM('newcomment', 'mentioncomment', 'newrelease', 'teaminvite', 'modownershiptransfer') NULL,
   `recordid` INT NULL,
   `created` DATETIME NULL,
   PRIMARY KEY (`notificationid`),
@@ -349,6 +349,20 @@ CREATE TABLE IF NOT EXISTS `moddb`.`follow` (
   INDEX `userid` (`userid` ASC) VISIBLE)
 ENGINE = InnoDB;
 
+-- -----------------------------------------------------
+-- Table `moddb`.`teammembers`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `teammembers` (
+    `teammemberid` INT(11) NOT NULL AUTO_INCREMENT,
+    `userid` INT(11) NOT NULL,
+    `modid` INT(11) NOT NULL,
+    `canedit` TINYINT(1) NOT NULL DEFAULT '0',
+    `accepted` TINYINT(1) NOT NULL DEFAULT '0',
+    `created` DATETIME NULL DEFAULT NULL,
+    PRIMARY KEY (`teammemberid`),
+    INDEX `tempuploadtoken` (`userid` ASC) VISIBLE,
+    INDEX `modid` (`modid` ASC) VISIBLE
+) ENGINE = InnoDB;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

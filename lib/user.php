@@ -99,12 +99,23 @@ function loadNotifications() {
 			if ($notification['type']=="newcomment") {
 				$notification['text'] = "{$cmt['username']} commented on {$cmt['modname']}";
 			}
+
 			if ($notification['type']=="mentioncomment") {
 				$notification['text'] = "{$cmt['username']} mentioned you in a comment on {$cmt['modname']}";
 			}
+
+			if ($notification['type'] == "teaminvite")
+			{
+				$notification['text'] = "{$cmt['username']} invited you to a team in {$cmt['modname']}";
+			}			
+			
+			if ($notification['type'] == "modownershiptransfer")
+			{
+				$notification['text'] = "{$cmt['username']} offered you ownership of mod: {$cmt['modname']}";
+			}
 		}
 		
-		$notification['link'] = "/notification/{$notification['notificationid']}";
+		$notification['link'] = "/notification/{$notification['notificationid']}"; 
 	}
 
 	if (count($notifications)) {
