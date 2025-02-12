@@ -132,23 +132,15 @@ class ModEditor extends AssetEditor
 
 		$teammembers = $_POST["teammemberids"];
 
-		// notification("teaminvite", $assetid, $teammembers);
-		// echo '<pre>';
-		// var_dump($teammembers);
-		// echo '</pre>';
-
-		// die;
-
 		if ($teammembers) {
 			foreach ($teammembers as $userid) {
 				$teammemberid = $con->getOne("select teammemberid from teammembers where modid=? and userid=?", array($assetid, $userid));
 
 				if (!$teammemberid) {
 					$con->Execute("INSERT INTO teammembers (modid, userid, created) VALUES (?, ?, ?)", array($assetid, $userid, date("Y-m-d H:i:s")));
+					$con->Execute("INSERT INTO notification (`read`, userid, type, recordid, created) VALUES (0, ?, 'teaminvite', ?, ?)", array($userid, $assetid, date("Y-m-d H:i:s")));
 
-					// $notid = insert("notification");
-					// update("notification", $notid, array("userid" => $userid, "type" => "teaminvite", "recordid" => $assetid));
-					$changes[] = "Added team member '{$userid}'";
+					$changes[] = "Invited user '{$userid}' to join the team of the mod: '{$assetid}'";
 				}
 
 				unset($teammemberids[$userid]);

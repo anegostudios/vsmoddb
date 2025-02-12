@@ -17,7 +17,7 @@ if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
 		define("DEBUG", 0);
 		define("DEBUGUSER", 0);
 	} else {
-		define("DEBUG", 1);
+		define("DEBUG", 0);
 		define("DEBUGUSER", 1);
 	}
 } else {

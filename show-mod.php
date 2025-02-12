@@ -21,7 +21,7 @@ if ($assetid) {
         	(select json_arrayagg(json_object('userid', user.userid, 'name', user.name)) 
         		from teammembers 
         		join user on teammembers.userid = user.userid 
-        		where teammembers.modid = `mod`.modid) as teammembers
+        		where teammembers.modid = `mod`.modid and teammembers.accepted = 1) as teammembers
 		from 
 			asset 
 			join `mod` on asset.assetid=`mod`.assetid
@@ -45,7 +45,7 @@ if ($assetid) {
 		}
 
 		$view->assign("teammembers", $asset['teammembers']);
-	} 
+	}
 
 	$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);
 	$view->assign("createdusertoken", $createdusertoken);
@@ -153,8 +153,32 @@ $view->assign("asset", $asset);
 
 $view->assign("isfollowing", empty($user) ? 0 : $con->getOne("select modid from `follow` where modid=? and userid=?", array($asset['modid'], $user['userid'])));
 
-$view->display("show-mod");
+$accepted = $con->getOne("select accepted from teammembers where accepted = 0 and modid=? and userid=?", array($asset['modid'], $user['userid']));
 
+if ($accepted === 0) {
+	$view->assign("teaminvite", 1);
+}
+
+if (isset($_GET['acceptteaminvite'])) {
+	$available = $con->getOne("select accepted from teammembers where accepted = 0 and modid=? and userid=?", array($asset['modid'], $user['userid']));
+
+	if ($available === 0) {
+		switch ($_GET['acceptteaminvite']) {
+			case 1:
+				$con->Execute("update teammembers set accepted=1 where modid=? and userid=?", array($asset['modid'], $user['userid']));
+				header('Location: /' . $asset['urlalias']);
+				break;
+			case 0:
+				$con->Execute("delete from teammembers where modid=? and userid=?", array($asset['modid'], $user['userid']));
+				header('Location: /' . $asset['urlalias']);
+				break;
+			default:
+				break;
+		}
+	}
+}
+
+$view->display("show-mod");
 
 function cmpReleases($r1, $r2)
 {
