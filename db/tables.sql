@@ -358,6 +358,7 @@ CREATE TABLE IF NOT EXISTS `teammembers` (
     `modid` INT(11) NOT NULL,
     `canedit` TINYINT(1) NOT NULL DEFAULT '0',
     `accepted` TINYINT(1) NOT NULL DEFAULT '0',
+    `transferownership` TINYINT(1) NULL DEFAULT '0',
     `created` DATETIME NULL DEFAULT NULL,
     PRIMARY KEY (`teammemberid`),
     INDEX `tempuploadtoken` (`userid` ASC) VISIBLE,

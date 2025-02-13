@@ -46,7 +46,7 @@ if ($not['type'] == "newrelease") {
 	where modid=?
 	", array($not['recordid']));
 
-	$url = "/" . $row['modalias'] . "?teaminvite=1";
+	$url = "/" . $row['modalias'];
 
 	$con->Execute("update notification set `read`= 1 where userid=? and notificationid = ?", array($user['userid'], $not['notificationid']));
 

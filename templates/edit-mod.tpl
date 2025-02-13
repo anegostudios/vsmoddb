@@ -201,8 +201,9 @@
 
 			<div class="editbox linebreak">
 				<label>Select new owner</label>
-				<small>Only the current owner can change the owner.</small>
-				<small>This action cannot be undone!</small>
+				<small>Ownership can only be transferred by the current owner of this resource.</small>
+				<br>
+				<small>A notification will be sent to the specified user, inviting them to accept ownership.</small>
 
 				<div>
 					<select name="newownerid" style="width:300px;">

@@ -153,32 +153,8 @@ $view->assign("asset", $asset);
 
 $view->assign("isfollowing", empty($user) ? 0 : $con->getOne("select modid from `follow` where modid=? and userid=?", array($asset['modid'], $user['userid'])));
 
-$accepted = $con->getOne("select accepted from teammembers where accepted = 0 and modid=? and userid=?", array($asset['modid'], $user['userid']));
-
-if ($accepted === 0) {
-	$view->assign("teaminvite", 1);
-}
-
-if (isset($_GET['acceptteaminvite'])) {
-	$available = $con->getOne("select accepted from teammembers where accepted = 0 and modid=? and userid=?", array($asset['modid'], $user['userid']));
-
-	if ($available === 0) {
-		switch ($_GET['acceptteaminvite']) {
-			case 1:
-				$con->Execute("update teammembers set accepted=1 where modid=? and userid=?", array($asset['modid'], $user['userid']));
-				$con->Execute("update notification set `read` = 1 where userid=? and type='teaminvite' and recordid=?", array($user['userid'], $asset['modid']));
-				header('Location: /' . $asset['urlalias']);
-				break;
-			case 0:
-				$con->Execute("delete from teammembers where modid=? and userid=?", array($asset['modid'], $user['userid']));
-				$con->Execute("update notification set `read` = 1 where userid=? and type='teaminvite' and recordid=?", array($user['userid'], $asset['modid']));
-				header('Location: /' . $asset['urlalias']);
-				break;
-			default:
-				break;
-		}
-	}
-}
+processTeamInvitations($asset, $user);
+processOwnershipTransfers($asset, $user);
 
 $view->display("show-mod");
 
@@ -233,4 +209,78 @@ function groupMinorVersionTags($tags)
 	}
 
 	return $gtags;
+}
+
+function processTeamInvitations($asset, $user)
+{
+	global $con, $view;
+
+	$accepted = $con->getOne("select accepted from teammembers where accepted = 0 and modid=? and userid=?", array($asset['modid'], $user['userid']));
+
+	if ($accepted === 0) {
+		$view->assign("teaminvite", 1);
+	}
+
+	if (isset($_GET['acceptteaminvite'])) {
+		$available = $con->getOne("select accepted from teammembers where accepted = 0 and modid=? and userid=?", array($asset['modid'], $user['userid']));
+
+		if ($available === 0) {
+			switch ($_GET['acceptteaminvite']) {
+				case 1:
+					$con->Execute("update teammembers set accepted=1 where modid=? and userid=?", array($asset['modid'], $user['userid']));
+					$con->Execute("update notification set `read` = 1 where userid=? and type='teaminvite' and recordid=?", array($user['userid'], $asset['modid']));
+					header('Location: /' . $asset['urlalias']);
+					break;
+				case 0:
+					$con->Execute("delete from teammembers where modid=? and userid=?", array($asset['modid'], $user['userid']));
+					$con->Execute("update notification set `read` = 1 where userid=? and type='teaminvite' and recordid=?", array($user['userid'], $asset['modid']));
+					header('Location: /' . $asset['urlalias']);
+					break;
+				default:
+					break;
+			}
+		}
+	}
+}
+
+function processOwnershipTransfers($asset, $user)
+{
+	global $con, $view;
+
+	$invitedtoownership = $con->getOne("select transferownership from teammembers where transferownership = 1 and modid=? and userid=?", array($asset['modid'], $user['userid']));
+
+	if ($invitedtoownership === 1) {
+		$view->assign("transferownership", 1);
+	}
+
+	if (isset($_GET['acceptownershiptransfer'])) {
+		$available = $con->getOne("select transferownership from teammembers where transferownership = 1 and modid=? and userid=?", array($asset['modid'], $user['userid']));
+
+		if ($available === 1) {
+			switch ($_GET['acceptownershiptransfer']) {
+				case 1:
+					if ($oldOwnerId = $con->getOne("select `createdbyuserid` from `asset` where `assetid` = ?", array($asset['modid']))) {
+						$con->Execute("insert into teammembers (userid, modid, canedit, accepted, created) values (?, ?, 1, 1, NOW())", array($oldOwnerId, $asset['modid']));
+					}
+
+					$con->Execute("delete from teammembers where modid=? and userid=?", array($asset['modid'], $user['userid']));
+					$con->Execute("update asset set createdbyuserid=? where assetid=?", array($user['userid'], $asset['assetid']));
+					$con->Execute("update notification set `read` = 1 where userid=? and type='modownershiptransfer' and recordid=?", array($user['userid'], $asset['modid']));
+					header('Location: /' . $asset['urlalias']);
+					break;
+				case 0:
+					if ($isActiveTeamMember = $con->getOne("select `teammemberid` from `teammembers` where `userid` = ? and `modid` = ? and `canedit` = 1 and `accepted` = 1", array($user['userid'], $asset['modid']))) {
+						$con->Execute("update `teammembers` set `transferownership` = 0 where `userid` = ? and `modid` = ?", array($user['userid'], $asset['modid']));
+					} else {
+						$con->Execute("delete from teammembers where modid=? and userid=?", array($asset['modid'], $user['userid']));
+					}
+
+					$con->Execute("update notification set `read` = 1 where userid=? and type='modownershiptransfer' and recordid=?", array($user['userid'], $asset['modid']));
+					header('Location: /' . $asset['urlalias']);
+					break;
+				default:
+					break;
+			}
+		}
+	}
 }

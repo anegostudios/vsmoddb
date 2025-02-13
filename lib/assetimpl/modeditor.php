@@ -196,6 +196,35 @@ class ModEditor extends AssetEditor
 		return $changes;
 	}
 
+	// function updateNewOwner($assetId)
+	// {
+	// 	global $con, $user;
+
+	// 	if ($this->asset['createdbyuserid'] !== $user['userid']) {
+	// 		return array();
+	// 	}
+
+	// 	if (!isset($_POST['newownerid']) || empty($_POST['newownerid']) || $_POST['newownerid'] == $this->asset['createdbyuserid'] || !is_numeric($_POST['newownerid']) || (int) $_POST['newownerid'] <= 0) {
+	// 		return array();
+	// 	}
+
+	// 	$newOwnerId = (int) $_POST['newownerid'];
+	// 	$oldOwnerId = $this->asset['createdbyuserid'];
+
+	// 	$con->Execute("UPDATE asset SET createdbyuserid = ? WHERE assetid = ?", array($newOwnerId, $assetId));
+
+	// 	$isTeamMember = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $newOwnerId));
+
+	// 	if ($isTeamMember) {
+	// 		$con->Execute("DELETE FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $newOwnerId));
+	// 	}
+
+	// 	$isOldOwnerTeamMember = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $oldOwnerId));
+	// 	if (!$isOldOwnerTeamMember) {
+	// 		$con->Execute("INSERT INTO teammembers (modid, userid, canedit, accepted, created) VALUES (?, ?, 1, 1, ?)", array($assetId, $oldOwnerId, date("Y-m-d H:i:s")));
+	// 	}
+	// }
+
 	function updateNewOwner($assetId)
 	{
 		global $con, $user;
@@ -211,17 +240,20 @@ class ModEditor extends AssetEditor
 		$newOwnerId = (int) $_POST['newownerid'];
 		$oldOwnerId = $this->asset['createdbyuserid'];
 
-		$con->Execute("UPDATE asset SET createdbyuserid = ? WHERE assetid = ?", array($newOwnerId, $assetId));
-
+		// Check if the new owner is already a team member
 		$isTeamMember = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $newOwnerId));
 
 		if ($isTeamMember) {
-			$con->Execute("DELETE FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $newOwnerId));
+			// Update the transferownership column to 1
+			$con->Execute("UPDATE teammembers SET transferownership = 1 WHERE modid = ? AND userid = ?", array($assetId, $newOwnerId));
+		} else {
+			// Insert the new owner as a team member with transferownership set to 1
+			$con->Execute("INSERT INTO teammembers (modid, userid, canedit, accepted, transferownership, created) VALUES (?, ?, 0, 0, 1, ?)", array($assetId, $newOwnerId, date("Y-m-d H:i:s")));
 		}
 
-		$isOldOwnerTeamMember = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $oldOwnerId));
-		if (!$isOldOwnerTeamMember) {
-			$con->Execute("INSERT INTO teammembers (modid, userid, canedit, accepted, created) VALUES (?, ?, 1, 1, ?)", array($assetId, $oldOwnerId, date("Y-m-d H:i:s")));
-		}
+		// Send a notification to the new owner
+		$con->Execute("INSERT INTO notification (`read`, userid, type, recordid, created) VALUES (0, ?, 'modownershiptransfer', ?, ?)", array($newOwnerId, $assetId, date("Y-m-d H:i:s")));
+
+		return array("Ownership transfer initiated successfully.");
 	}
 }

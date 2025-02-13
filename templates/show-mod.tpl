@@ -13,17 +13,27 @@
 
 {include file="header" pagetitle="`$asset['name']` - "}
 
-{if isset($teaminvite) && $teaminvite}
+{if (isset($teaminvite) && $teaminvite) && (!isset($transferownership) || !$transferownership)}
 	<div class="teaminvite">
 		<span>You have been invited to join the team of this mod</span>
-
 		<div class="buttons">
 			<a title="Click here to join to the team of this mod" class="button submit"
-				href="{$asset['urlalias']}?acceptteaminvite=1">Click here to accept</a>
+				href="{$asset['urlalias']}?acceptteaminvite=1">Accept</a>
 			<a title="Click here to decline the invitation to the team" class="button btndelete"
-				href="{$asset['urlalias']}?acceptteaminvite=0">Click here to decline</a>
+				href="{$asset['urlalias']}?acceptteaminvite=0">Decline</a>
 		</div>
 	</div>
+{/if}
+
+
+{if isset($transferownership) && $transferownership}
+	<div class="teaminvite">
+    <span>You have been invited to become the owner of this modification.</span>
+    <div class="buttons">
+        <a title="Accept Ownership" class="button submit" href="{$asset['urlalias']}?acceptownershiptransfer=1">Accept</a>
+        <a title="Decline Ownership" class="button btndelete" href="{$asset['urlalias']}?acceptownershiptransfer=0">Decline</a>
+    </div>
+</div>
 {/if}
 
 <div class="edit-asset mod-{$asset['statuscode']}">
@@ -76,17 +86,18 @@
 			<div style="float: right;">
 				{if isset($user) && canEditAsset($asset, $user)}
 					{include
-																file="button"
-																href="/edit/mod/?assetid=`$asset['assetid']`"
-																buttontext="Edit"
-																class="strikethrough-when-banned"
-															}
+						file="button"
+						href="/edit/mod/?assetid=`$asset['assetid']`"
+						buttontext="Edit"
+						class="strikethrough-when-banned"
+					}
+
 					{include
-																file="button"
-																href="/edit/release/?modid=`$asset['modid']`"
-																buttontext="Add release"
-																class="strikethrough-when-banned"
-															}
+						file="button"
+						href="/edit/release/?modid=`$asset['modid']`"
+						buttontext="Add release"
+						class="strikethrough-when-banned"
+					}
 				{/if}
 			</div>
 
