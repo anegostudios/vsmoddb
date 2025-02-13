@@ -198,7 +198,7 @@ class ModEditor extends AssetEditor
 
 	function updateNewOwner($assetId)
 	{
-		global $con, $user;
+		global $con, $view, $user;
 
 		if ($this->asset['createdbyuserid'] !== $user['userid']) {
 			return array();
@@ -208,8 +208,15 @@ class ModEditor extends AssetEditor
 			return array();
 		}
 
+		// Check if any invitation has been sent
+		$invitationSent = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? and transferownership = 1", array($assetId));
+
+		if ($invitationSent > 0) {
+			$view->assign("warningmessage", "An invitation to transfer ownership has already been sent to the new owner.");
+			return array();
+		}
+
 		$newOwnerId = (int) $_POST['newownerid'];
-		$oldOwnerId = $this->asset['createdbyuserid'];
 
 		// Check if the new owner is already a team member
 		$isTeamMember = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $newOwnerId));

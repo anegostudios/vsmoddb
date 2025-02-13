@@ -103,7 +103,8 @@
 				<div class="editbox linebreak" style="min-height: 85px;">
 					<label>Team Members</label>
 					<select name="teammemberids[]" style="width:300px;" multiple class="teammembers ajax-autocomplete"
-						data-url="/api/authors" data-ownerid="{if $asset['assetid'] > 0}{$teammembers['ownerid']}{else}{$user['userid']}{/if}">
+						data-url="/api/authors"
+						data-ownerid="{if $asset['assetid'] > 0}{$teammembers['ownerid']}{else}{$user['userid']}{/if}">
 						{if isset($teammembers) && count($teammembers['members']) > 0 && $asset['assetid'] > 0}
 							{foreach from=$teammembers['members'] item=teammember}
 								<option selected {if $teammember['userid'] == $teammembers['ownerid']}disabled{/if}
@@ -200,19 +201,28 @@
 			<h3>Ownership transfer</h3>
 
 			<div class="editbox linebreak">
-				<label>Select new owner</label>
-				<small>Ownership can only be transferred by the current owner of this resource.</small>
-				<br>
-				<small>A notification will be sent to the specified user, inviting them to accept ownership.</small>
+				{if isset($ownershipTransferUser) && $ownershipTransferUser}
+					<span>An ownership transfer invitation has been sent to: {$ownershipTransferUser}.</span>
+					<br>
+					<span>You may revoke the pending invitation using the button below:</span>
+					<p><a href="/edit/mod/?assetid={$asset['assetid']}&revokenewownership=1" class="button btndelete">REVOKE</a></p>
+				{else}
+					<div>
+						<label>Select new owner</label>
+						<small>Ownership can only be transferred by the current owner of this resource.</small>
+						<br>
+						<small>A notification will be sent to the specified user, inviting them to accept ownership.</small>
+						<br>
 
-				<div>
-					<select name="newownerid" style="width:300px;">
-						<option value="" selected="selected">--- Select new owner ---</option>
-						{foreach from=$users item=user}
-							<option value="{$user['userid']}">{$user['name']}</option>
-						{/foreach}
-					</select>
-				</div>
+						<select name="newownerid" style="width:300px;">
+							<option value="" selected="selected">--- Select new owner ---</option>
+							{foreach from=$users item=user}
+								<option value="{$user['userid']}">{$user['name']}</option>
+							{/foreach}
+						</select>
+					</div>
+				{/if}
+
 			</div>
 		{/if}
 </div>
@@ -262,11 +272,11 @@
 {if $asset['assetid'] && canDeleteAsset($asset, $user)}
 	<span style="float:right;">
 		{include
-					file="button"
-					class="btndelete"
-					href="javascript:submitDelete()"
-					buttontext="Delete `$entrysingular`"
-				}
+			file="button"
+			class="btndelete"
+			href="javascript:submitDelete()"
+			buttontext="Delete `$entrysingular`"
+		}
 	</span>
 {/if}
 

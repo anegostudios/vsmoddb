@@ -205,8 +205,6 @@ class AssetEditor extends AssetController
 		$this->asset["tags"] = $tags;
 	}
 
-
-
 	function saveFromBrowser()
 	{
 		global $con, $user, $view, $config;
@@ -267,7 +265,6 @@ class AssetEditor extends AssetController
 		$assetdata = array("editedbyuserid" => $user["userid"]);
 		$recorddata = array();
 
-
 		foreach ($this->columns as $column) {
 			$col = $column["code"];
 			$val = null;
@@ -307,7 +304,6 @@ class AssetEditor extends AssetController
 
 		$tagchanges = $this->updateTags($this->assetid);
 		$changes = array_merge($changes, $tagchanges);
-
 
 		if ($_POST["statusid"] == 3 && $oldstatusid != 3) {
 			$assetdata["readydate"] = date("Y-m-d H:i:s");
@@ -363,8 +359,7 @@ class AssetEditor extends AssetController
 		$view->assign("tags", $tags);
 		$view->assign("asset", $this->asset);
 
-		if (($this->asset['createdbyuserid'] === $user['userid']) && $this->assetid > 0)
-		{
+		if (($this->asset['createdbyuserid'] === $user['userid']) && $this->assetid > 0) {
 			$teammembers = $con->getAll("select u.*, t.canedit from user u join teammembers t on u.userid = t.userid where t.modid = ? and u.userid != ?", array($this->assetid, $user['userid']));
 
 			$view->assign("teammembers", [
@@ -372,12 +367,47 @@ class AssetEditor extends AssetController
 				"ownerid" => $this->asset['createdbyuserid']
 			]);
 
-			$view->assign("users", $con->getAll("select * from user where userid != ?", array($user['userid']))); 
+			$view->assign("users", $con->getAll("select * from user where userid != ?", array($user['userid'])));
+
+			// Check if ownership transfer invitation has been sent to a user
+			$ownershipTransferUser = $con->getOne("select u.name from teammembers t join user u on u.userid = t.userid where modid = ? and transferownership = 1", array($this->assetid));
+
+			if ($ownershipTransferUser) {
+				$view->assign("ownershipTransferUser", $ownershipTransferUser);
+
+				if (isset($_GET['revokenewownership']) && $_GET['revokenewownership'] == 1) {
+					$this->handleRevokeNewOwnership($user);
+				}
+			}
 		}
 
 		$this->displayTemplate($this->editTemplateFile);
 	}
 
+	function handleRevokeNewOwnership($user)
+	{
+		if (($this->asset['createdbyuserid'] !== $user['userid']) && $this->assetid <= 0) {
+			return;
+		}
+
+		global $con;
+
+		$newOwnerId = $con->getOne('SELECT `userid` FROM `teammembers` WHERE `modid` = ? AND `transferownership` = 1 LIMIT 1', [$this->assetid]);
+
+		if ($newOwnerId === 0 || $newOwnerId === null) {
+			header("Location: /edit/{$this->classname}?assetid=$this->assetid");
+			exit;
+		}
+
+		// Remove new owner from the teammembers list
+		$con->Execute("DELETE FROM `teammembers` WHERE `userid` = ? AND `modid` = ? AND `transferownership` = 1", [$newOwnerId, $this->assetid]);
+
+		// Mark notification to new owner as readed
+		$con->Execute("UPDATE `notification` SET `read` = 1 WHERE `userid` = ? AND `recordid` = ? AND `type` = 'modownershiptransfer' AND `read` = 0", [$newOwnerId, $this->assetid]);
+
+		header("Location: /edit/{$this->classname}?assetid=$this->assetid");
+		exit;
+	}
 
 	function updateTags($assetid)
 	{
