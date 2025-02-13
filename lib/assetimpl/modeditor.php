@@ -196,35 +196,6 @@ class ModEditor extends AssetEditor
 		return $changes;
 	}
 
-	// function updateNewOwner($assetId)
-	// {
-	// 	global $con, $user;
-
-	// 	if ($this->asset['createdbyuserid'] !== $user['userid']) {
-	// 		return array();
-	// 	}
-
-	// 	if (!isset($_POST['newownerid']) || empty($_POST['newownerid']) || $_POST['newownerid'] == $this->asset['createdbyuserid'] || !is_numeric($_POST['newownerid']) || (int) $_POST['newownerid'] <= 0) {
-	// 		return array();
-	// 	}
-
-	// 	$newOwnerId = (int) $_POST['newownerid'];
-	// 	$oldOwnerId = $this->asset['createdbyuserid'];
-
-	// 	$con->Execute("UPDATE asset SET createdbyuserid = ? WHERE assetid = ?", array($newOwnerId, $assetId));
-
-	// 	$isTeamMember = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $newOwnerId));
-
-	// 	if ($isTeamMember) {
-	// 		$con->Execute("DELETE FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $newOwnerId));
-	// 	}
-
-	// 	$isOldOwnerTeamMember = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $oldOwnerId));
-	// 	if (!$isOldOwnerTeamMember) {
-	// 		$con->Execute("INSERT INTO teammembers (modid, userid, canedit, accepted, created) VALUES (?, ?, 1, 1, ?)", array($assetId, $oldOwnerId, date("Y-m-d H:i:s")));
-	// 	}
-	// }
-
 	function updateNewOwner($assetId)
 	{
 		global $con, $user;
