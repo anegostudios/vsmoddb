@@ -167,7 +167,7 @@ function listMod($modid)
 			`mod` 
 			join asset on (`mod`.assetid = asset.assetid)
 			join user on (`asset`.createdbyuserid = user.userid)
-			left join file as logofile on (`mod`.logofileid = file.fileid)
+			left join file as logofile on (`mod`.logofileid = logofile.fileid)
 		where
 			asset.statusid=2
 			and modid=?
