@@ -12,6 +12,7 @@ if ($assetid) {
 		select 
 			asset.*, 
 			`mod`.*,
+			logofile.cdnpath as logourl,
 			createduser.userid as createduserid,
 			createduser.created as createduserjoindate,
 			createduser.name as createdusername,
@@ -28,6 +29,7 @@ if ($assetid) {
 			left join user as createduser on asset.createdbyuserid = createduser.userid
 			left join user as editeduser on asset.editedbyuserid = editeduser.userid
 			left join status on asset.statusid = status.statusid
+			left join file as logofile on mod.logofileid = logofile.fileid
 		where
 			asset.assetid = ?
 	", array($assetid));
@@ -47,13 +49,18 @@ if ($assetid) {
 		$view->assign("teammembers", $asset['teammembers']);
 	}
 
+	if(!empty($asset['logourl'])) {
+		$asset['logourl'] = formatCdnUrlFromCdnPath($asset['logourl']);
+	}
+
 	$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);
 	$view->assign("createdusertoken", $createdusertoken);
 	$files = $con->getAll("select * from file where assetid=?", array($assetid));
 
 	foreach ($files as &$file) {
-		$file["ending"] = substr($file["filename"], strrpos($file["filename"], ".") + 1);
 		$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
+		$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
+		$file["url"] = formatCdnUrl($file);
 	}
 
 	unset($file);

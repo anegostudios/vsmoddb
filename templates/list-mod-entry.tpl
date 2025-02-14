@@ -1,10 +1,10 @@
 <div class="mod {$mod['statuscode']}">
 	{if $mod['statuscode']=='draft'}<span class="draftnotice">Draft</span>{/if}
 	<a href="{if $mod['urlalias']}/{$mod['urlalias']}{else}/show/mod/{$mod['assetid']}{/if}">
-		{if (empty($mod['logofilename']))}
+		{if (empty($mod['logocdnpath']))}
 			<img src="/web/img/mod-default.png" loading="lazy">
 		{else}
-			<img src="/files/asset/{$mod['assetid']}/{$mod['logofilename']}" loading="lazy">
+			<img src="{formatCdnUrlFromCdnPath($mod['logocdnpath'])}" loading="lazy">
 		{/if}
 		{if !empty($mod['following'])}<i title="You are following this mod" class="followed fas fa-star"></i>{/if}
 	</a>

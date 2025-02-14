@@ -134,11 +134,10 @@
 		{/if}
 
 		<div style="clear:both;"></div>
-		<h3>Screenshots<span style="float:right; font-size:70%;">(drag&drop to upload{if (count($files) > 0)}, <a
-					href="/download?assetid={$asset['assetid']}">download all as zip</a>{/if})</span></h3>
+
+		<h3>Screenshots<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$asset['assetid']}">download all as zip</a>{/if})</span></h3>
 
 		{include file="edit-asset-files.tpl"}
-
 
 		<div style="clear:both;"></div>
 		<h3>Additional information</h3>
@@ -288,8 +287,9 @@
 		$(document).ready(function() {
 			$('form[name=commentformtemplate]').areYouSure();
 		});
-	</script>
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=5" async></script>
+	</script>	
+
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=6" async></script>
 {/capture}
 
 {include file="footer"}

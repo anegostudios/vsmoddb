@@ -102,26 +102,44 @@ class ModEditor extends AssetEditor
 
 		return $result;
 	}
-
-	function generateLogoImage($logofileid)
-	{
-		global $con, $config;
-
+	
+	function generateLogoImage($logofileid) {
+		global $con, $user;
+		
 		$file = $con->getRow("select * from file where fileid=?", array($logofileid));
 		if (empty($file)) return;
-		$srcpath = $config['basepath'] . "files/asset/" . $this->assetid . "/" . $file['filename'];
 
-		$filetype = pathinfo($file['filename'], PATHINFO_EXTENSION);
+		$locallogofilename = tempnam(sys_get_temp_dir(), '');
 
-		$logofilename = null;
+		// Since we don't have the files locally anymore we unfortunately have to do this stunt and re-download the image thats supposed to be used as a logo.
+		// Upload happens asynchronously during drag-n-drop, so when the user saves the asset the files already don't exist locally anymore.
+		// Since changing the logo is not a action repeated very often this is ok for now, especially since the alternative would be to keep files around, but not abandon them if hte user just navigates away from the asset editor.
 
-		if (file_exists($srcpath)) {
-			$logofilename  = "logo." . $filetype;
-			$destpath = $config['basepath'] . "files/asset/" . $this->assetid . "/" . $logofilename;
-			$filename = copyImageResized($srcpath, 480, 320, true, 'file', '', $destpath);
+		$localpath = tempnam(sys_get_temp_dir(), '');
+		$originalfile = @file_get_contents(formatCdnUrl($file));
+		if(!file_put_contents($localpath, $originalfile)) {
+			unlink($localpath);
+			return array("status" => "error", "errormessage" => 'The logo file seems to be gone.');
 		}
 
-		$con->Execute("update `mod` set logofilename=? where assetid=?", array($logofilename, $this->assetid));
+		$resizeresult = copyImageResized($localpath, 480, 320, true, 'file', '', $locallogofilename);
+		if(!$resizeresult) {
+			unlink($localpath);
+			return array("status" => "error", "errormessage" => 'Failed to resize image for thumbnail.');
+		}
+
+		splitOffExtension($file['cdnpath'], $cdnbasepath, $ext);
+
+		$cdnlogopath = "{$cdnbasepath}_480_320.{$ext}";
+		$uploadresult = uploadToCdn($locallogofilename, $cdnlogopath);
+		unlink($locallogofilename);
+		if($uploadresult['error']) {
+			unlink($localpath);
+			return array("status" => "error", "errormessage" => 'CDN Error: '.$uploadresult['error']);
+		}
+
+		$con->Execute("insert into file (userid, cdnpath, created) VALUES (?, ?, NOW())", array($user['userid'], $cdnlogopath));
+		$con->Execute("update `mod` set logofileid=? where assetid=?", array($con->insert_ID(), $this->assetid));
 	}
 
 	function updateTeamMembers($assetid)
@@ -130,7 +148,7 @@ class ModEditor extends AssetEditor
 
 		if (($this->asset['createdbyuserid'] !== $user['userid']) && $this->assetid > 0) {
 			return array();
-		}
+		} 
 
 		$rows = $con->getCol("select userid from teammembers where modid = ? and userid != (select createdbyuserid from asset where assetid = ?)", array($assetid, $assetid));
 		$teammemberids = array_combine($rows, array_fill(0, count($rows), 1));

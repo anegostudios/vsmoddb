@@ -83,19 +83,31 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `moddb`.`file` (
   `fileid` INT NOT NULL AUTO_INCREMENT,
   `assetid` INT NULL,
-  `assettypeid` INT NULL COMMENT 'Required for assets that don\'t exist yet, otherwise we cannot verify if the right assettypeid was passed on during asset creation',
+  `assettypeid` INT NULL COMMENT 'Required for assets that don''t exist yet, otherwise we cannot verify if the right assettypeid was passed on during asset creation',
   `userid` INT NULL,
   `downloads` INT NULL DEFAULT 0,
   `filename` VARCHAR(255) NULL,
-  `thumbnailfilename` VARCHAR(255) NULL,
+  `cdnpath` VARCHAR(255) NULL,
   `type` ENUM('portrait', 'asset', 'shape', 'texture', 'sound') NULL,
+  `hasthumbnail` BOOL NOT NULL DEFAULT 0, -- could maybe be merged with type
   `created` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`fileid`),
   INDEX `assetid` (`assetid` ASC) VISIBLE,
-  INDEX `tempuploadtoken` (`userid` ASC) VISIBLE)
+  INDEX `tempuploadtoken` (`userid` ASC) VISIBLE,
+  INDEX `cdnpathidx` (`cdnpath`) VISIBLE) -- used for fast download pingback
 ENGINE = InnoDB;
 
+-- -----------------------------------------------------
+-- Table `moddb`.`modpeek_result`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `moddb`.`modpeek_result` (
+  `fileid` INT NOT NULL,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `detectedmodidstr` VARCHAR(255),
+  `detectedmodversion` VARCHAR(255),
+  PRIMARY KEY (`fileid`))
+ENGINE = InnoDB;
 
 -- -----------------------------------------------------
 -- Table `moddb`.`status`
@@ -152,7 +164,6 @@ CREATE TABLE IF NOT EXISTS `moddb`.`release` (
   `modid` INT NULL,
   `modidstr` VARCHAR(255) NULL,
   `modversion` VARCHAR(50) NULL,
-  `detectedmodidstr` VARCHAR(255) NULL,
   `releasedate` VARCHAR(255) NULL,
   `inprogress` TINYINT NULL,
   `detailtext` TEXT NULL,
@@ -215,7 +226,6 @@ CREATE TABLE IF NOT EXISTS `moddb`.`mod` (
   `assetid` INT NULL,
   `urlalias` VARCHAR(45) NULL,
   `logofileid` INT NULL,
-  `logofilename` VARCHAR(255) NULL,
   `homepageurl` VARCHAR(255) NULL,
   `sourcecodeurl` VARCHAR(255) NULL,
   `trailervideourl` VARCHAR(255) NULL,
@@ -338,7 +348,6 @@ CREATE TABLE IF NOT EXISTS `moddb`.`majorversion` (
   PRIMARY KEY (`majorversionid`))
 ENGINE = InnoDB;
 
-
 -- -----------------------------------------------------
 -- Table `moddb`.`follow`
 -- -----------------------------------------------------
@@ -361,8 +370,11 @@ CREATE TABLE IF NOT EXISTS `teammembers` (
     `transferownership` TINYINT(1) NULL DEFAULT '0',
     `created` DATETIME NULL DEFAULT NULL,
     PRIMARY KEY (`teammemberid`),
-    INDEX `tempuploadtoken` (`userid` ASC) VISIBLE,
-    INDEX `modid` (`modid` ASC) VISIBLE
+    INDEX `modid_userid` (`modid` ASC, `userid` ASC),  
+    INDEX `accepted` (`accepted` ASC),            
+    INDEX `transferownership` (`transferownership` ASC),  
+    INDEX `userid` (`userid` ASC),                
+    INDEX `modid` (`modid` ASC) 
 ) ENGINE = InnoDB;
 
 SET SQL_MODE=@OLD_SQL_MODE;
@@ -390,7 +402,7 @@ INSERT INTO `moddb`.`assettype` (`assettypeid`, `maxfiles`, `maxfilesizekb`, `al
 
 COMMIT;
 
-
+ 
 -- -----------------------------------------------------
 -- Data for table `moddb`.`language`
 -- -----------------------------------------------------
@@ -412,7 +424,6 @@ INSERT INTO `moddb`.`tagtype` (`tagtypeid`, `code`, `name`, `text`, `created`, `
 INSERT INTO `moddb`.`tagtype` (`tagtypeid`, `code`, `name`, `text`, `created`, `lastmodified`) VALUES (2, 'category', 'Category', NULL, NULL, NULL);
 
 COMMIT;
-
 
 -- -----------------------------------------------------
 -- Data for table `moddb`.`role`

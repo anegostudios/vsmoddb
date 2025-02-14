@@ -33,7 +33,7 @@ class Asset {
 		
 		update($tablename, "{$tablename}id", array('assetid' => $assetid));
 		
-		return self::loadFromDB($objectid);
+		return self::loadFromDB($objectid); //TODO(Rennorb) @cleanup @explain: objectid is not defined, what's going on here.
 	}
 	
 	
@@ -43,7 +43,7 @@ class Asset {
 		$asset = new $classname($id);
 		$asset->loadData();
 		
-		return $object;
+		return $object; //TODO(Rennorb) @cleanup @explain: objectid is not defined, what's going on here.
 	}
 	
 	private function loadData() {

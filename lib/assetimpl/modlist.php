@@ -95,9 +95,14 @@ class ModList extends AssetList {
 		
 		$this->loadFilters();	
 		
+		//TODO(Rennorb) @cleanup
+		// I was not able to find a better solution for this, without rewriting the whole "assetcontroller" inheritance system.
+		// This is ugly, but should not incur any noticable overhead.
+		$logopathselector = $this->tablename === 'mod' ? 'logofile.cdnpath as logocdnpath,' : '';
+		$logopathjoiner   = $this->tablename === 'mod' ? 'left join file as logofile on `mod`.logofileid = logofile.fileid' : '';
+
 		$selfuserid = -1;
 		if (!empty($user)) $selfuserid = $user['userid'];
-		
 		$sql = "
 			select 
 				asset.createdbyuserid,
@@ -110,6 +115,7 @@ class ModList extends AssetList {
 				asset.lastmodified,
 				asset.tagscached,
 				`{$this->tablename}`.*,
+				{$logopathselector}
 				user.name as `from`,
 				status.code as statuscode,
 				status.name as statusname{$this->extracolumns},
@@ -120,6 +126,7 @@ class ModList extends AssetList {
 				left join user on asset.createdbyuserid = user.userid
 				left join status on asset.statusid = status.statusid
 				left join `follow` on `mod`.modid = follow.modid and follow.userid = {$selfuserid}
+				{$logopathjoiner}
 			" . (count($this->wheresql) ? "where " . implode(" and ", $this->wheresql) : "") . "
 			order by {$this->orderby}
 		";

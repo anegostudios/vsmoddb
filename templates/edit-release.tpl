@@ -83,7 +83,7 @@
 		{/if}
 
 		<div style="clear:both;"></div>
-		<h3>Files{if (count($files) > 0)}<span style="float:right; font-size:70%;">(<a href="/download?assetid={$asset['assetid']}">download all as zip</a>)</span>{/if}</h3>
+		<h3>Files{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}<span style="float:right; font-size:70%;">(<a href="/download?assetid={$asset['assetid']}">download all as zip</a>)</span>{/if}</h3>
 
 		{include file="edit-asset-files.tpl" formupload="1"}
 		

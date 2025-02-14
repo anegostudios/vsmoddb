@@ -86,14 +86,14 @@
 		<div class="files">
 			{foreach from=$files item=file}
 				<div class="file">
-					{if $file['thumbnailfilename']}
-						<a data-fancybox="gallery" href="/files/asset/{$asset['assetid']}/{$file['filename']}" class="editbox">
-							<img src="/files/asset/{$asset['assetid']}/{$file['thumbnailfilename']}"/>
+					{if $file['hasthumbnail']}
+						<a data-fancybox="gallery" href="{formatCdnUrl($file)}" class="editbox">
+							<img src="{formatCdnUrl($file, '_55_60')}"/>
 							<div class="filename">{$file["filename"]}</div><br>
 							<div class="uploaddate">{$file["created"]}</div>
 						</a>
 					{else}
-						<a href="/files/asset/{$asset['assetid']}/{$file['filename']}" class="editbox">
+						<a href="{formatCdnUrl($file)}" class="editbox">
 							<div class="fi fi-{$file['ending']}">
 								<div class="fi-content">{$file['ending']}</div>
 							</div>
@@ -102,7 +102,7 @@
 						</a>
 					{/if}
 					<a href="" class="delete" data-fileid="{$file['fileid']}"></a>
-					<a href="/download?fileid={$file['fileid']}" class="download">&#11123;</a>
+					<a href="{formatDownloadUrl($file)}" class="download">&#11123;</a>
 				</div>
 			{/foreach}
 		</div>
