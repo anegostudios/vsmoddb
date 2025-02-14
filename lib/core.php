@@ -5,8 +5,6 @@ header('X-Frame-Options: DENY');
 global $config, $con, $view;
 error_reporting(E_ALL & ~E_DEPRECATED);
 
-include($config["basepath"] . "lib/config.php");
-
 include($config["basepath"] . "lib/ErrorHandler.php");
 ErrorHandler::setupErrorHandling();
 
@@ -36,6 +34,7 @@ $con = createADOConnection($config);
 $view = new View();
 
 $view->assign("fileuploadmaxsize", round(file_upload_max_size() / 1024 / 1024, 1));
+$view->assign("assetserver", $config['assetserver']);
 
 $ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;
 
@@ -101,7 +100,7 @@ function dump_die($var)
 
 function endsWith($string, $part) //TODO(Rennorb)  @perf: use str_ends_with() instead, if we can get a newer version of php
 {
-	return preg_match("/(" . preg_quote($part) . ")$/", $string);
+	return mb_strlen($string) >= mb_strlen($part) && mb_substr($string, mb_strlen($string) - mb_strlen($part)) == $part;
 }
 
 function startsWith($string, $part) //TODO(Rennorb)  @perf: use str_starts_with() instead, if we can get a newer version of php
@@ -484,8 +483,10 @@ function sendPostData($path, $data, $remoteurl = null)
 }
 
 
-
-
+/**
+ * @param string $filepath
+ * @return array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:string}
+ */
 function getModInfo($filepath)
 {
 	$returncode = null;
@@ -507,7 +508,7 @@ function getModInfo($filepath)
 	// allow uploading files when DEBUG is set AND mono/windows is unavailable
 	if (isset($error)) {
 		if (DEBUG === 1) {
-			return array("modparse" => "ok", "modid" => "ExampleMod", "modversion" => "1.0.0");
+			return array("modparse" => "ok", "modid" => $_POST['modidstr'] ?? "ExampleMod", "modversion" => $_POST['modversion'] ?? "1.0.0");
 		}
 		return $error;
 	}
@@ -554,6 +555,47 @@ function getUserByHash($hashcode, $con)
 	return $con->getRow("select * from user where sha2(concat(user.userid, user.created), 512) like ?", array($hashcode . "%")); //TODO(Rennorb) @perf @correctness
 }
 
+/**
+ * Splits of the last extension from a path, gives back the whole path without extension and the extension.
+ * More light-weight than pathinfo.
+ * 
+ * @param string &$out_noext
+ * @param string &$out_ext
+ * @param string $path
+ */
+function splitOffExtension($path, &$out_noext, &$out_ext)
+{
+	$lastdot = strrpos($path, '.');
+	if($lastdot === false) {
+		$out_noext = $path;
+		$out_ext = '';
+	}
 
-// Loads after other function deffinitions so we can use them during global init.
+	$out_noext = substr($path, 0, $lastdot);
+	$out_ext = substr($path, $lastdot + 1);
+}
+
+
+// Loads after other function deffinitions so we can use them during global userstate init.
 include($config["basepath"] . "lib/user.php");
+
+
+if(CDN == 'bunny') {
+	include($config["basepath"] . "lib/cdn/bunny.php");
+}
+else {
+	include($config["basepath"] . "lib/cdn/none.php");
+}
+
+
+/**
+ * Formats a download tracking link to the file.
+ * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser.
+ * 
+ * @param array{filename:string, fileid:int} $file
+ * @return string
+ */
+function formatDownloadUrl($file)
+{
+	return "/download/{$file['fileid']}/{$file['filename']}";
+}

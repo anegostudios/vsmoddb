@@ -32,7 +32,7 @@ $(document).ready(function() {
 		if (confirm("Really delete " + filename +"?")) {
 			$(".okmessagepopup").html(filename + " deleted.");
 			$.post("/edit-deletefile", { fileid: fileid, at: actiontoken }).done(function() {
-				showOkMessage();
+				//showOkMessage(); //TODO(Rennorb) @cleanup: this fn is not defined
 				$self.parent().remove();
 			});
 		}
@@ -159,6 +159,15 @@ $(document).ready(function() {
 			$(".uploadprogress", $elem).hide();
 			$elem.append("<a href=\"#\" class=\"delete\" data-fileid=\""+response.fileid+"\"></a>");
 			$(".uploaddate", $elem).html(response.uploaddate);
+
+			const logo_picker_el = document.querySelector('select[name="logofileid"]');
+			if(logo_picker_el) {
+				const opt = document.createElement('option');
+				opt.value = response.fileid;
+				opt.textContent = file.name;
+				logo_picker_el.append(opt);
+				$(logo_picker_el).trigger("chosen:updated");
+			}
 			
 			onUploadFinished(response);
 		},

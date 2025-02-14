@@ -1,28 +1,51 @@
 <?php
 header_remove('X-Powered-By');
 
+$config = array();
+$config["basepath"] = getcwd() . '/';
+include("lib/config.php");
+
+// The none cdn does request handling for assets directly, so it needs ty bypass this check.
+if(CDN === 'none') include("lib/core.php");
+
 if (!empty($_SERVER['HTTP_ACCEPT']) && $_SERVER['REQUEST_METHOD'] == "GET") {
 	if(!strstr($_SERVER['HTTP_ACCEPT'], "text/html") && !strstr($_SERVER['HTTP_ACCEPT'], "application/json") && $_SERVER['HTTP_ACCEPT'] != "*/*") exit("not an image");
 }
 
-$config = array();
-$config["basepath"] = getcwd() . '/';
+// This is the more desirable point to initialize.
+if(CDN !== 'none') include("lib/core.php");
 
-include("lib/core.php");
+
 
 $urlpath = getURLPath();
 $target = explode("?", $urlpath)[0];
 
 $view->assign("urltarget", $target);
 
-if (preg_match("/[^-\/\w+]/", $target)) $target="dashboard";
+if (preg_match("/[^-\/\w+\.]/", $target)) $target="dashboard";
 if (empty($target)) {
 	$target = "home";
 }
 
 $urlparts = explode("/", $target);
 
-$typewhitelist = array("terms", "api", "updateversiontags", "files", "show", "download", "edit", "edit-comment", "delete-comment", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist", "get-usernames", "notification", "set-follow", "moderate");
+if ($urlparts[0] == "download" && count($urlparts) >= 2) {
+	include("download.php");
+	exit();
+}
+
+if ($urlparts[0] == "api") {
+	array_shift($urlparts);
+	include("api.php");
+	exit();
+}
+
+if ($urlparts[0] == "notification") {
+	include("notification.php");
+	exit();
+}
+
+$typewhitelist = array("terms", "updateversiontags", "files", "show", "edit", "edit-comment", "delete-comment", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist", "get-usernames", "set-follow", "moderate");
 
 if (!in_array($urlparts[0], $typewhitelist)) {
 	$modid = $con->getOne("select assetid from `mod` where urlalias=?", array($urlparts[0]));
@@ -33,16 +56,6 @@ if (!in_array($urlparts[0], $typewhitelist)) {
 		$view->display("404.tpl");
 		exit();
 	}
-}
-
-if ($urlparts[0] == "api") {
-	array_shift($urlparts);
-	include("api.php");
-	exit();
-}
-if ($urlparts[0] == "notification") {
-	include("notification.php");
-	exit();
 }
 
 // Try to compose filename from the first two segemnts of the url:

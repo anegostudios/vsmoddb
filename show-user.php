@@ -19,11 +19,13 @@ $sql = "
 			select 
 				asset.*, 
 				`mod`.*,
+				logofile.cdnpath as logocdnpath,
 				status.code as statuscode
 			from 
 				asset 
 				join `mod` on asset.assetid = `mod`.assetid
 				left join status on asset.statusid = status.statusid
+				left join file as logofile on mod.logofileid = logofile.fileid
 			where
 				asset.createdbyuserid = ?
 			order by asset.created desc

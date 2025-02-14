@@ -95,22 +95,41 @@ class ModEditor extends AssetEditor {
 	}
 	
 	function generateLogoImage($logofileid) {
-		global $con, $config;
+		global $con, $user;
 		
 		$file = $con->getRow("select * from file where fileid=?", array($logofileid));
 		if (empty($file)) return;
-		$srcpath = $config['basepath'] . "files/asset/" . $this->assetid . "/" . $file['filename'];
-		
-		$filetype = pathinfo($file['filename'], PATHINFO_EXTENSION);
-		
-		$logofilename = null;
-		
-		if (file_exists($srcpath)) {
-			$logofilename  = "logo." . $filetype;
-			$destpath = $config['basepath'] . "files/asset/" . $this->assetid . "/" . $logofilename ;
-			$filename = copyImageResized($srcpath, 480, 320, true, 'file', '', $destpath);
+
+		$locallogofilename = tempnam(sys_get_temp_dir(), '');
+
+		// Since we don't have the files locally anymore we unfortunately have to do this stunt and re-download the image thats supposed to be used as a logo.
+		// Upload happens asynchronously during drag-n-drop, so when the user saves the asset the files already don't exist locally anymore.
+		// Since changing the logo is not a action repeated very often this is ok for now, especially since the alternative would be to keep files around, but not abandon them if hte user just navigates away from the asset editor.
+
+		$localpath = tempnam(sys_get_temp_dir(), '');
+		$originalfile = @file_get_contents(formatCdnUrl($file));
+		if(!file_put_contents($localpath, $originalfile)) {
+			unlink($localpath);
+			return array("status" => "error", "errormessage" => 'The logo file seems to be gone.');
 		}
-		
-		$con->Execute("update `mod` set logofilename=? where assetid=?", array($logofilename, $this->assetid));
+
+		$resizeresult = copyImageResized($localpath, 480, 320, true, 'file', '', $locallogofilename);
+		if(!$resizeresult) {
+			unlink($localpath);
+			return array("status" => "error", "errormessage" => 'Failed to resize image for thumbnail.');
+		}
+
+		splitOffExtension($file['cdnpath'], $cdnbasepath, $ext);
+
+		$cdnlogopath = "{$cdnbasepath}_480_320.{$ext}";
+		$uploadresult = uploadToCdn($locallogofilename, $cdnlogopath);
+		unlink($locallogofilename);
+		if($uploadresult['error']) {
+			unlink($localpath);
+			return array("status" => "error", "errormessage" => 'CDN Error: '.$uploadresult['error']);
+		}
+
+		$con->Execute("insert into file (userid, cdnpath, created) VALUES (?, ?, NOW())", array($user['userid'], $cdnlogopath));
+		$con->Execute("update `mod` set logofileid=? where assetid=?", array($con->insert_ID(), $this->assetid));
 	}
 }

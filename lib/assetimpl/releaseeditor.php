@@ -8,6 +8,11 @@ class ReleaseEditor extends AssetEditor {
 	
 	var $modid;
 
+	var $moddtype;
+	var $releaseIdDupl;
+	var $modAssetIdDupl;
+	var $inUseByUser;
+
 	function __construct() {
 		$this->editTemplateFile = "edit-release";
 		
@@ -90,57 +95,46 @@ class ReleaseEditor extends AssetEditor {
 		}
 	}
 	
+	/**
+	 * @return 'invalidfile'|'missingfile'|'missingmodinfo'|'invalidmodid'|'invalidmodversion'|'duplicateid'|'modidinuse'|'duplicatemod'|'onlyonefile'|'savednew'|'saved'|'error'
+	 */
 	function saveFromBrowser() {
 		global $con, $user, $view;
 		
 		$modid = null;
-		$file=null;
+		$file  = null;
 		$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
 
 
+		//TODO(Rennorb) @cleanup: This only exists for the case that the user used the "Browse" button instead of drag and drop, because that doesn't immediately upload the file. 
 		if (!empty($_FILES["newfile"]) && $_FILES["newfile"]["error"] != 4) {
 			if ($this->assetid && $con->getRow("select * from file where assetid=?", array($this->assetid))) return "onlyonefile";
 		
-			$this->fileuploadstatus = processFileUpload($_FILES["newfile"], $assettypeid, 0);
+			$this->fileuploadstatus = processFileUpload($_FILES["newfile"], $assettypeid, $this->assetid ?? 0);
 			
 			if ($this->fileuploadstatus["status"] != "ok") {
 				return "invalidfile";
 			}
-			
-			if ($this->assetid) {
-				update("file", $this->fileuploadstatus['fileid'], array("assetid" => $this->assetid));
-			}
 		}
-	
-		if ($this->assetid) $file = $con->getRow("select * from file where assetid=?", array($this->assetid));
-		if (!$file) $file = $con->getRow("select * from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
+
+		$sql_join_with_modpeek = "left join modpeek_result mpr on mpr.fileid = file.fileid";
+		if ($this->assetid) $file = $con->getRow("select * from file $sql_join_with_modpeek where assetid=?", array($this->assetid));
+		if (!$file) $file = $con->getRow("select * from file $sql_join_with_modpeek where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
 		if (!$file) return "missingfile";
 				
-		if ($this->assetid) {
-			$filepath = "files/asset/{$this->assetid}/{$file['filename']}";
-		} else {
-			$filepath = "tmp/{$user['userid']}/{$file['filename']}";
-		}
-		
 		if ($this->moddtype == "mod") {
-			$modinfo = getModInfo($filepath);
-				
-			if ($modinfo['modparse'] == 'ok') {
-				$modidstr = $modinfo['modid']; 
-				$modversion = $modinfo['modversion'];
-			} else {
+
+			if(!empty($file['detectedmodidstr']) && !empty($file['detectedmodversion'])) {
+				$modidstr = $file['detectedmodidstr'];
+				$modversion = $file['detectedmodversion'];
+			}
+			else {
 				$view->assign("allowinfoedit", true);
 
-				if ($this->assetid && (empty($_POST['modidstr']) || empty($_POST['modversion']))) {
-					$release = $con->getRow("select * from `release` where assetid=?", array($this->assetid));
-					$modidstr = $release['modidstr'];
-					$modversion = $release['modversion'];
-				} else {
+				if (!empty($_POST['modidstr']) && !empty($_POST['modversion'])) {
 					$modidstr = $_POST['modidstr'];
 					$modversion = $_POST['modversion'];
-				}
-				
-				if (empty($modidstr) || empty($modversion)) {
+				} else {
 					return 'missingmodinfo';
 				}
 			}
@@ -174,6 +168,7 @@ class ReleaseEditor extends AssetEditor {
 				return 'duplicatemod';
 			}
 			
+			// Reserve special mod ids
 			if ($modidstr == "game" || $modidstr == "creative" || $modidstr == "survival") {
 				$this->inUseByUser = array("userid"=>1, "name" => "the creators of this very game - gasp!");
 				return 'modidinuse';
@@ -185,25 +180,13 @@ class ReleaseEditor extends AssetEditor {
 		if ($status == 'saved' || $status == 'savednew') {
 			$releaseid = $con->getOne("select releaseid from `release` where assetid=?", array($this->assetid));
 			
-			if ($modinfo['modparse'] == 'ok') {
+			if (!empty($file['detectedmodidstr']) && !empty($file['detectedmodversion'])) {
 				update("release", $releaseid, array("detectedmodidstr" => $modidstr, "modidstr" => $modidstr, "modversion" => $modversion));
 			} else {
 				update("release", $releaseid, array("detectedmodidstr" => null));
 			}
 		}
-		
-		if ($status == "invalidfile" || $status == "onlyonefile") {
-			foreach ($this->columns as $column) {
-				$col = $column["code"];
-				$val = null;
-				if (!empty($_POST[$col])) {
-					$this->asset[$col] = $_POST[$col];
-				}
-			}
-		
-			$view->assign("errormessage", $this->fileuploadstatus["errormessage"]);
-		}
-		
+
 		$modid = $con->getOne("select modid from `release` where assetid=?", array($this->assetid));
 		
 		if ($status == 'savednew') {

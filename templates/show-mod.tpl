@@ -3,10 +3,10 @@
 <meta content="{$asset['name']}" property="og:title" />
 <meta content="{strip_tags($assetraw['text'])}" property="og:description" />
 <meta name="twitter:card" content="summary_large_image">
-{if (empty($asset['logofilename']))}
+{if (empty($asset['logourl']))}
 <meta content="/web/img/mod-default.png" property="og:image" />
 {else}
-<meta content="/files/asset/{$asset['assetid']}/{$asset['logofilename']}" property="og:image" />
+<meta content="{$asset['logourl']}" property="og:image" />
 {/if}
 <meta content="#91A357" data-react-helmet="true" name="theme-color" />
 {/capture}
@@ -80,7 +80,7 @@
 					<a href="{$asset['trailervideourl']}">Trailer Video</a>
 				{/if}
 				{foreach from=$files item=file}
-					<img src="/files/asset/{$asset['assetid']}/{$file['filename']}">
+					<img src="{formatCdnUrl($file)}">
 				{/foreach}
 			</div>
 			
@@ -107,7 +107,7 @@
 						{if count($releases[0]['tags']) > 0}<span class="text-weak">Latest file for {$releases[0]['tags'][count($releases[0]['tags'])-1]['name']}:</span><br>
 						{else}<span class="text-weak">Latest version:</span><br>{/if}
 
-						<a class="downloadbutton" href="/download?fileid={$releases[0]['file']['fileid']}">{$releases[0]['file']['filename']}</a>
+						<a class="downloadbutton" href="{formatDownloadUrl($releases[0]['file'])}">{$releases[0]['file']['filename']}</a>
 						{if !empty($releases[0]['modidstr'])}<a style="padding-left:10px;" href="vintagestorymodinstall://{$releases[0]['modidstr']}@{$releases[0]['modversion']}"><abbr title="Works only on Windows and v1.18.0-rc.1 or newer">1-click install</abbr></a>{/if}
 					</p>
 				{/if}
@@ -168,7 +168,7 @@
 							<td>{if !empty($release['file'])}{intval($release['file']['downloads'])}{/if}</td>
 							<td>{fancyDate($release['created'])}</td>
 							<td><a href="#showchangelog">Show</a></td>
-							<td>{if !empty($release['file'])}<a class="downloadbutton" href="/download?fileid={$release['file']['fileid']}">{$release['file']['filename']}</a>{/if}</td>
+							<td>{if !empty($release['file'])}<a class="downloadbutton" href="{formatDownloadUrl($release['file'])}">{$release['file']['filename']}</a>{/if}</td>
 							<td>{if !empty($release['modidstr'])}<a href="vintagestorymodinstall://{$release['modidstr']}@{$release['modversion']}">Install now</a>{/if}</td>
 						</tr>
 						{assign var="first" value="1"}

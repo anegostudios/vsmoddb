@@ -31,7 +31,7 @@ if ($sessiontoken) {
 
 if ($user) {
 	$user['banneduntil'] = parseSqlDateTime($user['banneduntil']);
-	$user['isbanned'] = isCurrentlyBanned($user); //TODO(Rennorb) @cleanup: move to sql? 
+	$user['isbanned'] = isCurrentlyBanned($user);
 	loadNotifications();
 
 	$view->assign("user", $user);

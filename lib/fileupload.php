@@ -1,7 +1,16 @@
 <?php
 
+/**
+ * @param array $file
+ * @param int   $assettypeid
+ * @param int   $parentassetid
+ * @return array{status:'error', errormessage:string}|(
+ *   array{status:'ok', fileid:int, thumbnailfilepath:string, filename:string, uploaddate:string, releaseid?:int}
+ *  &(array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:string})
+ * )
+ */
 function processFileUpload($file, $assettypeid, $parentassetid) {
-	global $con, $user;
+	global $con, $user, $config;
 	
 	switch($file['error']) {
 		case 0: break;
@@ -19,7 +28,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	}
 
 	if (!$file["tmp_name"]) return array("status" =>"error", "errormessage" => "unknown error");
-	
+
 	$assettype = $con->getRow("
 		select
 			maxfiles, 
@@ -46,8 +55,8 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	if ($file['size'] / 1024 > $assettype['maxfilesizekb']) {
 		return array("status" => "error", "errormessage" => 'File too large! Limit is ' . $assettype['maxfilesizekb'] . " KB");
 	}
-	
-	$ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+	splitOffExtension($file["name"], $filebasename, $ext);
 	$exts = explode("|", $assettype["allowedfiletypes"]);
 	
 	if (!in_array($ext, $exts)) {
@@ -63,111 +72,70 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	if ($quantityfiles + 1 > $assettype['maxfiles']) {
 		return array("status" => "error", "errormessage" => 'Too many files! The limit is ' . $assettype['maxfiles'] . " for this asset");
 	}
-	
-	$ismod = $assettype['code'] == 'release';
-	
-	if ($parentassetid) {
-		return uploadFile($file, $parentassetid, $ismod);
-	} else {
-		return uploadFileTemporary($file, $assettypeid, $ismod);
-	}
-}
 
-function uploadFileTemporary($file, $assettypeid, $ismod) {
-	global $con, $user;
-	
-	$dir = "tmp/" . $user['userid']."/";	
-	if (!is_dir($dir)) {
-		mkdir($dir, 0777, true);
-	}
-	
-	$filename = urldecode($file["name"]);
-	move_uploaded_file(
-		$file["tmp_name"], 
-		$dir . $filename
-	);
-	
-	$data = array("filename" => $filename, "assettypeid" => $assettypeid, "userid" => $user['userid']);
 
-	list($width, $height, $type, $attr) = getimagesize($dir . $filename);
-	
+	$localpath = $file["tmp_name"];
+	$cdnbasepath = generateCdnFileBasenameWithPath($user['userid'], $localpath, $filebasename);
+	$cdnfilepath = "{$cdnbasepath}.{$ext}";
+
+	$data = $parentassetid
+		? array("filename" => $file['name'], "cdnpath" => $cdnfilepath, "assetid" => $parentassetid)
+		: array("filename" => $file["name"], "cdnpath" => $cdnfilepath, "assettypeid" => $assettypeid, "userid" => $user['userid']);
+
+	list($width, $height, $type, $attr) = getimagesize($file["tmp_name"]);
 	if ($type == IMAGETYPE_GIF || $type == IMAGETYPE_JPEG || $type == IMAGETYPE_PNG) {
-		
 		if ($width > 1920 || $height > 1080) {
+			unlink($localpath);
 			return array("status" => "error", "errormessage" => 'Image too large! Limit is 1920x1080 pixels');
-			unlink($dir . $filename);
 		}
-	
-		$filename = copyImageResized($dir . $filename, 55, 60);
-		$data["thumbnailfilename"] = basename($filename);
+
+		$localthumbnailfilename = tempnam(sys_get_temp_dir(), '');
+
+		$resizeresult = copyImageResized($localpath, 55, 60, true, 'file', '', $localthumbnailfilename);
+		if(!$resizeresult) {
+			@unlink($localthumbnailfilename);
+			return array("status" => "error", "errormessage" => 'Failed to resize image for thumbnail.');
+		}
+
+		$cdnthumbnailpath = "{$cdnbasepath}_55_60.{$ext}";
+		$uploadresult = uploadToCdn($localthumbnailfilename, $cdnthumbnailpath);
+		unlink($localthumbnailfilename);
+		if($uploadresult['error']) {
+			unlink($localpath);
+			return array("status" => "error", "errormessage" => 'CDN Error: '.$uploadresult['error']);
+		}
+
+		$data['hasthumbnail'] = true;
+	}
+
+	// Do this upload after analyzing the image, that way we don't needlessly upload files should resizing fail.
+	$uploadresult = uploadToCdn($localpath, $cdnfilepath);
+	if($uploadresult['error']) {
+		unlink($localpath);
+		return array("status" => "error", "errormessage" => 'CDN Error: '.$uploadresult['error']);
 	}
 	
 	
 	$fileid = insert("file");
 	update("file", $fileid, $data);
+
+	if($parentassetid) logAssetChanges(array("Uploaded file '{$file['name']}'"), $parentassetid);
 		
 	$data = array(
 		"status" => "ok",
 		"fileid" => $fileid,
-		"thumbnailfilepath" => empty($data["thumbnailfilename"]) ? null : "/" . $dir . $data["thumbnailfilename"],
-		"filename" => $filename,
+		"thumbnailfilepath" => isset($cdnthumbnailpath) ? formatCdnUrlFromCdnPath($cdnthumbnailpath) : null,
+		"filename" => $file["name"],
 		"uploaddate" => date("M jS Y, H:i:s")
 	);
 
-	if ($ismod) {
-		$info = getModInfo($dir . $filename);
-		$data = array_merge($data, $info);
-	}
+	if ($assettype['code'] == 'release') {
+		$info = getModInfo($localpath);
 
-	return $data;
-}
-
-
-function uploadFile($file, $assetid, $ismod) {
-	global $con, $user;
-	
-	$dir = "files/asset/{$assetid}/";
-	if (!is_dir($dir)) {
-		mkdir($dir, 0755, true);
-	}
-	
-	$filename = urldecode($file["name"]);
-	
-	move_uploaded_file(
-		$file["tmp_name"], 
-		$dir . $filename
-	);
-	
-	$data = array("assetid" => $assetid, "filename" => $filename);
-	
-
-	
-	list($width, $height, $type, $attr) = getimagesize($dir . $filename);
-	if ($type == IMAGETYPE_GIF || $type == IMAGETYPE_JPEG || $type == IMAGETYPE_PNG) {
-		if ($width > 1920 || $height > 1080) {
-			return array("status" => "error", "errormessage" => 'Image too large! Limit is 1920x1080 pixels');
-			unlink($dir . $filename);
+		if($info['modparse'] === 'ok') {
+			$con->Execute('insert into modpeek_result (fileid, detectedmodidstr, detectedmodversion) VALUES (?,?,?)', [$fileid, $info['modid'], $info['modversion']]);
 		}
-	
-		$filename = copyImageResized($dir . $filename, 55, 60);
-		$data["thumbnailfilename"] = basename($filename);
-	}
-	
-	$fileid = insert("file");
-	update("file", $fileid, $data);
-	
-	logAssetChanges(array("Uploaded file '{$filename}'"), $assetid);
-		
-	$data = array(
-		"status" => "ok",
-		"fileid" => $fileid,
-		"thumbnailfilepath" => empty($data["thumbnailfilename"]) ? null : "/" . $dir . $data["thumbnailfilename"],
-		"filename" => $filename,
-		"uploaddate" => date("M jS Y, H:i:s")
-	);
 
-	if ($ismod) {
-		$info = getModInfo($dir . $filename);
 		$data = array_merge($data, $info);
 	}
 

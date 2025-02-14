@@ -29,7 +29,9 @@
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/skin.min.css" as="style">
 	<link rel="preload" href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
 	<link rel="preload" href="/web/css/editor_content.css" as="style">
-	
+
+	{if isset($assetserver) && startsWith($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
+
 	<script type="text/javascript" src="/web/js/jquery-1.11.1.min.js"></script>
 	<script type="text/javascript" src="/web/js/chosen/chosen.jquery.min.js"></script>
 	{if isset($head)}{$head}{/if}

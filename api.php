@@ -1,8 +1,6 @@
 <?php
 header('Content-Type: application/json');
 
-//$basefileurl = "http://mods.vintagestory.at/files/";
-
 if (empty($urlparts)) {
 	fail("404");
 }
@@ -63,16 +61,17 @@ switch ($action) {
 
 	case "comments":
 		$wheresql = '';
-		$wherevalue = array();
 		$limit = 'limit 100';
 
 		if (intval($urlparts[1] ?? 0) > 0) {
-			$wheresql = 'where assetid=?';
-			$wherevalue = array(intval($urlparts[1]));
+			$wheresql = 'AND assetid='.intval($urlparts[1]);
 			$limit = '';
 		}
 
-		$rows = $con->getAll("select commentid, assetid, userid, text, created, lastmodified from comment $wheresql order by lastmodified DESC $limit", $wherevalue);
+		$rows = $con->getAll("
+			select commentid, assetid, userid, text, created, lastmodified 
+			from comment where !deleted $wheresql 
+			order by lastmodified DESC $limit");
 		$comments = array();
 		foreach ($rows as $row) {
 			$comments[] = array(
@@ -161,11 +160,14 @@ function listMod($modid)
 			asset.text,
 			asset.tagscached,
 			user.name as author,
-			`mod`.*
+			`mod`.*,
+			logofile.cdnpath as logocdnpath,
+			logofile.filename as logofilename
 		from 
 			`mod` 
 			join asset on (`mod`.assetid = asset.assetid)
 			join user on (`asset`.createdbyuserid = user.userid)
+			left join file as logofile on (`mod`.logofileid = file.fileid)
 		where
 			asset.statusid=2
 			and modid=?
@@ -190,15 +192,15 @@ function listMod($modid)
 		$file = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
 
 		$releases[] = array(
-			"releaseid" => intval($release['releaseid']),
-			"mainfile" => empty($file) ? "" : "files/asset/{$file['assetid']}/" . $file["filename"],
-			"filename" => empty($file) ? 0 : $file["filename"],
-			"fileid" => isset($file['fileid']) ? intval($file['fileid']) : null,
-			"downloads" => empty($file) ? 0 : intval($file["downloads"]),
-			"tags" => $tags,
-			"modidstr" => $release['modidstr'],
+			"releaseid"  => intval($release['releaseid']),
+			"mainfile"   => empty($file) ? "" : formatCdnUrl($file),
+			"filename"   => empty($file) ? 0 : $file["filename"],
+			"fileid"     => isset($file['fileid']) ? intval($file['fileid']) : null,
+			"downloads"  => empty($file) ? 0 : intval($file["downloads"]),
+			"tags"       => $tags,
+			"modidstr"   => $release['modidstr'],
 			"modversion" => $release['modversion'],
-			"created" => $release["created"]
+			"created"    => $release["created"]
 		);
 	}
 
@@ -207,7 +209,8 @@ function listMod($modid)
 			fileid,
 			assetid,
 			filename,
-			thumbnailfilename,
+			hasthumbnail,
+			cdnpath,
 			created
 		from 
 			`file` 
@@ -217,42 +220,43 @@ function listMod($modid)
 	$screenshots = array();
 	foreach ($srows as $screenshot) {
 		$screenshots[] = array(
-			"fileid" => intval($screenshot["fileid"]),
-			"mainfile" => "files/asset/{$screenshot["assetid"]}/" . $screenshot["filename"],
-			"filename" => $screenshot["filename"],
-			"thumbnailfilename" => $screenshot["thumbnailfilename"],
-			"created" => $screenshot["created"]
+			"fileid"            => intval($screenshot["fileid"]),
+			"mainfile"          => formatCdnUrl($screenshot),
+			"filename"          => $screenshot["filename"],
+			"thumbnailfilename" => $screenshot["hasthumbnail"] ? formatCdnUrl($screenshot, '_55_60') : null,
+			"created"           => $screenshot["created"]
 		);
 	}
 
+	$logourl = $row['logocdnpath'] ? formatCdnUrlFromCdnPath($row['logocdnpath']) : null;
 	$mod = array(
-		"modid" => intval($row["modid"]),
-		"assetid" => intval($row["assetid"]),
-		"name" => $row['name'],
-		"text" => $row['text'],
-		"author" => $row['author'],
-		"urlalias" => $row['urlalias'],
-		"logofilename" => $row['logofilename'] ? "files/asset/{$row['assetid']}/" . $row['logofilename'] : null, // deprecated
-		"logofile" => $row['logofilename'] ? "files/asset/{$row['assetid']}/" . $row['logofilename'] : null,
-		"homepageurl" => $row['homepageurl'],
-		"sourcecodeurl" => $row['sourcecodeurl'],
+		"modid"           => intval($row["modid"]),
+		"assetid"         => intval($row["assetid"]),
+		"name"            => $row['name'],
+		"text"            => $row['text'],
+		"author"          => $row['author'],
+		"urlalias"        => $row['urlalias'],
+		"logofilename"    => $logourl, // deprecated //NOTE(Rennorb): This is not the filename, but just the link again.
+		"logofile"        => $logourl,
+		"homepageurl"     => $row['homepageurl'],
+		"sourcecodeurl"   => $row['sourcecodeurl'],
 		"trailervideourl" => $row['trailervideourl'],
 		"issuetrackerurl" => $row['issuetrackerurl'],
-		"wikiurl" => $row['wikiurl'],
-		"downloads" => intval($row['downloads']),
-		"follows" => intval($row['follows']),
-		"trendingpoints" => intval($row['trendingpoints']),
-		"comments" => intval($row['comments']),
-		"side" => $row['side'],
-		"type" => $row['type'],
-		"created" => $row['created'],
-		"lastmodified" => $row['lastmodified'],
-		"tags" => resolveTags($row['tagscached']),
-		"releases" => $releases,
-		"screenshots" => $screenshots
+		"wikiurl"         => $row['wikiurl'],
+		"downloads"       => intval($row['downloads']),
+		"follows"         => intval($row['follows']),
+		"trendingpoints"  => intval($row['trendingpoints']),
+		"comments"        => intval($row['comments']),
+		"side"            => $row['side'],
+		"type"            => $row['type'],
+		"created"         => $row['created'],
+		"lastmodified"    => $row['lastmodified'],
+		"tags"            => resolveTags($row['tagscached']),
+		"releases"        => $releases,
+		"screenshots"     => $screenshots
 	);
 
-	good(array("statuscode" => 200, "mod" => $mod));
+	good(array("mod" => $mod));
 }
 
 function listMods()
@@ -270,7 +274,7 @@ function listMods()
 	}
 
 	if (!empty($_GET['orderdirection'])) {
-		$orderDirection = $_GET['orderdirection'] === 'asc' ? $_GET['orderdirection'] : 'desc';
+		$orderDirection = $_GET['orderdirection'] === 'asc' ? 'asc' : 'desc';
 	}
 
 	if (!empty($_GET["text"])) {
@@ -306,10 +310,7 @@ function listMods()
 	}
 
 	if ($gvs) {
-		$gamevers = array();
-		foreach ($gvs as $gameversion) {
-			$gamevers[] = intval($gameversion);
-		}
+		$gamevers = array_map("intval", $gvs);
 		$wheresql[] = "exists (select 1 from modversioncached where `mod`.modid =`modversioncached`.modid and modversioncached.tagid in (" . implode(",", $gamevers) . "))";
 	}
 
@@ -325,8 +326,8 @@ function listMods()
 			`mod`.type,
 			`mod`.urlalias,
 			asset.name,
-			logofilename, 
-			downloads, 
+			logofile.cdnpath as logocdnpath,
+			mod.downloads,
 			follows,
 			comments, 
 			tagscached,
@@ -340,6 +341,7 @@ function listMods()
 			join asset on (`mod`.assetid = asset.assetid)
 			join user on (`asset`.createdbyuserid = user.userid)
 			left join `release` on `release`.modid = `mod`.modid
+			left join file as logofile on mod.logofileid = logofile.fileid
 		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "
 		group by `mod`.modid
 		order by $orderBy $orderDirection
@@ -352,22 +354,22 @@ function listMods()
 
 
 		$mods[] = array(
-			"modid" => intval($row['modid']),
-			"assetid" => intval($row['assetid']),
-			"downloads" => intval($row['downloads']),
-			"follows" => intval($row['follows']),
+			"modid"          => intval($row['modid']),
+			"assetid"        => intval($row['assetid']),
+			"downloads"      => intval($row['downloads']),
+			"follows"        => intval($row['follows']),
 			"trendingpoints" => intval($row['trendingpoints']),
-			"comments" => intval($row['comments']),
-			"name" => $row['name'],
-			"summary" => $row['summary'],
-			"modidstrs" => !empty($row['modidstrs']) ? explode(",", $row['modidstrs']) : array(),
-			"author" => $row['author'],
-			"urlalias" => $row['urlalias'],
-			"side" => $row['side'],
-			"type" => $row['type'],
-			"logo" => $row['logofilename'] ? "files/asset/{$row['assetid']}/" . $row['logofilename'] : null,
-			"tags" => $tags,
-			"lastreleased" => $row['lastreleased']
+			"comments"       => intval($row['comments']),
+			"name"           => $row['name'],
+			"summary"        => $row['summary'],
+			"modidstrs"      => !empty($row['modidstrs']) ? explode(",", $row['modidstrs']) : array(),
+			"author"         => $row['author'],
+			"urlalias"       => $row['urlalias'],
+			"side"           => $row['side'],
+			"type"           => $row['type'],
+			"logo"           => $row['logocdnpath'] ? formatCdnUrlFromCdnPath($row['logocdnpath']) : null,
+			"tags"           => $tags,
+			"lastreleased"   => $row['lastreleased']
 		);
 	}
 
@@ -441,15 +443,15 @@ function getLatestRelease($modid, $modReleases, $modidToVersionMap, $con) {
 	$file = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
 
 	return array(
-		"releaseid" => intval($release['releaseid']),
-		"mainfile" => "files/asset/{$file['assetid']}/" . $file["filename"],
-		"filename" => $file["filename"],
-		"fileid" => $file['fileid'] ? intval($file['fileid']) : null,
-		"downloads" => intval($file["downloads"]),
-		"tags" => $tags,
-		"modidstr" => $release['modidstr'],
+		"releaseid"  => intval($release['releaseid']),
+		"mainfile"   => formatCdnUrl($file),
+		"filename"   => $file["filename"],
+		"fileid"     => $file['fileid'] ? intval($file['fileid']) : null,
+		"downloads"  => intval($file["downloads"]),
+		"tags"       => $tags,
+		"modidstr"   => $release['modidstr'],
 		"modversion" => $release['modversion'],
-		"created" => $release["created"]
+		"created"    => $release["created"]
 	);
 }
 
