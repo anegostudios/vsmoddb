@@ -250,7 +250,8 @@ function listMod($modid)
 		"side"            => $row['side'],
 		"type"            => $row['type'],
 		"created"         => $row['created'],
-		"lastmodified"    => $row['lastmodified'],
+		"lastreleased"    => $row['lastreleased'],
+		"lastmodified"    => $row['lastmodified'], //NOTE(Rennorb): Updated on download number changes, basically pointless. Should we change this behaviour?
 		"tags"            => resolveTags($row['tagscached']),
 		"releases"        => $releases,
 		"screenshots"     => $screenshots
