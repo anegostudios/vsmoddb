@@ -27,13 +27,19 @@ class ReleaseEditor extends AssetEditor {
 	
 	
 	public function load() {
-		global $con, $view;
+		global $con, $view, $user;
 		
 		$this->assetid = empty($_REQUEST["assetid"]) ? 0 : $_REQUEST["assetid"];
 		if ($this->assetid) {
 			$this->modid = $modid = $con->getOne("select modid from `release` where assetid=?", array($this->assetid));
 		} else {
 			$this->modid = $modid = $_REQUEST['modid'];
+			
+			$asset = $con->getOne("select asset.* from asset join `mod` where mod.modid = ?", array($this->modid));
+			if (!canEditAsset($asset, $user)) {
+				$view->display("403");
+				exit();
+			}
 		}
 		
 		$this->moddtype = $modtype = $con->getOne("select `type` from `mod` where modid=?", array($modid));

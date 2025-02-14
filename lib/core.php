@@ -552,7 +552,7 @@ function getUserHash($userid, $joindate)
 function getUserByHash($hashcode, $con)
 {
 	global $config;
-	return $con->getRow("select * from user where sha2(concat(user.userid, user.created), 512) like ?", array($hashcode . "%")); //TODO(Rennorb) @perf @correctness
+	return $con->getRow("select * from user where sha2(concat(user.userid, user.created), 512) like ?", array($hashcode . "%"));
 }
 
 /**
