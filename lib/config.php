@@ -20,7 +20,16 @@ if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
 		$config["databaseuser"] = "vsmoddb";
 		$config["databasepassword"] = "vsmoddb";
 	}
-	if (!defined("DEBUG")) define("DEBUG", 1);
+
+	if (!defined("DEBUG")) {
+		// Check if we're in the api endpoint, if so, don't enable debug mode
+		if (strstr($_SERVER["REQUEST_URI"], "/api/")) {
+			define("DEBUG", 0);
+		} else {
+			define("DEBUG", 1);
+		}
+	}
+
 	define("DEBUGUSER", 1);
 } else {
 	$config["database"] = "moddb";
