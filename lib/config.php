@@ -22,15 +22,12 @@ if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
 	}
 
 	if (!defined("DEBUG")) {
-		// Check if we're in the api endpoint, if so, don't enable debug mode
-		if (strstr($_SERVER["REQUEST_URI"], "/api/")) {
-			define("DEBUG", 0);
-		} else {
-			define("DEBUG", 1);
-		}
+		define("DEBUG", 1);
 	}
 
-	define("DEBUGUSER", 1);
+	if (!defined("DEBUGUSER")) {
+		define("DEBUGUSER", 1);
+	}
 } else {
 	$config["database"] = "moddb";
 	define("CDN", "bunny");
