@@ -188,9 +188,7 @@ class ReleaseEditor extends AssetEditor {
 			$releaseid = $con->getOne("select releaseid from `release` where assetid=?", array($this->assetid));
 			
 			if (!empty($file['detectedmodidstr']) && !empty($file['detectedmodversion'])) {
-				update("release", $releaseid, array("detectedmodidstr" => $modidstr, "modidstr" => $modidstr, "modversion" => $modversion));
-			} else {
-				update("release", $releaseid, array("detectedmodidstr" => null));
+				update("release", $releaseid, array("modidstr" => $modidstr, "modversion" => $modversion));
 			}
 		}
 

@@ -1,6 +1,8 @@
 <?php
 
 // expects to be called as  download/132465[/somefile.png]
+// but the game client downloads it using ?fileid=1231 so we need to remain backwards compatible
+
 $fileid = $_GET["fileid"];
 
 if (count($urlparts) > 2) {
