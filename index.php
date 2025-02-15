@@ -33,7 +33,7 @@ $urlparts = explode("/", $target);
 
 
 
-if ($urlparts[0] == "download" && count($urlparts) >= 2) {
+if ($urlparts[0] == "download") {
 	include("download.php");
 	exit();
 }

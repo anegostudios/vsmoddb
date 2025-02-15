@@ -4,7 +4,7 @@
 		{if (empty($mod['logocdnpath']))}
 			<img src="/web/img/mod-default.png">
 		{else}
-			<img src={formatCdnUrlFromCdnPath($mod['logocdnpath'])}">
+			<img src="{formatCdnUrlFromCdnPath($mod['logocdnpath'])}">
 		{/if}
 	</a>
 	

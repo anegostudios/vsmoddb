@@ -1,8 +1,11 @@
 <?php
 
 // expects to be called as  download/132465[/somefile.png]
+$fileid = $_GET["fileid"];
 
-$fileid = intval($urlparts[1]);
+if (count($urlparts) > 2) {
+	$fileid = intval($urlparts[1]);
+}
 $file = $con->getRow("select * from file where fileid=?", array($fileid));
 if (!$file) {
 	http_response_code(404);
