@@ -3,7 +3,6 @@ header('Content-Type: text/html; charset=utf-8');
 header('X-Frame-Options: DENY');
 
 global $config, $con, $view;
-error_reporting(E_ALL & ~E_DEPRECATED);
 
 include($config["basepath"] . "lib/ErrorHandler.php");
 ErrorHandler::setupErrorHandling();
@@ -13,7 +12,7 @@ include($config["basepath"] . "lib/timezones.php");
 include($config["basepath"] . "lib/View.php");
 include($config["basepath"] . "lib/img.php");
 include($config["basepath"] . "lib/tags.php");
-include($config["basepath"] . "lib/3rdparty/adodb5/adodb-exceptions.inc.php");
+//include($config["basepath"] . "lib/3rdparty/adodb5/adodb-exceptions.inc.php");
 include($config["basepath"] . "lib/3rdparty/adodb5/adodb.inc.php");
 
 include($config["basepath"] . "lib/asset.php");
@@ -30,6 +29,7 @@ while (($file = readdir($rd))) {
 	}
 }
 
+mysqli_report(MYSQLI_REPORT_ERROR);
 $con = createADOConnection($config);
 $view = new View();
 

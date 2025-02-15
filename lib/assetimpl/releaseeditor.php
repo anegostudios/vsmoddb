@@ -35,7 +35,7 @@ class ReleaseEditor extends AssetEditor {
 		} else {
 			$this->modid = $modid = $_REQUEST['modid'];
 			
-			$asset = $con->getOne("select asset.* from asset join `mod` where mod.modid = ?", array($this->modid));
+			$asset = $con->getRow("select asset.* from asset join `mod` where mod.modid = ?", array($this->modid));
 			if (!canEditAsset($asset, $user)) {
 				$view->display("403");
 				exit();
