@@ -130,7 +130,14 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	);
 
 	if ($assettype['code'] == 'release') {
-		$info = getModInfo($localpath);
+		//NOTE(Rennorb): Since we append the extesion teh buildin collision-prevention mechanisms of tempnam wont work.
+		// For this reason we prepend a token to the filename, taht should be enough entropy to not collide with others.
+		$localpathwithcorrectext = tempnam(sys_get_temp_dir(), genToken()).'.'.$ext;
+		rename($localpath, $localpathwithcorrectext);
+
+		$info = getModInfo($localpathwithcorrectext);
+
+		unlink($localpathwithcorrectext);
 
 		if($info['modparse'] === 'ok') {
 			$con->Execute('insert into modpeek_result (fileid, detectedmodidstr, detectedmodversion) VALUES (?,?,?)', [$fileid, $info['modid'], $info['modversion']]);
