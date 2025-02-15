@@ -132,13 +132,6 @@ class ErrorHandler {
 				</div>
 			<?php
 
-
-			/*if ($_SERVER["REMOTE_ADDR"] == "80.108.33.120" or $_SERVER['REMOTE_ADDR'] == "62.178.35.208") {
-
-				print_p($e);
-				print_p($errstr);
-			}*/
-
 			self::$usererrorprinted = true;
 		}
 	}

@@ -46,7 +46,7 @@ function generateCdnFileBasenameWithPath($userid, $localpath, $originalfilebasen
 {
 	$h = hash_init('md5', HASH_HMAC, $userid);
 	hash_update_file($h, $localpath);
-	return substr($originalfilebasename, 0, 10).'_'.hash_final($h, false);
+	return urlencode(substr($originalfilebasename, 0, 20)).'_'.hash_final($h, false);
 }
 
 

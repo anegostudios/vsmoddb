@@ -29,14 +29,13 @@ if ($sessiontoken) {
 	);
 }
 
-if ($user) {
+if (!empty($user)) {
 	$user['banneduntil'] = parseSqlDateTime($user['banneduntil']);
 	$user['isbanned'] = isCurrentlyBanned($user);
 	loadNotifications();
 
 	$view->assign("user", $user);
 } else {
-	$user['isbanned'] = false;
 	$view->assign("notificationcount", 0);
 }
 
