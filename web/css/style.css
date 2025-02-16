@@ -1470,3 +1470,27 @@ body.banned .strikethrough-when-banned {
 	color: red;
 	text-decoration: line-through;
 }
+
+.teaminvite {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 25px;
+	background: linear-gradient(0deg, rgba(104, 80, 55, 0.65) 0%, rgba(179, 154, 121, 0.65) 100%);
+	border: 1px solid #3E372F;
+	border-radius: 5px;
+	padding: 5px;
+}
+
+.teaminvite .button {
+	min-width: 175px;
+}
+
+@media (max-width: 767px) {
+	.teaminvite { 
+		flex-direction: column;
+    	align-items: start;
+    	width: fit-content;
+	} 
+}

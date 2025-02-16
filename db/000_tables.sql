@@ -318,7 +318,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`notification` (
   `notificationid` INT NOT NULL AUTO_INCREMENT,
   `read` TINYINT NOT NULL DEFAULT 0,
   `userid` VARCHAR(255) NULL,
-  `type` ENUM('newcomment', 'mentioncomment', 'newrelease') NULL,
+  `type` ENUM('newcomment', 'mentioncomment', 'newrelease', 'teaminvite', 'modownershiptransfer') NULL,
   `recordid` INT NULL,
   `created` DATETIME NULL,
   PRIMARY KEY (`notificationid`),
@@ -348,7 +348,6 @@ CREATE TABLE IF NOT EXISTS `moddb`.`majorversion` (
   PRIMARY KEY (`majorversionid`))
 ENGINE = InnoDB;
 
-
 -- -----------------------------------------------------
 -- Table `moddb`.`follow`
 -- -----------------------------------------------------
@@ -359,6 +358,24 @@ CREATE TABLE IF NOT EXISTS `moddb`.`follow` (
   INDEX `userid` (`userid` ASC) VISIBLE)
 ENGINE = InnoDB;
 
+-- -----------------------------------------------------
+-- Table `moddb`.`teammembers`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `teammembers` (
+    `teammemberid` INT(11) NOT NULL AUTO_INCREMENT,
+    `userid` INT(11) NOT NULL,
+    `modid` INT(11) NOT NULL,
+    `canedit` TINYINT(1) NOT NULL DEFAULT '0',
+    `accepted` TINYINT(1) NOT NULL DEFAULT '0',
+    `transferownership` TINYINT(1) NULL DEFAULT '0',
+    `created` DATETIME NULL DEFAULT NULL,
+    PRIMARY KEY (`teammemberid`),
+    INDEX `modid_userid` (`modid` ASC, `userid` ASC),  
+    INDEX `accepted` (`accepted` ASC),            
+    INDEX `transferownership` (`transferownership` ASC),  
+    INDEX `userid` (`userid` ASC),                
+    INDEX `modid` (`modid` ASC) 
+) ENGINE = InnoDB;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
@@ -385,7 +402,7 @@ INSERT INTO `moddb`.`assettype` (`assettypeid`, `maxfiles`, `maxfilesizekb`, `al
 
 COMMIT;
 
-
+ 
 -- -----------------------------------------------------
 -- Data for table `moddb`.`language`
 -- -----------------------------------------------------
@@ -407,7 +424,6 @@ INSERT INTO `moddb`.`tagtype` (`tagtypeid`, `code`, `name`, `text`, `created`, `
 INSERT INTO `moddb`.`tagtype` (`tagtypeid`, `code`, `name`, `text`, `created`, `lastmodified`) VALUES (2, 'category', 'Category', NULL, NULL, NULL);
 
 COMMIT;
-
 
 -- -----------------------------------------------------
 -- Data for table `moddb`.`role`

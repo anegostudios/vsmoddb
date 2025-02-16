@@ -33,19 +33,28 @@ services:
       MYSQL_USER: vsmoddb
       MYSQL_PASSWORD: vsmoddb
 
-  # mysql-workbench:
-  #   image: lscr.io/linuxserver/mysql-workbench
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/London
-  #   volumes:
-  #     - ../:/vsmoddb
-  #   ports:
-  #     - 4444:3000
-  #   cap_add:
-  #     - IPC_LOCK
-  #   restart: unless-stopped
+  mysql-workbench:
+    image: lscr.io/linuxserver/mysql-workbench
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ../:/vsmoddb
+    ports:
+      - 4444:3000
+    cap_add:
+      - IPC_LOCK
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 8080:80
+    restart: unless-stopped
   
 volumes:
   mysql-data:
