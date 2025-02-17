@@ -251,7 +251,10 @@ function listMod($modid)
 		"type"            => $row['type'],
 		"created"         => $row['created'],
 		"lastreleased"    => $row['lastreleased'],
-		"lastmodified"    => $row['lastmodified'], //NOTE(Rennorb): Updated on download number changes, basically pointless. Should we change this behaviour?
+		//NOTE(Rennorb): This field updates on download number changes and is therefore pretty much useless.
+		// Removing it is however not a good idea becasue it's a public api, and changing it to work differently also isn't great because it would make the behaviour inconsistent between different tables.
+		// We therefore simply keep it in this jank state for now, until a potential future breaking version.
+		"lastmodified"    => $row['lastmodified'],
 		"tags"            => resolveTags($row['tagscached']),
 		"releases"        => $releases,
 		"screenshots"     => $screenshots
