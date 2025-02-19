@@ -160,7 +160,7 @@ function formatCdnUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
  * Formats a download link to the file.
  * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser.
  * 
- * @param array{cdnpath: string, filename:string, fileid:int} $file
+ * @param array{cdnpath: string, filename:string} $file
  * @return string
  */
 function formatCdnDownloadUrl($file) {
