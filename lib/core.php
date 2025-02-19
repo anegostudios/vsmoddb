@@ -590,12 +590,32 @@ else {
 
 /**
  * Formats a download tracking link to the file.
- * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser.
+ * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser as well as tracking that download (-attempt).
  * 
  * @param array{filename:string, fileid:int} $file
  * @return string
  */
-function formatDownloadUrl($file)
+function formatDownloadTrackingUrl($file)
 {
 	return "/download/{$file['fileid']}/{$file['filename']}";
+}
+
+/**
+ * Formats a download tracking link to the file if the extension is not one of the image types we support.
+ * In that case this url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser as well as tracking that download (-attempt).
+ * Otherwise this just returns the cdn download url without tracking.
+ * This is meant specifically for the purpose of the asset file attachement; open images in browser, download everything else and track the download.
+ * 
+ * @param array{filename:string, fileid:int, ext:string, cdnpath:string} $file
+ * @return string
+ */
+function maybeFormatDownloadTrackingUrlDependingOnFileExt($file)
+{
+	switch($file['ext']) {
+		case 'png': case 'jpg': case 'gif':
+			return formatCdnDownloadUrl($file);
+
+		default:
+			return formatDownloadTrackingUrl($file);
+	}
 }
