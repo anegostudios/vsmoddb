@@ -24,14 +24,14 @@ $target = explode("?", $urlpath)[0];
 
 $view->assign("urltarget", $target);
 
-if (preg_match("/[^-%\/\w+\.]/", $target)) $target="dashboard";
 if (empty($target)) {
 	$target = "home";
 }
 
 $urlparts = explode("/", $target);
 
-
+if (preg_match("/[^\-\d\w]/", $urlparts[0])) $target="dashboard";
+if (count($urlparts) > 1 && preg_match("/[^\-\d\w]/", $urlparts[1])) $target="dashboard";
 
 if ($urlparts[0] == "download") {
 	include("download.php");

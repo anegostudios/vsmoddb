@@ -5,7 +5,7 @@ $config = array();
 $config["basepath"] = getcwd() . '/';
 $_SERVER["SERVER_NAME"] = "mods.vintagestory.at";
 define("DEBUG", 1);
-
+include("lib/config.php");
 include("lib/core.php");
 
 $mods = $con->getAll("select * from `mod`");

@@ -291,7 +291,7 @@ function listMods()
 	}
 
 	if (!empty($_GET["author"])) {
-		$wheresql[] = "userid=?";
+		$wheresql[] = "user.userid=?";
 		$wherevalues[] = intval($_GET["author"]);
 	}
 
