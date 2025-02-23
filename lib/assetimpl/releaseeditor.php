@@ -89,6 +89,14 @@ class ReleaseEditor extends AssetEditor {
 		$con->Execute("delete from asset where assetid=?", array($this->assetid));
 		$con->Execute("delete from `{$this->tablename}` where {$this->tablename}id=?", array($this->recordid));
 
+		//TODO(Rennorb) @correctness: We cannot remove notifications for deleted releases here like we do with comment notifications, because those notifications are tracked by modid, not by releaseid.
+		// Because of this we cannot trivially remove those notifications, because if we just go by modid we could run into the following scenario:
+		// 1. new release 1 -> notification (unread)
+		// 2. new release 2 -> notification (unread)
+		// 3. delete release 2 -> we delete both notifications even though only one should be removed
+		// I think it is possible to do work out something with the creation dates for releases and notifications, but for now we just let these "invalid" notifications exist, as to not potentially remove valid ones.
+		// Another option would be to change the tracking asset for those notifications, and track the actual release instead of the mod. That would be a larger change, and this right now is just a small fix so I'm not doing it right now.
+
 		if (!empty($mod)) {
 			updateGameVersionsCached($mod['modid']);
 		
