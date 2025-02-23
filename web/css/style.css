@@ -48,6 +48,10 @@ a:hover {
 	color: white;
 }
 
+.flex-spacer {
+	flex-grow: 1;
+}
+
 
 .logo img {
 	width: 280px; 
@@ -238,10 +242,12 @@ ul.submenu a {
 }
 
 .mods {
-	clear:both;
-	display: flex;
-	/*justify-content: center;*/
-	flex-wrap: wrap;
+	clear: both;
+	display: grid;
+	justify-content: space-evenly;
+	grid-template-columns: repeat(auto-fill, 300px);
+	grid-template-rows: auto;
+	gap: 1em;
 }
 
 .mods div.mod {
@@ -249,16 +255,11 @@ ul.submenu a {
 	flex-shrink: 1; /* Fix for mobile devices */
 	overflow: hidden;
 	
-	flex-grow: 1;
 	background-color: rgba(255, 255, 255, 0.6);
 	width: 300px;
-	max-width: 375px;
 	height: 300px;
-	margin-right: 10px;
-	margin-bottom: 10px;
-	margin-top: 10px;
 	border-radius: .25rem;
-	border: 1px solid #rgba(255,255,255,0.8);
+	border: 1px solid rgba(255,255,255,0.8);
 	box-shadow: 1px 1px 4px #999;
 }
 
@@ -281,8 +282,6 @@ ul.submenu a {
 }
 
 .mod.draft {
-	width: 300px;
-	height: 298px !important;
 	border: 1.5px dashed gray !important; 
 	position: relative;
 }
@@ -1390,7 +1389,7 @@ span.username {
     background-image: linear-gradient(to bottom,#08c,#0077b3);
     background-repeat: repeat-x;
     outline: 0;
-    filter: progid:DXImageTransform.Microsof;
+    filter: progid:DXImageTransform.Microsoft;
 }
 
 
