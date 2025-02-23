@@ -89,13 +89,15 @@ class ReleaseEditor extends AssetEditor {
 		$con->Execute("delete from asset where assetid=?", array($this->assetid));
 		$con->Execute("delete from `{$this->tablename}` where {$this->tablename}id=?", array($this->recordid));
 
-		//TODO(Rennorb) @correctness: We cannot remove notifications for deleted releases here like we do with comment notifications, because those notifications are tracked by modid, not by releaseid.
-		// Because of this we cannot trivially remove those notifications, because if we just go by modid we could run into the following scenario:
-		// 1. new release 1 -> notification (unread)
-		// 2. new release 2 -> notification (unread)
-		// 3. delete release 2 -> we delete both notifications even though only one should be removed
-		// I think it is possible to do work out something with the creation dates for releases and notifications, but for now we just let these "invalid" notifications exist, as to not potentially remove valid ones.
-		// Another option would be to change the tracking asset for those notifications, and track the actual release instead of the mod. That would be a larger change, and this right now is just a small fix so I'm not doing it right now.
+		//TODO(Rennorb) @correctness: Remove / hide unread release notifications for deleted releases.
+		// We cannot remove notifications for deleted releases trivially like we do with comment notifications because release notifications are tracked by modid, not by releaseid.
+		// Since we only have the modid in the notification entry we could run into the following scenario:
+		// 1. new release 1 for mod 1 -> notification 1 (unread)
+		// 2. new release 2 for mod 1 -> notification 2 (unread)
+		// 3. delete release 2 -> we would delete both notifications even though only one should be removed, because both of them are tracked by the same modid
+		// I think it is possible to figure out a solution to this using the creation dates for releases and notifications, or change the notifications to be tracking releaseid instead of modid.
+		// Both of those would however be a larger change, and right now I'm just supplying a small fix for notifications.
+		// For now we just let these "invalid" notifications exist, as to not potentially remove valid ones which would be a lot worse.
 
 		if (!empty($mod)) {
 			updateGameVersionsCached($mod['modid']);
