@@ -353,7 +353,7 @@ class AssetEditor extends AssetController
 		$view->assign("tags", $tags);
 		$view->assign("asset", $this->asset);
 
-		if (($this->asset['createdbyuserid'] === $user['userid']) && $this->assetid > 0) {
+		if (isset($this->asset['createdbyuserid']) && ($this->asset['createdbyuserid'] === $user['userid']) && $this->assetid > 0) {
 			$teammembers = $con->getAll("select u.*, t.canedit from user u join teammembers t on u.userid = t.userid where t.modid = ? and u.userid != ?", array($this->assetid, $user['userid']));
 
 			$view->assign("teammembers", [

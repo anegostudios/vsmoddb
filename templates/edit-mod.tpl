@@ -93,7 +93,7 @@
 			{include file="edit-asset-`$entrycode`.tpl"}
 		{/if}
 
-		{if ($asset['createdbyuserid'] == $user['userid']) || $asset['assetid'] === 0}
+		{if isset($asset['createdbyuserid']) && ($asset['createdbyuserid'] == $user['userid']) || $asset['assetid'] === 0}
 			<div style="clear:both;"></div>
 			<h3>Team members</h3>
 
@@ -195,7 +195,7 @@
 			</select>
 		</div>
 
-		{if $asset['createdbyuserid'] == $user['userid']}
+		{if isset($asset['createdbyuserid']) && ($asset['createdbyuserid'] == $user['userid'])}
 			<div style="clear:both;"></div>
 			<h3>Ownership transfer</h3>
 
