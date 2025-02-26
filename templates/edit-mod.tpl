@@ -215,8 +215,8 @@
 
 						<select name="newownerid" style="width:300px;">
 							<option value="" selected="selected">--- Select new owner ---</option>
-							{foreach from=$users item=user}
-								<option value="{$user['userid']}">{$user['name']}</option>
+							{foreach from=$users item=ouser}
+								<option value="{$ouser['userid']}">{$ouser['name']}</option>
 							{/foreach}
 						</select>
 					</div>
