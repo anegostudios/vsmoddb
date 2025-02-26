@@ -106,7 +106,7 @@ function loadNotifications()
 					`mod`
 					join asset on (`mod`.assetid = asset.assetid)
 					join user on (asset.createdbyuserid = user.userid)
-				where modid=? 
+				where `asset`.assetid=? 
 			", $notification['recordid']);
 
 			$notification['text'] = "{$cmt['username']} invited you to join the team of {$cmt['modname']}";
@@ -119,7 +119,7 @@ function loadNotifications()
 					`mod`
 					join asset on (`mod`.assetid = asset.assetid)
 					join user on (asset.createdbyuserid = user.userid)
-				where modid=? 
+				where `asset`.assetid=? 
 			", $notification['recordid']);
 
 			$notification['text'] = "{$cmt['username']} offered you ownership of {$cmt['modname']}";

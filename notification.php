@@ -43,7 +43,7 @@ if ($not['type'] == "newrelease") {
 		`mod`.urlalias as modalias
 	from
 		`mod`
-	where modid=?
+	where `mod`.modid=?
 	", array($not['recordid']));
 
 	$url = "/" . $row['modalias'];
