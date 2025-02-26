@@ -154,21 +154,23 @@ class ModEditor extends AssetEditor
 		$teammemberids = array_combine($rows, array_fill(0, count($rows), 1));
 		$changes = array();
 
-		$teammembers = $_POST["teammemberids"];
+		$teammembers = isset($_POST["teammemberids"]) && $_POST["teammemberids"] ? $_POST["teammemberids"] : array();
 
-		if ($teammembers) {
-			foreach ($teammembers as $userid) {
-				$teammemberid = $con->getOne("select teammemberid from teammembers where modid=? and userid=?", array($assetid, $userid));
+		if (!$teammembers) {
+			return array();
+		}
 
-				if (!$teammemberid) {
-					$con->Execute("INSERT INTO teammembers (modid, userid, created) VALUES (?, ?, ?)", array($assetid, $userid, date("Y-m-d H:i:s")));
-					$con->Execute("INSERT INTO notification (`read`, userid, type, recordid, created) VALUES (0, ?, 'teaminvite', ?, ?)", array($userid, $assetid, date("Y-m-d H:i:s")));
+		foreach ($teammembers as $userid) {
+			$teammemberid = $con->getOne("select teammemberid from teammembers where modid=? and userid=?", array($assetid, $userid));
 
-					$changes[] = "Invited user '{$userid}' to join the team of the mod: '{$assetid}'";
-				}
+			if (!$teammemberid) {
+				$con->Execute("INSERT INTO teammembers (modid, userid, created) VALUES (?, ?, ?)", array($assetid, $userid, date("Y-m-d H:i:s")));
+				$con->Execute("INSERT INTO notification (`read`, userid, type, recordid, created) VALUES (0, ?, 'teaminvite', ?, ?)", array($userid, $assetid, date("Y-m-d H:i:s")));
 
-				unset($teammemberids[$userid]);
+				$changes[] = "Invited user '{$userid}' to join the team of the mod: '{$assetid}'";
 			}
+
+			unset($teammemberids[$userid]);
 		}
 
 		foreach ($teammemberids as $userid => $one) {
@@ -176,6 +178,7 @@ class ModEditor extends AssetEditor
 			$changes[] = "Deleted team member '{$userid}'";
 		}
 
+		// @TODO: Implement logging for team member changes
 		return $changes;
 	}
 
@@ -191,19 +194,21 @@ class ModEditor extends AssetEditor
 		$teammemberids = array_combine($rows, array_fill(0, count($rows), 1));
 		$changes = array();
 
-		$teammembers = $_POST["teammembereditids"];
+		$teammembers = isset($_POST["teammembereditids"]) && $_POST["teammembereditids"] ? $_POST["teammembereditids"] : array();
 
-		if ($teammembers) {
-			foreach ($teammembers as $userid) {
-				$teammemberid = $con->getOne("select teammemberid from teammembers where modid=? and userid=?", array($assetid, $userid));
+		if (!$teammembers) {
+			return array();
+		}
 
-				if ($teammemberid) {
-					$con->Execute("UPDATE teammembers SET canedit = 1 WHERE modid = ? AND userid = ?", array($assetid, $userid));
-					$changes[] = "Granted edit permission for '{$userid}' in the mod: '{$assetid}'";
-				}
+		foreach ($teammembers as $userid) {
+			$teammemberid = $con->getOne("select teammemberid from teammembers where modid=? and userid=?", array($assetid, $userid));
 
-				unset($teammemberids[$userid]);
+			if ($teammemberid) {
+				$con->Execute("UPDATE teammembers SET canedit = 1 WHERE modid = ? AND userid = ?", array($assetid, $userid));
+				$changes[] = "Granted edit permission for '{$userid}' in the mod: '{$assetid}'";
 			}
+
+			unset($teammemberids[$userid]);
 		}
 
 		foreach ($teammemberids as $userid => $one) {
@@ -211,6 +216,7 @@ class ModEditor extends AssetEditor
 			$changes[] = "Deleted edit permissions for user '{$userid}' in mod '{$assetid}'";
 		}
 
+		// @TODO: Implement logging for team member changes
 		return $changes;
 	}
 
