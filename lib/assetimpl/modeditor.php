@@ -102,10 +102,11 @@ class ModEditor extends AssetEditor
 
 		return $result;
 	}
-	
-	function generateLogoImage($logofileid) {
+
+	function generateLogoImage($logofileid)
+	{
 		global $con, $user;
-		
+
 		$file = $con->getRow("select * from file where fileid=?", array($logofileid));
 		if (empty($file)) return;
 
@@ -117,13 +118,13 @@ class ModEditor extends AssetEditor
 
 		$localpath = tempnam(sys_get_temp_dir(), '');
 		$originalfile = @file_get_contents(formatCdnUrl($file));
-		if(!file_put_contents($localpath, $originalfile)) {
+		if (!file_put_contents($localpath, $originalfile)) {
 			unlink($localpath);
 			return array("status" => "error", "errormessage" => 'The logo file seems to be gone.');
 		}
 
 		$resizeresult = copyImageResized($localpath, 480, 320, true, 'file', '', $locallogofilename);
-		if(!$resizeresult) {
+		if (!$resizeresult) {
 			unlink($localpath);
 			return array("status" => "error", "errormessage" => 'Failed to resize image for thumbnail.');
 		}
@@ -133,9 +134,9 @@ class ModEditor extends AssetEditor
 		$cdnlogopath = "{$cdnbasepath}_480_320.{$ext}";
 		$uploadresult = uploadToCdn($locallogofilename, $cdnlogopath);
 		unlink($locallogofilename);
-		if($uploadresult['error']) {
+		if ($uploadresult['error']) {
 			unlink($localpath);
-			return array("status" => "error", "errormessage" => 'CDN Error: '.$uploadresult['error']);
+			return array("status" => "error", "errormessage" => 'CDN Error: ' . $uploadresult['error']);
 		}
 
 		$con->Execute("insert into file (userid, cdnpath, created) VALUES (?, ?, NOW())", array($user['userid'], $cdnlogopath));
@@ -144,38 +145,44 @@ class ModEditor extends AssetEditor
 
 	function updateTeamMembers($assetid)
 	{
+		if (!$this->asset || $this->asset == null) {
+			return array();
+		}
+
 		global $con, $user;
 
-		if (($this->asset['createdbyuserid'] !== $user['userid']) && $this->assetid > 0) {
+		if ($this->assetid > 0 && ($this->asset['createdbyuserid'] !== $user['userid'])) {
 			return array();
-		} 
+		}
 
-		$rows = $con->getCol("select userid from teammembers where modid = ? and userid != (select createdbyuserid from asset where assetid = ?)", array($assetid, $assetid));
+		$modId = $con->getOne("select modid from `mod` where assetid=?", array($assetid));
+
+		$rows = $con->getCol("select userid from teammembers where modid = ? and userid != (select createdbyuserid from asset where assetid = ?)", array($modId, $assetid));
 		$teammemberids = array_combine($rows, array_fill(0, count($rows), 1));
 		$changes = array();
 
 		$teammembers = isset($_POST["teammemberids"]) && $_POST["teammemberids"] ? $_POST["teammemberids"] : array();
 
-		if (!$teammembers) {
-			return array();
-		}
-
-		foreach ($teammembers as $userid) {
-			$teammemberid = $con->getOne("select teammemberid from teammembers where modid=? and userid=?", array($assetid, $userid));
-
-			if (!$teammemberid) {
-				$con->Execute("INSERT INTO teammembers (modid, userid, created) VALUES (?, ?, ?)", array($assetid, $userid, date("Y-m-d H:i:s")));
-				$con->Execute("INSERT INTO notification (`read`, userid, type, recordid, created) VALUES (0, ?, 'teaminvite', ?, ?)", array($userid, $assetid, date("Y-m-d H:i:s")));
-
-				$changes[] = "Invited user '{$userid}' to join the team of the mod: '{$assetid}'";
+		if ($teammembers) {
+			foreach ($teammembers as $userid) {
+				$teammemberid = $con->getOne("select teammemberid from teammembers where modid=? and userid=?", array($modId, $userid));
+	
+				if (!$teammemberid) {
+					$con->Execute("INSERT INTO teammembers (modid, userid, created) VALUES (?, ?, ?)", array($modId, $userid, date("Y-m-d H:i:s")));
+					$con->Execute("INSERT INTO notification (`read`, userid, type, recordid, created) VALUES (0, ?, 'teaminvite', ?, ?)", array($userid, $modId, date("Y-m-d H:i:s")));
+	
+					$changes[] = "Invited user '{$userid}' to join the team of the mod: '{$modId}'";
+				}
+	
+				unset($teammemberids[$userid]);
 			}
-
-			unset($teammemberids[$userid]);
 		}
 
-		foreach ($teammemberids as $userid => $one) {
-			$con->Execute("delete from teammembers where modid=? and userid=?", array($assetid, $userid));
-			$changes[] = "Deleted team member '{$userid}'";
+		if ($teammemberids) {
+			foreach ($teammemberids as $userid => $one) {
+				$con->Execute("delete from teammembers where modid=? and userid=?", array($modId, $userid));
+				$changes[] = "Deleted team member '{$userid}'";
+			}
 		}
 
 		// @TODO: Implement logging for team member changes
@@ -184,36 +191,42 @@ class ModEditor extends AssetEditor
 
 	function updateTeamMembersPermissions($assetid)
 	{
-		global $con, $user;
-
-		if ($this->asset['createdbyuserid'] !== $user['userid']) {
+		if (!$this->asset || $this->asset == null) {
 			return array();
 		}
 
-		$rows = $con->getCol("select userid from teammembers where modid = ? and userid != (select createdbyuserid from asset where assetid = ?)", array($assetid, $assetid));
+		global $con, $user;
+
+		if ($this->assetid > 0 && ($this->asset['createdbyuserid'] !== $user['userid'])) {
+			return array();
+		}
+
+		$modId = $con->getOne("select modid from `mod` where assetid=?", array($assetid));
+
+		$rows = $con->getCol("select userid from teammembers where modid = ? and userid != (select createdbyuserid from asset where assetid = ?)", array($modId, $assetid));
 		$teammemberids = array_combine($rows, array_fill(0, count($rows), 1));
 		$changes = array();
 
 		$teammembers = isset($_POST["teammembereditids"]) && $_POST["teammembereditids"] ? $_POST["teammembereditids"] : array();
 
-		if (!$teammembers) {
-			return array();
-		}
-
-		foreach ($teammembers as $userid) {
-			$teammemberid = $con->getOne("select teammemberid from teammembers where modid=? and userid=?", array($assetid, $userid));
-
-			if ($teammemberid) {
-				$con->Execute("UPDATE teammembers SET canedit = 1 WHERE modid = ? AND userid = ?", array($assetid, $userid));
-				$changes[] = "Granted edit permission for '{$userid}' in the mod: '{$assetid}'";
+		if ($teammembers) {
+			foreach ($teammembers as $userid) {
+				$teammemberid = $con->getOne("select teammemberid from teammembers where modid=? and userid=?", array($modId, $userid));
+	
+				if ($teammemberid) {
+					$con->Execute("UPDATE teammembers SET canedit = 1 WHERE modid = ? AND userid = ?", array($modId, $userid));
+					$changes[] = "Granted edit permission for '{$userid}' in the mod: '{$modId}'";
+				}
+	
+				unset($teammemberids[$userid]);
 			}
-
-			unset($teammemberids[$userid]);
 		}
 
-		foreach ($teammemberids as $userid => $one) {
-			$con->Execute("UPDATE teammembers SET canedit = 0 WHERE modid = ? AND userid = ?", array($assetid, $userid));
-			$changes[] = "Deleted edit permissions for user '{$userid}' in mod '{$assetid}'";
+		if ($teammemberids) {
+			foreach ($teammemberids as $userid => $one) {
+				$con->Execute("UPDATE teammembers SET canedit = 0 WHERE modid = ? AND userid = ?", array($modId, $userid));
+				$changes[] = "Deleted edit permissions for user '{$userid}' in mod '{$modId}'";
+			}
 		}
 
 		// @TODO: Implement logging for team member changes
@@ -222,9 +235,13 @@ class ModEditor extends AssetEditor
 
 	function updateNewOwner($assetId)
 	{
+		if (!$this->asset || $this->asset == null) {
+			return array();
+		}
+
 		global $con, $view, $user;
 
-		if ($this->asset['createdbyuserid'] !== $user['userid']) {
+		if ($this->assetid > 0 && ($this->asset['createdbyuserid'] !== $user['userid'])) {
 			return array();
 		}
 
@@ -232,8 +249,10 @@ class ModEditor extends AssetEditor
 			return array();
 		}
 
+		$modId = $con->getOne("select modid from `mod` where assetid=?", array($assetId));
+
 		// Check if any invitation has been sent
-		$invitationSent = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? and transferownership = 1", array($assetId));
+		$invitationSent = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? and transferownership = 1", array($modId));
 
 		if ($invitationSent > 0) {
 			$view->assign("warningmessage", "An invitation to transfer ownership has already been sent to the new owner.");
@@ -243,18 +262,18 @@ class ModEditor extends AssetEditor
 		$newOwnerId = (int) $_POST['newownerid'];
 
 		// Check if the new owner is already a team member
-		$isTeamMember = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? AND userid = ?", array($assetId, $newOwnerId));
+		$isTeamMember = $con->getOne("SELECT COUNT(*) FROM teammembers WHERE modid = ? AND userid = ?", array($modId, $newOwnerId));
 
 		if ($isTeamMember) {
 			// Update the transferownership column to 1
-			$con->Execute("UPDATE teammembers SET transferownership = 1 WHERE modid = ? AND userid = ?", array($assetId, $newOwnerId));
+			$con->Execute("UPDATE teammembers SET transferownership = 1 WHERE modid = ? AND userid = ?", array($modId, $newOwnerId));
 		} else {
 			// Insert the new owner as a team member with transferownership set to 1
-			$con->Execute("INSERT INTO teammembers (modid, userid, canedit, accepted, transferownership, created) VALUES (?, ?, 0, 0, 1, ?)", array($assetId, $newOwnerId, date("Y-m-d H:i:s")));
+			$con->Execute("INSERT INTO teammembers (modid, userid, canedit, accepted, transferownership, created) VALUES (?, ?, 0, 0, 1, ?)", array($modId, $newOwnerId, date("Y-m-d H:i:s")));
 		}
 
 		// Send a notification to the new owner
-		$con->Execute("INSERT INTO notification (`read`, userid, type, recordid, created) VALUES (0, ?, 'modownershiptransfer', ?, ?)", array($newOwnerId, $assetId, date("Y-m-d H:i:s")));
+		$con->Execute("INSERT INTO notification (`read`, userid, type, recordid, created) VALUES (0, ?, 'modownershiptransfer', ?, ?)", array($newOwnerId, $modId, date("Y-m-d H:i:s")));
 
 		return array("Ownership transfer initiated successfully.");
 	}

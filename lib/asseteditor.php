@@ -354,7 +354,9 @@ class AssetEditor extends AssetController
 		$view->assign("asset", $this->asset);
 
 		if (isset($this->asset['createdbyuserid']) && ($this->asset['createdbyuserid'] === $user['userid']) && $this->assetid > 0) {
-			$teammembers = $con->getAll("select u.*, t.canedit from user u join teammembers t on u.userid = t.userid where t.modid = ? and u.userid != ?", array($this->assetid, $user['userid']));
+			$modId = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
+
+			$teammembers = $con->getAll("select u.*, t.canedit from user u join teammembers t on u.userid = t.userid where t.modid = ? and u.userid != ?", array($modId, $user['userid']));
 
 			$view->assign("teammembers", [
 				"members" => $teammembers,
@@ -364,7 +366,7 @@ class AssetEditor extends AssetController
 			$view->assign("users", $con->getAll("select * from user where userid != ?", array($user['userid'])));
 
 			// Check if ownership transfer invitation has been sent to a user
-			$ownershipTransferUser = $con->getOne("select u.name from teammembers t join user u on u.userid = t.userid where modid = ? and transferownership = 1", array($this->assetid));
+			$ownershipTransferUser = $con->getOne("select u.name from teammembers t join user u on u.userid = t.userid where modid = ? and transferownership = 1", array($modId));
 
 			if ($ownershipTransferUser) {
 				$view->assign("ownershipTransferUser", $ownershipTransferUser);

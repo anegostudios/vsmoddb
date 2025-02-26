@@ -46,7 +46,13 @@ function canEditAsset($asset, $user)
 {
 	global $con;
 
-	$canEditAsTeamMember = $con->getOne("select count(*) from teammembers where canedit = 1 and accepted = 1 and modid=? and userid=?", array(isset($asset['modid']) && $asset['modid'] ? $asset['modid'] : $asset['assetid'], $user['userid']));
+	$canEditAsTeamMember = false;
+
+	// It's mod if assettypeid is 1
+	if ($asset['assettypeid'] === 1) {
+		$modId = $con->getOne("select `modid` from `mod` where `assetid` = ?", array($asset['assetid']));
+		$canEditAsTeamMember = $con->getOne("select count(*) from teammembers where canedit = 1 and accepted = 1 and modid=? and userid=?", array($modId, $user['userid']));
+	}
 
 	return isset($user['userid']) && ($user['userid'] == $asset['createdbyuserid'] || $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator" || $canEditAsTeamMember);
 }
@@ -106,7 +112,7 @@ function loadNotifications()
 					`mod`
 					join asset on (`mod`.assetid = asset.assetid)
 					join user on (asset.createdbyuserid = user.userid)
-				where `asset`.assetid=? 
+				where `mod`.modid=? 
 			", $notification['recordid']);
 
 			$notification['text'] = "{$cmt['username']} invited you to join the team of {$cmt['modname']}";
@@ -119,7 +125,7 @@ function loadNotifications()
 					`mod`
 					join asset on (`mod`.assetid = asset.assetid)
 					join user on (asset.createdbyuserid = user.userid)
-				where `asset`.assetid=? 
+				where `mod`.modid=? 
 			", $notification['recordid']);
 
 			$notification['text'] = "{$cmt['username']} offered you ownership of {$cmt['modname']}";
