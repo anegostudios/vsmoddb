@@ -122,7 +122,7 @@ class AssetEditor extends AssetController {
 			from 
 				comment 
 				join user on (comment.userid = user.userid)
-			where assetid=?
+			where assetid=? and comment.deleted = 0
 			order by comment.created desc
 		", array($this->assetid));
 		

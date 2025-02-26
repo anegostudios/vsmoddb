@@ -116,6 +116,7 @@ $latestcomments = $con->getAll("
 		join assettype on (asset.assettypeid = assettype.assettypeid)
 	where 
 		asset.statusid=2
+		and comment.deleted = 0
 		and comment.created > date_sub(now(), interval 14 day)
 	order by
 		comment.created desc
