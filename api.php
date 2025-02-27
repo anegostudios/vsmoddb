@@ -167,7 +167,7 @@ function listMod($modid)
 			`mod` 
 			join asset on (`mod`.assetid = asset.assetid)
 			join user on (`asset`.createdbyuserid = user.userid)
-			left join file as logofile on (`mod`.logofileid = file.fileid)
+			left join file as logofile on (`mod`.logofileid = logofile.fileid)
 		where
 			asset.statusid=2
 			and modid=?
@@ -193,7 +193,7 @@ function listMod($modid)
 
 		$releases[] = array(
 			"releaseid"  => intval($release['releaseid']),
-			"mainfile"   => empty($file) ? "" : formatCdnUrl($file),
+			"mainfile"   => empty($file) ? "" : formatCdnDownloadUrl($file),
 			"filename"   => empty($file) ? 0 : $file["filename"],
 			"fileid"     => isset($file['fileid']) ? intval($file['fileid']) : null,
 			"downloads"  => empty($file) ? 0 : intval($file["downloads"]),
@@ -250,6 +250,10 @@ function listMod($modid)
 		"side"            => $row['side'],
 		"type"            => $row['type'],
 		"created"         => $row['created'],
+		"lastreleased"    => $row['lastreleased'],
+		//NOTE(Rennorb): This field updates on download number changes and is therefore pretty much useless.
+		// Removing it is however not a good idea becasue it's a public api, and changing it to work differently also isn't great because it would make the behaviour inconsistent between different tables.
+		// We therefore simply keep it in this jank state for now, until a potential future breaking version.
 		"lastmodified"    => $row['lastmodified'],
 		"tags"            => resolveTags($row['tagscached']),
 		"releases"        => $releases,
@@ -291,7 +295,7 @@ function listMods()
 	}
 
 	if (!empty($_GET["author"])) {
-		$wheresql[] = "userid=?";
+		$wheresql[] = "user.userid=?";
 		$wherevalues[] = intval($_GET["author"]);
 	}
 
@@ -444,7 +448,7 @@ function getLatestRelease($modid, $modReleases, $modidToVersionMap, $con) {
 
 	return array(
 		"releaseid"  => intval($release['releaseid']),
-		"mainfile"   => formatCdnUrl($file),
+		"mainfile"   => formatCdnDownloadUrl($file),
 		"filename"   => $file["filename"],
 		"fileid"     => $file['fileid'] ? intval($file['fileid']) : null,
 		"downloads"  => intval($file["downloads"]),

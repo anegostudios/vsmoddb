@@ -31,7 +31,7 @@ if ($not['type'] == "newrelease") {
 		where modid=?
 	", array($not['recordid']));
 
-	$url = $row['modalias'] ? "/" . $row['modalias'] : "show/mod/" . $row['assetid'];
+	$url = $row['modalias'] ? "/" . $row['modalias'] : "/show/mod/" . $row['assetid'];
 	header("Location: {$url}#tab-files");
 } elseif (
 	($not['type'] == "teaminvite" || $not['type'] == "modownershiptransfer") &&
@@ -62,8 +62,7 @@ if ($not['type'] == "newrelease") {
 			join `mod` on (comment.assetid = `mod`.assetid)
 		where commentid=?
 	", array($not['recordid']));
-
-	$url = $cmt['modalias'] ? "/" . $cmt['modalias'] : "show/mod/" . $cmt['assetid'];
-
+ 
+	$url = $cmt['modalias'] ? "/" . $cmt['modalias'] : "/show/mod/" . $cmt['assetid'];
 	header("Location: {$url}#cmt-{$cmt['commentid']}");
 }

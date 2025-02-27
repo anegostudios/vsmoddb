@@ -27,13 +27,20 @@ class ReleaseEditor extends AssetEditor {
 	
 	
 	public function load() {
-		global $con, $view;
+		global $con, $view, $user;
 		
 		$this->assetid = empty($_REQUEST["assetid"]) ? 0 : $_REQUEST["assetid"];
 		if ($this->assetid) {
 			$this->modid = $modid = $con->getOne("select modid from `release` where assetid=?", array($this->assetid));
 		} else {
 			$this->modid = $modid = $_REQUEST['modid'];
+			
+			$asset = $con->getRow("select asset.* from asset join `mod` on (`mod`.assetid=asset.assetid) where mod.modid = ?", array($this->modid));
+			$this->assetid=$asset['assetid'];
+			if (!canEditAsset($asset, $user)) {
+				$view->display("403");
+				exit();
+			}
 		}
 		
 		$this->moddtype = $modtype = $con->getOne("select `type` from `mod` where modid=?", array($modid));
@@ -81,6 +88,16 @@ class ReleaseEditor extends AssetEditor {
 		
 		$con->Execute("delete from asset where assetid=?", array($this->assetid));
 		$con->Execute("delete from `{$this->tablename}` where {$this->tablename}id=?", array($this->recordid));
+
+		//TODO(Rennorb) @correctness: Remove / hide unread release notifications for deleted releases.
+		// We cannot remove notifications for deleted releases trivially like we do with comment notifications because release notifications are tracked by modid, not by releaseid.
+		// Since we only have the modid in the notification entry we could run into the following scenario:
+		// 1. new release 1 for mod 1 -> notification 1 (unread)
+		// 2. new release 2 for mod 1 -> notification 2 (unread)
+		// 3. delete release 2 -> we would delete both notifications even though only one should be removed, because both of them are tracked by the same modid
+		// I think it is possible to figure out a solution to this using the creation dates for releases and notifications, or change the notifications to be tracking releaseid instead of modid.
+		// Both of those would however be a larger change, and right now I'm just supplying a small fix for notifications.
+		// For now we just let these "invalid" notifications exist, as to not potentially remove valid ones which would be a lot worse.
 
 		if (!empty($mod)) {
 			updateGameVersionsCached($mod['modid']);
@@ -181,9 +198,7 @@ class ReleaseEditor extends AssetEditor {
 			$releaseid = $con->getOne("select releaseid from `release` where assetid=?", array($this->assetid));
 			
 			if (!empty($file['detectedmodidstr']) && !empty($file['detectedmodversion'])) {
-				update("release", $releaseid, array("detectedmodidstr" => $modidstr, "modidstr" => $modidstr, "modversion" => $modversion));
-			} else {
-				update("release", $releaseid, array("detectedmodidstr" => null));
+				update("release", $releaseid, array("modidstr" => $modidstr, "modversion" => $modversion));
 			}
 		}
 

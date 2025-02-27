@@ -37,7 +37,7 @@
 	{if isset($head)}{$head}{/if}
 </head>
 
-<body{if $user['isbanned']} class="banned"{/if}>
+<body{if !empty($user) && $user['isbanned']} class="banned"{/if}>
 	<div class="okmessagepopup messagepopup bg-success text-success" style="display:none;">
 		<div class="checkmark">&#10003;</div>
 		<div class="text">{if isset($okmessage)}{$okmessage}{/if}</div>

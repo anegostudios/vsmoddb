@@ -34,7 +34,7 @@ if ($assetid) {
 	foreach ($files as &$file) {
 		$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
 		$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
-		$file["url"] = formatCdnUrl($file);
+		$file["url"] = formatDownloadTrackingUrl($file);
 	}
 	unset($file);
 	$view->assign("files", $files);
@@ -46,7 +46,7 @@ if ($assetid) {
 		from 
 			comment 
 			join user on (comment.userid = user.userid)
-		where assetid=?
+		where assetid=? and comment.deleted = 0
 		order by comment.created desc
 	", array($assetid));
 	

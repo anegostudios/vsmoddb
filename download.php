@@ -1,8 +1,13 @@
 <?php
 
 // expects to be called as  download/132465[/somefile.png]
+// but the game client downloads it using ?fileid=1231 so we need to remain backwards compatible
 
-$fileid = intval($urlparts[1]);
+$fileid = $_GET["fileid"];
+
+if (count($urlparts) > 2) {
+	$fileid = intval($urlparts[1]);
+}
 $file = $con->getRow("select * from file where fileid=?", array($fileid));
 if (!$file) {
 	http_response_code(404);

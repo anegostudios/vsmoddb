@@ -28,6 +28,7 @@ $sql = "
 				left join file as logofile on mod.logofileid = logofile.fileid
 			where
 				asset.createdbyuserid = ?
+				and asset.statusid = 2
 			order by asset.created desc
 		";
 

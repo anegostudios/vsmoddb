@@ -110,8 +110,9 @@ class AssetEditor extends AssetController
 
 		foreach ($files as &$file) {
 			$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
-			$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".") + 1); // no clue why pathinfo doesnt work here
-			$file["url"] = formatCdnUrl($file);
+
+			$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
+			$file["url"] = maybeFormatDownloadTrackingUrlDependingOnFileExt($file);
 		}
 
 		unset($file);
@@ -125,7 +126,7 @@ class AssetEditor extends AssetController
 			from 
 				comment 
 				join user on (comment.userid = user.userid)
-			where assetid=?
+			where assetid=? and comment.deleted = 0
 			order by comment.created desc
 		", array($this->assetid));
 
