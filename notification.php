@@ -18,10 +18,10 @@ if (empty($not)) {
 	exit();
 }
 
-$con->Execute("update notification set `read`=1 where notificationid=? and userid=?", array($not['notificationid'], $user['userid']));
+// $con->Execute("update notification set `read`=1 where notificationid=? and userid=?", array($not['notificationid'], $user['userid']));
 
-if ($not['type'] == "newrelease") { 
-	
+if ($not['type'] == "newrelease") {
+
 	$row = $con->getRow("
 		select 
 			`mod`.assetid,
@@ -33,6 +33,24 @@ if ($not['type'] == "newrelease") {
 
 	$url = $row['modalias'] ? "/" . $row['modalias'] : "/show/mod/" . $row['assetid'];
 	header("Location: {$url}#tab-files");
+} elseif (
+	($not['type'] == "teaminvite" || $not['type'] == "modownershiptransfer") &&
+	(isset($not['recordid']) && $not['recordid'])
+) {
+	$row = $con->getRow("
+	select 
+		`mod`.assetid,
+		`mod`.urlalias as modalias
+	from
+		`mod`
+	where `mod`.modid=?
+	", array($not['recordid']));
+
+	$url = "/" . $row['modalias'];
+
+	$con->Execute("update notification set `read`= 1 where userid=? and notificationid = ?", array($user['userid'], $not['notificationid']));
+
+	header("Location: " . $url);
 } else {
 
 	$cmt = $con->getRow("
@@ -44,9 +62,7 @@ if ($not['type'] == "newrelease") {
 			join `mod` on (comment.assetid = `mod`.assetid)
 		where commentid=?
 	", array($not['recordid']));
-
+ 
 	$url = $cmt['modalias'] ? "/" . $cmt['modalias'] : "/show/mod/" . $cmt['assetid'];
 	header("Location: {$url}#cmt-{$cmt['commentid']}");
 }
-
-
