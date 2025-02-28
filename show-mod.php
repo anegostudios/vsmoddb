@@ -38,7 +38,8 @@ if ($assetid) {
 	$teammembers = $con->getAll("
 		select 
 			user.userid, 
-			user.name 
+			user.name,
+			user.created as joindate
 		from 
 			teammembers 
 			join user on teammembers.userid = user.userid 
@@ -49,7 +50,7 @@ if ($assetid) {
 
 	if ($teammembers) {
 		foreach ($teammembers as $idx => $teammember) {
-			$teammembers[$idx]['usertoken'] = getUserHash($teammember['userid'], $asset['createduserjoindate']);
+			$teammembers[$idx]['usertoken'] = getUserHash($teammember['userid'], $teammember['joindate']);
 		}
 
 		$view->assign("teammembers", $teammembers);
@@ -166,8 +167,10 @@ $view->assign("asset", $asset);
 
 $view->assign("isfollowing", empty($user) ? 0 : $con->getOne("select modid from `follow` where modid=? and userid=?", array($asset['modid'], $user['userid'])));
 
-processTeamInvitations($asset, $user);
-processOwnershipTransfers($asset, $user);
+if (!empty($user)) {
+	processTeamInvitations($asset, $user);
+	processOwnershipTransfers($asset, $user);
+}
 
 $view->display("show-mod");
 
