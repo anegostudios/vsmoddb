@@ -3,15 +3,16 @@
 // expects to be called as  download/132465[/somefile.png]
 // but the game client downloads it using ?fileid=1231 so we need to remain backwards compatible
 
-$fileid = $_GET["fileid"];
-
-if (count($urlparts) > 2) {
-	$fileid = intval($urlparts[1]);
+$fileid = intval($_GET["fileid"] ?? $urlparts[1] ?? 0);
+if($fileid === 0) {
+	http_response_code(400);
+	exit("Missing fileid.");
 }
+
 $file = $con->getRow("select * from file where fileid=?", array($fileid));
 if (!$file) {
 	http_response_code(404);
-	exit("file not found");
+	exit("File not found.");
 }
 
 // do download tracking

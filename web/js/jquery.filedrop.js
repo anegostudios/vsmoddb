@@ -144,7 +144,7 @@
       builder += boundary;
       builder += crlf;
       builder += 'Content-Disposition: form-data; name="' + (paramname||"") + '"';
-      builder += '; filename="' + encodeURIComponent(filename) + '"';
+      builder += '; filename="' + String.fromCharCode(...(new TextEncoder('windows-1252')).encode(filename)) + '"';
       builder += crlf;
 
       builder += 'Content-Type: ' + mime;

@@ -117,7 +117,7 @@ function formatCdnDownloadUrl($file) {
 {
 	$path_parts = explode('/', substr(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), 1), 2);
 	if($path_parts[0] === 'cdndl') {
-		$filepath = $config["basepath"] . "files/" . $path_parts[1]; // easy path traversal, we don't care. :NoneCDN_NoSecurity
+		$filepath = $config["basepath"] . "files/" . urldecode($path_parts[1]); // easy path traversal, we don't care. :NoneCDN_NoSecurity
 		
 		// copy paste from the old dl code
 		header('Content-Description: File Transfer');
@@ -133,7 +133,7 @@ function formatCdnDownloadUrl($file) {
 		exit();
 	}
 	else if($path_parts[0] === 'cdnfile') {
-		$filepath = $config["basepath"] . "files/" . $path_parts[1]; // easy path traversal, we don't care. :NoneCDN_NoSecurity
+		$filepath = $config["basepath"] . "files/" . urldecode($path_parts[1]); // easy path traversal, we don't care. :NoneCDN_NoSecurity
 
 		$type = mime_content_type($filepath);
 		header('Content-Type: '.$type);

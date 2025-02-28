@@ -18,7 +18,7 @@
 	<script type="text/javascript" src="/web/js/wysiwyg.js?version=25"></script>
 	<script type="text/javascript" src="/web/js/tinymce/tinymce.min.js"></script>
 
-	<script type="text/javascript" src="/web/js/jquery.filedrop.js"></script>
+	<script type="text/javascript" src="/web/js/jquery.filedrop.js?v=2"></script>
 	<script type="text/javascript" src="/web/js/datepicker.min.js"></script>
 	<script type="text/javascript" src="/web/js/i18n/datepicker.en.js"></script>
 	
