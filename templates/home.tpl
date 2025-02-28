@@ -14,7 +14,7 @@ Cheers,<br>
 </p>
 {else}
 	{if !empty($mods)}
-		<h3>Your uploaded mods</h3>
+		<h3>Your mod contributions</h3>
 		<div class="mods">
 			{foreach from=$mods item=mod}
 				{include file="list-mod-entry"}

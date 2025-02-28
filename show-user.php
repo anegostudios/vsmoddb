@@ -26,13 +26,14 @@ $sql = "
 				join `mod` on asset.assetid = `mod`.assetid
 				left join status on asset.statusid = status.statusid
 				left join file as logofile on mod.logofileid = logofile.fileid
+				left join teammembers on `mod`.modid = teammembers.modid and teammembers.accepted = 1
 			where
-				asset.createdbyuserid = ?
+				(asset.createdbyuserid = ? or teammembers.userid = ?)
 				and asset.statusid = 2
 			order by asset.created desc
 		";
 
-$authormods = $con->getAll($sql, array($shownuser['userid']));
+$authormods = $con->getAll($sql, array($shownuser['userid'], $shownuser['userid']));
 
 foreach ($authormods as &$row) {
 	unset($row['text']);

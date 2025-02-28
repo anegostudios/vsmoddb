@@ -12,12 +12,13 @@ if (!empty($user)) {
 			join `mod` on asset.assetid = `mod`.assetid
 			left join status on asset.statusid = status.statusid
 			left join file as logofile on `mod`.logofileid = logofile.fileid
+			left join teammembers on `mod`.modid = teammembers.modid and teammembers.accepted = 1
 		where
-			asset.createdbyuserid = ?
+			(asset.createdbyuserid = ? or teammembers.userid = ?)
 		order by asset.created desc
 	";
 	
-	$ownmods = $con->getAll($sql, array($user['userid']));
+	$ownmods = $con->getAll($sql, array($user['userid'], $user['userid']));
 	
 	foreach($ownmods as &$row) {
 		unset($row['text']);
