@@ -11,9 +11,8 @@ $(document).ready(function () {
 	createEditor($("textarea.editor"), tinymceSettings);
 	
 	$(document).on("keydown", ".teammembers input.chosen-search-input", function(e) {
-		if (wait) {
-			return;
-		}	
+		if (wait) return;
+		
 		wait=true;		
 		setTimeout(() => {
 			getAuthors("teammembers");
@@ -21,9 +20,8 @@ $(document).ready(function () {
 	});
 	
 	$(document).on("keydown", ".ownership input.chosen-search-input", function(e) {
-		if (wait) {
-			return;
-		}	
+		if (wait) return;
+		
 		wait=true;		
 		setTimeout(() => {
 			getAuthors("ownership");
@@ -33,14 +31,15 @@ $(document).ready(function () {
 	
 	function getAuthors(eleClass) {
 		var searchname = $("." + eleClass + " .chosen-search-input").val();
+		
 		if (!searchname || searchname.length == 0) {
 			wait=false;
 			return;
 		}
 		
-		const $select = $("select." + eleClass);
-		const url = $select.data('url');
-		const ownerId = $select.data('ownerid'); 
+		var $select = $("select." + eleClass);
+		var url = $select.data('url');
+		var ownerId = $select.data('ownerid'); 
 		
 		var surl = url.replace("{name}", searchname);
 		
@@ -53,28 +52,21 @@ $(document).ready(function () {
 			}
 			
 			var currentUserIds = $select.val();
-			
-			$select.children().each(() => {
-				if ($(this).is(":selected")) {
-					currentUserIds.push($(this).val());
-				} else {
-					$(this).remove();					
-				}
-			});
+			var currentSelected = $select.children(":selected");
+			$select.empty();
+			$select.append(currentSelected);
 
 			authors.forEach(function (author) {
-				if ((currentUserIds != null && currentUserIds.includes(author.userid+'')) || author.userid == ownerId) {
-					return;
-				}
-
-				$select.append($('<option>', {
-					value: author.userid,
-					text: author.name
-				}));
+				if (author.userid == ownerId) return;
+				if (currentUserIds != null && currentUserIds.includes(author.userid+'')) return;
+				
+				$select.append('<option value="'+author.userid+'">' + author.name + '</option>');
 			});
 
+			searchname = $("." + eleClass + " .chosen-search-input").val();
 			$select.trigger("chosen:updated");
 			$("." + eleClass + " .chosen-search-input").val(searchname);
+			$("." + eleClass + " .chosen-search-input").css("width", "150px"); // Chosen... *facepalm*
 			wait=false;
 		});
 	}
