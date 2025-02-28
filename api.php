@@ -48,7 +48,12 @@ switch ($action) {
 		break;
 
 	case "authors":
-		$rows = $con->getAll("select userid, name from user");
+		if (isset($_GET["name"])) {
+			$rows = $con->getAll("select userid, name from user where name like ? limit 10", "%".substr($_GET["name"],0,20)."%");
+		} else {		
+			$rows = $con->getAll("select userid, name from user");
+		}
+		
 		$authors = array();
 		foreach ($rows as $row) {
 			$authors[] = array(

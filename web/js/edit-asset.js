@@ -1,3 +1,4 @@
+var wait = false;
 var uploading = 0;
 
 if (typeof (onUploadFinished) === 'undefined') {
@@ -8,27 +9,61 @@ if (typeof (onUploadFinished) === 'undefined') {
 $(document).ready(function () {
 	console.log("ready");
 	createEditor($("textarea.editor"), tinymceSettings);
-
-	$("select.teammembers.ajax-autocomplete").on('chosen:showing_dropdown', function () {
-		const $select = $(this);
-
-		if ($select.data('loaded')) return;
-
+	
+	$(document).on("keydown", ".teammembers input.chosen-search-input", function(e) {
+		if (wait) {
+			return;
+		}	
+		wait=true;		
+		setTimeout(() => {
+			getAuthors("teammembers");
+		}, 1000);
+	});
+	
+	$(document).on("keydown", ".ownership input.chosen-search-input", function(e) {
+		if (wait) {
+			return;
+		}	
+		wait=true;		
+		setTimeout(() => {
+			getAuthors("ownership");
+		}, 1000);
+	});	
+	
+	
+	function getAuthors(eleClass) {
+		var searchname = $("." + eleClass + " .chosen-search-input").val();
+		if (!searchname || searchname.length == 0) {
+			wait=false;
+			return;
+		}
+		
+		const $select = $("select." + eleClass);
 		const url = $select.data('url');
 		const ownerId = $select.data('ownerid'); 
-
-		$.get(url, function (data) {
+		
+		var surl = url.replace("{name}", searchname);
+		
+		$.get(surl, function (data) {
 			const authors = data.authors;
 
-			if (!authors) return;
+			if (!authors) {
+				wait=false;
+				return;
+			}
+			
+			var currentUserIds = $select.val();
+			
+			$select.children().each(() => {
+				if ($(this).is(":selected")) {
+					currentUserIds.push($(this).val());
+				} else {
+					$(this).remove();					
+				}
+			});
 
 			authors.forEach(function (author) {
-				const currentUserIds = $select.find('option:selected').map(function () { return Number($(this).val()); }).get();
-
-				if (
-					(currentUserIds.includes(author.userid)) ||
-					(author.userid == ownerId)
-				) {
+				if ((currentUserIds != null && currentUserIds.includes(author.userid+'')) || author.userid == ownerId) {
 					return;
 				}
 
@@ -39,9 +74,11 @@ $(document).ready(function () {
 			});
 
 			$select.trigger("chosen:updated");
-			$select.data('loaded', true);
+			$("." + eleClass + " .chosen-search-input").val(searchname);
+			wait=false;
 		});
-	});
+	}
+	
 
 	$("a[href='#addconnection']").click(function () {
 		var $elem = $(".connection.template").clone();

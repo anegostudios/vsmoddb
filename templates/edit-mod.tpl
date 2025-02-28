@@ -100,10 +100,10 @@
 			{if $asset['assetid'] === 0}
 				<p>Team members can be added after the mod has been created.</p>
 			{else}
-				<div class="editbox linebreak" style="min-height: 85px;">
+				<div class="editbox linebreak teammembers" style="min-height: 85px;">
 					<label>Team Members</label>
 					<select name="teammemberids[]" style="width:300px;" multiple class="teammembers ajax-autocomplete"
-						data-url="/api/authors"
+						data-url="/api/authors?name={name}"
 						data-ownerid="{if $asset['assetid'] > 0}{$teammembers['ownerid']}{else}{$user['userid']}{/if}">
 						{if isset($teammembers) && count($teammembers['members']) > 0 && $asset['assetid'] > 0}
 							{foreach from=$teammembers['members'] item=teammember}
@@ -199,7 +199,7 @@
 			<div style="clear:both;"></div>
 			<h3>Ownership transfer</h3>
 
-			<div class="editbox linebreak">
+			<div class="editbox linebreak ownership">
 				{if isset($ownershipTransferUser) && $ownershipTransferUser}
 					<span>An ownership transfer invitation has been sent to: {$ownershipTransferUser}.</span>
 					<br>
@@ -213,11 +213,11 @@
 						<small>A notification will be sent to the specified user, inviting them to accept ownership.</small>
 						<br>
 
-						<select name="newownerid" style="width:300px;">
+						<select class="ownership" name="newownerid" style="width:300px;"class="teammembers ajax-autocomplete"
+							data-url="/api/authors?name={name}"
+							data-ownerid="{if $asset['assetid'] > 0}{$teammembers['ownerid']}{else}{$user['userid']}{/if}">
+						>
 							<option value="" selected="selected">--- Select new owner ---</option>
-							{foreach from=$users item=ouser}
-								<option value="{$ouser['userid']}">{$ouser['name']}</option>
-							{/foreach}
 						</select>
 					</div>
 				{/if}
@@ -289,7 +289,7 @@
 		});
 	</script>	
 
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=6" async></script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=23" async></script>
 {/capture}
 
 {include file="footer"}

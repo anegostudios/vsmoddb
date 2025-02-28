@@ -223,7 +223,7 @@
 		});
 		
 	</script>	
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=22" async></script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=24" async></script>
 {/capture}
 
 {include file="footer"}
