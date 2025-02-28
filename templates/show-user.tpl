@@ -31,7 +31,7 @@
 
 {if !empty($mods)}
 
-	<h3>Mod created by {$shownuser['name']}</h3>
+	<h3>Mods {$shownuser['name']} contributed to</h3>
 
 	<div class="mods">
 		{foreach from=$mods item=mod}
