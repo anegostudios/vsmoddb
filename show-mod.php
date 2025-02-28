@@ -18,11 +18,7 @@ if ($assetid) {
 			createduser.name as createdusername,
 			editeduser.userid as editeduserid,
 			editeduser.name as editedusername,
-			status.code as statuscode,
-        	(select json_arrayagg(json_object('userid', user.userid, 'name', user.name)) 
-        		from teammembers 
-        		join user on teammembers.userid = user.userid 
-        		where teammembers.modid = `mod`.modid and teammembers.accepted = 1) as teammembers
+			status.code as statuscode
 		from 
 			asset 
 			join `mod` on asset.assetid=`mod`.assetid
@@ -39,14 +35,24 @@ if ($assetid) {
 		exit();
 	}
 
-	if ($asset['teammembers'] > 0) {
-		$asset['teammembers'] = json_decode($asset['teammembers'], true);
+	$teammembers = $con->getAll("
+		select 
+			user.userid, 
+			user.name 
+		from 
+			teammembers 
+			join user on teammembers.userid = user.userid 
+		where 
+			teammembers.modid = ? 
+			and teammembers.accepted = 1
+		", array($asset['modid']));
 
-		foreach ($asset['teammembers'] as $idx => $teammember) {
-			$asset['teammembers'][$idx]['usertoken'] = getUserHash($teammember['userid'], $asset['createduserjoindate']);
+	if ($teammembers) {
+		foreach ($teammembers as $idx => $teammember) {
+			$teammembers[$idx]['usertoken'] = getUserHash($teammember['userid'], $asset['createduserjoindate']);
 		}
 
-		$view->assign("teammembers", $asset['teammembers']);
+		$view->assign("teammembers", $teammembers);
 	}
 
 	if(!empty($asset['logourl'])) {
