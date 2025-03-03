@@ -103,7 +103,7 @@
 				<div class="editbox linebreak teammembers" style="min-height: 85px;">
 					<label>Team Members</label>
 					<select name="teammemberids[]" style="width:300px;" multiple class="teammembers ajax-autocomplete"
-						data-url="/api/authors?name={name}"
+						data-url="/api/authors?name=\{name}"
 						data-ownerid="{if $asset['assetid'] > 0}{$teammembers['ownerid']}{else}{$user['userid']}{/if}">
 						{if isset($teammembers) && count($teammembers['members']) > 0 && $asset['assetid'] > 0}
 							{foreach from=$teammembers['members'] item=teammember}
@@ -216,7 +216,7 @@
 						<br>
 
 						<select class="ownership" name="newownerid" style="width:300px;"class="teammembers ajax-autocomplete"
-							data-url="/api/authors?name={name}"
+							data-url="/api/authors?name=\{name}"
 							data-ownerid="{if $asset['assetid'] > 0}{$teammembers['ownerid']}{else}{$user['userid']}{/if}">
 						>
 							<option value="" selected="selected">--- Select new owner ---</option>
