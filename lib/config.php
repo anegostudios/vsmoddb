@@ -21,13 +21,8 @@ if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
 		$config["databasepassword"] = "vsmoddb";
 	}
 
-	if (!defined("DEBUG")) {
-		define("DEBUG", 1);
-	}
-
-	if (!defined("DEBUGUSER")) {
-		define("DEBUGUSER", 1);
-	}
+	if (!defined("DEBUG")) define("DEBUG", 1);
+	if (!defined("DEBUGUSER")) define("DEBUGUSER", 1);
 } else {
 	$config["database"] = "moddb";
 	define("CDN", "bunny");

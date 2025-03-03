@@ -53,8 +53,13 @@ foreach ($authormods as &$row) {
 
 	$row['tags'] = $tags;
 }
-
 unset($row);
+
+if (canModerate($shownuser, $user)) {
+	$changelog = $con->getAll("select * from changelog where userid=? order by created desc limit 100", array($shownuser["userid"]));
+	$view->assign("changelog", $changelog);
+}
+
 $view->assign("mods", $authormods);
 $view->assign("user", $user);
 $view->assign("shownuser", $shownuser);

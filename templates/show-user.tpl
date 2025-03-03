@@ -30,7 +30,6 @@
 <div style="clear:both;"></div>
 
 {if !empty($mods)}
-
 	<h3>Mods {$shownuser['name']} contributed to</h3>
 
 	<div class="mods">
@@ -38,7 +37,18 @@
 			{include file="list-mod-entry"}
 		{/foreach}
 	</div>
+{/if}
 
+{if canModerate($shownuser, $user)}
+	<p><br><strong>User activity history (newest 100)</strong></p>
+	<table class="stdtable">
+		<thead><th>Text</th><th>Assetid</th><th>Date</th></thead>
+		<tbody>
+		{foreach from=$changelog item=centry}
+			<tr><td>{$centry["text"]}</td><td>{$centry["assetid"]}</td><td>{fancyDate($centry["created"])}</td></tr>
+		{/foreach}
+		</tbody>
+	</table>
 {/if}
 
 {include file="footer"}

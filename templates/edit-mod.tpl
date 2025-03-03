@@ -200,6 +200,8 @@
 			<h3>Ownership transfer</h3>
 
 			<div class="editbox linebreak ownership">
+				SoonTM
+				<!--
 				{if isset($ownershipTransferUser) && $ownershipTransferUser}
 					<span>An ownership transfer invitation has been sent to: {$ownershipTransferUser}.</span>
 					<br>
@@ -221,6 +223,7 @@
 						</select>
 					</div>
 				{/if}
+				-->
 
 			</div>
 		{/if}
