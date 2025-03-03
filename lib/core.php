@@ -545,14 +545,16 @@ function updateGameVersionsCached($modid)
 
 function getUserHash($userid, $joindate)
 {
-	global $config;
 	return substr(hash("sha512", $userid . $joindate), 0, 20);
 }
 
 function getUserByHash($hashcode, $con)
 {
-	global $config;
-	return $con->getRow("select * from user where sha2(concat(user.userid, user.created), 512) like ?", array($hashcode . "%"));
+	return $con->getRow("
+		select *, ifnull(user.banneduntil >= NOW(), 0) as `isbanned`
+		from user
+		where substring(sha2(concat(user.userid, user.created), 512), 1, 20) = ?
+	", array($hashcode));
 }
 
 /**

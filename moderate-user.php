@@ -43,6 +43,7 @@ if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 		$view->assign('errormessage', "Missing $errorreasons for ban.");
 	}
 	else {
+		$con->execute("update user set banneduntil = ? where userid = ?", array($until, $targetuser['userid']));
 		logModeratorAction($targetuser['userid'], $user['userid'], MODACTION_KIND_BAN, $until, $fpost['modreason']);
 
 		forceRedirectAfterPOST();
@@ -56,11 +57,8 @@ else if(isset($_POST['submit']) && $_POST['submit'] == 'redeem') {
 		$view->assign('errormessage', 'Missing reason for redemption.');
 	}
 	else {
-		$con->execute("
-			update moderationrecord
-			set until = NOW()
-			where kind = ".MODACTION_KIND_BAN." and until > NOW()
-		");
+		$con->execute("update user set banneduntil = now() where userid = ?", array($targetuser['userid']));
+		$con->execute("update moderationrecord set until = now() where kind = ".MODACTION_KIND_BAN." and until > now()");
 		logModeratorAction($targetuser['userid'], $user['userid'], MODACTION_KIND_REDEEM, SQL_DATE_FOREVER, $reason);
 
 		forceRedirectAfterPOST();

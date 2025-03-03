@@ -55,7 +55,7 @@ Cheers,<br>
 		<tr>
 			<th style="width:200px;">On</th>
 			<th class="textCol">Text</th>
-			<th style="width:100px;">By</th>
+			<th style="width:140px;">By</th>
 			<th style="width:120px;">Date</th>
 		</tr>
 	</thead>
@@ -65,7 +65,7 @@ Cheers,<br>
 			<tr>
 				<td><a href="/show/mod/{$entry['assetid']}">{$entry['assetname']}</a></td>
 				<td class="textCol"><div onclick="location.href='/show/mod/{$entry['assetid']}#cmt-{$entry['commentid']}'">{$entry['text']}</div></td>
-				<td><a href="/show/mod/{$entry['assetid']}#comments">{$entry['username']}</a></td>
+				<td><a href="/show/mod/{$entry['assetid']}#comments">{$entry['username']}</a>{if $entry['isbanned']} <span style="color:red;white-space:nowrap;">[currently restricted]</span>{/if}</td>
 				<td><a href="/show/mod/{$entry['assetid']}#comments">{fancyDate($entry['created'])}</a></td>
 			</tr>
 		{/foreach}

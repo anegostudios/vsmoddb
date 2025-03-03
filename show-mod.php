@@ -79,6 +79,7 @@ if ($assetid) {
 			user.name as username,
 			user.roleid as roleid,
 			substring(sha2(concat(user.userid, user.created), 512), 1, 20) as usertoken,
+			ifnull(user.banneduntil >= now(), 0) as `isbanned`,
 			role.code as rolecode,
 			role.name as rolename
 		from 

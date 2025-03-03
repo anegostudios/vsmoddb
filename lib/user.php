@@ -9,7 +9,7 @@ $cnt = 0;
 if (DEBUGUSER === 1) {
 	$userid = empty($_GET['showas']) ? 1 : (intval($_GET['showas']) ?: 1); // append ?showas=<id> to view the page as a different user
 	$user = $con->getRow("
-		select user.*, role.code as rolecode, rec.reason as bannedreason
+		select user.*, role.code as rolecode, ifnull(user.banneduntil >= now(), 0) as `isbanned`, rec.reason as bannedreason
 		from user 
 		left join role on (user.roleid = role.roleid)
 		left join moderationrecord as rec on (rec.kind = " . MODACTION_KIND_BAN . " and rec.targetuserid = user.userid and rec.until = user.banneduntil and rec.until >= NOW())
@@ -18,21 +18,18 @@ if (DEBUGUSER === 1) {
 }
 
 if ($sessiontoken) {
-	$user = $con->getRow(
-		"
-		select user.*, role.code as rolecode, rec.reason as bannedreason
+	$user = $con->getRow("
+		select user.*, role.code as rolecode, ifnull(user.banneduntil >= now(), 0) as `isbanned`, rec.reason as bannedreason
 		from user 
 		left join role on (user.roleid = role.roleid) 
 		left join moderationrecord as rec on (rec.kind = " . MODACTION_KIND_BAN . " and rec.targetuserid = user.userid and rec.until = user.banneduntil and rec.until >= NOW())
 		where sessiontoken=? and sessiontokenvaliduntil > now()
-	",
-		array($_COOKIE['vs_websessionkey'])
+	", array($_COOKIE['vs_websessionkey'])
 	);
 }
 
 if (!empty($user)) {
 	$user['banneduntil'] = parseSqlDateTime($user['banneduntil']);
-	$user['isbanned'] = isCurrentlyBanned($user);
 	loadNotifications();
 
 	$view->assign("user", $user);
@@ -63,11 +60,6 @@ function canDeleteAsset($asset, $user)
 function canEditProfile($shownuser, $user)
 {
 	return isset($user['userid']) && ($user['userid'] == $shownuser['userid'] || canModerate($shownuser, $user));
-}
-
-function isCurrentlyBanned($user)
-{
-	return $user['banneduntil'] && $user['banneduntil'] >= new \DateTimeImmutable("now");
 }
 
 /**

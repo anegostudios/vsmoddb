@@ -6,7 +6,7 @@
 		{include
 			file="button"
 			href="/moderate/user/$usertoken"
-			buttontext="Ban User"
+			buttontext="Moderate User"
 			class="flair-moderator"
 		}
 	{/if}
@@ -19,7 +19,7 @@
 	{/if}
 </div>
 
-<h2><span class="title">About {$shownuser['name']}</span></h2>
+<h2><span class="title">About {$shownuser['name']}</span>{if $shownuser['isbanned']}&nbsp;<span style="color: red;">[currently restricted]</span>{/if}</h2>
 
 {if !empty($shownuserraw['bio'])}
 	{$shownuserraw['bio']}

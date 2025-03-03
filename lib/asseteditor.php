@@ -122,7 +122,8 @@ class AssetEditor extends AssetController
 		$comments = $con->getAll("
 			select 
 				comment.*,
-				user.name as username
+				user.name as username,
+				ifnull(user.banneduntil >= now(), 0) as `isbanned`
 			from 
 				comment 
 				join user on (comment.userid = user.userid)
