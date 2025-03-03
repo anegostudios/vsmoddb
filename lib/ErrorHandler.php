@@ -111,7 +111,7 @@ class ErrorHandler {
 
 
 	/* User friendly error message */
-	public static function printUserError($errno, $e, $errstr) {
+	public static function printUserError($errno, $e, $errstr = "") {
 		if ((self::$productionreporting & $errno) && !self::$usererrorprinted) {
 			if (ob_get_level() > 0) {
 				ob_end_flush();
@@ -222,7 +222,7 @@ class ErrorHandler {
 			if (self::isDebugMode()) {
 			   self::printException($e);
 			} else {
-				self::printUserError($errno);
+				self::printUserError($errno, $e);
 			}
 
 			self::logException($e, $severity);
