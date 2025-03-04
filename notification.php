@@ -43,15 +43,17 @@ switch($notification['type']) {
 
 	case "newcomment": case "mentioncomment":
 		$mod = $con->getRow("
-			select assetid, urlalias
+			select `mod`.assetid, `mod`.urlalias
 			from `mod`
 			join comment on comment.assetid = `mod`.assetid
 			where commentid = ?
 		", array($notification['recordid']));
 
+		$con->execute('update notification set `read` = 1 where notificationid = ?', [$notification['notificationid']]); // TODO @setting
+
 		forceRedirect([
 			'path'     => formatModPath($mod),
-			'fragment' => '#cmt-'.$notification['recordid'],
+			'fragment' => 'cmt-'.$notification['recordid'],
 		]);
 		exit();
 }
