@@ -49,18 +49,16 @@ switch ($action) {
 
 	case "authors":
 		if (isset($_GET["name"])) {
-			$rows = $con->getAll("select userid, name from user where name like ? limit 10", "%".substr($_GET["name"],0,20)."%");
+			$rows = $con->getAll("select userid, name from user where (banneduntil is null or banneduntil < now()) and name like ? limit 10", "%".substr($_GET["name"], 0, 20)."%");
 		} else {		
 			$rows = $con->getAll("select userid, name from user");
 		}
 		
-		$authors = array();
-		foreach ($rows as $row) {
-			$authors[] = array(
-				"userid" => intval($row["userid"]),
-				"name" => $row['name']
-			);
-		}
+		$authors = array_map(fn($row) => [
+			"userid" => intval($row["userid"]),
+			"name"   => $row['name'],
+		], $rows);
+
 		good(array("statuscode" => 200, "authors" => $authors));
 		break;
 

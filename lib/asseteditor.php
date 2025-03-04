@@ -59,14 +59,15 @@ class AssetEditor extends AssetController
 
 			if ($status == 'saved' || $status == 'savednew') {
 				if (!empty($_POST['saveandback'])) {
-					header("Location: " . $this->getBackLink());
-					exit();
-				} else {
-					if ($status == 'savednew') {
-						header("Location: /edit/{$this->classname}?assetid={$this->assetid}");
-						exit();
-					}
+					forceRedirect($this->getBackLink());
 				}
+				else if ($status == 'savednew') {
+					forceRedirect("/edit/{$this->classname}?assetid={$this->assetid}");
+				}
+				else {
+					forceRedirectAfterPOST();
+				}
+				exit();
 			}
 		}
 
@@ -355,56 +356,7 @@ class AssetEditor extends AssetController
 		$view->assign("tags", $tags);
 		$view->assign("asset", $this->asset);
 
-		if (false && isset($this->asset['createdbyuserid']) && ($this->asset['createdbyuserid'] === $user['userid']) && $this->assetid > 0) {
-			$modId = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
-
-			$teammembers = $con->getAll("select u.*, t.canedit from user u join teammembers t on u.userid = t.userid where t.modid = ? and u.userid != ?", array($modId, $user['userid']));
-
-			$view->assign("teammembers", [
-				"members" => $teammembers,
-				"ownerid" => $this->asset['createdbyuserid']
-			]);
-
-			$view->assign("users", $con->getAll("select * from user where userid != ?", array($user['userid'])));
-
-			// Check if ownership transfer invitation has been sent to a user
-			$ownershipTransferUser = $con->getOne("select u.name from teammembers t join user u on u.userid = t.userid where modid = ? and transferownership = 1", array($modId));
-
-			if ($ownershipTransferUser) {
-				$view->assign("ownershipTransferUser", $ownershipTransferUser);
-
-				if (isset($_GET['revokenewownership']) && $_GET['revokenewownership'] == 1) {
-					$this->handleRevokeNewOwnership($user);
-				}
-			}
-		}
-
 		$this->displayTemplate($this->editTemplateFile);
-	}
-
-	function handleRevokeNewOwnership($user)
-	{
-		if (($this->asset['createdbyuserid'] !== $user['userid']) && $this->assetid <= 0) {
-			return;
-		}
-
-		global $con;
-
-		$newOwnerId = $con->getOne('SELECT `userid` FROM `teammembers` WHERE `modid` = ? AND `transferownership` = 1 LIMIT 1', [$this->assetid]);
-
-		if ($newOwnerId === 0 || $newOwnerId === null) {
-			header("Location: /edit/{$this->classname}?assetid=$this->assetid");
-			exit;
-		}
-
-		// Remove new owner from the teammembers list
-		$con->Execute("DELETE FROM `teammembers` WHERE `userid` = ? AND `modid` = ? AND `transferownership` = 1", [$newOwnerId, $this->assetid]);
-
-		// Mark notification to new owner as readed
-		$con->Execute("UPDATE `notification` SET `read` = 1 WHERE `userid` = ? AND `recordid` = ? AND `type` = 'modownershiptransfer' AND `read` = 0", [$newOwnerId, $this->assetid]);
-
-		header("Location: /edit/{$this->classname}?assetid=$this->assetid");
-		exit;
 	}
 
 	function updateTags($assetid)

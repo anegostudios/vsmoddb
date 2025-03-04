@@ -10,64 +10,67 @@ $(document).ready(function () {
 	console.log("ready");
 	createEditor($("textarea.editor"), tinymceSettings);
 	
-	$(document).on("keydown", ".teammembers input.chosen-search-input", function(e) {
+	$(document).on("keydown", "#teammembers-box input.chosen-search-input", function(e) {
 		if (wait) return;
 		
-		wait=true;		
+		wait = true;
 		setTimeout(() => {
-			getAuthors("teammembers");
+			getAuthors($("#teammembers-box"));
 		}, 1000);
 	});
 	
-	$(document).on("keydown", ".ownership input.chosen-search-input", function(e) {
-		if (wait) return;
+	const $editPermsSelect = $('#teameditors-box select');
+	$("#teammembers-box select").on('change', function(e, ex) {
+		if(ex.selected) {
+			const $option = $(e.target).find(`[value="${ex.selected}"]`).clone();
+			$option.removeProp('selected');
+			$editPermsSelect.append($option);
+		}
+		else if(ex.deselected) {
+			$editPermsSelect.find(`[value="${ex.deselected}"]`).remove()
+		}
+		$editPermsSelect.trigger("chosen:updated");
+	});
+
+	function getAuthors($box) {
+		const $searchInput = $box.find(".chosen-search-input");
+		const searchname = $searchInput.val();
 		
-		wait=true;		
-		setTimeout(() => {
-			getAuthors("ownership");
-		}, 1000);
-	});	
-	
-	
-	function getAuthors(eleClass) {
-		var searchname = $("." + eleClass + " .chosen-search-input").val();
-		
-		if (!searchname || searchname.length == 0) {
-			wait=false;
+		if (!searchname) {
+			wait = false;
 			return;
 		}
 		
-		var $select = $("select." + eleClass);
-		var url = $select.data('url');
-		var ownerId = $select.data('ownerid'); 
+		const $select = $box.find("select");
+		const url = $select.data('url').replace("{name}", searchname);
+		const ownerId = $select.data('ownerid'); 
 		
-		var surl = url.replace("{name}", searchname);
-		
-		$.get(surl, function (data) {
+		$.get(url, function (data) {
 			const authors = data.authors;
 
 			if (!authors) {
-				wait=false;
+				wait = false;
 				return;
 			}
 			
-			var currentUserIds = $select.val();
-			var currentSelected = $select.children(":selected");
+			const currentUserIds = $select.val();
+			const $currentSelected = $select.children(":selected");
 			$select.empty();
-			$select.append(currentSelected);
+			$select.append($currentSelected);
 
 			authors.forEach(function (author) {
 				if (author.userid == ownerId) return;
 				if (currentUserIds != null && currentUserIds.includes(author.userid+'')) return;
 				
-				$select.append('<option value="'+author.userid+'">' + author.name + '</option>');
+				$select.append(`<option value="${author.userid}">${author.name}</option>`);
 			});
 
-			searchname = $("." + eleClass + " .chosen-search-input").val();
+			const searchname = $searchInput.val(); // cannot use the old value, it will be outdated by now
 			$select.trigger("chosen:updated");
-			$("." + eleClass + " .chosen-search-input").val(searchname);
-			$("." + eleClass + " .chosen-search-input").css("width", "150px"); // Chosen... *facepalm*
-			wait=false;
+			$searchInput.val(searchname);
+			// Choses resets this values in the update call. We manually modify the search, so we need to set the width as well.
+			$searchInput.css("width", "150px");
+			wait = false;
 		});
 	}
 	

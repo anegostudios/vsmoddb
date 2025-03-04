@@ -37,16 +37,29 @@ if (!empty($user)) {
 	$view->assign("notificationcount", 0);
 }
 
-function canEditAsset($asset, $user)
+const ASSETTYPE_MOD = 1;
+const ASSETTYPE_RELEASE = 2;
+
+function canEditAsset($asset, $user, $includeTeam = true)
 {
 	global $con;
 
 	$canEditAsTeamMember = false;
 
-	// It's mod if assettypeid is 1
-	if ($asset['assettypeid'] === 1) {
-		$modId = $con->getOne("select `modid` from `mod` where `assetid` = ?", array($asset['assetid']));
-		$canEditAsTeamMember = $con->getOne("select count(*) from teammembers where canedit = 1 and accepted = 1 and modid=? and userid=?", array($modId, $user['userid']));
+	// @cleanup: cursed hackery, breaking the point of the oop asseteditor
+	if ($asset['assettypeid'] === ASSETTYPE_MOD && $includeTeam) {
+		$canEditAsTeamMember = $con->getOne("select 1 
+			from teammember 
+			join `mod` on `mod`.modid = teammember.modid
+			where canedit = 1 and assetid = ? and userid = ?
+		", array($asset['assetid'], $user['userid']));
+	}
+	else if ($asset['assettypeid'] === ASSETTYPE_RELEASE && $includeTeam) {
+		$canEditAsTeamMember = $con->getOne("select 1 
+			from teammember 
+			join `release` on `release`.modid = teammember.modid
+			where canedit = 1 and assetid = ? and userid = ?
+		", array($asset['assetid'], $user['userid']));
 	}
 
 	return isset($user['userid']) && ($user['userid'] == $asset['createdbyuserid'] || $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator" || $canEditAsTeamMember);
@@ -80,71 +93,78 @@ function loadNotifications()
 	$notifications = $con->getAll("select * from notification where userid=? and `read`=0 order by created desc limit 10", array($user['userid']));
 
 	foreach ($notifications as &$notification) {
-		if ($notification['type'] == "newrelease") {
-			$cmt = $con->getRow("
-				select 
-					`asset`.name as modname,
-					user.name as username
-				from
-					`mod`
-					join asset on (`mod`.assetid = asset.assetid)
-					join user on (asset.createdbyuserid = user.userid)
-				where modid=?
-			", $notification['recordid']);
+		switch ($notification['type']) {
+			case "newrelease":
+				$cmt = $con->getRow("
+					select 
+						`asset`.name as modname,
+						user.name as username
+					from
+						`mod`
+						join asset on (`mod`.assetid = asset.assetid)
+						join user on (asset.createdbyuserid = user.userid)
+					where modid=?
+				", $notification['recordid']);
 
-			$notification['text'] = "{$cmt['username']} uploaded a new version of {$cmt['modname']}";
-		} elseif ($notification['type'] == "teaminvite") {
-			$cmt = $con->getRow("
-				select 
-					`asset`.name as modname,
-					user.name as username
-				from
-					`mod`
-					join asset on (`mod`.assetid = asset.assetid)
-					join user on (asset.createdbyuserid = user.userid)
-				where `mod`.modid=? 
-			", $notification['recordid']);
+				$notification['text'] = "{$cmt['username']} uploaded a new version of {$cmt['modname']}";
+				break;
 
-			$notification['text'] = "{$cmt['username']} invited you to join the team of {$cmt['modname']}";
-		} elseif ($notification['type'] == "modownershiptransfer") {
-			$cmt = $con->getRow("
-				select 
-					`asset`.name as modname,
-					user.name as username
-				from
-					`mod`
-					join asset on (`mod`.assetid = asset.assetid)
-					join user on (asset.createdbyuserid = user.userid)
-				where `mod`.modid=? 
-			", $notification['recordid']);
+			case "teaminvite":
+				$cmt = $con->getRow("
+					select 
+						`asset`.name as modname,
+						user.name as username
+					from
+						`mod`
+						join asset on (`mod`.assetid = asset.assetid)
+						join user on (asset.createdbyuserid = user.userid)
+					where `mod`.modid = ? 
+				", intval($notification['recordid']) & ((1 << 30) - 1));  // :InviteEditBit
 
-			$notification['text'] = "{$cmt['username']} offered you ownership of {$cmt['modname']}";
-		} else {
-			$cmt = $con->getRow("
-				select 
-					asset.assetid,
-					asset.name as modname,
-					user.name as username,
-					`mod`.urlalias as modalias
-				from
-					comment 
-					join asset on (comment.assetid = asset.assetid)
-					join `mod` on (comment.assetid = `mod`.assetid)
-					join user on (comment.userid = user.userid)
-				where commentid=?
-			", $notification['recordid']);
+				$notification['text'] = "{$cmt['username']} invited you to join the team of {$cmt['modname']}";
+				break;
 
-			if ($notification['type'] == "newcomment") {
-				$notification['text'] = "{$cmt['username']} commented on {$cmt['modname']}";
-			}
+			case "modownershiptransfer":
+				$cmt = $con->getRow("
+					select 
+						`asset`.name as modname,
+						user.name as username
+					from
+						`mod`
+						join asset on (`mod`.assetid = asset.assetid)
+						join user on (asset.createdbyuserid = user.userid)
+					where `mod`.modid=? 
+				", $notification['recordid']);
 
-			if ($notification['type'] == "mentioncomment") {
-				$notification['text'] = "{$cmt['username']} mentioned you in a comment on {$cmt['modname']}";
-			}
+				$notification['text'] = "{$cmt['username']} offered you ownership of {$cmt['modname']}";
+				break;
+
+			case "newcomment": case "mentioncomment":
+				$cmt = $con->getRow("
+					select 
+						asset.assetid,
+						asset.name as modname,
+						user.name as username,
+						`mod`.urlalias as modalias
+					from
+						comment 
+						join asset on (comment.assetid = asset.assetid)
+						join `mod` on (comment.assetid = `mod`.assetid)
+						join user on (comment.userid = user.userid)
+					where commentid=?
+				", $notification['recordid']);
+
+				if ($notification['type'] == "newcomment") {
+					$notification['text'] = "{$cmt['username']} commented on {$cmt['modname']}";
+				}
+				else {
+					$notification['text'] = "{$cmt['username']} mentioned you in a comment on {$cmt['modname']}";
+				}
+				break;
 		}
-
 		$notification['link'] = "/notification/{$notification['notificationid']}";
 	}
+	unset($notification);
 
 	if (count($notifications)) {
 		$notifications[] = array('type' => 'clearall', 'text' => 'Clear all notifications', 'recorid' => 'clear', 'link' => '/notification/clearall');

@@ -27,7 +27,7 @@
 		<input type="hidden" name="delete" value="1">
 	</form>
 
-	<form method="post" name="form1">
+	<form method="post" name="form1" autocomplete="off">
 		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="assetid" value="{$asset['assetid']}">
@@ -93,44 +93,30 @@
 			{include file="edit-asset-`$entrycode`.tpl"}
 		{/if}
 
-		{if isset($asset['createdbyuserid']) && ($asset['createdbyuserid'] == $user['userid']) || $asset['assetid'] === 0}
+		{if canEditAsset($asset, $user, false)}
 			<div style="clear:both;"></div>
 			<h3>Team members</h3>
 
-			{if $asset['assetid'] === 0}
-				<p>Team members can be added after the mod has been created.</p>
-			{else}
-				<div class="editbox linebreak teammembers" style="min-height: 85px;">
-					<label>Team Members</label>
-					<select name="teammemberids[]" style="width:300px;" multiple class="teammembers ajax-autocomplete"
-						data-url="/api/authors?name=\{name}"
-						data-ownerid="{if $asset['assetid'] > 0}{$teammembers['ownerid']}{else}{$user['userid']}{/if}">
-						{if isset($teammembers) && count($teammembers['members']) > 0 && $asset['assetid'] > 0}
-							{foreach from=$teammembers['members'] item=teammember}
-								<option selected {if $teammember['userid'] == $teammembers['ownerid']}disabled{/if}
-									value="{$teammember['userid']}" title="{$teammember['name']}">
-									{$teammember['name']}
-								</option>
-							{/foreach}
-						{/if}
-					</select>
-				</div>
-			{/if}
-
-			{if (isset($teammembers) && count($teammembers['members']) > 0) && $asset['assetid'] > 0}
-				<div class="editbox" style="min-height: 85px;">
-					<label>Team Members with edit permissions</label>
-					<select name="teammembereditids[]" style="width:300px;" multiple class="teammembers-edit">
-						{foreach from=$teammembers['members'] item=teammember}
-							<option {if $teammember['canedit'] == 1}selected{/if}
-								{if $teammember['userid'] == $teammembers['ownerid']}disabled{/if} value="{$teammember['userid']}"
-								title="{$teammember['name']}">
-								{$teammember['name']}
-							</option>
+			<div id="teammembers-box" class="editbox linebreak pending-markers" style="min-height: 85px;">
+				<label>Team Members</label>
+				<select name="teammemberids[]" style="width:300px;" multiple class="ajax-autocomplete" data-placeholder="Search Users"
+					data-url="/api/authors?name=\{name}" data-ownerid="{$asset['createdbyuserid']}">
+					{if !empty($teammembers)}
+						{foreach from=$teammembers item=teammember}
+							<option selected class="maybe-accepted{if !$teammember['pending']} accepted{/if}" value="{$teammember['userid']}" title="{$teammember['name']}">{$teammember['name']}</option>
 						{/foreach}
-					</select>
-				</div>
-			{/if}
+					{/if}
+				</select>
+			</div>
+
+			<div id="teameditors-box" class="editbox pending-markers" style="min-height: 85px;">
+				<label>Team Members with edit permissions</label>
+				<select name="teammembereditids[]" style="width:300px;" multiple data-placeholder="Search Members">
+					{foreach from=$teammembers item=teammember}
+						<option {if $teammember['canedit']}selected{/if} class="maybe-accepted{if !$teammember['pending']} accepted{/if}" value="{$teammember['userid']}" title="{$teammember['name']}">{$teammember['name']}</option>
+					{/foreach}
+				</select>
+			</div>
 		{/if}
 
 		<div style="clear:both;"></div>
@@ -176,12 +162,9 @@
 		<div class="editbox linebreak">
 			<label>Side</label>
 			<select name="side">
-				<option value="client" {if ($asset['side']=='client')}selected="selected" {/if}>Client side only mod
-				</option>
-				<option value="server" {if ($asset['side']=='server')}selected="selected" {/if}>Server side only mod
-				</option>
-				<option value="both" {if (empty($asset['side']) || $asset['side']=='both')}selected="selected" {/if}>
-					Client and Server side mod</option>
+				<option value="client" {if ($asset['side']=='client')}selected="selected" {/if}>Client side only mod</option>
+				<option value="server" {if ($asset['side']=='server')}selected="selected" {/if}>Server side only mod</option>
+				<option value="both" {if (empty($asset['side']) || $asset['side']=='both')}selected="selected" {/if}>Client and Server side mod</option>
 			</select>
 		</div>
 
@@ -195,13 +178,11 @@
 			</select>
 		</div>
 
-		{if isset($asset['createdbyuserid']) && ($asset['createdbyuserid'] == $user['userid'])}
+		{if $asset['assetid'] && canEditAsset($asset, $user, false)}
 			<div style="clear:both;"></div>
 			<h3>Ownership transfer</h3>
 
-			<div class="editbox linebreak ownership">
-				SoonTM
-				<!--
+			<div class="editbox linebreak">
 				{if isset($ownershipTransferUser) && $ownershipTransferUser}
 					<span>An ownership transfer invitation has been sent to: {$ownershipTransferUser}.</span>
 					<br>
@@ -212,18 +193,21 @@
 						<label>Select new owner</label>
 						<small>Ownership can only be transferred by the current owner of this resource.</small>
 						<br>
+						<small>Ownership can only be transferred to an existing teammember.</small>
+						<br>
 						<small>A notification will be sent to the specified user, inviting them to accept ownership.</small>
 						<br>
 
-						<select class="ownership" name="newownerid" style="width:300px;"class="teammembers ajax-autocomplete"
+						<select name="newownerid" style="width:300px;"
 							data-url="/api/authors?name=\{name}"
-							data-ownerid="{if $asset['assetid'] > 0}{$teammembers['ownerid']}{else}{$user['userid']}{/if}">
-						>
+							data-ownerid="{$asset['createdbyuserid']}">
 							<option value="" selected="selected">--- Select new owner ---</option>
+							{foreach from=$teammembers item=teammember}
+								{if !$teammember['pending']}<option value="{$teammember['userid']}" title="{$teammember['name']}">{$teammember['name']}</option>{/if}
+							{/foreach}
 						</select>
 					</div>
 				{/if}
-				-->
 
 			</div>
 		{/if}
@@ -292,7 +276,7 @@
 		});
 	</script>	
 
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=28" async></script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=29" async></script>
 {/capture}
 
 {include file="footer"}

@@ -23,6 +23,10 @@ USE `moddb`;
 INSERT INTO `moddb`.`user` (roleid, uid, name, password, email, actiontoken, sessiontoken, sessiontokenvaliduntil, timezone, created, lastmodified, lastonline) VALUES (3, NULL, 'Example User', NULL, 'example.user@example.com', NULL, NULL, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL);
 INSERT INTO `moddb`.`user` (userid, name, created, banneduntil, email) VALUES (2, 'Evil User', NOW(), '9999-12-31', '2+void@localhost');
 INSERT INTO `moddb`.`user` (userid, roleid, name, created, email) VALUES (3, 2, 'Moderator User', NOW(), '3+void@localhost');
+INSERT INTO `moddb`.`user` (userid, roleid, name, created, email) VALUES (4, 3, 'User 4', NOW(), '4+void@localhost');
+INSERT INTO `moddb`.`user` (userid, roleid, name, created, email) VALUES (5, 3, 'User 5', NOW(), '5+void@localhost');
+INSERT INTO `moddb`.`user` (userid, roleid, name, created, email) VALUES (6, 3, 'User 6', NOW(), '6+void@localhost');
+INSERT INTO `moddb`.`user` (userid, roleid, name, created, email) VALUES (7, 3, 'User 7', NOW(), '7+void@localhost');
 
 COMMIT;
 

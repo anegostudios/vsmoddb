@@ -14,7 +14,7 @@ services:
       - ..:/var/www/html
 
   db:
-    image: mysql
+    image: mariadb:10.2.38
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root

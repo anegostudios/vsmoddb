@@ -22,7 +22,7 @@ services:
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
   db:
-    image: mysql
+    image: mariadb:10.2.38
     restart: unless-stopped
     volumes:
       - mysql-data:/var/lib/mysql

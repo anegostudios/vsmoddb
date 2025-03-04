@@ -36,25 +36,17 @@ if ($assetid) {
 	}
 
 	$teammembers = $con->getAll("
-		select 
-			user.userid, 
+		select
+			user.userid,
 			user.name,
-			user.created as joindate
+			substring(sha2(concat(user.userid, user.created), 512), 1, 20) as usertoken
 		from 
-			teammembers 
-			join user on teammembers.userid = user.userid 
+			teammember
+			join user on teammember.userid = user.userid 
 		where 
-			teammembers.modid = ? 
-			and teammembers.accepted = 1
+			teammember.modid = ?
 		", array($asset['modid']));
-
-	if ($teammembers) {
-		foreach ($teammembers as $idx => $teammember) {
-			$teammembers[$idx]['usertoken'] = getUserHash($teammember['userid'], $teammember['joindate']);
-		}
-
-		$view->assign("teammembers", $teammembers);
-	}
+	$view->assign("teammembers", $teammembers);
 
 	if(!empty($asset['logourl'])) {
 		$asset['logourl'] = formatCdnUrlFromCdnPath($asset['logourl']);
@@ -169,8 +161,8 @@ $view->assign("asset", $asset);
 $view->assign("isfollowing", empty($user) ? 0 : $con->getOne("select modid from `follow` where modid=? and userid=?", array($asset['modid'], $user['userid'])));
 
 if (!empty($user)) {
-	processTeamInvitations($asset, $user);
-	processOwnershipTransfers($asset, $user);
+	processTeamInvitation($asset, $user);
+	processOwnershipTransfer($asset, $user);
 }
 
 $view->display("show-mod");
@@ -228,76 +220,91 @@ function groupMinorVersionTags($tags)
 	return $gtags;
 }
 
-function processTeamInvitations($asset, $user)
+function processTeamInvitation($asset, $user)
 {
 	global $con, $view;
 
-	$accepted = $con->getOne("select accepted from teammembers where accepted = 0 and modid=? and userid=?", array($asset['modid'], $user['userid']));
+	$invite = $con->getRow("select notificationid, recordid from notification where `type` = 'teaminvite' and `read` = 0 and userid = ? and (recordid & ((1 << 30) - 1)) = ?", array($user['userid'], $asset['modid'])); // :InviteEditBit
+	$pending = !empty($invite);
+	$view->assign("teaminvite", $pending);
+	if(!$pending) return;
 
-	if ($accepted === 0) {
-		$view->assign("teaminvite", 1);
-	}
 
-	if (isset($_GET['acceptteaminvite'])) {
-		$available = $con->getOne("select accepted from teammembers where accepted = 0 and modid=? and userid=?", array($asset['modid'], $user['userid']));
+	if (!isset($_GET['acceptteaminvite'])) return;
 
-		if ($available === 0) {
-			switch ($_GET['acceptteaminvite']) {
-				case 1:
-					$con->Execute("update teammembers set accepted=1 where modid=? and userid=?", array($asset['modid'], $user['userid']));
-					$con->Execute("update notification set `read` = 1 where userid=? and type='teaminvite' and recordid=?", array($user['userid'], $asset['modid']));
-					header('Location: /' . $asset['urlalias']);
-					break;
-				case 0:
-					$con->Execute("delete from teammembers where modid=? and userid=?", array($asset['modid'], $user['userid']));
-					$con->Execute("update notification set `read` = 1 where userid=? and type='teaminvite' and recordid=?", array($user['userid'], $asset['modid']));
-					header('Location: /' . $asset['urlalias']);
-					break;
-				default:
-					break;
-			}
-		}
+	switch ($_GET['acceptteaminvite']) {
+		case 1:
+			$canedit = (intval($invite['recordid']) & (1 << 30)) ? 1 : 0; // :InviteEditBit
+			$con->Execute("insert into teammember (modid, userid, created, canedit) values (?, ?, now(), ?)", array($asset['modid'], $user['userid'], $canedit));
+
+			$con->Execute("update notification set `read` = 1 where notificationid = ?", array($invite['notificationid']));
+
+			logAssetChanges([$user['name'].' acepted team invitation'], $asset['assetid']);
+
+			$url = parse_url($_SERVER['REQUEST_URI']);
+			$url['query'] = stripQueryParam($url['query'], 'acceptteaminvite');
+			forceRedirect($url);
+			exit();
+
+		case 0:
+			$con->Execute("update notification set `read` = 1 where notificationid = ?", array($invite['notificationid']));
+
+			logAssetChanges([$user['name'].' rejected team invitation'], $asset['assetid']);
+
+
+			$url = parse_url($_SERVER['REQUEST_URI']);
+			$url['query'] = stripQueryParam($url['query'], 'acceptteaminvite');
+			forceRedirect($url);
+			exit();
 	}
 }
 
-function processOwnershipTransfers($asset, $user)
+function processOwnershipTransfer($asset, $user)
 {
 	global $con, $view;
 
-	$invitedtoownership = $con->getOne("select transferownership from teammembers where transferownership = 1 and modid=? and userid=?", array($asset['modid'], $user['userid']));
+	$pendingInvitationId = $con->getOne("select notificationid from notification where `type` = 'modownershiptransfer' and `read` = 0 and userid = ? and recordid = ?", array($user['userid'], $asset['modid']));
+	$view->assign("transferownership", $pendingInvitationId);
+	if(!$pendingInvitationId) return;
 
-	if ($invitedtoownership === 1) {
-		$view->assign("transferownership", 1);
-	}
 
-	if (isset($_GET['acceptownershiptransfer'])) {
-		$available = $con->getOne("select transferownership from teammembers where transferownership = 1 and modid=? and userid=?", array($asset['modid'], $user['userid']));
+	if(!isset($_GET['acceptownershiptransfer'])) return;
 
-		if ($available === 1) {
-			switch ($_GET['acceptownershiptransfer']) {
-				case 1:
-					if ($oldOwnerId = $con->getOne("select `createdbyuserid` from `asset` where `assetid` = ?", array($asset['modid']))) {
-						$con->Execute("insert into teammembers (userid, modid, canedit, accepted, created) values (?, ?, 1, 1, NOW())", array($oldOwnerId, $asset['modid']));
-					}
+	switch ($_GET['acceptownershiptransfer']) {
+		case 1:
+			$con->startTrans();
+			$oldOwnerData = $con->getOne("select createdbyuserid, created from `asset` where `assetid` = ?", array($asset['assetid'])); // @perf
+			// swap owner and teammember that accepted in the teammembers table
+			$con->execute("update teammember
+				set userid = ?, canedit = 1, accepted = 1, created = ?
+				where modid = ? and userid = ?
+			", array($oldOwnerData['createdbyuserid'], $oldOwnerData['created'], $asset['modid'], $user['userid']));
+			$con->execute("update asset set createdbyuserid=? where assetid=?", array($user['userid'], $asset['assetid']));
+			$con->execute("update asset
+				join `mod` on `mod`.modid = ?
+				join `release` on `release`.modid = `mod`.modid and `release`.assetid = asset.assetid
+				set asset.createdbyuserid = ?
+			", array($asset['modid'], $user['userid']));
 
-					$con->Execute("delete from teammembers where modid=? and userid=?", array($asset['modid'], $user['userid']));
-					$con->Execute("update asset set createdbyuserid=? where assetid=?", array($user['userid'], $asset['assetid']));
-					$con->Execute("update notification set `read` = 1 where userid=? and type='modownershiptransfer' and recordid=?", array($user['userid'], $asset['modid']));
-					header('Location: /' . $asset['urlalias']);
-					break;
-				case 0:
-					if ($isActiveTeamMember = $con->getOne("select `teammemberid` from `teammembers` where `userid` = ? and `modid` = ? and `canedit` = 1 and `accepted` = 1", array($user['userid'], $asset['modid']))) {
-						$con->Execute("update `teammembers` set `transferownership` = 0 where `userid` = ? and `modid` = ?", array($user['userid'], $asset['modid']));
-					} else {
-						$con->Execute("delete from teammembers where modid=? and userid=?", array($asset['modid'], $user['userid']));
-					}
-
-					$con->Execute("update notification set `read` = 1 where userid=? and type='modownershiptransfer' and recordid=?", array($user['userid'], $asset['modid']));
-					header('Location: /' . $asset['urlalias']);
-					break;
-				default:
-					break;
+			$con->execute("update notification set `read` = 1 where notificationid = ?", array($pendingInvitationId));
+			$ok = $con->completeTrans();
+			if($ok) {
+				logAssetChanges(['Ownership migrated to '.$user['name']], $asset['assetid']);
 			}
-		}
+
+			$url = parse_url($_SERVER['REQUEST_URI']);
+			$url['query'] = stripQueryParam($url['query'], 'acceptownershiptransfer');
+			forceRedirect($url);
+			exit();
+
+		case 0:
+			$con->execute("update notification set `read` = 1 where notificationid = ?", array($pendingInvitationId));
+
+			logAssetChanges(['Ownership migration rejected by '.$user['name']], $asset['assetid']);
+
+			$url = parse_url($_SERVER['REQUEST_URI']);
+			$url['query'] = stripQueryParam($url['query'], 'acceptownershiptransfer');
+			forceRedirect($url);
+			exit();
 	}
 }

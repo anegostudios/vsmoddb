@@ -15,25 +15,23 @@ if (empty($usertoken) || empty($shownuser = getUserByHash($usertoken, $con))) {
 
 $view->assign("usertoken", $usertoken);
 
-$sql = "
-			select 
-				asset.*, 
-				`mod`.*,
-				logofile.cdnpath as logocdnpath,
-				status.code as statuscode
-			from 
-				asset 
-				join `mod` on asset.assetid = `mod`.assetid
-				left join status on asset.statusid = status.statusid
-				left join file as logofile on mod.logofileid = logofile.fileid
-				left join teammembers on `mod`.modid = teammembers.modid and teammembers.accepted = 1
-			where
-				(asset.createdbyuserid = ? or teammembers.userid = ?)
-				and asset.statusid = 2
-			order by asset.created desc
-		";
-
-$authormods = $con->getAll($sql, array($shownuser['userid'], $shownuser['userid']));
+$sqlWhereExt = (isset($user) && $shownuser['userid'] == $user['userid']) || canModerate($shownuser, $user) ? '' : ' and asset.statusid = 2'; // show drafts if owner or mod
+$authormods = $con->getAll("
+	select 
+		asset.*, 
+		`mod`.*,
+		logofile.cdnpath as logocdnpath,
+		status.code as statuscode
+	from 
+		asset 
+		join `mod` on asset.assetid = `mod`.assetid
+		left join status on asset.statusid = status.statusid
+		left join file as logofile on mod.logofileid = logofile.fileid
+		left join teammember on `mod`.modid = teammember.modid
+	where
+		(asset.createdbyuserid = ? or teammember.userid = ?) $sqlWhereExt
+	order by asset.created desc
+", array($shownuser['userid'], $shownuser['userid']));
 
 foreach ($authormods as &$row) {
 	unset($row['text']);

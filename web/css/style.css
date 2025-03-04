@@ -1471,11 +1471,11 @@ body.banned .strikethrough-when-banned {
 }
 
 .teaminvite {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 25px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: 25px;
 	background: linear-gradient(0deg, rgba(104, 80, 55, 0.65) 0%, rgba(179, 154, 121, 0.65) 100%);
 	border: 1px solid #3E372F;
 	border-radius: 5px;
@@ -1484,6 +1484,17 @@ body.banned .strikethrough-when-banned {
 
 .teaminvite .button {
 	min-width: 175px;
+}
+
+.pending-markers .search-choice:not(.accepted)::after,
+.pending-markers .result-selected:not(.accepted)::after,
+#teameditors-box .active-result:not(.accepted)::after {
+  content: ' [pending]';
+  color: gray;
+}
+
+.pending-markers .result-selected::before {
+	content: '✔ ';
 }
 
 @media (max-width: 767px) {

@@ -14,7 +14,7 @@
 
 	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
-	<link href="/web/css/style.css?version=36" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=37" rel="stylesheet" type="text/css">
 	<link href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/dialog.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">
@@ -33,7 +33,7 @@
 	{if isset($assetserver) && startsWith($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
 
 	<script type="text/javascript" src="/web/js/jquery-1.11.1.min.js"></script>
-	<script type="text/javascript" src="/web/js/chosen/chosen.jquery.min.js"></script>
+	<script type="text/javascript" src="/web/js/chosen/chosen.jquery.min.js?v=2"></script>
 	{if isset($head)}{$head}{/if}
 </head>
 

@@ -7,10 +7,6 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema moddb
 -- -----------------------------------------------------
-
--- -----------------------------------------------------
--- Schema moddb
--- -----------------------------------------------------
 CREATE SCHEMA IF NOT EXISTS `moddb` DEFAULT CHARACTER SET utf8 ;
 USE `moddb` ;
 
@@ -52,9 +48,10 @@ CREATE TABLE IF NOT EXISTS `moddb`.`user` (
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `lastonline` DATETIME NULL,
   `banneduntil` DATETIME NULL,
+  `bio` TEXT NULL,
   PRIMARY KEY (`userid`),
-  UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE,
-  INDEX `uid` (`uid` ASC) VISIBLE)
+  UNIQUE INDEX `email_UNIQUE` (`email` ASC),
+  INDEX `uid` (`uid` ASC))
 ENGINE = InnoDB;
 
 
@@ -93,9 +90,9 @@ CREATE TABLE IF NOT EXISTS `moddb`.`file` (
   `created` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`fileid`),
-  INDEX `assetid` (`assetid` ASC) VISIBLE,
-  INDEX `tempuploadtoken` (`userid` ASC) VISIBLE,
-  INDEX `cdnpathidx` (`cdnpath`) VISIBLE) -- used for fast download pingback
+  INDEX `assetid` (`assetid` ASC),
+  INDEX `tempuploadtoken` (`userid` ASC),
+  INDEX `cdnpathidx` (`cdnpath`)) -- used for fast download pingback
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
@@ -171,7 +168,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`release` (
   `created` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`releaseid`),
-  UNIQUE INDEX `modidstr` (`modidstr` ASC, `modversion` ASC) VISIBLE)
+  UNIQUE INDEX `modidstr` (`modidstr` ASC, `modversion` ASC))
 ENGINE = InnoDB;
 
 
@@ -244,8 +241,8 @@ CREATE TABLE IF NOT EXISTS `moddb`.`mod` (
   `lastreleased` DATETIME NULL,
   `supportedversions` TEXT NULL,
   PRIMARY KEY (`modid`),
-  FULLTEXT INDEX `supportedversions` (`supportedversions`) VISIBLE,
-  INDEX `urlalias` (`urlalias` ASC) VISIBLE)
+  FULLTEXT INDEX `supportedversions` (`supportedversions`),
+  INDEX `urlalias` (`urlalias` ASC))
 ENGINE = InnoDB;
 
 
@@ -296,8 +293,8 @@ CREATE TABLE IF NOT EXISTS `moddb`.`downloadip` (
   `fileid` INT NOT NULL,
   `date` DATETIME NULL,
   PRIMARY KEY (`ipaddress`, `fileid`),
-  INDEX `ipaddress` (`ipaddress` ASC) VISIBLE,
-  INDEX `fileid` (`fileid` ASC) VISIBLE)
+  INDEX `ipaddress` (`ipaddress` ASC),
+  INDEX `fileid` (`fileid` ASC))
 ENGINE = InnoDB;
 
 
@@ -307,7 +304,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `moddb`.`modversioncached` (
   `tagid` INT NULL,
   `modid` INT NULL,
-  INDEX `modid` (`modid` ASC) VISIBLE)
+  INDEX `modid` (`modid` ASC))
 ENGINE = InnoDB;
 
 
@@ -322,7 +319,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`notification` (
   `recordid` INT NULL,
   `created` DATETIME NULL,
   PRIMARY KEY (`notificationid`),
-  INDEX `userid` (`userid` ASC) VISIBLE)
+  INDEX `userid` (`userid` ASC))
 ENGINE = InnoDB;
 
 
@@ -332,9 +329,9 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `moddb`.`majormodversioncached` (
   `majorversionid` INT NULL,
   `modid` INT NULL,
-  INDEX `modid` (`modid` ASC) VISIBLE,
-  INDEX `majorversionid` (`majorversionid` ASC) VISIBLE,
-  UNIQUE INDEX `index` (`majorversionid` ASC, `modid` ASC) VISIBLE)
+  INDEX `modid` (`modid` ASC),
+  INDEX `majorversionid` (`majorversionid` ASC),
+  UNIQUE INDEX `index` (`majorversionid` ASC, `modid` ASC))
 ENGINE = InnoDB;
 
 
@@ -344,7 +341,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `moddb`.`majorversion` (
   `majorversionid` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) NULL,
-  INDEX `modid` (`name` ASC) VISIBLE,
+  INDEX `modid` (`name` ASC),
   PRIMARY KEY (`majorversionid`))
 ENGINE = InnoDB;
 
@@ -354,27 +351,24 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `moddb`.`follow` (
   `modid` INT NULL,
   `userid` INT NULL,
-  UNIQUE INDEX `modiduserid` (`modid` ASC, `userid` ASC) VISIBLE,
-  INDEX `userid` (`userid` ASC) VISIBLE)
+  `created` DATETIME NULL DEFAULT NULL,
+  UNIQUE INDEX `modiduserid` (`modid` ASC, `userid` ASC),
+  INDEX `userid` (`userid` ASC))
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `moddb`.`teammembers`
+-- Table `moddb`.`teammember`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `teammembers` (
-    `teammemberid` INT(11) NOT NULL AUTO_INCREMENT,
-    `userid` INT(11) NOT NULL,
-    `modid` INT(11) NOT NULL,
-    `canedit` TINYINT(1) NOT NULL DEFAULT '0',
-    `accepted` TINYINT(1) NOT NULL DEFAULT '0',
-    `transferownership` TINYINT(1) NULL DEFAULT '0',
-    `created` DATETIME NULL DEFAULT NULL,
-    PRIMARY KEY (`teammemberid`),
-    INDEX `modid_userid` (`modid` ASC, `userid` ASC),  
-    INDEX `accepted` (`accepted` ASC),            
-    INDEX `transferownership` (`transferownership` ASC),  
-    INDEX `userid` (`userid` ASC),                
-    INDEX `modid` (`modid` ASC) 
+CREATE TABLE IF NOT EXISTS `teammember` (
+  `teammemberid` INT(11) NOT NULL AUTO_INCREMENT,
+  `userid` INT(11) NOT NULL,
+  `modid` INT(11) NOT NULL,
+  `canedit` TINYINT(1) NOT NULL DEFAULT '0',
+  `created` DATETIME NULL DEFAULT NULL,
+  PRIMARY KEY (`teammemberid`),
+  INDEX `modid_userid` (`modid` ASC, `userid` ASC),
+  INDEX `userid` (`userid` ASC),
+  INDEX `modid` (`modid` ASC)
 ) ENGINE = InnoDB;
 
 SET SQL_MODE=@OLD_SQL_MODE;
@@ -402,7 +396,7 @@ INSERT INTO `moddb`.`assettype` (`assettypeid`, `maxfiles`, `maxfilesizekb`, `al
 
 COMMIT;
 
- 
+
 -- -----------------------------------------------------
 -- Data for table `moddb`.`language`
 -- -----------------------------------------------------

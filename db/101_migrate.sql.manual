@@ -1,3 +1,6 @@
+--- NOTE(Rennorb): This file might still be broken, handle with care and tripple check everything!
+
+
 -- NOTE(Rennorb): This file ends in .manual as to prevent automatic execution. This is because it purposefully terminates the sql connection, which would likely prevent the sampledata to be loaded afterwards. 
 
 
@@ -111,7 +114,7 @@ BEGIN
 IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND TABLE_NAME='file'
 	AND COLUMN_NAME='cdnpath') ) THEN
 		ALTER TABLE moddb.file  RENAME COLUMN thumbnailfilename to cdnpath;
-    ALTER TABLE moddb.file ADD INDEX `cdnpathidx` (`cdnpath`) VISIBLE; -- used for fast download pingback
+    ALTER TABLE moddb.file ADD INDEX `cdnpathidx` (`cdnpath`); -- used for fast download pingback
 END IF;
 
 IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND TABLE_NAME='mod'

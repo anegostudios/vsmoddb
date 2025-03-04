@@ -108,6 +108,11 @@ function startsWith($string, $part) //TODO(Rennorb)  @perf: use str_starts_with(
 	return mb_substr($string, 0, mb_strlen($part)) == $part;
 }
 
+function contains($string, $part)
+{
+	return mb_strstr($string, $part) !== false;
+}
+
 function isNumber($val)
 {
 	return intval($val) . "" == $val;
@@ -165,9 +170,75 @@ function getURLPath()
 	return $urlcode;
 }
 
+/** This function forces a location header to the the current uri, as well as status 303.
+ * This causes the browser to GET the (same) page again, and prevents "resend with data" on page reloads.
+ * This function does not terminate execution. You likely want to exit() after calling this.
+ * 
+ */
 function forceRedirectAfterPOST()
 {
 	header('Location: '.$_SERVER['REQUEST_URI'], true, 303);
+}
+
+/** This function forces a location header to the provided location, as well as status 303.
+ * This function does not terminate execution. You likely want to exit() after calling this.
+ * 
+ * @param string|array $url
+ */
+function forceRedirect($url)
+{
+	if(gettype($url) === 'array') $url = buildLocalUri($url);
+	header('Location: '.$url, true, 303);
+}
+
+/** Constructs a uri from a parse_url result shaped array.
+ * 
+ * @param array{scheme : string, host : string, port : int, query : string, path : string, fragment : string} $parts
+ * @return string
+ */
+function buildUri($parts)
+{
+	$uri = "{$parts['scheme']}://{$parts['hostname']}";
+	if(!empty($parts['port'])) $uri .= ':'.$parts['port'];
+	$uri .= $parts['path'];
+	if(!empty($parts['query'])) $uri .= '?'.$parts['query'];
+	if(!empty($parts['fragment'])) $uri .= '#'.$parts['fragment'];
+	return $uri;
+}
+
+/** Constructs a uri from a parse_url result shaped array, does not contain schema, host, port, and auth. User for redirects on the same page
+ * 
+ * @param array{scheme : string, host : string, port : int, query : string, path : string, fragment : string} $parts
+ * @return string
+ */
+function buildLocalUri($parts)
+{
+	$uri = $parts['path'];
+	if(!empty($parts['query'])) $uri .= '?'.$parts['query'];
+	if(!empty($parts['fragment'])) $uri .= '#'.$parts['fragment'];
+	return $uri;
+}
+
+/** Strips one specific query parameter from the provided query string if it exists.
+ * @param string $query
+ * @param string $paramname
+ * @return string
+ */
+function stripQueryParam($query, $paramname)
+{
+	$params = explode('&', $query);
+	$s = $paramname.'=';
+	$params = array_filter($params, fn($p) => !startsWith($p, $s));
+	return implode('&', $params);
+}
+
+/** Formats the path to a mod page using the urlalias of the mod if possible.
+ * @param array{urlalias : string, assetid : int} $mod
+ * @return string Path to the mod page starting with the root slash.
+ */
+function formatModPath($mod)
+{
+	return $mod['urlalias'] ? ('/'.$mod['urlalias']) : ("/show/mod/" . $mod['assetid']);
 }
 
 

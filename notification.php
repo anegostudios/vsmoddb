@@ -1,68 +1,57 @@
 <?php
 
+function goBackOrRootFallback()
+{
+	forceRedirect(contains($_SERVER['HTTP_REFERER'] ?? '', 'notification') ? $_SERVER['HTTP_REFERER'] : '/');
+}
+
 if (empty($user)) {
-	header("Location: /");
+	goBackOrRootFallback();
 	exit();
 }
 
 if ($urlparts[1] == 'clearall') {
 	$con->Execute("update notification set `read`=1 where userid=?", array($user['userid']));
-	header("Location: /");
+	goBackOrRootFallback();
 	exit();
 }
 
-$not = $con->getRow("select * from notification where notificationid=?", array($urlparts[1]));
+$notification = $con->getRow("select * from notification where notificationid=?", array($urlparts[1]));
 
-if (empty($not)) {
-	header("Location: /");
+if (empty($notification)) {
+	goBackOrRootFallback();
 	exit();
 }
 
-// $con->Execute("update notification set `read`=1 where notificationid=? and userid=?", array($not['notificationid'], $user['userid']));
+switch($notification['type']) {
+	case "newrelease":
+		$con->execute("update notification set `read` = 1 where notificationid = ?", array($notification['notificationid']));
 
-if ($not['type'] == "newrelease") {
+		$mod = $con->getRow("select assetid, urlalias from `mod` where modid = ?", array($notification['recordid']));
 
-	$row = $con->getRow("
-		select 
-			`mod`.assetid,
-			`mod`.urlalias as modalias
-		from
-			`mod`
-		where modid=?
-	", array($not['recordid']));
+		forceRedirect([
+			'path'     => formatModPath($mod),
+			'fragment' => 'tab-files',
+		]);
+		exit();
 
-	$url = $row['modalias'] ? "/" . $row['modalias'] : "/show/mod/" . $row['assetid'];
-	header("Location: {$url}#tab-files");
-} elseif (
-	($not['type'] == "teaminvite" || $not['type'] == "modownershiptransfer") &&
-	(isset($not['recordid']) && $not['recordid'])
-) {
-	$row = $con->getRow("
-	select 
-		`mod`.assetid,
-		`mod`.urlalias as modalias
-	from
-		`mod`
-	where `mod`.modid=?
-	", array($not['recordid']));
+	case "teaminvite": case "modownershiptransfer":
+		$mod = $con->getRow("select assetid, urlalias from `mod` where modid = ?", array((intval($notification['recordid']) & ((1 << 30) - 1)))); // :InviteEditBit
 
-	$url = "/" . $row['modalias'];
+		forceRedirect(['path' => formatModPath($mod)]);
+		exit();
 
-	$con->Execute("update notification set `read`= 1 where userid=? and notificationid = ?", array($user['userid'], $not['notificationid']));
+	case "newcomment": case "mentioncomment":
+		$mod = $con->getRow("
+			select assetid, urlalias
+			from `mod`
+			join comment on comment.assetid = `mod`.assetid
+			where commentid = ?
+		", array($notification['recordid']));
 
-	header("Location: " . $url);
-} else {
-
-	$cmt = $con->getRow("
-		select 
-			commentid,
-			`mod`.urlalias as modalias
-		from
-			comment 
-			join `mod` on (comment.assetid = `mod`.assetid)
-		where commentid=?
-	", array($not['recordid']));
- 
-	$url = $cmt['modalias'] ? "/" . $cmt['modalias'] : "/show/mod/" . $cmt['assetid'];
-	header("Location: {$url}#cmt-{$cmt['commentid']}");
+		forceRedirect([
+			'path'     => formatModPath($mod),
+			'fragment' => '#cmt-'.$notification['recordid'],
+		]);
+		exit();
 }

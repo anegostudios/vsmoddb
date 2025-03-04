@@ -13,27 +13,24 @@
 
 {include file="header" pagetitle="`$asset['name']` - "}
 
-{if (isset($teaminvite) && $teaminvite) && (!isset($transferownership) || !$transferownership)}
+{if $transferownership}
+	<div class="teaminvite">
+    <span>You have been invited to become the owner of this modification.</span>
+    <div class="buttons">
+        <a title="Accept Ownership" class="button submit" href="?acceptownershiptransfer=1">Accept</a>
+        <a title="Decline Ownership" class="button btndelete" href="?acceptownershiptransfer=0">Decline</a>
+    </div>
+	</div>
+{elseif $teaminvite}
 	<div class="teaminvite">
 		<span>You have been invited to join the team of this mod</span>
 		<div class="buttons">
 			<a title="Click here to join to the team of this mod" class="button submit"
-				href="{$asset['urlalias']}?acceptteaminvite=1">Accept</a>
+				href="?acceptteaminvite=1">Accept</a>
 			<a title="Click here to decline the invitation to the team" class="button btndelete"
-				href="{$asset['urlalias']}?acceptteaminvite=0">Decline</a>
+				href="?acceptteaminvite=0">Decline</a>
 		</div>
 	</div>
-{/if}
-
-
-{if isset($transferownership) && $transferownership}
-	<div class="teaminvite">
-    <span>You have been invited to become the owner of this modification.</span>
-    <div class="buttons">
-        <a title="Accept Ownership" class="button submit" href="{$asset['urlalias']}?acceptownershiptransfer=1">Accept</a>
-        <a title="Decline Ownership" class="button btndelete" href="{$asset['urlalias']}?acceptownershiptransfer=0">Decline</a>
-    </div>
-</div>
 {/if}
 
 <div class="edit-asset mod-{$asset['statuscode']}">
@@ -119,7 +116,7 @@
 				{/foreach}
 				<br>
 
-				{if isset($teammembers) && count($teammembers) > 0}
+				{if !empty($teammembers)}
 					<span class="text-weak">Authors:</span>
 
 					<a href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a
