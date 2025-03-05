@@ -244,7 +244,7 @@ ul.submenu a {
 .mods {
 	clear: both;
 	display: grid;
-	justify-content: space-evenly;
+	justify-content: space-between;
 	grid-template-columns: repeat(auto-fill, 300px);
 	grid-template-rows: auto;
 	gap: 1em;
