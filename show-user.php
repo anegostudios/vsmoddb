@@ -30,6 +30,7 @@ $authormods = $con->getAll("
 		left join teammember on `mod`.modid = teammember.modid
 	where
 		(asset.createdbyuserid = ? or teammember.userid = ?) $sqlWhereExt
+	group by asset.assetid
 	order by asset.created desc
 ", array($shownuser['userid'], $shownuser['userid']));
 

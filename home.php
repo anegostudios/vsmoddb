@@ -1,7 +1,7 @@
 <?php
 
 if (!empty($user)) {
-	$sql = "
+	$ownmods = $con->getAll("
 		select 
 			asset.*, 
 			`mod`.*,
@@ -15,10 +15,9 @@ if (!empty($user)) {
 			left join teammember on `mod`.modid = teammember.modid
 		where
 			(asset.createdbyuserid = ? or teammember.userid = ?)
+		group by asset.assetid
 		order by asset.created desc
-	";
-	
-	$ownmods = $con->getAll($sql, array($user['userid'], $user['userid']));
+	", array($user['userid'], $user['userid']));
 	
 	foreach($ownmods as &$row) {
 		unset($row['text']);
