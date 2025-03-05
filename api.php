@@ -203,7 +203,8 @@ function listMod($modid)
 			"tags"       => $tags,
 			"modidstr"   => $release['modidstr'],
 			"modversion" => $release['modversion'],
-			"created"    => $release["created"]
+			"created"    => $release['created'],
+			"changelog"  => $release['text'],
 		);
 	}
 
