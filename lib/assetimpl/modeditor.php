@@ -96,7 +96,12 @@ class ModEditor extends AssetEditor
 		$newlogofileid = $con->getOne("select logofileid from `mod` where assetid=?", array($this->assetid));
 
 		if ($newlogofileid != $oldlogofileid) {
-			$this->generateLogoImage($newlogofileid);
+			$result = $this->generateLogoImage($newlogofileid);
+			if($result['status'] === 'error') {
+				$view->unsetVar("okmessage");
+				$view->assign("errormessage", 'Failed to generate logo image: '.$result['errormessage']);
+				return 'error';
+			}
 		}
 
 		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
@@ -123,18 +128,22 @@ class ModEditor extends AssetEditor
 		return $result;
 	}
 
+	/**
+	 * @param int $logofileid
+	 * @return array{status : string, errormessage? : string}
+	 */
 	function generateLogoImage($logofileid)
 	{
 		global $con, $user;
 
 		$file = $con->getRow("select * from file where fileid=?", array($logofileid));
-		if (empty($file)) return;
+		if (empty($file)) return ['status' => 'error', 'errormessage' => 'Invalid fileid.'];
 
 		$locallogofilename = tempnam(sys_get_temp_dir(), '');
 
 		// Since we don't have the files locally anymore we unfortunately have to do this stunt and re-download the image thats supposed to be used as a logo.
 		// Upload happens asynchronously during drag-n-drop, so when the user saves the asset the files already don't exist locally anymore.
-		// Since changing the logo is not a action repeated very often this is ok for now, especially since the alternative would be to keep files around, but not abandon them if hte user just navigates away from the asset editor.
+		// Since changing the logo is not a action repeated very often this is ok for now, especially since the alternative would be to keep files around, but not abandon them if the user just navigates away from the asset editor.
 
 		$localpath = tempnam(sys_get_temp_dir(), '');
 		$originalfile = @file_get_contents(formatCdnUrl($file));
@@ -161,6 +170,8 @@ class ModEditor extends AssetEditor
 
 		$con->Execute("insert into file (userid, cdnpath, created) VALUES (?, ?, NOW())", array($user['userid'], $cdnlogopath));
 		$con->Execute("update `mod` set logofileid=? where assetid=?", array($con->insert_ID(), $this->assetid));
+
+		return ['status' => 'ok'];
 	}
 
 	function handleRevokeNewOwnership($modId)
