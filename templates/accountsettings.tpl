@@ -4,17 +4,17 @@
 <form method="post">
 	<div style="float:left;">
 
-		<div class="editbox linebreak">
+		<div class="editbox flex-fill">
 			<label>Name</label>
 			<input type="text" name="name" value="{$user['name']}" style="width:290px;" disabled> (<a href="https://account.vintagestory.at/profile">edit</a>)
 		</div>
 
-		<div class="editbox linebreak">
+		<div class="editbox flex-fill">
 			<label>E-Mail</label>
 			<input type="text" name="email" value="{$user['email']}" style="width:290px;" disabled> (<a href="https://account.vintagestory.at/profile">edit</a>)
 		</div>
 
-		<div class="editbox linebreak">
+		<div class="editbox flex-fill">
 			<label>Time Zone</label>
 			<select name="timezone" style="width:294px;">
 				{foreach from=$timezones item=timezone key=index}

@@ -17,7 +17,7 @@ $view->assign("entryplural", "Users");
 $view->assign("entrysingular", "User");
 
 $searchvalues = array(
-	"name" => $_GET["name"]
+	"name" => $_GET["name"] ?? '',
 );
 $view->assign("searchvalues", $searchvalues);
 

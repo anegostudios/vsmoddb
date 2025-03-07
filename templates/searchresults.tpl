@@ -1,14 +1,12 @@
 {include file="header"}
 <br>
-	<form method="get">
+	<form method="get" autocomplete="off" class="flex-list">
 		<input type="hidden" name="search" value="1">
-		<div class="searchbox">
-			<label>Text</label>
+		<div data-label="Text">
 			<input type="text" name="text" value="{$searchvalues['text']}">
 		</div>
 		
-		<div class="searchbox">
-			<label>Status</label>
+		<div data-label="Status">
 			<select name="statusid">
 				<option value="">-</option>
 				{foreach from=$stati item=status}
@@ -17,8 +15,7 @@
 			</select>
 		</div>
 
-		<div class="searchbox">
-			<label>Tags</label>
+		<div data-label="Tags">
 			<select style="width:300px;" name="tagids[]" multiple>
 				<option value="">-</option>
 				{foreach from=$tags item=tag}
@@ -27,8 +24,7 @@
 			</select>
 		</div>
 
-		<div class="searchbox">
-			<p style="height:6px;"></p>
+		<div data-label="">
 			<button type="submit" name="">Search</button>
 		</div>
 		

@@ -12,7 +12,7 @@
 </h3>
 
 <form method="post">
-	<div class="editbox linebreak" style="width: 99%; max-width:1000px">
+	<div class="editbox flex-fill" style="width: 99%; max-width:1000px">
 		<label>Text</label>
 		<textarea name="bio" class="editor" data-editorname="bio" style="width: 99%; height: auto;">{$bio}</textarea>
 	</div>

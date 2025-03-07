@@ -58,13 +58,13 @@
 			</div>
 		{/if}
 		
-		<div class="editbox linebreak">
+		<div class="editbox flex-fill">
 			<label>Name</label>
 			<input type="text" name="name" style="width: 996px;" class="required" value="{$asset['name']}"/>
 		</div>
 		
 
-		<div class="editbox linebreak" style="width: 1000px; max-width:1000px">
+		<div class="editbox flex-fill" style="width: 1000px; max-width:1000px">
 			<label>Text</label>
 			<textarea name="text" class="editor" data-editorname="text" style="width: 994px; height: auto;">{$asset['text']}</textarea>
 		</div>

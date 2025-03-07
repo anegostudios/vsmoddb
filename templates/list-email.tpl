@@ -6,14 +6,12 @@
 		</span>
 	</h2>	
 	
-	<form method="get">
-		<div class="searchbox">
-			<label>Text</label>
+	<form method="get" autocomplete="off" class="flex-list">
+		<div data-label="Text">
 			<input type="text" name="text" value="{$searchvalues['text']}">
 		</div>
 		
-		<div class="searchbox">
-			<label>Campaign</label>
+		<div data-label="Campaign">
 			<select name="campaignid" style="width:250px">
 				<option value="">-</option>
 				{foreach from=$campaigns item=campaign}
@@ -22,8 +20,7 @@
 			</select>
 		</div>
 
-		<div class="searchbox">
-			<p style="height:6px;"></p>
+		<div data-label="">
 			<button type="submit" name="">Search</button>
 		</div>
 		

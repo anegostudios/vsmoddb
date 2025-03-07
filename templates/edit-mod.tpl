@@ -8,8 +8,7 @@
 				<a href="/list/{$entrycode}">{$entryplural}</a>
 			</span> /
 			<span class="title">
-				<a
-					href="{if $asset['urlalias']}/{$asset['urlalias']}{else}/show/mod/{$asset['assetid']}{/if}">{$asset["name"]}</a>
+				<a href="{if $asset['urlalias']}/{$asset['urlalias']}{else}/show/mod/{$asset['assetid']}{/if}">{$asset["name"]}</a>
 			</span> /
 			<span class="title">Edit</span>
 		</h2>
@@ -27,63 +26,56 @@
 		<input type="hidden" name="delete" value="1">
 	</form>
 
-	<form method="post" name="form1" autocomplete="off">
+	<form method="post" name="form1" autocomplete="off" class="flex-list">
 		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="assetid" value="{$asset['assetid']}">
 		<input type="hidden" name="numsaved" value="{$asset['numsaved']}">
 		<input type="hidden" name="saveandback" value="0">
 
-		<div class="editbox" style="min-height:54px;">
+		<div class="editbox short">
 			<label><abbr title="Only mods with Status 'Published' are publicly visible">Status</abbr></label>
-			<select name="statusid" style="width:120px;">
+			<select name="statusid">
 				{foreach from=$stati item=status}
-					<option value="{$status['statusid']}" {if $asset['statusid']==$status['statusid']}selected="selected"
-						{/if}>{$status['name']}</option>
+					<option value="{$status['statusid']}"{if $asset['statusid']==$status['statusid']} selected="selected"{/if}>{$status['name']}</option>
 				{/foreach}
 			</select>
 		</div>
 
-		<div class="editbox" style="min-height:54px;">
-			<label><abbr
-					title="Only mods with type 'Game Mod' are available in the in-game mod browser">Type</abbr></label>
-			<select name="type" style="width:120px;">
+		<div class="editbox short">
+			<label><abbr title="Only mods with type 'Game Mod' are available in the in-game mod browser">Type</abbr></label>
+			<select name="type">
 				{foreach from=$modtypes item=modtype}
-					<option value="{$modtype['code']}" {if $asset['type']==$modtype['code']}selected="selected" {/if}>
-						{$modtype['name']}</option>
+					<option value="{$modtype['code']}"{if $asset['type']==$modtype['code']} selected="selected"{/if}>{$modtype['name']}</option>
 				{/foreach}
 			</select>
 		</div>
 
 		<div class="editbox">
 			<label>Tags</label>
-			<select name="tagids[]" style="width:300px;" multiple>
+			<select name="tagids[]" multiple>
 				{foreach from=$tags item=tag}
-					<option value="{$tag['tagid']}" title="{$tag['text']}"
-						{if !empty($asset['tags'][$tag['tagid']])}selected="selected" {/if}>{$tag['name']}</option>
+					<option value="{$tag['tagid']}" title="{$tag['text']}"{if !empty($asset['tags'][$tag['tagid']])} selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
 			</select>
 		</div>
 
-		<div class="editbox linebreak">
+		<div class="editbox">
 			<label>Name</label>
-			<input type="text" name="name" style="width: 400px;" class="required" value="{$asset['name']}" />
+			<input type="text" name="name" class="required" value="{$asset['name']}" />
 		</div>
 
-		<div class="editbox" style="line-height:127%">
-			<label><abbr
-					title="If set, your mod can be reached with this custom url. Only alphabetical letters are allowed.">URL
-					Alias</abbr></label>
-			<span style="font-size:12px;">https://mods.vintagestory.at/</span><input type="text" name="urlalias"
-				style="width: 80px;" value="{$asset['urlalias']}" />
+		<div class="editbox wide">
+			<label><abbr title="If set, your mod can be reached with this custom url. Only alphabetical letters are allowed.">URL Alias</abbr></label>
+			<label for="inp-urlalias" class="prefixed-input" data-prefix="https://mods.vintagestory.at/"><input id="inp-urlalias" type="text" name="urlalias" value="{$asset['urlalias']}" style="width: 21ch" /></label>
 		</div>
 
-		<div class="editbox linebreak">
+		<div class="editbox flex-fill">
 			<label>Summary. Describe your mod in 100 characters or less.</label>
-			<input type="text" name="summary" style="width: 992px;" maxlength="100" class="required"
-				value="{$asset['summary']}" />
+			<input type="text" name="summary" maxlength="100" class="required" value="{$asset['summary']}" />
 		</div>
-		<div class="editbox linebreak" style="width: 95%; min-width: 350px;">
+
+		<div class="editbox flex-fill">
 			<label>Text</label>
 			<textarea name="text" class="editor" data-editorname="text"
 				style="width: 100%; height: auto;">{$asset['text']}</textarea>
@@ -94,12 +86,11 @@
 		{/if}
 
 		{if canEditAsset($asset, $user, false)}
-			<div style="clear:both;"></div>
-			<h3>Team members</h3>
+			<h3 class="flex-fill">Team members</h3>
 
-			<div id="teammembers-box" class="editbox linebreak pending-markers" style="min-height: 85px;">
+			<div id="teammembers-box" class="editbox wide pending-markers">
 				<label>Team Members</label>
-				<select name="teammemberids[]" style="width:300px;" multiple class="ajax-autocomplete" data-placeholder="Search Users"
+				<select name="teammemberids[]" multiple class="ajax-autocomplete" data-placeholder="Search Users"
 					data-url="/api/authors?name=\{name}" data-ownerid="{$asset['createdbyuserid']}">
 					{if !empty($teammembers)}
 						{foreach from=$teammembers item=teammember}
@@ -109,9 +100,9 @@
 				</select>
 			</div>
 
-			<div id="teameditors-box" class="editbox pending-markers" style="min-height: 85px;">
+			<div id="teameditors-box" class="editbox wide pending-markers">
 				<label>Team Members with edit permissions</label>
-				<select name="teammembereditids[]" style="width:300px;" multiple data-placeholder="Search Members">
+				<select name="teammembereditids[]" multiple data-placeholder="Search Members">
 					{foreach from=$teammembers item=teammember}
 						<option {if $teammember['canedit']}selected{/if} class="maybe-accepted{if !$teammember['pending']} accepted{/if}" value="{$teammember['userid']}" title="{$teammember['name']}">{$teammember['name']}</option>
 					{/foreach}
@@ -119,47 +110,45 @@
 			</div>
 		{/if}
 
-		<div style="clear:both;"></div>
+		<div class="flex-fill">
+			<h3>Screenshots<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$asset['assetid']}">download all as zip</a>{/if})</span></h3>
 
-		<h3>Screenshots<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$asset['assetid']}">download all as zip</a>{/if})</span></h3>
+			{include file="edit-asset-files.tpl"}
+		</div>
 
-		{include file="edit-asset-files.tpl"}
-
-		<div style="clear:both;"></div>
-		<h3>Additional information</h3>
-
-
-		<div class="editbox linebreak">
+		<h3 class="flex-fill">Links</h3>
+		<div class="editbox">
 			<label>Homepage or Forum Post Url</label>
-			<input type="text" name="homepageurl" style="width: 300px;" value="{$asset['homepageurl']}" />
+			<input type="url" name="homepageurl" value="{$asset['homepageurl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Trailer Video Url</label>
-			<input type="text" name="trailervideourl" style="width: 300px;" value="{$asset['trailervideourl']}" />
+			<input type="url" name="trailervideourl" value="{$asset['trailervideourl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Source Code Url</label>
-			<input type="text" name="sourcecodeurl" style="width: 300px;" value="{$asset['sourcecodeurl']}" />
+			<input type="url" name="sourcecodeurl" value="{$asset['sourcecodeurl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Issue tracker Url</label>
-			<input type="text" name="issuetrackerurl" style="width: 300px;" value="{$asset['issuetrackerurl']}" />
+			<input type="url" name="issuetrackerurl" value="{$asset['issuetrackerurl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Wiki Url</label>
-			<input type="text" name="wikiurl" style="width: 300px;" value="{$asset['wikiurl']}" />
+			<input type="url" name="wikiurl" value="{$asset['wikiurl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Donate Url</label>
-			<input type="text" name="donateurl" style="width: 300px;" value="{$asset['donateurl']}" />
+			<input type="url" name="donateurl" value="{$asset['donateurl']}" />
 		</div>
 
-		<div class="editbox linebreak">
+		<h3 class="flex-fill">Additional information</h3>
+		<div class="editbox">
 			<label>Side</label>
 			<select name="side">
 				<option value="client" {if ($asset['side']=='client')}selected="selected" {/if}>Client side only mod</option>
@@ -179,10 +168,9 @@
 		</div>
 
 		{if $asset['assetid'] && canEditAsset($asset, $user, false)}
-			<div style="clear:both;"></div>
-			<h3>Ownership transfer</h3>
+			<h3 class="flex-fill">Ownership transfer</h3>
 
-			<div class="editbox linebreak">
+			<div class="editbox wide">
 				{if isset($ownershipTransferUser) && $ownershipTransferUser}
 					<span>An ownership transfer invitation has been sent to: {$ownershipTransferUser}.</span>
 					<br>
@@ -198,9 +186,7 @@
 						<small>A notification will be sent to the specified user, inviting them to accept ownership.</small>
 						<br>
 
-						<select name="newownerid" style="width:300px;"
-							data-url="/api/authors?name=\{name}"
-							data-ownerid="{$asset['createdbyuserid']}">
+						<select name="newownerid">
 							<option value="" selected="selected">--- Select new owner ---</option>
 							{foreach from=$teammembers item=teammember}
 								{if !$teammember['pending']}<option value="{$teammember['userid']}" title="{$teammember['name']}">{$teammember['name']}</option>{/if}

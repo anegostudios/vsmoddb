@@ -29,7 +29,7 @@
 		<input type="hidden" name="delete" value="1">
 	</form>
 
-	<form method="post" name="form1" enctype="multipart/form-data">
+	<form method="post" name="form1" enctype="multipart/form-data" autocomplete="off" class="flex-list">
 		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="assetid" value="{$asset['assetid']}">
@@ -41,7 +41,7 @@
 		{if $modtype == "mod"}
 			<div class="editbox">
 				<label>Compatible with game versions</label>
-				<select name="tagids[]" style="width:300px;" class="required" multiple>
+				<select name="tagids[]" class="required" multiple>
 					{foreach from=$tags item=tag}
 						<option value="{$tag['tagid']}" {if !empty($asset['tags'][$tag['tagid']])}selected="selected"{/if}>{$tag['name']}</option>
 					{/foreach}
@@ -49,7 +49,7 @@
 			</div>
 			
 			{if $asset["assetid"]}
-				<div class="editbox" style="min-height: 44px;">
+				<div class="editbox">
 					Created by: {$asset['createdusername']}<br>
 					{if $asset['editedusername'] && $asset['createdusername'] != $asset['editedusername']}Last Edited by: {$asset['editedusername']}<br>{/if}
 					Last modified: {fancyDate($asset['lastmodified'])}
@@ -58,32 +58,30 @@
 			
 			<div class="editbox">
 				<label><abbr title="This value is autodetected, please upload a file.">Mod Id</a></label>
-				<input type="text" name="modidstr" class="required" value="{$asset['modidstr']}" {if empty($allowinfoedit)}disabled="disabled"{/if} style="width:150px; min-width:auto; height:23px;" autocomplete="off">
+				<input type="text" name="modidstr" class="required" value="{$asset['modidstr']}" {if empty($allowinfoedit)}disabled=""{/if}>
 			</div>
 			<div class="editbox">
 				<label><abbr title="This value is autodetected, please upload a file.">Mod Version Number</a></label>
-				v<input type="text" name="modversion" class="required" value="{$asset['modversion']}" {if empty($allowinfoedit)}disabled="disabled"{/if} style="width:150px; min-width:auto; height:23px;" autocomplete="off">
-			</div>			
+				<label for="inp-modversion" class="prefixed-input{if empty($allowinfoedit)} disabled{/if}" data-prefix="v"><input id="inp-modversion" type="text" name="modversion" value="{$asset['modversion']}" class="required" style="width: 10ch"{if empty($allowinfoedit)}disabled=""{/if} /></label>
+			</div>
 		{else}
 			<div class="editbox">
 				<label>Version Number</label>
-				v<input type="text" name="modversion" class="required" value="{$asset['modversion']}" style="width:150px; min-width:auto; height:23px;" autocomplete="off">
-			</div>			
-			
+				<label for="inp-modversion" class="prefixed-input" data-prefix="v"><input id="inp-modversion" type="text" name="modversion" value="{$asset['modversion']}" class="required" style="width: 10ch" /></label>
+			</div>
 		{/if}
 		
 		
-		<div class="editbox linebreak" style="width: 1000px; max-width:1000px">
+		<div class="editbox flex-fill">
 			<label>Text</label>
-			<textarea name="text" class="editor" data-editorname="text" style="width: 994px; height: auto;">{$asset['text']}</textarea>
+			<textarea name="text" class="editor" data-editorname="text">{$asset['text']}</textarea>
 		</div>
 		
 		{if file_exists("templates/edit-asset-$entrycode.tpl")}
 			{include file="edit-asset-`$entrycode`.tpl"}
 		{/if}
 
-		<div style="clear:both;"></div>
-		<h3>Files{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}<span style="float:right; font-size:70%;">(<a href="/download?assetid={$asset['assetid']}">download all as zip</a>)</span>{/if}</h3>
+		<h3 class="flex-fill">Files{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}<span style="float:right; font-size:70%;">(<a href="/download?assetid={$asset['assetid']}">download all as zip</a>)</span>{/if}</h3>
 
 		{include file="edit-asset-files.tpl" formupload="1"}
 		

@@ -6,14 +6,12 @@
 		</span>
 	</h2>	
 	
-	<form method="get">
-		<div class="searchbox">
-			<label>Name</label>
+	<form method="get" autocomplete="off" class="flex-list">
+		<div data-label="Name">
 			<input type="text" name="name" value="{$searchvalues['name']}">
 		</div>
 		
-		<div class="searchbox">
-			<p style="height:6px;"></p>
+		<div data-label="">
 			<button type="submit" name="">Search</button>
 		</div>
 		

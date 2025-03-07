@@ -38,7 +38,7 @@
 			<input type="text" name="email" value="{$email}" style="width:200px;">
 		</div>
 		
-		<div class="editbox linebreak" style="display:inline-block; text-align:left; float:none;">
+		<div class="editbox flex-fill" style="display:inline-block; text-align:left; float:none;">
 			<label>Password</label>
 			<input type="password" name="password" style="width:200px;">
 		</div>

@@ -1,4 +1,4 @@
-		<div class="files">
+		<div class="files flex-list">
 			{foreach from=$files item=file}
 				<div class="file">
 					{if $file['hasthumbnail']}
@@ -8,7 +8,7 @@
 							<div class="uploaddate">{$file["created"]}</div>
 						</a>
 					{else}
-						<a href="{$file['url']}" class="editbox">
+						<a href="{$file['url']}">
 							<div class="fi fi-{$file['ext']}">
 								<div class="fi-content">{$file['ext']}</div>
 							</div>
@@ -22,11 +22,9 @@
 			{/foreach}
 			
 			{if !empty($formupload)}
-			<div class="file">
-				<div class="editbox">
-					<p>Upload new file (or drag and drop, max file size: {$fileuploadmaxsize} MB)</p>
-					<input type="file" name="newfile">
-				</div>
+			<div class="editbox wide">
+				<label>Upload new file (or drag and drop, max file size: {$fileuploadmaxsize} MB)</label>
+				<input type="file" name="newfile" style="height: unset; padding: .25em;">
 			</div>
 			{/if}
 			

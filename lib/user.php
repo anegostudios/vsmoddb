@@ -30,6 +30,7 @@ if ($sessiontoken) {
 
 if (!empty($user)) {
 	$user['banneduntil'] = parseSqlDateTime($user['banneduntil']);
+	$user['hash'] = getUserHash($user['userid'], $user['created']);
 	loadNotifications();
 
 	$view->assign("user", $user);

@@ -29,12 +29,12 @@
 		<input type="hidden" name="{$entrycode}id" value="{$row[$entrycode.'id']}">
 		<input type="hidden" name="saveandback" value="0">
 		
-		<div class="editbox linebreak">
+		<div class="editbox flex-fill">
 			<label>Name</label>
 			<input type="text" name="name" value="{$row['name']}"/>
 		</div>
 		
-		<div class="editbox linebreak">
+		<div class="editbox flex-fill">
 			<label>Code</label>
 			<input type="text" name="code" value="{$row['code']}"/>
 		</div>

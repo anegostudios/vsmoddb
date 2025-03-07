@@ -6,14 +6,12 @@
 		</span>
 	</h2>	
 	
-	<form method="get">
-		<div class="searchbox">
-			<label>Text</label>
+	<form method="get" autocomplete="off" class="flex-list">
+		<div data-label="Text">
 			<input type="text" name="text" value="{$searchvalues['text']}">
 		</div>
 		
-		<div class="searchbox">
-			<label>Assigned to user</label>
+		<div data-label="Assigned to user">
 			<select name="userid" style="width:150px">
 				<option value="">-</option>
 				{foreach from=$users item=oneuser}
@@ -23,8 +21,7 @@
 		</div>
 
 
-		<div class="searchbox">
-			<label>Status</label>
+		<div data-label="Status">
 			<select name="statusid">
 				<option value="">-</option>
 				{foreach from=$stati item=status}
@@ -33,8 +30,7 @@
 			</select>
 		</div>
 
-		<div class="searchbox">
-			<label>Tags</label>
+		<div data-label="Tags">
 			<select style="width:300px;" name="tagids[]" multiple>
 				<option value="">-</option>
 				{foreach from=$tags item=tag}
@@ -43,8 +39,7 @@
 			</select>
 		</div>
 
-		<div class="searchbox">
-			<p style="height:6px;"></p>
+		<div data-label="">
 			<button type="submit" name="">Search</button>
 		</div>
 		
