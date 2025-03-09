@@ -25,6 +25,8 @@ input:active,
 	--color-border-active: #333;
 	--color-link: #3d6594;
 	--color-link-active: #608CBE;
+	--c-mod-bg: 0 0 100%;
+	--color-mod-bg: hsl(var(--c-mod-bg));
 }
 
 body {
@@ -88,6 +90,27 @@ a:hover { color: var(--color-link-active); }
 	left: 0;
 	top: -1.25rem;
 	white-space: nowrap;
+}
+
+/* generic ribbon */
+
+.ribbon-tr {
+	--d: 1.5em;
+
+	position: absolute;
+	top: 0;
+	left: 100%;
+
+	transform-origin: top center;
+	transform: translateX(-50%) rotate(45deg) translateY(var(--d));
+
+	width: 150%; /*close enough to 100% * sqrt(2)*/
+	text-align: center;
+	padding: .25em 0;
+}
+
+.ribbon-tr.d2 {
+	--d: 3.5em;
 }
 
 
@@ -212,6 +235,93 @@ a:hover { color: var(--color-link-active); }
 	background-color: rgba(255, 255, 255, 0.2); /* @cleanup */
 }
 
+/* mod boxes */
+
+
+.mods {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	grid-template-rows: auto;
+	gap: 1em;
+	justify-content: space-between;
+}
+
+@media (max-width: 450px) {
+	.mods {
+		grid-template-columns: 100%;
+	}
+}
+
+.mods>h3 {
+	grid-column: 1/-1;
+}
+
+.mod {
+	position: relative;
+	aspect-ratio: 1;
+	overflow: hidden;
+
+	background-color: hsl(var(--c-mod-bg));
+	border-radius: .25rem;
+	border: 1px solid white;
+	box-shadow: 1px 1px 4px var(--color-border);
+}
+
+.mod.draft {
+	border: 1.5px dashed gray;
+}
+
+.mods .mod:only-child {
+	max-width: 300px;	
+}
+
+.mod a {
+	color: var(--color-text);
+	text-decoration: none;
+}
+
+.mod>a>img  {
+	width: 100%;
+	border-radius: .25rem .25rem 0 0;
+}
+.mod.legacy>a>img{ /* :LegacyModLogos */
+	height: calc(2/3 * 100%);
+	object-fit: contain;
+}
+
+
+.mod .moddesc {
+	position: absolute;
+	top: calc(2/3 * 100%);
+	bottom: 0;
+	width: 100%;
+	padding: .25em;
+	background-color: hsla(var(--c-mod-bg) / .8);
+	text-shadow: 1px white;
+}
+
+.mod .stats {
+	float: right;
+}
+
+
+.mod .stats a {
+	vertical-align: middle;
+	padding: 0px 2px;
+}
+
+.mod .stats a:hover {
+	background: var(--color-input);
+}
+
+.mod .stats img {
+	height: 16px;
+	vertical-align: middle;
+	margin-right: 3px;
+}
+
+
+
 /* from here on: TODO @cleanup */
 
 
@@ -237,10 +347,10 @@ a:hover { color: var(--color-link-active); }
 .interactbox.off .on { display: none; }
 .interactbox.on .off { display: none; }
 
-.followed {
+.followed-star {
 	position: absolute;
-	right: 10px;
-	top: 10px;
+	top: 0;
+	right: 0;
 	color: #5189ca;
 	text-shadow: rgba(0,0,0,0.5) 1px 1px 3px;
 }
@@ -290,49 +400,11 @@ a:hover { color: var(--color-link-active); }
 
 
 
-.mods {
-	clear: both;
-	display: grid;
-	justify-content: space-between;
-	grid-template-columns: repeat(auto-fill, 300px);
-	grid-template-rows: auto;
-	gap: 1em;
-}
-
-.mods div.mod {
-	position: relative;
-	flex-shrink: 1; /* Fix for mobile devices @explain */
-	overflow: hidden;
-
-	background-color: rgba(255, 255, 255, 0.6);
-	width: 300px;
-	height: 300px;
-	border-radius: .25rem;
-	border: 1px solid rgba(255,255,255,0.8);
-	box-shadow: 1px 1px 4px #999;
-}
-
-.mods div.mod a {
-	color: #333;
-	text-decoration:none;
-}
-
-.mods .mod > a img  {
-	width: 100%;
-	height: 200px;
-	display: inline-block;
-	object-fit: cover;
-	border-radius: .25rem .25rem 0 0;
-}
 
 .mod-draft {
 	position: relative;
 }
 
-.mod.draft {
-	border: 1.5px dashed gray !important;
-	position: relative;
-}
 
 .mod-draft .tab_container, .mod-draft .tabs li {
 	border-style: dashed;
@@ -340,16 +412,6 @@ a:hover { color: var(--color-link-active); }
 
 .mod-draft .tabs {
 	border-bottom-style: dashed;
-}
-
-.draftnotice {
-	position: absolute;
-	color: white;
-	font-weight: bold;
-	right: 5px;
-	top: 5px;
-	font-size: 25px;
-	text-shadow: 2px 2px 2px #000000;
 }
 
 .edit-asset.mods {
@@ -373,33 +435,10 @@ a:hover { color: var(--color-link-active); }
 	font-weight: bold;
 }
 
-.mod .moddesc {
-	margin: 5px;
-	margin-top: 0px;
-}
-
-.mod .moddesc .stats {
-	font-size: 110%;
-	float:right;
-}
 
 
-.mod .moddesc .stats a {
-	vertical-align: middle;
-	text-decoration: none;
-	color: #333;
-	padding: 0px 2px;
-}
 
-.mod .moddesc .stats a:hover {
-	background: rgba(0,0,0,0.1);
-}
 
-.mod .moddesc .stats img {
-	height: 16px;
-	vertical-align: middle;
-	margin-right: 3px;
-}
 
 .imageslideshow {
 	float: left;
@@ -1248,6 +1287,14 @@ ul.footer {
 
 
 
+.fa-star::before {
+	content: '★';
+	font-style: normal;
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+}
+
 
 
 div.betanotice {
@@ -1392,32 +1439,6 @@ span.username {
 	outline: 0;
 }
 
-
-.ribbon-top {
-	--d:4px;
-	--w:100px;
-	--c:rgb(255, 227, 0);
-
-	position: absolute;
-	top: 0;
-	right: 0;
-	transform: translate(29.29%, -100%) rotate(45deg); /* 29.29% = 100%*(1 - cos(45deg)) */
-	text-align: center;
-	width: var(--w);
-	transform-origin: bottom left;
-	padding:5px 0 calc(var(--d) + 5px);
-	background:
-		linear-gradient(rgba(0,0,0,0.6) 0 0) bottom/100% var(--d) no-repeat
-		var(--c);
-	clip-path:polygon(0 100%,0 calc(100% - var(--d)),50% calc(100% - var(--d) - var(--w)/2),100% calc(100% - var(--d)),100% 100%,calc(100% - var(--d)) calc(100% - var(--d)), var(--d) calc(100% - var(--d)))
-}
-
-.ribbon-top.left {
-	left: 0;
-	right: auto;
-	transform: translate(-29.29%, -100%) rotate(-45deg);
-	transform-origin: bottom right;
-}
 
 .flair {
 	margin-left: 5px;

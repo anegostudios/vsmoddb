@@ -1,6 +1,6 @@
 {include file="header"}
 
-<div class="edit-asset {$entrycode}">
+<div class="edit-asset edit-{$entrycode}">
 
 	{if $asset['assetid']}
 		<h2>
@@ -32,9 +32,9 @@
 		<input type="hidden" name="numsaved" value="{$asset['numsaved']}">
 		<input type="hidden" name="saveandback" value="0">
 		
-		<div class="editbox" style="min-height:50px;">
+		<div class="editbox">
 			<label>Status</label>
-			<select name="statusid" style="width:120px;">
+			<select name="statusid">
 				{foreach from=$stati item=status}
 					<option value="{$status['statusid']}" {if $asset['statusid']==$status['statusid']}selected="selected"{/if}>{$status['name']}</option>
 				{/foreach}
@@ -43,7 +43,7 @@
 
 		<div class="editbox">
 			<label>Tags</label>
-			<select name="tagids[]" style="width:300px;" multiple>
+			<select name="tagids[]" multiple>
 				{foreach from=$tags item=tag}
 					<option value="{$tag['tagid']}" {if !empty($asset['tags'][$tag['tagid']])}selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
@@ -51,7 +51,7 @@
 		</div>
 		
 		{if $asset["assetid"]}
-			<div class="editbox" style="min-height: 44px;">
+			<div class="editbox">
 				Created by: {$asset['createdusername']}<br>
 				{if $asset['editedusername'] && $asset['createdusername'] != $asset['editedusername']}Last Edited by: {$asset['editedusername']}<br>{/if}
 				Last modified: {fancyDate($asset['lastmodified'])}
@@ -60,13 +60,13 @@
 		
 		<div class="editbox flex-fill">
 			<label>Name</label>
-			<input type="text" name="name" style="width: 996px;" class="required" value="{$asset['name']}"/>
+			<input type="text" name="name" class="required" value="{$asset['name']}"/>
 		</div>
 		
 
-		<div class="editbox flex-fill" style="width: 1000px; max-width:1000px">
+		<div class="editbox flex-fill">
 			<label>Text</label>
-			<textarea name="text" class="editor" data-editorname="text" style="width: 994px; height: auto;">{$asset['text']}</textarea>
+			<textarea name="text" class="editor" data-editorname="text">{$asset['text']}</textarea>
 		</div>
 		
 		{if file_exists("templates/edit-asset-$entrycode.tpl")}
@@ -149,11 +149,11 @@
 
 <div class="file template">
 	<input type="hidden" name="fileids[]" value="" />
-	<a href="#" class="editbox">
+	<a href="#">
 		<div class="fi">
 			<div class="fi-content"></div>
 		</div>
-		<img src="" style="display:none;"/>
+		<img src="" style="display:none;" />
 		<div class="filename"></div><br>
 		<div class="uploaddate"></div><br>
 		<div class="uploadprogress"></div>
@@ -223,7 +223,7 @@
 		});
 		
 	</script>	
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=24" async></script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=30" async></script>
 {/capture}
 
 {include file="footer"}

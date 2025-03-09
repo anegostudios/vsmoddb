@@ -12,42 +12,28 @@ Cheers,<br>
 &nbsp;&nbsp;Tyron
 
 </p>
-{else}
+{/if}
+
+<div class="mods">
+{if !empty($user)}
 	{if !empty($mods)}
 		<h3>Your mod contributions</h3>
-		<div class="mods">
-			{foreach from=$mods item=mod}
-				{include file="list-mod-entry"}
-			{/foreach}
-		</div>
+		{foreach from=$mods item=mod}{include file="list-mod-entry"}{/foreach}
+	{/if}
+
+	{if !empty($followedmods)}
+		<h3>Followed Mods</h3>
+		{foreach from=$followedmods item=mod}{include file="list-mod-entry-followed"}{/foreach}
 	{/if}
 {/if}
 
-<div style="clear:both;"></div>
-
-<p><br></p>
-
-{if !empty($followedmods)}
-	<h3>Followed Mods</h3>
-	<div class="mods">
-		{foreach from=$followedmods item=mod}{include file="list-mod-entry-followed"}{/foreach}
-	</div>
-{/if}
-
-<div style="clear:both;"></div>
-
-<p><br></p>
-
 {if !empty($latestentries)}
 	<h3>Latest 10 Mods</h3>
-	<div class="mods">
-		{foreach from=$latestentries item=mod}{include file="list-mod-entry"}{/foreach}
-	</div>
+	{foreach from=$latestentries item=mod}{include file="list-mod-entry"}{/foreach}
 {/if}
+</div>
 
-<div style="clear:both;"></div>
-
-<p><br></p>
+<br/>
 
 <h3>Latest 20 Comments</h3>
 <table class="stdtable latestcomments" style="width:100%;">

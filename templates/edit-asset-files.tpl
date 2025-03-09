@@ -2,7 +2,7 @@
 			{foreach from=$files item=file}
 				<div class="file">
 					{if $file['hasthumbnail']}
-						<a data-fancybox="gallery" href="{$file['url']}" class="editbox">
+						<a data-fancybox="gallery" href="{$file['url']}">
 							<img src="{formatCdnUrl($file, '_55_60')}"/>
 							<div class="filename">{$file["filename"]}</div><br>
 							<div class="uploaddate">{$file["created"]}</div>

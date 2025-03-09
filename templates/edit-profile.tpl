@@ -12,14 +12,14 @@
 </h3>
 
 <form method="post">
-	<div class="editbox flex-fill" style="width: 99%; max-width:1000px">
+	<div class="editbox flex-fill">
 		<label>Text</label>
-		<textarea name="bio" class="editor" data-editorname="bio" style="width: 99%; height: auto;">{$bio}</textarea>
+		<textarea name="bio" class="editor" data-editorname="bio">{$bio}</textarea>
 	</div>
 
 	<p><br></p>
 	
-	<div style="clear:both">
+	<div>
 		<input type="submit" name="save" value="Save changes">
 	</div>
 </form>

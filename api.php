@@ -165,6 +165,7 @@ function listMod($modid)
 			user.name as author,
 			`mod`.*,
 			logofile.cdnpath as logocdnpath,
+			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
 			logofile.filename as logofilename
 		from 
 			`mod` 

@@ -6,6 +6,7 @@ if (!empty($user)) {
 			asset.*, 
 			`mod`.*,
 			logofile.cdnpath as logocdnpath,
+			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
 			status.code as statuscode
 		from 
 			asset 
@@ -23,21 +24,21 @@ if (!empty($user)) {
 		unset($row['text']);
 		$row["tags"] = array();
 		$row['from'] = $user['name'];
+		$row['modpath'] = formatModPath($row);
 		
 		$tagscached = trim($row["tagscached"]);
-		if (empty($tagscached)) continue;
-		
-		$tagdata = explode("\r\n", $tagscached);
-		$tags=array();
-		
-		foreach($tagdata as $tagrow) {
-			$parts = explode(",", $tagrow);
-			$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagid' => $parts[2]);
+		if (!empty($tagscached)) {
+			$tagdata = explode("\r\n", $tagscached);
+			$tags=array();
+			
+			foreach($tagdata as $tagrow) {
+				$parts = explode(",", $tagrow);
+				$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagid' => $parts[2]);
+			}
+			
+			$row['tags'] = $tags;
 		}
-		
-		$row['tags'] = $tags;
 	}
-	
 	unset($row);
 	
 	$view->assign("mods", $ownmods);
@@ -50,6 +51,7 @@ if (!empty($user)) {
 			asset.*,
 			`mod`.*,
 			logofile.cdnpath as logocdnpath,
+			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
 			user.name as `from`,
 			status.code as statuscode,
 			status.name as statusname,
@@ -70,7 +72,10 @@ if (!empty($user)) {
 			releasedate desc
 	", array($user['userid']));
 
-	
+	foreach($followedmods as &$row) {
+		$row['modpath'] = formatModPath($row);
+	}
+	unset($row);
 
 	$view->assign("followedmods", $followedmods);
 } else {
@@ -83,6 +88,7 @@ $latestentries = $con->getAll("
 		asset.*,
 		`mod`.*,
 		logofile.cdnpath as logocdnpath,
+		logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
 		user.name as `from`,
 		status.code as statuscode,
 		status.name as statusname
@@ -99,6 +105,11 @@ $latestentries = $con->getAll("
 		asset.created desc
 	limit 10
 ");
+
+foreach($latestentries as &$row) {
+	$row['modpath'] = formatModPath($row);
+}
+unset($row);
 
 $view->assign("latestentries", $latestentries);
 

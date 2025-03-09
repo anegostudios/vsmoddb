@@ -93,16 +93,15 @@ class ModList extends AssetList {
 		
 		$this->searchvalues = array("text" => "", "statusid" => null);
 		
-		$this->loadFilters();	
+		$this->loadFilters();
 		
 		//TODO(Rennorb) @cleanup
 		// I was not able to find a better solution for this, without rewriting the whole "assetcontroller" inheritance system.
 		// This is ugly, but should not incur any noticable overhead.
-		$logopathselector = $this->tablename === 'mod' ? 'logofile.cdnpath as logocdnpath,' : '';
+		$logopathselector = $this->tablename === 'mod' ? "logofile.cdnpath as logocdnpath, logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo," : '';
 		$logopathjoiner   = $this->tablename === 'mod' ? 'left join file as logofile on `mod`.logofileid = logofile.fileid' : '';
 
-		$selfuserid = -1;
-		if (!empty($user)) $selfuserid = $user['userid'];
+		$selfuserid = $user['userid'] ?? -1;
 		$sql = "
 			select 
 				asset.createdbyuserid,
@@ -131,14 +130,13 @@ class ModList extends AssetList {
 			order by {$this->orderby}
 		";
 
-		
 		$rows = $con->getAll($sql, $this->wherevalues);
 		$this->rows = array();
 
 		foreach ($rows as $row) {
 			unset($row['text']);
-			$tags=array();
-			
+			$row['modpath'] = formatModPath($row);
+
 			if (isset($_GET['text'])) {
 				$row['weight'] = $this->getModMatchWeight($row, $_GET['text']);
 			}

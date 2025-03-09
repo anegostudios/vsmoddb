@@ -31,13 +31,13 @@ $(document).ready(function() {
 
 	if ($.cookie("commentsort") == "oldestfirst") $("a[href='#orderoldestfirst']").trigger("click");
 
-	$(".comments .comment.template").toggle();
-	$(".comments .comment.template textarea").focus(function() {
+	$(".comments .comment.comment-editor").show();
+	$(".comments .comment.comment-editor textarea").focus(function() {
 		if (initialized) return;
 		$(this).removeClass("whitetext");
 		initialized=true;
 		$('form[name=commentformtemplate]').trigger('reinitialize.areYouSure');
-		createEditor($('.comment.template textarea[name=commenttext]'), tinymceSettingsCmt);
+		createEditor($('.comment.comment-editor textarea[name=commenttext]'), tinymceSettingsCmt);
 	});
 	
 	
@@ -111,7 +111,7 @@ $(document).ready(function() {
 	});
 	
 	
-	$(".comments .comment.template button[name='save']").click(function() {
+	$(".comments .comment.comment-editor button[name='save']").click(function() {
 		var $elem =  $(this).parents(".comment");
 		
 		$.post('/edit-comment', { assetid:assetid, text: getEditorContents($("textarea", $elem)), at: actiontoken, save: 1 }, function(response) {
@@ -125,8 +125,8 @@ $(document).ready(function() {
 			);
 			
 			setEditorContents($("textarea", $elem), "");
-			$cmt.insertAfter($(".comments .comment.template"));
-			$(".comments .comment.template").toggle();
+			$cmt.insertAfter($(".comments .comment.comment-editor"));
+			$(".comments .comment.comment-editor").toggle();
 		});
 	});
 	

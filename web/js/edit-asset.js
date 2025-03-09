@@ -101,6 +101,16 @@ $(document).ready(function () {
 				//showOkMessage(); //TODO(Rennorb) @cleanup: this fn is not defined
 				$self.parent().remove();
 			});
+
+			const logo_picker_el = document.querySelector('select[name="logofileid"]');
+
+			if(logo_picker_el) {
+				const opt = logo_picker_el.querySelector(`option[value="${fileid}"]`);
+				if(opt) {
+					opt.remove();
+					$(logo_picker_el).trigger("chosen:updated");
+				}
+			}
 		}
 
 		return false;

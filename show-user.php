@@ -21,6 +21,7 @@ $authormods = $con->getAll("
 		asset.*, 
 		`mod`.*,
 		logofile.cdnpath as logocdnpath,
+		logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
 		status.code as statuscode
 	from 
 		asset 

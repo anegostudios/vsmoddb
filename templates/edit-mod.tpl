@@ -1,6 +1,6 @@
 {include file="header"}
 
-<div class="edit-asset {$entrycode}">
+<div class="edit-asset edit-{$entrycode}">
 
 	{if $asset['assetid']}
 		<h2>
@@ -159,7 +159,8 @@
 
 		<div class="editbox">
 			<label>Logo/Thumbnail image</label>
-			<select name="logofileid" style="width:250px;">
+			<small>Logo has to be 480x480 or 480x320 px.</small>
+			<select name="logofileid">
 				{foreach from=$files item=file}
 					<option value="{$file['fileid']}" {if $asset['logofileid']==$file['fileid']} selected="selected" {/if}>
 						{$file['filename']}</option>
@@ -201,7 +202,7 @@
 
 <div class="file template">
 	<input type="hidden" name="fileids[]" value="" />
-	<a href="#" class="editbox">
+	<a href="#">
 		<div class="fi">
 			<div class="fi-content"></div>
 		</div>
@@ -262,7 +263,7 @@
 		});
 	</script>	
 
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=29" async></script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=30" async></script>
 {/capture}
 
 {include file="footer"}

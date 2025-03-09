@@ -1,6 +1,6 @@
 {include file="header"}
 
-<div class="edit-asset {$entrycode}">
+<div class="edit-asset edit-{$entrycode}">
 
 	{if $asset['assetid']}
 		<h2>
@@ -125,11 +125,11 @@
 
 <div class="file template">
 	<input type="hidden" name="fileids[]" value="" />
-	<a href="#" class="editbox">
+	<a href="#">
 		<div class="fi">
 			<div class="fi-content"></div>
 		</div>
-		<img src="" style="display:none;"/>
+		<img src="" style="display:none;" />
 		<div class="filename"></div><br>
 		<div class="uploaddate"></div><br>
 		<div class="uploadprogress"></div>
@@ -209,7 +209,7 @@
 		$('form[name=commentformtemplate]').areYouSure();
 	});
 </script>
-<script type="text/javascript" src="/web/js/edit-asset.js?version=23" async></script>
+<script type="text/javascript" src="/web/js/edit-asset.js?version=30" async></script>
 
 {/capture}
 

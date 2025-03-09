@@ -95,11 +95,11 @@ class ModEditor extends AssetEditor
 		$result = parent::saveFromBrowser();
 		$newlogofileid = $con->getOne("select logofileid from `mod` where assetid=?", array($this->assetid));
 
-		if ($newlogofileid != $oldlogofileid) {
-			$result = $this->generateLogoImage($newlogofileid);
-			if($result['status'] === 'error') {
+		if (!empty($newlogofileid) && $newlogofileid != $oldlogofileid) {
+			$logoCheck = $this->validateLogoImage($newlogofileid);
+			if($logoCheck['status'] === 'error') {
 				$view->unsetVar("okmessage");
-				$view->assign("errormessage", 'Failed to generate logo image: '.$result['errormessage']);
+				$view->assign("errormessage", 'Failed to generate logo image: '.$logoCheck['errormessage']);
 				return 'error';
 			}
 		}
@@ -132,14 +132,12 @@ class ModEditor extends AssetEditor
 	 * @param int $logofileid
 	 * @return array{status : string, errormessage? : string}
 	 */
-	function generateLogoImage($logofileid)
+	function validateLogoImage($logofileid)
 	{
-		global $con, $user;
+		global $con;
 
-		$file = $con->getRow("select * from file where fileid=?", array($logofileid));
+		$file = $con->getRow("select * from file where fileid = ?", array($logofileid));
 		if (empty($file)) return ['status' => 'error', 'errormessage' => 'Invalid fileid.'];
-
-		$locallogofilename = tempnam(sys_get_temp_dir(), '');
 
 		// Since we don't have the files locally anymore we unfortunately have to do this stunt and re-download the image thats supposed to be used as a logo.
 		// Upload happens asynchronously during drag-n-drop, so when the user saves the asset the files already don't exist locally anymore.
@@ -152,24 +150,12 @@ class ModEditor extends AssetEditor
 			return array("status" => "error", "errormessage" => 'The logo file seems to be gone.');
 		}
 
-		$resizeresult = copyImageResized($localpath, 480, 320, true, 'file', '', $locallogofilename);
-		if (!$resizeresult) {
+		$imageInfo = getimagesize($localpath);
+		list($w, $h) = $imageInfo;
+		if($w !== 480 || ($h !== 480 && $h !== 320)) {
 			unlink($localpath);
-			return array("status" => "error", "errormessage" => 'Failed to resize image for thumbnail.');
+			return array("status" => "error", "errormessage" => 'Invalid logo dimensions. Only 480x480 or 480x320 are allowed.'); // :ModLogoDimensions
 		}
-
-		splitOffExtension($file['cdnpath'], $cdnbasepath, $ext);
-
-		$cdnlogopath = "{$cdnbasepath}_480_320.{$ext}";
-		$uploadresult = uploadToCdn($locallogofilename, $cdnlogopath);
-		unlink($locallogofilename);
-		if ($uploadresult['error']) {
-			unlink($localpath);
-			return array("status" => "error", "errormessage" => 'CDN Error: ' . $uploadresult['error']);
-		}
-
-		$con->Execute("insert into file (userid, cdnpath, created) VALUES (?, ?, NOW())", array($user['userid'], $cdnlogopath));
-		$con->Execute("update `mod` set logofileid=? where assetid=?", array($con->insert_ID(), $this->assetid));
 
 		return ['status' => 'ok'];
 	}

@@ -2,14 +2,14 @@
 			<h3><a name="comments"></a>{count($comments)} Comments <span style="font-size:70%">(<a href="#orderoldestfirst">oldest first</a> | <a href="#ordernewestfirst">newest first</a>)</span></h3>
 			<div class="comments">
 				{if !empty($user)}
-				<div class="comment template editbox overlay-when-banned" style="clear:both;">
+				<div class="comment comment-editor editbox overlay-when-banned" style="clear:both; display:none;">
 					<div class="title">
 						{$user['name']}, 0 seconds ago
 					</div>
 					<div class="body">
 						
-						<form name="commentformtemplate">
-							<textarea name="commenttext" class="whitetext editor" data-editorname="comment" style="width: 100%; height: 50px;"<?php /* autocomplete="off" */ ?>></textarea>
+						<form name="commentformtemplate" autocomplete="off">
+							<textarea name="commenttext" class="whitetext editor" data-editorname="comment" style="width: 100%; height: 50px;"></textarea>
 						</form>
 					</div>
 					<p style="margin:4px; margin-top:5px;"><button type="submit" name="save">Add Comment</button>
