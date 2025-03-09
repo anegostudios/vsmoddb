@@ -74,7 +74,7 @@ class ModEditor extends AssetEditor
 
 	function saveFromBrowser()
 	{
-		global $con, $view, $typewhitelist;
+		global $con, $user, $view, $typewhitelist;
 
 		$_POST['summary'] = substr(strip_tags($_POST['summary']), 0, 100);
 
@@ -116,8 +116,8 @@ class ModEditor extends AssetEditor
 			$con->Execute("update `mod` set lastreleased=now() where assetid=?", array($this->assetid));
 		}
 
-		$this->updateTeamMembers($modid);
-		$this->updateNewOwner($modid);
+		if(canEditAsset($this->asset, $user, false)) $this->updateTeamMembers($modid);
+		if($this->asset['createdbyuserid'] == $user['userid']) $this->updateNewOwner($modid);
 
 		if ($statusreverted) {
 			$view->unsetVar("okmessage");

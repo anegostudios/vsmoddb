@@ -40,6 +40,12 @@ if (!empty($user)) {
 const ASSETTYPE_MOD = 1;
 const ASSETTYPE_RELEASE = 2;
 
+/**
+ * @param array $asset
+ * @param array $user
+ * @param bool  $includeTeam
+ * @return bool
+ */
 function canEditAsset($asset, $user, $includeTeam = true)
 {
 	global $con;
@@ -47,14 +53,14 @@ function canEditAsset($asset, $user, $includeTeam = true)
 	$canEditAsTeamMember = false;
 
 	// @cleanup: cursed hackery, breaking the point of the oop asseteditor
-	if ($asset['assettypeid'] === ASSETTYPE_MOD && $includeTeam) {
+	if ($includeTeam && $asset['assettypeid'] === ASSETTYPE_MOD) {
 		$canEditAsTeamMember = $con->getOne("select 1 
 			from teammember 
 			join `mod` on `mod`.modid = teammember.modid
 			where canedit = 1 and assetid = ? and userid = ?
 		", array($asset['assetid'], $user['userid']));
 	}
-	else if ($asset['assettypeid'] === ASSETTYPE_RELEASE && $includeTeam) {
+	else if ($includeTeam && $asset['assettypeid'] === ASSETTYPE_RELEASE) {
 		$canEditAsTeamMember = $con->getOne("select 1 
 			from teammember 
 			join `release` on `release`.modid = teammember.modid
