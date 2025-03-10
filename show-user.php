@@ -39,6 +39,7 @@ foreach ($authormods as &$row) {
 	unset($row['text']);
 	$row["tags"] = array();
 	$row['from'] = $shownuser['name'];
+	$row['modpath'] = formatModPath($row);
 
 	$tagscached = trim($row["tagscached"]);
 	if (empty($tagscached)) continue;
