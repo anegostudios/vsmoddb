@@ -32,6 +32,10 @@ class ModEditor extends AssetEditor
 
 		parent::load();
 
+		if($this->migrateImageSizes()) {
+			$view->assign('files', $this->files);
+		}
+
 		$view->assign("modtypes", array(
 			array('code' => "mod", "name" => "Game mod"),
 			array('code' => "externaltool", "name" => "External tool"),
@@ -91,17 +95,23 @@ class ModEditor extends AssetEditor
 			}
 		}
 
-		$oldlogofileid = $con->getOne("select logofileid from `mod` where assetid=?", array($this->assetid));
-		$result = parent::saveFromBrowser();
-		$newlogofileid = $con->getOne("select logofileid from `mod` where assetid=?", array($this->assetid));
+		$oldLogoFileId = $con->getOne("select logofileid from `mod` where assetid=?", array($this->assetid));
+		$newLogoFileId = $_POST['logofileid'] ?? null;
 
-		if (!empty($newlogofileid) && $newlogofileid != $oldlogofileid) {
-			$logoCheck = $this->validateLogoImage($newlogofileid);
+		$logoCheck = ['status' => 'ok'];
+		if (!empty($newLogoFileId) && $newLogoFileId != $oldLogoFileId) {
+			$logoCheck = $this->validateLogoImage($newLogoFileId);
 			if($logoCheck['status'] === 'error') {
-				$view->unsetVar("okmessage");
-				$view->assign("errormessage", 'Failed to generate logo image: '.$logoCheck['errormessage']);
-				return 'error';
+				$_POST['logofileid'] = $oldLogoFileId;
 			}
+		}
+
+		$result = parent::saveFromBrowser();
+
+		if($logoCheck['status'] === 'error') {
+			$view->unsetVar("okmessage");
+			$view->assign("errormessage", 'Failed to generate logo image: '.$logoCheck['errormessage']);
+			return 'error';
 		}
 
 		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
@@ -128,6 +138,43 @@ class ModEditor extends AssetEditor
 		return $result;
 	}
 
+	/** @return bool true if a file was updated */
+	function migrateImageSizes()
+	{
+		global $con;
+		// 1. Mods only have image attachments.
+		// 2. Images uploaded before the strict logo change do not have their dimensions stored.
+		// :ImageSizeMigration
+
+		// To address this we re-download any such images on opening the editor, and figure out the dimensions.
+		// This should be a relatively sparse process, and therefore not overwhelm the server.
+		// In the future we can run a derivate of this function to clean up any remaining files, potentially using the still existing backup files on the drive from before we used a CDN.
+
+		$updatedAny = false;
+		foreach($this->files as &$file) {
+			if($file['imagesize'] === null) {
+				$localpath = tempnam(sys_get_temp_dir(), '');
+				$originalfile = @file_get_contents(formatCdnUrl($file));
+				if (file_put_contents($localpath, $originalfile) === false) {
+					unlink($localpath);
+					continue;
+				}
+		
+				list($w, $h) = getimagesize($localpath);
+
+				unlink($localpath);
+
+				$file['imagesize'] = "{$w}x{$h}";
+				$con->execute('update file set imagesize = POINT(?, ?) where fileid = ?', [$w, $h, $file['fileid']]);
+
+				$updatedAny = true;
+			}
+		}
+		unset($file);
+
+		return $updatedAny;
+	}
+
 	/**
 	 * @param int $logofileid
 	 * @return array{status : string, errormessage? : string}
@@ -136,24 +183,10 @@ class ModEditor extends AssetEditor
 	{
 		global $con;
 
-		$file = $con->getRow("select * from file where fileid = ?", array($logofileid));
+		$file = $con->getRow("select *, CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where fileid = ?", array($logofileid));
 		if (empty($file)) return ['status' => 'error', 'errormessage' => 'Invalid fileid.'];
 
-		// Since we don't have the files locally anymore we unfortunately have to do this stunt and re-download the image thats supposed to be used as a logo.
-		// Upload happens asynchronously during drag-n-drop, so when the user saves the asset the files already don't exist locally anymore.
-		// Since changing the logo is not a action repeated very often this is ok for now, especially since the alternative would be to keep files around, but not abandon them if the user just navigates away from the asset editor.
-
-		$localpath = tempnam(sys_get_temp_dir(), '');
-		$originalfile = @file_get_contents(formatCdnUrl($file));
-		if (!file_put_contents($localpath, $originalfile)) {
-			unlink($localpath);
-			return array("status" => "error", "errormessage" => 'The logo file seems to be gone.');
-		}
-
-		$imageInfo = getimagesize($localpath);
-		list($w, $h) = $imageInfo;
-		if($w !== 480 || ($h !== 480 && $h !== 320)) {
-			unlink($localpath);
+		if($file['imagesize'] !== '480x320' && $file['imagesize'] !== '480x480') {
 			return array("status" => "error", "errormessage" => 'Invalid logo dimensions. Only 480x480 or 480x320 are allowed.'); // :ModLogoDimensions
 		}
 

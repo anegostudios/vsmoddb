@@ -211,10 +211,10 @@ $(document).ready(function () {
 			$elem.removeClass("template");
 			$elem.attr("data-filename", file.name);
 
-			$(".filename", $elem).html(file.name);
+			$(".filename", $elem).text(file.name);
 			$(".fi", $elem).addClass("fi-" + ending);
 			$(".fi-content", $elem).html(ending);
-			$(".uploadprogress", $elem).html("0%");
+			$(".uploadprogress", $elem).text("0%");
 
 			$(".files").append($elem);
 		},
@@ -234,14 +234,15 @@ $(document).ready(function () {
 			$("input", $elem).val(response.fileid);
 			$(".uploadprogress", $elem).hide();
 			$elem.append("<a href=\"#\" class=\"delete\" data-fileid=\"" + response.fileid + "\"></a>");
-			$(".uploaddate", $elem).html(response.uploaddate);
+			$(".uploaddate", $elem).text(response.uploaddate);
+			if(response.imagesize) $(".imagesize", $elem).text(response.imagesize+' px');
 
 			const logo_picker_el = document.querySelector('select[name="logofileid"]');
 
-			if(logo_picker_el) {
+			if(logo_picker_el && ['480x320', '480x480'].includes(response.imagesize)) {
 				const opt = document.createElement('option');
 				opt.value = response.fileid;
-				opt.textContent = file.name;
+				opt.textContent = `${file.name} [${response.imagesize} px]`;
 				logo_picker_el.append(opt);
 				$(logo_picker_el).trigger("chosen:updated");
 			}
@@ -253,7 +254,7 @@ $(document).ready(function () {
 			// progress is the integer value of file being uploaded percentage to completion
 
 			$elem = $(".file[data-filename='" + file.name + "']");
-			$(".uploadprogress", $elem).html(progress + "%");
+			$(".uploadprogress", $elem).text(progress + "%");
 		},
 		globalProgressUpdated: function (progress) {
 			// progress for all the files uploaded on the current instance (percentage)

@@ -114,10 +114,17 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 		unlink($localpath);
 		return array("status" => "error", "errormessage" => 'CDN Error: '.$uploadresult['error']);
 	}
-	
-	
-	$fileid = insert("file");
-	update("file", $fileid, $data);
+
+	$foldedKeys = implode(', ', array_keys($data));
+	$placeholders = str_repeat(', ?', count($data));
+	if(!isset($data['hasthumbnail'])) {
+		$con->execute("insert into file (created, $foldedKeys) values (now() $placeholders)", array_values($data)); // no comma before $placeholders on purpose
+	}
+	else {
+		// :BrokenSqlPointType
+		$con->execute("insert into file (created, imagesize, $foldedKeys) values (now(), POINT($width, $height) $placeholders)", array_values($data)); // no comma before $placeholders on purpose
+	}
+	$fileid = $con->Insert_ID();
 
 	if($parentassetid) logAssetChanges(array("Uploaded file '{$file['name']}'"), $parentassetid);
 		
@@ -128,6 +135,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 		"filename" => $file["name"],
 		"uploaddate" => date("M jS Y, H:i:s")
 	);
+	if(isset($width)) $data['imagesize'] = "{$width}x{$height}";
 
 	if ($assettype['code'] == 'release') {
 		//NOTE(Rennorb): Since we append the extesion teh buildin collision-prevention mechanisms of tempnam wont work.

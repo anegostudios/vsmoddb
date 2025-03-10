@@ -840,14 +840,17 @@ input[type="submit"]:active {
 .file .fi,
 .file .filename,
 .file .uploaddate,
+.file .imagesize,
 .file .uploadprogress {
 	display: inline-block;
 	vertical-align: top;
 }
 
-.file .uploaddate {
-	font-size: 70%;
+.file .uploaddate,
+.file .imagesize {
+	font-size: x-small;
 }
+
 
 .file img {
 	float: left;

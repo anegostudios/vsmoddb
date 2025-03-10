@@ -153,6 +153,11 @@ function createADOConnection($config, $persistent = true)
 		die();
 	}
 
+	//TODO(Rennorb) @correctness: This is supposed to allow usage of POINT(x, y) in inserts, but those still fail with
+	// "Cannot get geometry object from data you send to the GEOMETRY field"
+	// :BrokenSqlPointType
+	//$con->setCustomMetaType('P', MYSQLI_TYPE_GEOMETRY, 'POINT');
+
 	return $con;
 }
 

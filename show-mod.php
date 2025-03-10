@@ -54,15 +54,15 @@ if ($assetid) {
 
 	$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);
 	$view->assign("createdusertoken", $createdusertoken);
-	$files = $con->getAll("select * from file where assetid=?", array($assetid));
+	$files = $con->getAll("select * from file where assetid = ? and fileid != ?", array($assetid, $asset['logofileid']));
 
 	foreach ($files as &$file) {
 		$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
 		$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
 		$file["url"] = formatCdnUrl($file);
 	}
-
 	unset($file);
+
 	$view->assign("files", $files);
 
 	$comments = $con->getAll("

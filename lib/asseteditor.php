@@ -3,6 +3,7 @@
 class AssetEditor extends AssetController
 {
 	var $asset;
+	var $files;
 
 	var $assetid;
 	var $recordid;
@@ -102,23 +103,22 @@ class AssetEditor extends AssetController
 		}
 
 		if ($this->assetid) {
-			$files = $con->getAll("select * from file where assetid=?", array($this->assetid));
+			$this->files = $con->getAll("select *, concat(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where assetid=?", array($this->assetid));
 		} else {
 			$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
 
-			$files = $con->getAll("select * from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
+			$this->files = $con->getAll("select *, concat(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
 		}
 
-		foreach ($files as &$file) {
+		foreach ($this->files as &$file) {
 			$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
 
 			$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
 			$file["url"] = maybeFormatDownloadTrackingUrlDependingOnFileExt($file);
 		}
-
 		unset($file);
 
-		$view->assign("files", $files);
+		$view->assign("files", $this->files);
 
 		$comments = $con->getAll("
 			select 

@@ -4,16 +4,17 @@
 					{if $file['hasthumbnail']}
 						<a data-fancybox="gallery" href="{$file['url']}">
 							<img src="{formatCdnUrl($file, '_55_60')}"/>
-							<div class="filename">{$file["filename"]}</div><br>
-							<div class="uploaddate">{$file["created"]}</div>
+							<h5 class="filename">{$file["filename"]}</h5><br />
+							<small class="uploaddate">{$file["created"]}</small><br />
+							<small class="imagesize">{$file["imagesize"]} px</small>
 						</a>
 					{else}
 						<a href="{$file['url']}">
 							<div class="fi fi-{$file['ext']}">
 								<div class="fi-content">{$file['ext']}</div>
 							</div>
-							<div class="filename">{$file["filename"]}</div><br>
-							<div class="uploaddate">{$file["created"]}</div>
+							<h5 class="filename">{$file["filename"]}</h5><br />
+							<small class="uploaddate">{$file["created"]}</small>
 						</a>
 					{/if}
 					<a href="" class="delete" data-fileid="{$file['fileid']}"></a>

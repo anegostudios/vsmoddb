@@ -159,11 +159,14 @@
 
 		<div class="editbox">
 			<label>Logo/Thumbnail image</label>
-			<small>Logo has to be 480x480 or 480x320 px.</small>
+			<small>Logo is selected from the 'Screenshots', has to be 480x480 or 480x320 px and will not be displayed in the slideshow.</small>
 			<select name="logofileid">
+				<option value="">--- None ---</option>
 				{foreach from=$files item=file}
+					{if $file['imagesize'] === '480x320' || $file['imagesize'] === '480x480'}
 					<option value="{$file['fileid']}" {if $asset['logofileid']==$file['fileid']} selected="selected" {/if}>
-						{$file['filename']}</option>
+						{$file['filename']} [{$file['imagesize']} px]</option>
+					{/if}
 				{/foreach}
 			</select>
 		</div>
@@ -207,8 +210,9 @@
 			<div class="fi-content"></div>
 		</div>
 		<img src="" style="display:none;" />
-		<div class="filename"></div><br>
-		<div class="uploaddate"></div><br>
+		<h5 class="filename"></h5><br />
+		<small class="uploaddate"></small><br />
+		<small class="imagesize"></small>
 		<div class="uploadprogress"></div>
 	</a>
 </div>
@@ -263,7 +267,7 @@
 		});
 	</script>	
 
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=30" async></script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=31" async></script>
 {/capture}
 
 {include file="footer"}

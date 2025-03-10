@@ -130,8 +130,9 @@
 			<div class="fi-content"></div>
 		</div>
 		<img src="" style="display:none;" />
-		<div class="filename"></div><br>
-		<div class="uploaddate"></div><br>
+		<h5 class="filename"></h5><br>
+		<small class="uploaddate"></small><br>
+		<small class="imagesize"></small>
 		<div class="uploadprogress"></div>
 	</a>
 </div>
@@ -209,7 +210,7 @@
 		$('form[name=commentformtemplate]').areYouSure();
 	});
 </script>
-<script type="text/javascript" src="/web/js/edit-asset.js?version=30" async></script>
+<script type="text/javascript" src="/web/js/edit-asset.js?version=31" async></script>
 
 {/capture}
 

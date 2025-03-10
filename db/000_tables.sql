@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`file` (
   `hasthumbnail` BOOL NOT NULL DEFAULT 0, -- could maybe be merged with type
   `created` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `imagesize` POINT NULL, -- :ImageSizeMigration
   PRIMARY KEY (`fileid`),
   INDEX `assetid` (`assetid` ASC),
   INDEX `tempuploadtoken` (`userid` ASC),
