@@ -110,11 +110,8 @@
 			</div>
 		{/if}
 
-		<div class="flex-fill">
-			<h3>Screenshots<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$asset['assetid']}">download all as zip</a>{/if})</span></h3>
-
-			{include file="edit-asset-files.tpl"}
-		</div>
+		<h3 class="flex-fill">Screenshots<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$asset['assetid']}">download all as zip</a>{/if})</span></h3>
+		{include file="edit-asset-files.tpl"}
 
 		<h3 class="flex-fill">Links</h3>
 		<div class="editbox">
@@ -210,9 +207,11 @@
 			<div class="fi-content"></div>
 		</div>
 		<img src="" style="display:none;" />
-		<h5 class="filename"></h5><br />
-		<small class="uploaddate"></small><br />
-		<small class="imagesize"></small>
+		<div>
+			<h5 class="filename"></h5>
+			<small class="uploaddate"></small><br />
+			<small class="imagesize"></small>
+		</div>
 		<div class="uploadprogress"></div>
 	</a>
 </div>

@@ -837,13 +837,14 @@ input[type="submit"]:active {
 /* file box */
 
 .file {
-	min-width: 220px;
+	min-width: calc(15ch * 2 + .5em);;
 	height: 70px;
 	position: relative;
 	display: inline-block;
 
 	background-color: hsl(var(--c-accent) 86%);
   padding: .25rem;
+	padding-right: 2em;
   border: 1px solid hsl(var(--c-accent) 58%);
 }
 
@@ -861,8 +862,7 @@ input[type="submit"]:active {
 	vertical-align: top;
 }
 
-.file .uploaddate,
-.file .imagesize {
+.file small {
 	font-size: x-small;
 }
 

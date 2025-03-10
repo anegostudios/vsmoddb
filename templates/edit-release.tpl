@@ -130,9 +130,11 @@
 			<div class="fi-content"></div>
 		</div>
 		<img src="" style="display:none;" />
-		<h5 class="filename"></h5><br>
-		<small class="uploaddate"></small><br>
-		<small class="imagesize"></small>
+		<div>
+			<h5 class="filename"></h5>
+			<small class="uploaddate"></small><br />
+			<small class="imagesize"></small>
+		</div>
 		<div class="uploadprogress"></div>
 	</a>
 </div>
