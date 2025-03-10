@@ -265,7 +265,7 @@ function verifyPasswordHash($password, $hash)
 
 // NOTE(Rennorb): Mod logos older than this date are considdered "legacy" and have to be formatted differently.
 // :LegacyModLogos
-const SQL_MOD_CARD_TRANSITION_DATE = "2025-03-08 15:30:00";
+const SQL_MOD_CARD_TRANSITION_DATE = "2025-03-10 15:50:00";
 
 function logAssetChanges($changes, $assetid)
 {
