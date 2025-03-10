@@ -107,6 +107,11 @@ $(document).ready(function () {
 			if(logo_picker_el) {
 				const opt = logo_picker_el.querySelector(`option[value="${fileid}"]`);
 				if(opt) {
+					const previewImage = document.querySelector('#preview-box img');
+					if(previewImage && previewImage.src.endsWith(opt.dataset.url) /* fix for url vs path comparison */) {
+						previewImage.src = '/web/img/mod-default.png';
+					}
+
 					opt.remove();
 					$(logo_picker_el).trigger("chosen:updated");
 				}
@@ -243,6 +248,8 @@ $(document).ready(function () {
 				const opt = document.createElement('option');
 				opt.value = response.fileid;
 				opt.textContent = `${file.name} [${response.imagesize} px]`;
+				opt.dataset.url = response.filepath;
+
 				logo_picker_el.append(opt);
 				$(logo_picker_el).trigger("chosen:updated");
 			}

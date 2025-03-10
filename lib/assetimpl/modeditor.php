@@ -66,6 +66,16 @@ class ModEditor extends AssetEditor
 
 			$this->handleRevokeNewOwnership($modId);
 		}
+
+		$previewData = array_merge($this->asset, [
+			'statuscode'  => 'draft',
+			'legacylogo'  => false,
+			'logocdnpath' => $this->assetid ? $con->getOne('select file.cdnpath from `mod` join file on file.fileid = `mod`.logofileid where  `mod`.assetid = ?', [$this->assetid]) : null, // @perf
+			'modpath'     => '#',
+			'downloads'   => 123456,
+			'comments'    => 123456
+		]);
+		$view->assign('mod', $previewData);
 	}
 
 	function delete()

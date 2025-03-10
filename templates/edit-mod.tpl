@@ -145,7 +145,7 @@
 		</div>
 
 		<h3 class="flex-fill">Additional information</h3>
-		<div class="editbox">
+		<div class="editbox" style="align-self: baseline;">
 			<label>Side</label>
 			<select name="side">
 				<option value="client" {if ($asset['side']=='client')}selected="selected" {/if}>Client side only mod</option>
@@ -154,18 +154,24 @@
 			</select>
 		</div>
 
-		<div class="editbox">
+		<div class="editbox" style="align-self: baseline;">
 			<label>Logo/Thumbnail image</label>
 			<small>Logo is selected from the 'Screenshots', has to be 480x480 or 480x320 px and will not be displayed in the slideshow.</small>
 			<select name="logofileid">
 				<option value="">--- None ---</option>
 				{foreach from=$files item=file}
 					{if $file['imagesize'] === '480x320' || $file['imagesize'] === '480x480'}
-					<option value="{$file['fileid']}" {if $asset['logofileid']==$file['fileid']} selected="selected" {/if}>
+					<option value="{$file['fileid']}" data-url="{$file['url']}"{if $asset['logofileid']==$file['fileid']} selected="selected" {/if}>
 						{$file['filename']} [{$file['imagesize']} px]</option>
 					{/if}
 				{/foreach}
 			</select>
+		</div>
+
+		<div class="flex-spacer"></div>
+		<div id="preview-box" class="editbox" style="width: calc(300px + .5em)">
+			<label>Preview</label>
+			{include file="list-mod-entry"}
 		</div>
 
 		{if $asset['assetid'] && canEditAsset($asset, $user, false)}
@@ -261,12 +267,32 @@
 
 {capture name="footerjs"}
 	<script type="text/javascript">
-		$(document).ready(function() {
-			$('form[name=commentformtemplate]').areYouSure();
-		});
-	</script>	
+		{
+			const previewBoxEl = document.getElementById('preview-box');
+			const imageEl = previewBoxEl.getElementsByTagName('img')[0];
+			const descriptionEl = previewBoxEl.querySelector('.moddesc>a');
+			const titleEl = descriptionEl.firstElementChild;
+			const summaryEl = descriptionEl.lastElementChild;
+			
+			$('input[name="name"]').on('input', function(e) {
+				const text = e.target.value;
+				titleEl.textContent = text.length < 49 ? text : text.substr(0, 45)+'...';
+			});
+			$('input[name="summary"]').on('input', function(e) { summaryEl.textContent = e.target.value; });
 
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=31" async></script>
+			const fileFrameEl = document.getElementsByClassName('files')[0];
+			const $logoSelect = $('select[name="logofileid"]');
+			$logoSelect.on('change', function(e, ex) {
+				let src = '/web/img/mod-default.png';
+				if(ex.selected) {
+					src = $(`option[value="${ex.selected}"]`, $logoSelect).data('url')
+				}
+				imageEl.src = src;
+			});
+		}
+	</script>
+
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=32" async></script>
 {/capture}
 
 {include file="footer"}

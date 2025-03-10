@@ -16,9 +16,11 @@
 			{else}
 				<h4>{substr($mod['name'], 0, 45)}...</h4>
 			{/if}
-			{if $mod['summary']}{$mod['summary']}{else}
-			{foreach from=$mod['tags'] item=tag} {$tag['name']}{/foreach}
-			{/if}
+			<p>
+				{if $mod['summary']}{$mod['summary']}{else}
+				{foreach from=$mod['tags'] item=tag} {$tag['name']}{/foreach}
+				{/if}
+			</p>
 		</a>
 	</div>
 
