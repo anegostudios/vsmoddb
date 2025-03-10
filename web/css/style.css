@@ -919,6 +919,10 @@ input[type="submit"]:active {
 	display: inline-block;
 }
 
+.comments .comment {
+	margin-bottom: .5em;
+}
+
 .comment {
 	width: 100%;
 	word-break: break-word;
