@@ -1443,30 +1443,31 @@ span.username {
 }
 
 
-.flair {
-	margin-left: 5px;
+.flair::before {
 	padding: 1px 2px;
 	border: 1px solid #3E372F;
 	border-radius: 5px;
 	unicode-bidi: isolate;
-	font-size: 75%;
-	vertical-align: bottom;
+	line-height: 1rem;
 
 	background: #f5f5f5;
 	color: #555;
 }
 
-.flair-moderator {
+.flair-moderator::before {
+	content: 'Moderator';
 	background: #2a6b6f;
 	color: white;
 }
 
-.flair-admin {
+.flair-admin::before {
+	content: 'Administrator';
 	background: #0e7239;
 	color: white;
 }
 
-.flair-author {
+.flair-author::before {
+	content: 'Author';
 	background: #535c88;
 	color: white;
 }

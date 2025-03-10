@@ -85,13 +85,11 @@ if ($assetid) {
 	foreach ($comments as $idx => $comment) {
 		if ($asset['createduserid'] == $comment["userid"]) {
 			$comments[$idx]["flaircode"] = "author";
-			$comments[$idx]["flairname"] = "Author";
 		}
 
 		// player, player_nc
 		if ($comment["roleid"] != 3 && $comment["roleid"] != 4) {
 			$comments[$idx]["flaircode"] = $comment["rolecode"];
-			$comments[$idx]["flairname"] = $comment["rolename"];
 		}
 	}
 

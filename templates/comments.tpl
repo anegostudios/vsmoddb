@@ -20,7 +20,7 @@
 					<div id="cmt-{$comment['commentid']}" class="editbox comment" data-timestamp="{strtotime($comment['created'])}" style="clear:both;">
 						<div class="title">
 							<a style="text-decoration:none;" href="#cmt-{$comment['commentid']}">&#128172;</a>
-							{$comment['username']}{if !empty($comment["flaircode"])}<span class="flair flair-{$comment['flaircode']}">{$comment["flairname"]}</span>{/if}{if $comment['isbanned']}&nbsp;<span style="color:red;">[currently restricted]</span>{/if}, {fancyDate($comment['created'])} {if $comment['modifieddate']}(modified at {$comment['modifieddate']}){/if}{if $comment['lastmodaction']} (edited by moderator){/if}
+							{$comment['username']}{if !empty($comment["flaircode"])} <small class="flair flair-{$comment['flaircode']}"></small>{/if}{if $comment['isbanned']}&nbsp;<span style="color:red;">[currently restricted]</span>{/if}, {fancyDate($comment['created'])} {if $comment['modifieddate']}(modified at {$comment['modifieddate']}){/if}{if $comment['lastmodaction']} (edited by moderator){/if}
 								{if !empty($user)}
 										{if $comment["userid"] == $user["userid"]}
 												<span class="buttonlinks strikethrough-when-banned">(<a href="#editcomment" data-commentid="{$comment['commentid']}">edit comment</a> <a style="margin-left:5px;"  href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>)</span>
