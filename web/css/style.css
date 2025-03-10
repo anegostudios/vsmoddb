@@ -39,6 +39,7 @@ body {
 	color: var(--color-text);
 	font-size: 16px;
 	line-height: 1.2;
+	text-rendering: optimizeSpeed;
 }
 
 blockquote {
@@ -49,12 +50,25 @@ blockquote {
 	font-style: italic;
 }
 
-h2 {
-	font-size: 1.2em;
+p:not(:last-child) {
+	margin-bottom: .5em;
+}
+
+h1:not(:first-child),
+h2:not(:first-child),
+h3:not(:first-child),
+h4:not(:first-child),
+h5:not(:first-child),
+h6:not(:first-child) {
+	margin-top: 1.5em;
 }
 
 a { color: var(--color-link); }
 a:hover { color: var(--color-link-active); }
+
+li {
+	margin-left: 1em;
+}
 
 /* generic classes */
 .whitetext { color: var(--color-text-inv); }
@@ -611,6 +625,7 @@ ul.tabs {
 }
 
 ul.tabs li {
+	margin: 0;
 	float: left;
 	height: 31px; /*--Subtract 1px from the height of the unordered list--*/
 	line-height: 31px; /*--Vertically aligns the text within the tab--*/
@@ -1103,8 +1118,8 @@ ul.footer {
 }
 
 .footer li {
+	margin: 0;
 	padding: 3px;
-	margin: 0px;
 	display: inline-block;
 }
 
