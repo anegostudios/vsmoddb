@@ -90,6 +90,7 @@
 		<p>{count($rows)} mods, sorted by {$sortbypretty}</p>
 		<div class="mods">
 			{foreach from=$rows item=mod}{include file="list-mod-entry"}{/foreach}
+			{if count($rows) < 5 /* @hack some spacing so the mods dont blow out */}<span></span><span></span><span></span><span></span><span></span>{/if}
 		</div>
 	{else}
 		<p>&nbsp;</p>

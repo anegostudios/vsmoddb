@@ -243,7 +243,7 @@ a:hover { color: var(--color-link-active); }
 	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 	grid-template-rows: auto;
 	gap: 1em;
-	justify-content: space-between;
+	justify-content: start;
 }
 
 @media (max-width: 450px) {
