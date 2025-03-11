@@ -34,6 +34,7 @@ $urlparts = explode("/", $target);
 if (preg_match("/[^\-\d\w]/", $urlparts[0])) $target="dashboard";
 if (count($urlparts) > 1 && preg_match("/[^\-\d\w]/", $urlparts[1])) $target="dashboard";
 
+//TODO(Rennorb) @cleanup: This routing mess...
 if ($urlparts[0] == "download") {
 	include("download.php");
 	exit();
@@ -46,7 +47,11 @@ if ($urlparts[0] == "api") {
 }
 
 if ($urlparts[0] == "notification") {
-	include("notification.php");
+	include("lib/notification.php");
+	exit();
+}
+if ($urlparts[0] == "notifications") {
+	include("notifications.php");
 	exit();
 }
 

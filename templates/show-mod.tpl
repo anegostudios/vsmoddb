@@ -61,20 +61,20 @@
 		<li><a href="#tab-description">Description</a></li>
 		<li><a href="#tab-files">Files</a></li>
 		{if $asset['homepageurl']}
-			<li><a href="{$asset['homepageurl']}"><img src="/web/img/externallink.png" height="18"> Homepage</a></li>
+			<li><a class="external" href="{$asset['homepageurl']}">Homepage</a></li>
 		{/if}
 		{if $asset['wikiurl']}
-			<li><a href="{$asset['wikiurl']}"><img src="/web/img/externallink.png" height="18"> Wiki</a></li>
+			<li><a class="external" class="external" href="{$asset['wikiurl']}">Wiki</a></li>
 		{/if}
 		{if $asset['issuetrackerurl']}
-			<li><a href="{$asset['issuetrackerurl']}"><img src="/web/img/externallink.png" height="18"> Issue tracker</a>
+			<li><a class="external" href="{$asset['issuetrackerurl']}">Issue tracker</a>
 			</li>
 		{/if}
 		{if $asset['sourcecodeurl']}
-			<li><a href="{$asset['sourcecodeurl']}"><img src="/web/img/externallink.png" height="18"> Source</a></li>
+			<li><a class="external" href="{$asset['sourcecodeurl']}">Source</a></li>
 		{/if}
 		{if $asset['donateurl']}
-			<li><a href="{$asset['donateurl']}"><img src="/web/img/externallink.png" height="18"> Donate</a></li>
+			<li><a class="external" href="{$asset['donateurl']}">Donate</a></li>
 		{/if}
 	</ul>
 

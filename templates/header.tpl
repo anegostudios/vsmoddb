@@ -20,7 +20,7 @@
 	<link href="/web/js/chosen/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/datepicker.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/js/tinymce/plugins/spoiler/css/spoiler.css" rel="stylesheet" type="text/css">
-	<link href="/web/css/style.css?version=49" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=50" rel="stylesheet" type="text/css">
 
 	<link href="/web/js/tinymce/skins/ui/oxide/skin.mobile.min.css" as="style">
 	<link href="/web/js/tinymce/skins/ui/oxide/content.mobile.min.css" as="style">
@@ -69,16 +69,18 @@
 
 			{if (!empty($user))}
 				<span class="icon-only submenu notifications">
-					<span>
+					<a href="/notifications">
 						<span class="notificationcount {if $notificationcount}visible{/if}">{$notificationcount}</span>
 						<i class="bx bxs-bell"></i>
-					</span>
+					</a>
 					<nav>
 						{foreach from=$notifications item=notification}
-							<a href="{$notification['link']}">{$notification['text']}{if $notification['type']!='clearall'}<br>{fancyDate($notification['created'])}{/if}</a>
+							<a href="{$notification['link']}">{$notification['text']}<br>{fancyDate($notification['created'])}</a>
 						{/foreach}
 						{if $notificationcount == 0}
 							<span>No new notifications, you're all caught up!</a>
+						{else}
+							<a href="/notification/clearall">Clear all notifications</a>
 						{/if}
 					</nav>
 				</span>

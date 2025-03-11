@@ -66,6 +66,29 @@ h6:not(:first-child) {
 a { color: var(--color-link); }
 a:hover { color: var(--color-link-active); }
 
+/*a[href^="http"]::before */ /* @cleanup needs font or svg image to sue currentcolor */
+a.external::before {
+	content: '';
+	display: inline-block;
+	height: 1.1em;
+	width: 1.1em;
+	vertical-align: sub;
+	margin-right: .5ch;
+
+	background-size: contain;
+	background-image: url(/web/img/externallink.png);
+}
+
+a[href*="github.com"].external::before {
+	background-image: url(/web/img/logo-github.svg);
+}
+a[href*="patreon.com"].external::before {
+	background-image: url(/web/img/logo-patreon-b.png);
+}
+a[href*="ko-fi.com"].external::before {
+	background-image: url(/web/img/logo-kofi-c.svg);
+}
+
 li {
 	margin-left: 1em;
 }
@@ -412,6 +435,7 @@ li {
 .innercontent {
 	padding: 15px;
 	background-color: var(--color-content-bg);
+	min-height: calc(100vh - 75px - 5em);
 }
 
 
@@ -1544,4 +1568,21 @@ body.banned .strikethrough-when-banned {
 		align-items: start;
 		width: fit-content;
 	}
+}
+
+#notifications-list>li{
+	display: flex;
+	margin: 1em 0;
+	padding: 1em 0 .25em 0;
+	flex-direction: row;
+	gap: 1em;
+}
+
+#notifications-list>[data-label]::before {
+	font-size: small;
+	top: 0;
+}
+
+#notifications-list>li:hover {
+	background-color: var(--color-input);
 }

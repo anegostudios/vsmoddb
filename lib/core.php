@@ -384,6 +384,25 @@ function formatDateWhichMightBeForever($date, $format = "M jS Y, H:i:s", $foreve
 	return startsWith($year, "9999") ? $forevertext : $date->format($format);
 }
 
+/**
+ * @param string $date
+ * @return string
+ */
+function formatDateRelative($sqldate)
+{
+	$diff = date_diff(parseSqlDateTime($sqldate), date_create_immutable());
+
+	     if($diff->y > 0) $fmt = $diff->y === 1 ? '1 year'   : $diff->y.' years';
+	else if($diff->m > 0) $fmt = $diff->m === 1 ? '1 month'  : $diff->m.' months';
+	else if($diff->d > 0) $fmt = $diff->d === 1 ? '1 day'    : $diff->d.' days';
+	else if($diff->h > 0) $fmt = $diff->h === 1 ? '1 hour'   : $diff->h.' hours';
+	else if($diff->i > 0) $fmt = $diff->i === 1 ? '1 minute' : $diff->i.' minutes';
+	else                  $fmt = $diff->s === 1 ? '1 second' : $diff->s.' seconds';
+
+	return $diff->invert ? 'in '.$fmt : $fmt.' ago';
+}
+
+/** @obsolete */
 function fancyDate($sqldate) //TODO(Rennorb): support for future dates
 {
 	if (empty($sqldate)) return "-";

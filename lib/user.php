@@ -173,9 +173,5 @@ function loadNotifications()
 	}
 	unset($notification);
 
-	if (count($notifications)) {
-		$notifications[] = array('type' => 'clearall', 'text' => 'Clear all notifications', 'recorid' => 'clear', 'link' => '/notification/clearall');
-	}
-
 	$view->assign("notifications", $notifications);
 }
