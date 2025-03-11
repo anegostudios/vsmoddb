@@ -6,7 +6,7 @@
 							<img src="{formatCdnUrl($file, '_55_60')}"/>
 							<div>
 								<h5 class="filename">{$file["filename"]}</h5>
-								<small class="uploaddate">{$file["created"]}</small><br />
+								<small class="uploaddate">{$file["created"]}</small>
 								<small class="imagesize">{$file["imagesize"]} px</small>
 							</div>
 						</a>
@@ -27,10 +27,10 @@
 			{/foreach}
 			
 			{if !empty($formupload)}
-			<div class="editbox wide">
-				<label>Upload new file (or drag and drop, max file size: {$fileuploadmaxsize} MB)</label>
-				<input type="file" name="newfile" style="height: unset; padding: .25em;">
-			</div>
+				<div class="editbox wide">
+					<label>Upload new file (or drag and drop, max file size: {$fileuploadmaxsize} MB)</label>
+					<input type="file" name="newfile" style="height: unset; padding: .25em;">
+				</div>
 			{/if}
-			
+
 		</div>

@@ -840,9 +840,7 @@ input[type="submit"]:active {
 
 .file {
 	min-width: calc(15ch * 2 + .5em);;
-	height: 70px;
 	position: relative;
-	display: inline-block;
 
 	background-color: hsl(var(--c-accent) 86%);
   padding: .25rem;
@@ -850,28 +848,25 @@ input[type="submit"]:active {
   border: 1px solid hsl(var(--c-accent) 58%);
 }
 
-.file .fi {
-	float: left;
-	margin-right: 10px;
+.file>a {
+	text-decoration: none;
+	display: flex;
+	flex-direction: row;
+	gap: .5em;
 }
 
-.file .fi,
-.file .filename,
-.file .uploaddate,
-.file .imagesize,
-.file .uploadprogress {
-	display: inline-block;
-	vertical-align: top;
+.file img {
+	width: 60px;
+	height: 60px;
+	object-fit: contain;
+}
+.file .fi {
+	height: 50px;
 }
 
 .file small {
+	display: block;
 	font-size: x-small;
-}
-
-
-.file img {
-	float: left;
-	margin-right: 10px;
 }
 
 .file .delete,

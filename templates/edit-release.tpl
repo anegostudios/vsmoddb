@@ -123,21 +123,7 @@
 		{/if}
 </div>
 
-<div class="file template">
-	<input type="hidden" name="fileids[]" value="" />
-	<a href="#">
-		<div class="fi">
-			<div class="fi-content"></div>
-		</div>
-		<img src="" style="display:none;" />
-		<div>
-			<h5 class="filename"></h5>
-			<small class="uploaddate"></small><br />
-			<small class="imagesize"></small>
-		</div>
-		<div class="uploadprogress"></div>
-	</a>
-</div>
+{include file="edit-asset-files-template.tpl"}
 
 <div class="connection template editbox" style="clear:both;">
 	<input type="hidden" name="connectionid[]" value="">
