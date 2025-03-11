@@ -98,13 +98,12 @@
 				{/if}
 			</div>
 
-			<div class="imageslideshow fotorama" data-width="675" data-autoplay="5000" data-nav="thumbs"
-				data-allowfullscreen="true">
+			<div class="imageslideshow fotorama" data-width="675" data-autoplay="5000" data-nav="thumbs" data-allowfullscreen="true">
 				{if (!empty($asset['trailervideourl']))}
 					<a href="{$asset['trailervideourl']}">Trailer Video</a>
 				{/if}
 				{foreach from=$files item=file}
-					<img src="{formatCdnUrl($file)}">
+					<img src="{$file['url']}">
 				{/foreach}
 			</div>
 
@@ -119,12 +118,9 @@
 				{if !empty($teammembers)}
 					<span class="text-weak">Authors:</span>
 
-					<a href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a
-
-					>{foreach from=$teammembers item=teammember}, <a href="/show/user/{$teammember['usertoken']}">{$teammember['name']}</a>{/foreach}
+					<a href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>{foreach from=$teammembers item=teammember}, <a href="/show/user/{$teammember['usertoken']}">{$teammember['name']}</a>{/foreach}
 				{else}
-					<span class="text-weak">Author:</span> <a
-						href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>
+					<span class="text-weak">Author:</span> <a href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>
 				{/if}
 
 				<br>

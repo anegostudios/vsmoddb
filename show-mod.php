@@ -54,7 +54,7 @@ if ($assetid) {
 
 	$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);
 	$view->assign("createdusertoken", $createdusertoken);
-	$files = $con->getAll("select * from file where assetid = ? and fileid != ?", array($assetid, $asset['logofileid']));
+	$files = $con->getAll("select * from file where assetid = ? and fileid != ?", array($assetid, $asset['logofileid'] ?? 0 /* sql cant compare against null */));
 
 	foreach ($files as &$file) {
 		$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
