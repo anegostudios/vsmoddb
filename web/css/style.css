@@ -310,6 +310,8 @@ li {
 	bottom: 0;
 	width: 100%;
 	padding: .25em;
+	background-color: white; /* fallback */
+	background-color: #ffffffcc; /* fallback */
 	background-color: hsla(var(--c-mod-bg) / .8);
 	text-shadow: 1px white;
 }
