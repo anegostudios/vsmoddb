@@ -76,6 +76,7 @@ a.external::before {
 	margin-right: .5ch;
 
 	background-size: contain;
+	background-repeat: round;
 	background-image: url(/web/img/externallink.png);
 }
 
