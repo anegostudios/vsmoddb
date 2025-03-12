@@ -51,8 +51,8 @@ class ReleaseEditor extends AssetEditor {
 		if ($this->savestatus == "invalidfile") {
 			$view->assign("errormessage", $this->fileuploadstatus['errormessage']);
 		}
-		if ($this->savestatus == "onlyonefile") {
-			$view->assign("errormessage", "Can't save. Already a file uploaded. Please delete old file first");
+		else if ($this->savestatus == "onlyonefile") {
+			$view->assign("errormessage", "There can only be one file per release. Please delete the old file first");
 		}
 		
 		if ($this->assetid) {
@@ -171,10 +171,16 @@ class ReleaseEditor extends AssetEditor {
 				return 'duplicateid';
 			}
 
-			// Make sure another user doesn't use this modid
-			$userid = $con->getOne("select createdbyuserid from `asset` join `release` on (asset.assetid = `release`.assetid) where modidstr=? and createdbyuserid!=?", array($modidstr, $user['userid']));
-			if (!$this->assetid && $userid) {
-				$this->inUseByUser = $con->getRow("select * from user where userid=?", $userid);
+			// Make sure another user doesn't use this modid whiel allowing team members to release.
+			$inUseBy = $con->getOne("
+				select user.*, asset.*
+				from `release`
+				join asset on asset.assetid = `release`.assetid
+				join user on user.userid = asset.createdbyuserid
+				where `release`.modidstr = ? and asset.createdbyuserid != ?
+			", array($modidstr, $user['userid']));
+			if (!$this->assetid && $inUseBy && !canEditAsset($inUseBy, $user)) {
+				$this->inUseByUser = $inUseBy;
 				return 'modidinuse';
 			}
 
@@ -187,7 +193,7 @@ class ReleaseEditor extends AssetEditor {
 			
 			// Reserve special mod ids
 			if ($modidstr == "game" || $modidstr == "creative" || $modidstr == "survival") {
-				$this->inUseByUser = array("userid"=>1, "name" => "the creators of this very game - gasp!");
+				$this->inUseByUser = array("userid" => 1, "name" => "the creators of this very game - gasp!");
 				return 'modidinuse';
 			}
 		}
@@ -223,30 +229,35 @@ class ReleaseEditor extends AssetEditor {
 				
 		parent::loadFromDB();
 		
-		if ($this->savestatus == 'duplicateid') {
-			$view->assign("errormessage", "Cannot save release, there already exists a <a href=\"/edit/release/?assetid={$this->releaseIdDupl}\">release</a> with this mod id and version - please ensure a unique modid and avoid uploading of duplicate version numbers.", null, true);
-		}
-		if ($this->savestatus == 'duplicatemod') {
-			$view->assign("errormessage", "Cannot save release, there already exists <a href=\"/show/mod/{$this->modAssetIdDupl}\">another mod</a> that uses this mod id - please ensure a unique modid.", null, true);
-		}		
-		if ($this->savestatus == 'modidinuse') {
-			$name = $this->inUseByUser['name'];
-			$view->assign("errormessage", "Cannot save release, this mod id has been claimed by {$name}, please choose another one.", null, true);
-		}
-		
+		switch($this->savestatus) {
+			case 'duplicateid':
+				$view->assign("errormessage", "Cannot save release, there already exists a <a href=\"/edit/release/?assetid={$this->releaseIdDupl}\">release</a> with this mod id and version - please ensure a unique modid and avoid uploading of duplicate version numbers.", null, true);
+				break;
 
-		
-		if ($this->savestatus == 'missingfile') {
-			$view->assign("errormessage", "Cannot save release, no file has been uploaded.");
-		}
-		if ($this->savestatus == 'missingmodinfo') {
-			$view->assign("errormessage", "Cannot save release, could not load mod info from file and mod info fields were empty.");
-		}
-		if ($this->savestatus == 'invalidmodid') {
-			$view->assign("errormessage", "Cannot save release, invalid mod info, please use only letters, numbers and -");
-		}
-		if ($this->savestatus == 'invalidmodversion') {
-			$view->assign("errormessage", "Cannot save release, invalid mod version, please use the format n.n.n or n.n.n-(rc|pre|dev).n<br>E.g. 1.0.1 or 1.5.2-rc.1", null, true);
+			case 'duplicatemod':
+				$view->assign("errormessage", "Cannot save release, there already exists <a href=\"/show/mod/{$this->modAssetIdDupl}\">another mod</a> that uses this mod id - please ensure a unique modid.", null, true);
+				break;
+
+			case 'modidinuse':
+				$name = $this->inUseByUser['name'];
+				$view->assign("errormessage", "Cannot save release, this mod id has been claimed by {$name}, please choose another one.", null, true);
+				break;
+
+			case 'missingfile':
+				$view->assign("errormessage", "Cannot save release, no file has been uploaded.");
+				break;
+
+			case 'missingmodinfo':
+				$view->assign("errormessage", "Cannot save release, could not load mod info from file and mod info fields were empty.");
+				break;
+
+			case 'invalidmodid':
+				$view->assign("errormessage", "Cannot save release, invalid mod info, please use only letters, numbers and -");
+				break;
+
+			case 'invalidmodversion':
+				$view->assign("errormessage", "Cannot save release, invalid mod version, please use the format n.n.n or n.n.n-(rc|pre|dev).n<br>E.g. 1.0.1 or 1.5.2-rc.1", null, true);
+				break;
 		}
 	}
 	
