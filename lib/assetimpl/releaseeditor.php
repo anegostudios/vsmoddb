@@ -101,12 +101,14 @@ class ReleaseEditor extends AssetEditor {
 
 		if (!empty($mod)) {
 			updateGameVersionsCached($mod['modid']);
+
+			$con->execute("
+				update `mod`
+				set lastreleased = IFNULL((select created from `release` where modid = `mod`.modid order by created desc), `mod`.created)
+				where modid = ?;
+			", [$mod['modid']]);
 		
-			if ($mod['urlalias']) {
-				header("Location: /{$mod['urlalias']}#tab-files");
-			} else {
-				header("Location: /show/mod/{$mod['assetid']}#tab-files");
-			}
+			forceRedirect(formatModPath($mod).'#tab-files');
 		} else {
 			header("Location: /");
 		}

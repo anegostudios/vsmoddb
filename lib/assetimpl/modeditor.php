@@ -133,7 +133,7 @@ class ModEditor extends AssetEditor
 		}
 
 		if ($this->isnew) {
-			$con->Execute("update `mod` set lastreleased=now() where assetid=?", array($this->assetid));
+			$con->Execute("update `mod` set lastreleased = `mod`.created where assetid = ?", array($this->assetid));
 		}
 
 		if(canEditAsset($this->asset, $user, false)) $this->updateTeamMembers($modid);
