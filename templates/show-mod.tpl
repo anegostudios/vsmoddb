@@ -34,23 +34,14 @@
 {/if}
 
 <div class="edit-asset mod-{$asset['statuscode']}">
-	{if $asset['assetid']}
-		<h2>
-			<span class="assettype">
-				<a href="/list/mod">Mods</a>
-			</span> /
-			<span class="title">
-				{$asset["name"]}
-			</span>
-		</h2>
-	{else}
-		<h2>
-			<span class="assettype">
-				<a href="/list/{$entrycode}">{$entryplural}</a>
-			</span> /
-			<span class="title">Add new {$entrysingular}</span>
-		</h2>
-	{/if}
+	<h2>
+		<span class="assettype">
+			<a href="/list/mod">Mods</a>
+		</span> /
+		<span class="title">
+			{$asset["name"] ?? 'Add new Mod'}
+		</span>
+	</h2>
 
 	{if $asset['statuscode']=='draft'}
 		<div class="showmod-draftnotice"><span class="title">Draft</span><br>Set to published to be listed. A draft mod is
@@ -98,7 +89,7 @@
 				{/if}
 			</div>
 
-			<div class="imageslideshow fotorama" data-width="675" data-autoplay="5000" data-nav="thumbs" data-allowfullscreen="true">
+			<div class="imageslideshow fotorama" data-max-width="800" data-max-height="450" data-autoplay="5000" data-nav="thumbs" data-allowfullscreen="true">
 				{if (!empty($asset['trailervideourl']))}
 					<a href="{$asset['trailervideourl']}">Trailer Video</a>
 				{/if}
