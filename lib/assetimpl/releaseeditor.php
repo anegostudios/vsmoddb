@@ -174,14 +174,14 @@ class ReleaseEditor extends AssetEditor {
 			}
 
 			// Make sure another user doesn't use this modid whiel allowing team members to release.
-			$inUseBy = $con->getOne("
+			$inUseBy = $con->getRow("
 				select user.*, asset.*
 				from `release`
 				join asset on asset.assetid = `release`.assetid
 				join user on user.userid = asset.createdbyuserid
 				where `release`.modidstr = ? and asset.createdbyuserid != ?
 			", array($modidstr, $user['userid']));
-			if (!$this->assetid && $inUseBy && !canEditAsset($inUseBy, $user)) {
+			if (!$this->assetid && !empty($inUseBy) && !canEditAsset($inUseBy, $user)) {
 				$this->inUseByUser = $inUseBy;
 				return 'modidinuse';
 			}
