@@ -249,6 +249,12 @@ class AssetEditor extends AssetController
 				}, $files)) . ')', $this->assetid);
 			}
 
+			$this->asset = [
+				'assetid' => $this->assetid,
+				'assettypeid' => $assettypeid,
+				'createdbyuserid' => $user['userid'],
+			];
+
 			$view->assign("okmessage", $this->namesingular . " created.");
 		} else {
 			$view->assign("okmessage", $this->namesingular . " saved.");
