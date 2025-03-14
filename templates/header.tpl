@@ -20,7 +20,7 @@
 	<link href="/web/js/chosen/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/datepicker.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/js/tinymce/plugins/spoiler/css/spoiler.css" rel="stylesheet" type="text/css">
-	<link href="/web/css/style.css?version=51" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=52" rel="stylesheet" type="text/css">
 
 	<link href="/web/js/tinymce/skins/ui/oxide/skin.mobile.min.css" as="style">
 	<link href="/web/js/tinymce/skins/ui/oxide/content.mobile.min.css" as="style">
@@ -63,24 +63,26 @@
 				<a href="/edit/mod"{if ($urltarget === 'edit/mod')} class="active"{/if}><img src="/web/img/upload.png"><span>Submit a mod</span></a>
 			{/if}
 			<span class="flex-spacer" style="max-width: 6em; flex-grow: .5"></span>
-			<a href="https://wiki.vintagestory.at/Troubleshooting_Mods" target="_blank">Mod Troubleshooting</a>
+			<a class="external" href="https://wiki.vintagestory.at/Troubleshooting_Mods" target="_blank">Mod Troubleshooting</a>
 
 			<span class="flex-spacer"></span>
 
 			{if (!empty($user))}
-				<span class="icon-only submenu notifications">
+				<span class="icon-only submenu notifications{if $urltarget === 'notifications'} active{/if}">
 					<a href="/notifications">
-						<span class="notificationcount {if $notificationcount}visible{/if}">{$notificationcount}</span>
+						<span class="notificationcount{if $notificationcount && $urltarget !== 'notifications'} visible{/if}">{$notificationcount}</span>
 						<i class="bx bxs-bell"></i>
 					</a>
 					<nav>
-						{foreach from=$notifications item=notification}
-							<a href="{$notification['link']}">{$notification['text']}<br>{fancyDate($notification['created'])}</a>
-						{/foreach}
-						{if $notificationcount == 0}
-							<span>No new notifications, you're all caught up!</a>
-						{else}
-							<a href="/notification/clearall">Clear all notifications</a>
+						{if $urltarget !== 'notifications'}
+							{foreach from=$notifications item=notification}
+								<a href="{$notification['link']}">{$notification['text']}<br>{fancyDate($notification['created'])}</a>
+							{/foreach}
+							{if $notificationcount == 0}
+								<span>No new notifications, you're all caught up!</a>
+							{else}
+								<a href="/notification/clearall">Clear all notifications</a>
+							{/if}
 						{/if}
 					</nav>
 				</span>

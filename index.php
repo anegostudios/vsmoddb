@@ -42,7 +42,13 @@ if ($urlparts[0] == "download") {
 
 if ($urlparts[0] == "api") {
 	array_shift($urlparts);
-	include("api.php");
+	if(count($urlparts) > 0 && $urlparts[0] === 'v2') {
+		array_shift($urlparts);
+		include("lib/api/v2.php");
+	}
+	else {
+		include("lib/api/v1.php");
+	}
 	exit();
 }
 

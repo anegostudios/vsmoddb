@@ -111,7 +111,7 @@ function loadNotifications()
 						join asset on (`mod`.assetid = asset.assetid)
 						join user on (asset.createdbyuserid = user.userid)
 					where modid=?
-				", $notification['recordid']);
+				", [$notification['recordid']]);
 
 				$notification['text'] = "{$cmt['username']} uploaded a new version of {$cmt['modname']}";
 				break;
@@ -126,7 +126,7 @@ function loadNotifications()
 						join asset on (`mod`.assetid = asset.assetid)
 						join user on (asset.createdbyuserid = user.userid)
 					where `mod`.modid = ? 
-				", intval($notification['recordid']) & ((1 << 30) - 1));  // :InviteEditBit
+				", [intval($notification['recordid']) & ((1 << 30) - 1)]);  // :InviteEditBit
 
 				$notification['text'] = "{$cmt['username']} invited you to join the team of {$cmt['modname']}";
 				break;
@@ -141,7 +141,7 @@ function loadNotifications()
 						join asset on (`mod`.assetid = asset.assetid)
 						join user on (asset.createdbyuserid = user.userid)
 					where `mod`.modid=? 
-				", $notification['recordid']);
+				", [$notification['recordid']]);
 
 				$notification['text'] = "{$cmt['username']} offered you ownership of {$cmt['modname']}";
 				break;
@@ -159,7 +159,7 @@ function loadNotifications()
 						join `mod` on (comment.assetid = `mod`.assetid)
 						join user on (comment.userid = user.userid)
 					where commentid=?
-				", $notification['recordid']);
+				", [$notification['recordid']]);
 
 				if ($notification['type'] == "newcomment") {
 					$notification['text'] = "{$cmt['username']} commented on {$cmt['modname']}";

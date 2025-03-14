@@ -96,9 +96,9 @@ $(document).ready(function () {
 		}
 
 		if (confirm("Really delete " + filename + "?")) {
-			$(".okmessagepopup").html(filename + " deleted.");
+			$(".okmessagepopup").text(filename + " deleted.");
 			$.post("/edit-deletefile", { fileid: fileid, at: actiontoken }).done(function() {
-				//showOkMessage(); //TODO(Rennorb) @cleanup: this fn is not defined
+				showMessage($(".okmessagepopup"));
 				$self.parent().remove();
 			});
 

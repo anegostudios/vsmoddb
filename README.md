@@ -16,11 +16,17 @@ Response: Json. Every response contains a *statuscode* property which uses [HTTP
 *Api base url*
 http://mods.vintagestory.at/api
 
-*Base url for all returned files*
-http://mods.vintagestory.at/
+*Api v2 base url - currently still in development*
+http://mods.vintagestory.at/api/v2
+
+~~*Base url for all returned files*~~
+~~http://mods.vintagestory.at/~~
+Always respect the full uris returned by the api.
 
 
 ## Interfaces
+
+## V1
 
 ### /api/tags
 List all mod tags
@@ -70,6 +76,31 @@ List all info for given mod. Modid can be either the numbered id as retrieved by
 Example: http://mods.vintagestory.at/api/mod/6<br>
 String example: http://mods.vintagestory.at/api/mod/carrycapacity
 
+
+## V2 - still under development
+
+Endpoints marked as `auth` require authentication and response with `401` if it is missing.
+
+### /api/v2/notifications `auth`
+- `get`: No args.
+	- `200`: Array of notification ids for the current user. May be empty.
+
+### /api/v2/notifications/{id} `auth`
+- `get`: Path arg `{id}`
+	- `404`: Not implemented.
+
+### /api/v2/notifications/all `auth`
+- `get`: No args.
+	- `404`: Not implemented.
+
+### /api/v2/notifications/clear `auth`
+- `post`:
+	- Args:
+		- `ids`: Comma separated list of integers (takes priority). or
+		- `ids[]`: formurlencoded ids.
+	- `400`: No ids provided or argument malformed.
+	- `403`: List of ids contains notifications that do not belong to the current user.
+	- `200`: Notifications were marked as read if they exist.
 
 # Development setup
 ## VS Code - Remote Containers
