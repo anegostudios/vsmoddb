@@ -239,7 +239,7 @@ li {
 	/* @cleanup quick recolor hack, its an image; cannot use currentcolor */
 	filter: invert(80%);
 }
-a.external::before {
+#main-nav a.external::before {
 	/* @cleanup quick recolor hack, its an image; cannot use currentcolor */
 	filter: invert();
 }

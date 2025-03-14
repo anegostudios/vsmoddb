@@ -20,7 +20,7 @@
 	<link href="/web/js/chosen/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/datepicker.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/js/tinymce/plugins/spoiler/css/spoiler.css" rel="stylesheet" type="text/css">
-	<link href="/web/css/style.css?version=52" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=53" rel="stylesheet" type="text/css">
 
 	<link href="/web/js/tinymce/skins/ui/oxide/skin.mobile.min.css" as="style">
 	<link href="/web/js/tinymce/skins/ui/oxide/content.mobile.min.css" as="style">
