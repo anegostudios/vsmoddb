@@ -94,7 +94,8 @@ a[href*="github.com"].external::before  { background-image: url(/web/img/logo-gi
 a[href*="gitlab.com"].external::before  { background-image: url(/web/img/logo-gitlab.svg); }
 a[href*="patreon.com"].external::before { background-image: url(/web/img/logo-patreon-b.png); }
 a[href*="ko-fi.com"].external::before   { background-image: url(/web/img/logo-kofi-c.svg); }
-a[href*="discord.gg"].external::before  { background-image: url(/web/img/logo-discord.svg); }
+a[href*="discord.gg"].external::before,
+a[href*="discord.com"].external::before { background-image: url(/web/img/logo-discord.svg); }
 
 li {
 	margin-left: 1em;
