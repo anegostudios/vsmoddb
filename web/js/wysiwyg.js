@@ -43,6 +43,7 @@
 		toolbar: 'bold italic strikethrough | link image emoticons | alignleft aligncenter alignright alignjustify  | numlist bullist outdent indent | removeformat',
 		image_advtab: true,
 		importcss_append: true,
+		min_height: 400 /* @hack: required for mobile */,
 		height: 400,
 		image_caption: true,
 		convert_urls:true,

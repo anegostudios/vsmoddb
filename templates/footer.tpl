@@ -12,10 +12,10 @@
 </div>
 
 	<script type="text/javascript" src="/web/js/jquery.are-you-sure.js"></script>
-     <script type="text/javascript" src="/web/js/ays-beforeunload-shim.js"></script>
+	<script type="text/javascript" src="/web/js/ays-beforeunload-shim.js"></script>
 	<script type="text/javascript" src="/web/js/jquery.cookie.js"></script>
 
-	<script type="text/javascript" src="/web/js/wysiwyg.js?version=25"></script>
+	<script type="text/javascript" src="/web/js/wysiwyg.js?version=26"></script>
 	<script type="text/javascript" src="/web/js/tinymce/tinymce.min.js"></script>
 
 	<script type="text/javascript" src="/web/js/jquery.filedrop.js?v=2"></script>
@@ -25,7 +25,7 @@
 	<script type="text/javascript" src="/web/js/tabs.js?version=6"></script>
 	
 	<script type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
-	 
+
 	<link  href="https://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.css" rel="stylesheet">
 	<script src="/web/js/fotorama.js"></script>
 
