@@ -13,6 +13,7 @@ if ($assetid) {
 			asset.*, 
 			`mod`.*,
 			logofile.cdnpath as logourl,
+			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
 			createduser.userid as createduserid,
 			createduser.created as createduserjoindate,
 			createduser.name as createdusername,
@@ -48,13 +49,37 @@ if ($assetid) {
 		", array($asset['modid']));
 	$view->assign("teammembers", $teammembers);
 
+	$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);
+	$view->assign("createdusertoken", $createdusertoken);
+
+	$files = $con->getAll("select * from file where assetid = ? and fileid != ?", array($assetid, $asset['logofileid'] ?? 0 /* sql cant compare against null */));
+
+	//NOTE(Rennorb): There was a time where we rescaled images for logos. We no longer do that, but in ~140 cases there are still two images for the logo: the actual logo image, and the original one that was uploaded.
+	// Since we don't show the logo in the slideshow anymore, we also need to remove that second file that got uploaded, without removing it from the database so it stays downloadable for the mod author until they replace it.
+	// Here is a sql query to get a list of such mods:
+	/*
+		select modid, urlalias, user.name from `mod`
+		join file f on f.fileid = `mod`.logofileid
+		join file f2 on f2.cdnpath = concat(substr(f.cdnpath, 1, length(f.cdnpath) - 12), substr(f.cdnpath, -4))
+		join asset on `mod`.assetid = asset.assetid
+		join user on user.userid = asset.createdbyuserid;
+	*/
+	if($asset['legacylogo']) {
+		splitOffExtension($asset['logourl'], $base, $ext);
+		if(endsWith($base, '_480_320')) {
+			$legacyLogoPath = substr($base, 0, strlen($base) - 8).'.'.$ext;
+			foreach ($files as $k => $file) {
+				if($file['cdnpath'] === $legacyLogoPath) {
+					unset($files[$k]);
+					break;
+				}
+			}
+		}
+	}
+
 	if(!empty($asset['logourl'])) {
 		$asset['logourl'] = formatCdnUrlFromCdnPath($asset['logourl']);
 	}
-
-	$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);
-	$view->assign("createdusertoken", $createdusertoken);
-	$files = $con->getAll("select * from file where assetid = ? and fileid != ?", array($assetid, $asset['logofileid'] ?? 0 /* sql cant compare against null */));
 
 	foreach ($files as &$file) {
 		$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
