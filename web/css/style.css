@@ -1091,6 +1091,10 @@ a.add:before {
 	content: "+";
 }
 
+.edit-asset h2:first-child {
+	margin-bottom: 1em;
+}
+
 .edit-asset h3 {
 	vertical-align: middle;
 	border-bottom: 1px solid #ccc;

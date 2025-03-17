@@ -2,27 +2,15 @@
 
 <div class="edit-asset edit-{$entrycode}">
 
-	{if $asset['assetid']}
-		<h2>
-			<span class="assettype">
-				<a href="/list/mod">Mods</a>
-			</span> / 
-			<span class="title">
-				<a href="/show/mod/{$mod['assetid']}#tab-files">{$mod["name"]}</a>
-			</span> / 
-			<span class="title">Edit file</span>
-		</h2>	
-	{else}
-		<h2>
-			<span class="assettype">
-				<a href="/list/mod">Mods</a>
-			</span> / 
-			<span class="title">
-				<a href="/show/mod/{$mod['assetid']}#tab-files">{$mod["name"]}</a>
-			</span> / 
-			<span class="title">Add new {$entrysingular}</span>
-		</h2>
-	{/if}
+	<h2>
+		<span class="assettype">
+			<a href="/list/mod">Mods</a>
+		</span> / 
+		<span>
+			<a href="{formatModPath($mod)}#tab-files">{$mod["name"]}</a>
+		</span> / 
+		<span>{$asset['assetid'] ? 'Edit file' : 'Add new '.$entrysingular}</span>
+	</h2>
 
 	<form method="post" name="deleteform">
 		<input type="hidden" name="at" value="{$user['actiontoken']}">

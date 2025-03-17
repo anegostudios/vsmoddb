@@ -1,25 +1,20 @@
 {include file="header"}
 
-<div class="edit-asset edit-{$entrycode}">
+<div class="edit-asset edit-mod">
 
-	{if $asset['assetid']}
-		<h2>
-			<span class="assettype">
-				<a href="/list/{$entrycode}">{$entryplural}</a>
-			</span> /
-			<span class="title">
-				<a href="{if $asset['urlalias']}/{$asset['urlalias']}{else}/show/mod/{$asset['assetid']}{/if}">{$asset["name"]}</a>
-			</span> /
-			<span class="title">Edit</span>
-		</h2>
-	{else}
-		<h2>
-			<span class="assettype">
-				<a href="/list/{$entrycode}">{$entryplural}</a>
-			</span> /
-			<span class="title">Add new {$entrysingular}</span>
-		</h2>
-	{/if}
+	<h2>
+		<span class="assettype">
+			<a href="/list/mod">Mods</a>
+		</span> /
+		{if $asset['assetid']}
+			<span>
+				<a href="{formatModPath($mod)}">{$asset["name"]}</a>
+			</span> / 
+			<span>Edit</span>
+		{else}
+			<span>Add new Mod</span>
+		{/if}
+	</h2>
 
 	<form method="post" name="deleteform">
 		<input type="hidden" name="at" value="{$user['actiontoken']}">

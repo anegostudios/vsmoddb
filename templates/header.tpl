@@ -20,7 +20,7 @@
 	<link href="/web/js/chosen/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/datepicker.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/js/tinymce/plugins/spoiler/css/spoiler.css" rel="stylesheet" type="text/css">
-	<link href="/web/css/style.css?version=54" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=55" rel="stylesheet" type="text/css">
 
 	<link href="/web/js/tinymce/skins/ui/oxide/skin.mobile.min.css" as="style">
 	<link href="/web/js/tinymce/skins/ui/oxide/content.mobile.min.css" as="style">
@@ -97,7 +97,7 @@
 					</span>
 				{/if}
 
-				<span class="submenu{if in_array($urltarget, array('accountsettings', 'show/user', 'show/user/'.$user['hash']))} active{/if}">
+				<span class="submenu{if in_array($urltarget, array('accountsettings', 'show/user', 'show/user/'.$user['hash'], 'edit/profile/'.$user['hash']))} active{/if}">
 					<span>{$user["name"]}</span>
 					<nav>
 						<a href="/show/user/{$user['hash']}">Profile</a>

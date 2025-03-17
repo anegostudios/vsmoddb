@@ -2,29 +2,18 @@
 
 <div class="edit">
 
-	{if $row[$entrycode.'id']}
-		<h2>
-			<span class="assettype">
-				<a href="/list/{$entrycode}">{$entryplural}</a>
-			</span> / 
-			<span class="title">
-				{$row["name"]}
-			</span>
-		</h2>	
-	{else}
-		<h2>
-			<span class="assettype">
-				<a href="/list/{$entrycode}">{$entryplural}</a>
-			</span> / 
-			<span class="title">Add new {$entrysingular}</span>
-		</h2>
-	{/if}
+	<h2>
+		<span class="assettype">
+			<a href="/list/{$entrycode}">{$entryplural}</a>
+		</span> / 
+		<span>{$row[$entrycode.'id'] ? $row["name"] : "Add new ".$entrysingular}</span>
+	</h2>
 
 	<form method="post" name="deleteform">
 		<input type="hidden" name="delete" value="1">
 	</form>
 
-	<form method="post" name="form1">
+	<form method="post" name="form1" class="flex-list">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="{$entrycode}id" value="{$row[$entrycode.'id']}">
 		<input type="hidden" name="saveandback" value="0">

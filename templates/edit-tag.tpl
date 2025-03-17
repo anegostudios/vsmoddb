@@ -7,16 +7,14 @@
 			<span class="assettype">
 				<a href="/list/tag">Tags</a>
 			</span> / 
-			<span class="title">
-				{$row["name"]}
-			</span>
+			<span>{$row["name"]}</span>
 		</h2>	
 	{else}
 		<h2>
 			<span class="assettype">
 				<a href="/list/tag">Tags</a>
 			</span> / 
-			<span class="title">Add new Tag</span>
+			<span>Add new Tag</span>
 		</h2>
 	{/if}
 

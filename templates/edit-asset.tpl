@@ -2,23 +2,12 @@
 
 <div class="edit-asset edit-{$entrycode}">
 
-	{if $asset['assetid']}
-		<h2>
-			<span class="assettype">
-				<a href="/list/{$entrycode}">{$entryplural}</a>
-			</span> / 
-			<span class="title">
-				{$asset["name"]}
-			</span>
-		</h2>	
-	{else}
-		<h2>
-			<span class="assettype">
-				<a href="/list/{$entrycode}">{$entryplural}</a>
-			</span> / 
-			<span class="title">Add new {$entrysingular}</span>
-		</h2>
-	{/if}
+	<h2>
+		<span class="assettype">
+			<a href="/list/{$entrycode}">{$entryplural}</a>
+		</span> / 
+		<span>{$asset['assetid'] ? $asset['name'] : "Add new ".$entrysingular}</span>
+	</h2>	
 
 	<form method="post" name="deleteform">
 		<input type="hidden" name="at" value="{$user['actiontoken']}">
@@ -32,7 +21,7 @@
 		<input type="hidden" name="numsaved" value="{$asset['numsaved']}">
 		<input type="hidden" name="saveandback" value="0">
 		
-		<div class="editbox">
+		<div class="editbox" class="flex-list">
 			<label>Status</label>
 			<select name="statusid">
 				{foreach from=$stati item=status}

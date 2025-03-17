@@ -38,7 +38,7 @@
 		<span class="assettype">
 			<a href="/list/mod">Mods</a>
 		</span> /
-		<span class="title">
+		<span>
 			{$asset["name"] ?? 'Add new Mod'}
 		</span>
 	</h2>

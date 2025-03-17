@@ -1,6 +1,8 @@
 
 {include file="header"}
 
+<h2><span>About {$shownuser['name']}</span>{if $shownuser['isbanned']}&nbsp;<span style="color: red;">[currently restricted]</span>{/if}</h2>
+
 <div style="float: right;">
 	{if canModerate($shownuser, $user)}
 		{include
@@ -18,8 +20,6 @@
 		}
 	{/if}
 </div>
-
-<h2><span class="title">About {$shownuser['name']}</span>{if $shownuser['isbanned']}&nbsp;<span style="color: red;">[currently restricted]</span>{/if}</h2>
 
 {if !empty($shownuserraw['bio'])}
 	{$shownuserraw['bio']}

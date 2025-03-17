@@ -4,25 +4,27 @@
 
 {include file="header"}
 
-<h3>
-	<span class="title">
- 		<a href="/show/user/{$usertoken}">Profile</a>
-	</span> / 
-	<span class="title">Edit</span>
-</h3>
+<div class="edit-asset">
 
-<form method="post">
+	<h2>
+		<span>
+			<a href="/show/user/{$usertoken}">Profile</a>
+		</span> / 
+		<span>Edit</span>
+	</h2>
+
+<form method="post" class="flex-list">
 	<div class="editbox flex-fill">
-		<label>Text</label>
+		<label>Bio</label>
 		<textarea name="bio" class="editor" data-editorname="bio">{$bio}</textarea>
 	</div>
 
-	<p><br></p>
-	
 	<div>
 		<input type="submit" name="save" value="Save changes">
 	</div>
 </form>
+
+</div>
 
 {if isset($errormessage)}
 	<div class="text-error" style="clear:both; margin-top:20px;">

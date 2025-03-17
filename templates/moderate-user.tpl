@@ -1,7 +1,7 @@
 
 {include file="header"}
 
-<h2><span class="title">Moderate {$shownuser['name']}</span></h2>
+<h2><span>Moderate {$shownuser['name']}</span></h2>
 
 <div style="clear:both;"></div>
 
