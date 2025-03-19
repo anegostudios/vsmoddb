@@ -127,7 +127,7 @@ class ErrorHandler {
 
 			?>
 				<div style="text-align: left; background-color: #fcc; border: 1px solid #600; color: #600; display: block; margin: 1em 0; padding: .33em 6px">
-				<b>An Error has occured, please contact Tyron on discord or at office@vintagestory.at</b><br>
+				<b>An Error has occured, please contact Rennorb on discord or at office@vintagestory.at</b><br>
 				<b>Code:</b> <?=$codename?><br />
 				</div>
 			<?php

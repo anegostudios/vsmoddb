@@ -223,26 +223,15 @@
 	<a href="#" class="delete"></a>
 </div>
 
-<p style="clear:both;"><br></p>
+<p style="clear:both"><br/></p>
 
-{include
-	file="submitbutton"
-	href="javascript:submitForm(0)"
-	buttontext="Save"
-}
+<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
 
 {if $asset['assetid'] && canDeleteAsset($asset, $user)}
 	<span style="float:right;">
-		{include
-			file="button"
-			class="btndelete"
-			href="javascript:submitDelete()"
-			buttontext="Delete `$entrysingular`"
-		}
+		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete Mod</a>
 	</span>
 {/if}
-
-<p style="clear:both;"><br></p>
 
 
 {capture name="footerjs"}

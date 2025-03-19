@@ -3,8 +3,6 @@
 
 <h2><span>Moderate {$shownuser['name']}</span></h2>
 
-<div style="clear:both;"></div>
-
 <form method="POST" autocomplete="off">
 	<label for="modreason">Reason for this ban:</label><br/>
 	<textarea id="modreason" name="modreason" style="display: block; width: 100%; min-height:150px; margin-bottom: 1em;">{$banreasonautocomplete}</textarea>

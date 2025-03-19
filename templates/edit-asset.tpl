@@ -159,39 +159,15 @@
 	<a href="#" class="delete"></a>
 </div>
 
-<p style="clear:both;"><br></p>
-
-
 {capture name="buttons"}
+	<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
+	<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
 	
-	{include
-		file="button"
-		href="javascript:submitForm(0)"
-		buttontext="Save"
-	}
-
-	{include
-		file="button"
-		href="javascript:submitForm(1)"
-		buttontext="Save+Back"
-	}
-	
-	<p style="clear:both;"><br></p>
-	{include
-		file="button"
-		href="/reclassify?assetid=`$asset['assetid']`"
-		buttontext="Reclassify"
-	}
-	
+	<div style="height: 1em"></div>
+	<a class="button large shine" href="/reclassify?assetid={$asset['assetid']}">Reclassify</a>
 	{if $asset['assetid']}
-		<p style="clear:both;"><br></p>
-		{include
-			file="button"
-			href="javascript:submitDelete()"
-			buttontext="Delete `$entrysingular`"
-		}
+		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete {$entrysingular}</a>
 	{/if}
-	
 {/capture}
 
 {capture name="footerjs"}

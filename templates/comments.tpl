@@ -12,7 +12,7 @@
 							<textarea name="commenttext" class="whitetext editor" data-editorname="comment" style="width: 100%; height: 50px;"></textarea>
 						</form>
 					</div>
-					<p style="margin:4px; margin-top:5px;"><button type="submit" name="save">Add Comment</button>
+					<p style="margin:4px; margin-top:5px;"><button class="button shine" type="submit" name="save">Add Comment</button>
 				</div>
 				{/if}
 			
@@ -36,6 +36,4 @@
 				{/foreach}
 			</div>
 			
-			<span class="buttonlinks template">&nbsp;(<a href="#editcomment" data-commentid="0">edit comment</a> <a style="margin-left:5px;" href="#deletecomment" data-commentid="0">delete</a>)</div>
-			
-			<div style="clear:both;"></div>
+			<span class="buttonlinks template">&nbsp;(<a href="#editcomment" data-commentid="0">edit comment</a> <a style="margin-left:5px;" href="#deletecomment" data-commentid="0">delete</a>)</span>

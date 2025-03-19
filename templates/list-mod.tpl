@@ -56,7 +56,7 @@
 		</span>
 
 		<span data-label="">
-			<button type="submit" name="" style="padding:0 0.3em;">Search</button>
+			<button class="button shine" type="submit" name="">Search</button>
 		</span>
 	</form>
 	

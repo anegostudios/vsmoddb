@@ -1,15 +1,11 @@
-	<div style="clear:both;"></div>
-{if !empty($buttons)}
-	<div id="rightbuttons">
-		<div id="buttonsinner">
-			{$buttons}
-		</div>
-	</div>
-{/if}
+		{if !empty($buttons)}
+			<div id="buttons-overlay">
+				{$buttons}
+			</div>
+		{/if}
 
+		</main>
 	</div>
-
-</div>
 
 	<script type="text/javascript" src="/web/js/jquery.are-you-sure.js"></script>
 	<script type="text/javascript" src="/web/js/ays-beforeunload-shim.js"></script>

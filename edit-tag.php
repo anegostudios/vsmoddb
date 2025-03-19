@@ -19,7 +19,7 @@ $save = !empty($_POST["save"]);
 $delete =!empty($_POST["delete"]);
 
 if (($save || $delete) && $user['actiontoken'] != $_REQUEST['at']) {
-	$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Tyron");
+	$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Rennorb");
 	$view->display("400");
 	exit();
 }

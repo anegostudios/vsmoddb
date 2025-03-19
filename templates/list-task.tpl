@@ -93,13 +93,7 @@
 
 
 {capture name="buttons"}
-	{include
-		file="button"
-		href="/edit/`$entrycode`"
-		buttontext="New `$entrysingular`"
-	}
+	<a class="button large shine" href="/edit/{$entrycode}">New {$entrysingular}</a>
 {/capture}
-
-
 
 {include file="footer"}

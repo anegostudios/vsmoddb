@@ -595,12 +595,12 @@ function getModInfo($filepath)
 	}
 
 	if ($returncode != 0) {
-		$error = array("modparse" => "error", "parsemsg" => "Unable to find mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Tyron");
+		$error = array("modparse" => "error", "parsemsg" => "Unable to find mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb");
 	}
 
 	$parts = explode(":", $idver);
 	if (count($parts) != 2) {
-		$error = array("modparse" => "error", "parsemsg" => "Unable to determine mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Tyron");
+		$error = array("modparse" => "error", "parsemsg" => "Unable to determine mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb");
 	}
 
 	// allow uploading files when DEBUG is set AND mono/windows is unavailable

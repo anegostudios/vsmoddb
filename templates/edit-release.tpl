@@ -9,7 +9,7 @@
 		<span>
 			<a href="{formatModPath($mod)}#tab-files">{$mod["name"]}</a>
 		</span> / 
-		<span>{$asset['assetid'] ? 'Edit file' : 'Add new '.$entrysingular}</span>
+		<span>{$asset['assetid'] ? 'Edit Release' : 'Add new Release'}</span>
 	</h2>
 
 	<form method="post" name="deleteform">
@@ -45,12 +45,12 @@
 			{/if}
 			
 			<div class="editbox">
-				<label><abbr title="This value is autodetected, please upload a file.">Mod Id</a></label>
+				<label><abbr title="This value is autodetected, please upload a file.">Mod Id</abbr></label>
 				<input type="text" name="modidstr" class="required" value="{$asset['modidstr']}" {if empty($allowinfoedit)}disabled=""{/if}>
 			</div>
 			<div class="editbox">
-				<label><abbr title="This value is autodetected, please upload a file.">Mod Version Number</a></label>
-				<label for="inp-modversion" class="prefixed-input{if empty($allowinfoedit)} disabled{/if}" data-prefix="v"><input id="inp-modversion" type="text" name="modversion" value="{$asset['modversion']}" class="required" style="width: 10ch"{if empty($allowinfoedit)}disabled=""{/if} /></label>
+				<label><abbr title="This value is autodetected, please upload a file.">Mod Version Number</abbr></label>
+				<label for="inp-modversion" class="prefixed-input{if empty($allowinfoedit)} disabled{/if}" data-prefix="v"><input id="inp-modversion" type="text" name="modversion" value="{$asset['modversion']}" class="required" style="width: 10ch"{if empty($allowinfoedit)} disabled=""{/if} /></label>
 			</div>
 		{else}
 			<div class="editbox">
@@ -134,32 +134,14 @@
 	<a href="#" class="delete"></a>
 </div>
 
-<p style="clear:both;"><br></p>
-
-
 {capture name="buttons"}
-	
-	{include
-		file="button"
-		href="javascript:submitForm(0)"
-		buttontext="Save"
-	}
-
-	{include
-		file="button"
-		href="javascript:submitForm(1)"
-		buttontext="Save+Back"
-	}
+	<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
+	<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
 	
 	{if $asset['assetid']}
-		<p style="clear:both;"><br></p>
-		{include
-			file="button"
-			href="javascript:submitDelete()"
-			buttontext="Delete `$entrysingular`"
-		}
+		<div style="height: 1em"></div>
+		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete Release</a>
 	{/if}
-	
 {/capture}
 
 

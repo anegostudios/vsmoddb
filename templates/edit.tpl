@@ -31,26 +31,12 @@
 </div>
 
 {capture name="buttons"}
-	
-	{include
-		file="button"
-		href="javascript:submitForm(0)"
-		buttontext="Save"
-	}
-
-	{include
-		file="button"
-		href="javascript:submitForm(1)"
-		buttontext="Save+Back"
-	}
+	<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
+	<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
 	
 	{if $row[$entrycode.'id']}
-		<p style="clear:both;"><br></p>
-		{include
-			file="button"
-			href="javascript:submitDelete()"
-			buttontext="Delete `$entrysingular`"
-		}
+		<div style="height: 1em"></div>
+		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete {$entrysingular}</a>
 	{/if}
 {/capture}
 

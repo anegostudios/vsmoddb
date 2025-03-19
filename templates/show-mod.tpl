@@ -71,21 +71,10 @@
 
 	<div class="tab_container">
 		<div class="tab_content" id="description">
-			<div style="float: right;">
+			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
-					{include
-						file="button"
-						href="/edit/mod/?assetid=`$asset['assetid']`"
-						buttontext="Edit"
-						class="strikethrough-when-banned"
-					}
-
-					{include
-						file="button"
-						href="/edit/release/?modid=`$asset['modid']`"
-						buttontext="Add release"
-						class="strikethrough-when-banned"
-					}
+					<a class="button large shine strikethrough-when-banned" href="/edit/mod/?assetid={$asset['assetid']}">Edit</a>&nbsp;
+					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modid']}">Add release</a>
 				{/if}
 			</div>
 
@@ -99,7 +88,7 @@
 			</div>
 
 			<div class="infobox{if empty($asset['trailervideourl']) && empty($files)} nomedia{/if}">
-				<span class="text-weak">Category:</span>
+				<span class="text-weak">Tags:</span>
 				{foreach from=$tags item=tag}
 					<a href="/list/mod/?tagids[]={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}"
 						title="{$tag['text']}">#{$tag['name']}</a>
@@ -148,14 +137,9 @@
 
 
 		<div class="tab_content" id="files">
-			<div style="float: right;">
+			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
-					{include
-						file="button"
-						href="/edit/release/?modid=`$asset['modid']`"
-						buttontext="Add release"
-						class="strikethrough-when-banned"
-					}
+					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modid']}">Add release</a>
 				{/if}
 			</div>
 
@@ -204,7 +188,9 @@
 						{assign var="first" value="1"}
 					{/foreach}
 				{else}
-					<td colspan="6"><i>No releases found</i></td>
+					<tr>
+						<td colspan="6"><i>No releases found</i></td>
+					</tr>
 				{/if}
 				</tbody>
 			</table>
@@ -220,12 +206,8 @@
 	<div style="clear:both;"></div>
 
 
-	{include file="comments"}
+{include file="comments"}
 
-</div>
-
-
-<p style="clear:both;"><br></p>
 {capture name="footerjs"}
 	<script type="text/javascript">
 		modid = {$asset['modid']};

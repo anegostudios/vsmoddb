@@ -6,7 +6,7 @@
 {if !empty($reason)}
 	{$reason}
 {else}
-	Go bug Tyron about it, or something
+	Go bug Rennorb about it, or something
 {/if}
 </p>
 <p>

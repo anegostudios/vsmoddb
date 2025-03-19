@@ -44,7 +44,7 @@ class AssetEditor extends AssetController
 
 		if (!empty($_POST["delete"])) {
 			if ($user['actiontoken'] != $_REQUEST['at']) {
-				$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Tyron");
+				$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Rennorb");
 				$view->display("400");
 				exit();
 			}
@@ -225,7 +225,7 @@ class AssetEditor extends AssetController
 		$oldstatusid = 0;
 
 		if ($user['actiontoken'] != $_REQUEST['at']) {
-			$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Tyron");
+			$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Rennorb");
 			$view->display("400");
 			exit();
 		}

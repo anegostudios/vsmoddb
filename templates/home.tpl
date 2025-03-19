@@ -61,7 +61,4 @@ Cheers,<br>
 	</tbody>
 </table>
 
-
-
-
 {include file="footer"}

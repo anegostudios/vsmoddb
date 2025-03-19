@@ -56,26 +56,12 @@
 </div>
 
 {capture name="buttons"}
+	<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
+	<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
 	
-	{include
-		file="button"
-		href="javascript:submitForm(0)"
-		buttontext="Save"
-	}
-
-	{include
-		file="button"
-		href="javascript:submitForm(1)"
-		buttontext="Save+Back"
-	}
-	
-	{if $row['tagid']}
-		<p style="clear:both;"><br></p>
-		{include
-			file="button"
-			href="javascript:submitDelete()"
-			buttontext="Delete Tag"
-		}
+	{if $asset['tagid']}
+		<div style="height: 1em"></div>
+		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete Tag</a>
 	{/if}
 {/capture}
 
