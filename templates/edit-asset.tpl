@@ -14,14 +14,14 @@
 		<input type="hidden" name="delete" value="1">
 	</form>
 
-	<form method="post" name="form1">
+	<form method="post" name="form1" autocomplete="off" class="flex-list">
 		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="assetid" value="{$asset['assetid']}">
 		<input type="hidden" name="numsaved" value="{$asset['numsaved']}">
 		<input type="hidden" name="saveandback" value="0">
 		
-		<div class="editbox" class="flex-list">
+		<div class="editbox">
 			<label>Status</label>
 			<select name="statusid">
 				{foreach from=$stati item=status}

@@ -7,7 +7,7 @@ Custom data (e.g. the structure type) will be lost!
 Current asset classification: {$nowassettype}
 </p>
 <p>
-<form method="post">
+<form method="post" autocomplete="off">
 	<input type="hidden" name="save" value="1">
 	Desired asset classification:
 	<select name="assettypeid" style="width: 300px">

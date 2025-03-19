@@ -23,7 +23,7 @@
 		<input type="hidden" name="delete" value="1">
 	</form>
 
-	<form method="post" name="form1">
+	<form method="post" name="form1" autocomplete="off" class="flex-list">
 		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="saveandback" value="0">
@@ -35,17 +35,17 @@
 		
 		<div class="editbox flex-fill">
 			<label>Description</label>
-			<textarea name="text" style="width: 600px; height: 80px;">{$row['text']}</textarea>
+			<textarea name="text">{$row['text']}</textarea>
 		</div>
 		
-		<div class="editbox flex-fill">
+		<div class="editbox">
 			<label>Color</label>
 			<input type="text" class="color" name="code" class="required" value="{$row['color']}"/>
 		</div>
 		
 		<div class="editbox flex-fill">
 			<label>For Asset Types</label>
-			<select style="width:200px;" name="assettypeid" class="required">
+			<select name="assettypeid" class="required">
 				<option value="">-</option>
 				{foreach from=$assettypes item=assettype}
 					<option value="{$assettype['assettypeid']}" {if $assettype['assettypeid']==$row['assettypeid']}selected="selected"{/if}>{$assettype['name']}</option>

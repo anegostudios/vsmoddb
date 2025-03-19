@@ -6,7 +6,7 @@
 		</span>
 	</h2>	
 	
-	<form method="get" autocomplete="off" class="flex-list">
+	<form method="get" autocomplete="off" autocomplete="off" class="flex-list">
 		<div data-label="Text">
 			<input type="text" name="text" value="{$searchvalues['text']}">
 		</div>
@@ -21,7 +21,7 @@
 		</div>
 
 		<div data-label="Tags">
-			<select style="width:300px;" name="tagids[]" multiple>
+			<select name="tagids[]" multiple>
 				<option value="">-</option>
 				{foreach from=$tags item=tag}
 					<option value="{$tag['tagid']}" {if !empty($searchvalues['tagids'][$tag['tagid']])}selected="selected"{/if}>{$tag['name']}</option>

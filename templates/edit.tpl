@@ -13,17 +13,17 @@
 		<input type="hidden" name="delete" value="1">
 	</form>
 
-	<form method="post" name="form1" class="flex-list">
+	<form method="post" name="form1" autocomplete="off" class="flex-list">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="{$entrycode}id" value="{$row[$entrycode.'id']}">
 		<input type="hidden" name="saveandback" value="0">
 		
-		<div class="editbox flex-fill">
+		<div class="editbox">
 			<label>Name</label>
 			<input type="text" name="name" value="{$row['name']}"/>
 		</div>
 		
-		<div class="editbox flex-fill">
+		<div class="editbox">
 			<label>Code</label>
 			<input type="text" name="code" value="{$row['code']}"/>
 		</div>

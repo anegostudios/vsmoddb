@@ -3,7 +3,7 @@
 
 <h2><span>Moderate {$shownuser['name']}</span></h2>
 
-<form method="POST" autocomplete="off">
+<form method="POST" autocomplete="off" autocomplete="off">
 	<label for="modreason">Reason for this ban:</label><br/>
 	<textarea id="modreason" name="modreason" style="display: block; width: 100%; min-height:150px; margin-bottom: 1em;">{$banreasonautocomplete}</textarea>
 	<p><label for="until">Ban until: <input id="until" type="datetime-local" name="until" /></label> <label for="forever" style="user-select: none;"><input id="forever" type="checkbox" name="forever" /> Forever</label></p>
@@ -12,7 +12,7 @@
 		<button class="button submit" type="submit" name="submit" value="ban" style="background-color: darkred;color: white;">Ban User</button>
 		<button class="button submit" type="submit" name="submit" value="redeem" style="background-color: darkgreen;color: white;">Redeem User</button>
 	</div>
-<form>
+</form>
 
 {if !empty($moderationrecord)}
 	<h3>ModAction history targeting {$shownuser['name']}</h3>

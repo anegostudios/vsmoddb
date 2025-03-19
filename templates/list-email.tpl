@@ -12,7 +12,7 @@
 		</div>
 		
 		<div data-label="Campaign">
-			<select name="campaignid" style="width:250px">
+			<select name="campaignid">
 				<option value="">-</option>
 				{foreach from=$campaigns item=campaign}
 					<option value="{$campaign['campaignid']}" {if $searchvalues['campaignid']==$campaign['campaignid']}selected="selected"{/if}>{$campaign['name']}</option>

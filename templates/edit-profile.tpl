@@ -13,7 +13,7 @@
 		<span>Edit</span>
 	</h2>
 
-<form method="post" class="flex-list">
+<form method="post" autocomplete="off" class="flex-list">
 	<div class="editbox flex-fill">
 		<label>Bio</label>
 		<textarea name="bio" class="editor" data-editorname="bio">{$bio}</textarea>

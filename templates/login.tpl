@@ -25,10 +25,8 @@
 	</div>
 
 	<div id="content">
-		
-		
 
-<form method="post">
+<form method="post" autocomplete="off">
 	<div style="width:400px; margin:auto; text-align:center; margin-top:30px;">
 		<h2>Vintage Story Asset DB</h2>
 		<p style=" margin-top:30px;">Please log in for great Justice.</p>
