@@ -27,7 +27,7 @@ $authormods = $con->getAll("
 		asset 
 		join `mod` on asset.assetid = `mod`.assetid
 		left join status on asset.statusid = status.statusid
-		left join file as logofile on mod.logofileiddb = logofile.fileid
+		left join file as logofile on mod.cardlogofileid = logofile.fileid
 		left join teammember on `mod`.modid = teammember.modid
 	where
 		(asset.createdbyuserid = ? or teammember.userid = ?) $sqlWhereExt

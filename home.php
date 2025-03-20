@@ -12,7 +12,7 @@ if (!empty($user)) {
 			asset 
 			join `mod` on asset.assetid = `mod`.assetid
 			left join status on asset.statusid = status.statusid
-			left join file as logofile on `mod`.logofileiddb = logofile.fileid
+			left join file as logofile on `mod`.cardlogofileid = logofile.fileid
 			left join teammember on `mod`.modid = teammember.modid
 		where
 			(asset.createdbyuserid = ? or teammember.userid = ?)
@@ -63,7 +63,7 @@ if (!empty($user)) {
 			join user on (asset.createdbyuserid = user.userid)
 			join status on (asset.statusid = status.statusid)
 			join follow on (`mod`.modid = follow.modid and follow.userid=?)
-			left join file as logofile on `mod`.logofileiddb = logofile.fileid
+			left join file as logofile on `mod`.cardlogofileid = logofile.fileid
 			left join (select * from `release`) rd on (rd.modid = `mod`.modid)
 		where
 			asset.statusid=2
@@ -97,7 +97,7 @@ $latestentries = $con->getAll("
 		join `mod` on asset.assetid = `mod`.assetid
 		join user on (asset.createdbyuserid = user.userid)
 		join status on (asset.statusid = status.statusid)
-		left join file as logofile on mod.logofileiddb = logofile.fileid
+		left join file as logofile on mod.cardlogofileid = logofile.fileid
 	where
 		asset.statusid=2
 		and `mod`.created > date_sub(now(), interval 30 day)

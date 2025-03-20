@@ -20,8 +20,8 @@ class ModEditor extends AssetEditor
 		$this->declareColumn(7, array("title" => "Wiki url", "code" => "wikiurl", "datatype" => "url", "tablename" => "mod"));
 		$this->declareColumn(13, array("title" => "Donate url", "code" => "donateurl", "datatype" => "url", "tablename" => "mod"));
 		$this->declareColumn(8, array("title" => "Side", "code" => "side", "tablename" => "mod"));
-		$this->declareColumn(9, array("title" => "Logo image", "code" => "logofileiddb", "tablename" => "mod"));
-		$this->declareColumn(9, array("title" => "Logo image", "code" => "logofileidexternal", "tablename" => "mod"));
+		$this->declareColumn(9, array("title" => "Logo image", "code" => "cardlogofileid", "tablename" => "mod"));
+		$this->declareColumn(9, array("title" => "Logo image", "code" => "embedlogofileid", "tablename" => "mod"));
 		$this->declareColumn(10, array("title" => "Mod Type", "code" => "type", "tablename" => "mod"));
 		$this->declareColumn(11, array("title" => "URL Alias", "code" => "urlalias", "tablename" => "mod"));
 		$this->declareColumn(12, array("title" => "Summary", "code" => "summary", "tablename" => "mod", "datatype" => "name"));
@@ -71,8 +71,8 @@ class ModEditor extends AssetEditor
 		$logoData = $this->assetid ? $con->getRow('
 			select file_db.cdnpath as path_db, file_external.cdnpath as path_external
 			from `mod` 
-			left join file as file_db on file_db.fileid = `mod`.logofileiddb
-			left join file as file_external on file_external.fileid = `mod`.logofileidexternal
+			left join file as file_db on file_db.fileid = `mod`.cardlogofileid
+			left join file as file_external on file_external.fileid = `mod`.embedlogofileid
 			where `mod`.assetid = ?
 		', [$this->assetid]) : null; // @perf
 		$previewData = array_merge($this->asset, [
@@ -114,17 +114,17 @@ class ModEditor extends AssetEditor
 			}
 		}
 
-		$oldLogoData = $con->getRow("select logofileiddb, logofileidexternal from `mod` where assetid = ?", array($this->assetid));
-		$oldLogoFileIdDb = $oldLogoData['logofileiddb'] ?? null;
-		$newLogoFileIdDb = $_POST['logofileiddb'] ?? null;
-		$oldLogoFileIdExternal = $oldLogoData['logofileidexternal'] ?? null;
-		$newLogoFileIdExternal = $_POST['logofileidexternal'] ?? null;
+		$oldLogoData = $con->getRow("select cardlogofileid, embedlogofileid from `mod` where assetid = ?", array($this->assetid));
+		$oldLogoFileIdDb = $oldLogoData['cardlogofileid'] ?? null;
+		$newLogoFileIdDb = $_POST['cardlogofileid'] ?? null;
+		$oldLogoFileIdExternal = $oldLogoData['embedlogofileid'] ?? null;
+		$newLogoFileIdExternal = $_POST['embedlogofileid'] ?? null;
 
 		$logoCheck = ['status' => 'ok', 'errormessage' => ''];
 		if (!empty($newLogoFileIdDb) && $newLogoFileIdDb != $oldLogoFileIdDb) {
 			$logoCheck = $this->validateLogoImage($newLogoFileIdDb);
 			if($logoCheck['status'] === 'error') {
-				$_POST['logofileiddb'] = $oldLogoFileIdDb;
+				$_POST['cardlogofileid'] = $oldLogoFileIdDb;
 			}
 		}
 
@@ -135,7 +135,7 @@ class ModEditor extends AssetEditor
 				$logoCheck['status'] = 'error';
 				$logoCheck['errormessage'] .= $logoCheckExternal['errormessage'];
 
-				$_POST['logofileidexternal'] = $oldLogoFileIdExternal;
+				$_POST['embedlogofileid'] = $oldLogoFileIdExternal;
 			}
 		}
 		else if(empty($newLogoFileIdExternal)) {
@@ -150,7 +150,7 @@ class ModEditor extends AssetEditor
 
 			if($logoCheck['status'] === 'size') { // no selected external logo but we have a db logo
 				if($logoCheck['size'] === '480x320') {
-					$_POST['logofileidexternal'] = $newLogoFileIdDb;
+					$_POST['embedlogofileid'] = $newLogoFileIdDb;
 				}
 				else {
 					// External image can be generated form the db one for ease of use.
@@ -159,10 +159,10 @@ class ModEditor extends AssetEditor
 						$logoCheck['status'] = 'error';
 						$logoCheck['errormessage'] .= $cropResult['errormessage'];
 
-						$_POST['logofileidexternal'] = $oldLogoFileIdExternal;
+						$_POST['embedlogofileid'] = $oldLogoFileIdExternal;
 					}
 					else {
-						$_POST['logofileidexternal'] = $cropResult['fileid'];
+						$_POST['embedlogofileid'] = $cropResult['fileid'];
 					}
 				}
 			}

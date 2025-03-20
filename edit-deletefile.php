@@ -42,8 +42,8 @@ if ($assetid) {
 
 splitOffExtension($file['cdnpath'], $noext, $ext);
 
-$con->Execute("update `mod` set logofileiddb = NULL where logofileiddb = ?", array($fileid));
-$con->Execute("update `mod` set logofileidexternal = NULL where logofileidexternal = ?", array($fileid));
+$con->Execute("update `mod` set cardlogofileid = NULL where cardlogofileid = ?", array($fileid));
+$con->Execute("update `mod` set embedlogofileid = NULL where embedlogofileid = ?", array($fileid));
 $con->Execute("delete from modpeek_result where fileid=?", array($fileid));
 $con->Execute("delete from file where fileid=?", array($fileid));
 $con->Execute("delete from `file` where cdnpath = ?", array("{$noext}_480_320.{$ext}")); // legacy logo

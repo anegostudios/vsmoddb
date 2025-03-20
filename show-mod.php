@@ -26,7 +26,7 @@ if ($assetid) {
 			left join user as createduser on asset.createdbyuserid = createduser.userid
 			left join user as editeduser on asset.editedbyuserid = editeduser.userid
 			left join status on asset.statusid = status.statusid
-			left join file as logofile on mod.logofileidexternal = logofile.fileid
+			left join file as logofile on mod.embedlogofileid = logofile.fileid
 		where
 			asset.assetid = ?
 	", array($assetid));
@@ -53,14 +53,14 @@ if ($assetid) {
 	$view->assign("createdusertoken", $createdusertoken);
 
 	$files = $con->getAll("select * from file where assetid = ? and fileid not in (?, ?)", 
-		array($assetid, $asset['logofileiddb'] ?? 0, $asset['logofileidexternal'] ?? 0));  /* sql cant compare against null */
+		array($assetid, $asset['cardlogofileid'] ?? 0, $asset['embedlogofileid'] ?? 0));  /* sql cant compare against null */
 
 	//NOTE(Rennorb): There was a time where we rescaled images for logos. We no longer do that, but in ~140 cases there are still two images for the logo: the actual logo image, and the original one that was uploaded.
 	// Since we don't show the logo in the slideshow anymore, we also need to remove that second file that got uploaded, without removing it from the database so it stays downloadable for the mod author until they replace it.
 	// Here is a sql query to get a list of such mods:
 	/*
 		select modid, urlalias, user.name from `mod`
-		join file f on f.fileid = `mod`.logofileiddb
+		join file f on f.fileid = `mod`.cardlogofileid
 		join file f2 on f2.cdnpath = concat(substr(f.cdnpath, 1, length(f.cdnpath) - 12), substr(f.cdnpath, -4))
 		join asset on `mod`.assetid = asset.assetid
 		join user on user.userid = asset.createdbyuserid;

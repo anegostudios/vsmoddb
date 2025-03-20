@@ -152,11 +152,11 @@
 		<div class="editbox" style="align-self: baseline;">
 			<label>ModDB Logo image</label>
 			<small>The ModDB logo is selected from the 'Screenshots' and has to be 480x480 or 480x320 px. This image will be used for mod cards on the Mod DB. <span class="text-error">Images selected as logos will not be displayed in the slideshow.</span></small>
-			<select name="logofileiddb">
+			<select name="cardlogofileid">
 				<option value="">--- Default ---</option>
 				{foreach from=$files item=file}
 					{if $file['imagesize'] === '480x320' || $file['imagesize'] === '480x480'}
-					<option value="{$file['fileid']}" data-url="{$file['url']}"{if $asset['logofileiddb']==$file['fileid']} selected="selected" {/if}>
+					<option value="{$file['fileid']}" data-url="{$file['url']}"{if $asset['cardlogofileid']==$file['fileid']} selected="selected" {/if}>
 						{$file['filename']} [{$file['imagesize']} px]</option>
 					{/if}
 				{/foreach}
@@ -165,11 +165,11 @@
 		<div class="editbox" style="align-self: baseline;">
 			<label>External Logo image</label>
 			<small>The external logo is selected from the 'Screenshots', has to be 480x480 or 480x320 px. This image will be used for social media embeds. If no specific logo is selected here, but a ModDB logo is selected, the upper 480x320 px of that ModDB logo will be used. <span class="text-error">Images selected as logos will not be displayed in the slideshow.</span></small>
-			<select name="logofileidexternal">
+			<select name="embedlogofileid">
 				<option value="">--- Default (crop ModDB image) ---</option>
 				{foreach from=$files item=file}
 					{if $file['imagesize'] === '480x320' || $file['imagesize'] === '480x480'}
-					<option value="{$file['fileid']}" data-url="{$file['url']}"{if $asset['logofileidexternal']==$file['fileid']} selected="selected" {/if}>
+					<option value="{$file['fileid']}" data-url="{$file['url']}"{if $asset['embedlogofileid']==$file['fileid']} selected="selected" {/if}>
 						{$file['filename']} [{$file['imagesize']} px]</option>
 					{/if}
 				{/foreach}
@@ -257,8 +257,8 @@
 
 {capture name="footerjs"}
 	<script type="text/javascript">
-		const $dbLogoSelect = $('select[name="logofileiddb"]');
-		const $externalLogoSelect = $('select[name="logofileidexternal"]');
+		const $dbLogoSelect = $('select[name="cardlogofileid"]');
+		const $externalLogoSelect = $('select[name="embedlogofileid"]');
 		const dbPreviewBoxEl = document.getElementById('preview-box-db');
 		const externalPreviewBoxEl = document.getElementById('preview-box-external');
 

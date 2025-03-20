@@ -172,8 +172,8 @@ function listMod($modid)
 			`mod` 
 			join asset on (`mod`.assetid = asset.assetid)
 			join user on (`asset`.createdbyuserid = user.userid)
-			left join file as logofile_external on (`mod`.logofileidexternal = logofile_external.fileid)
-			left join file as logofile_db on (`mod`.logofileiddb = logofile_db.fileid)
+			left join file as logofile_external on (`mod`.embedlogofileid = logofile_external.fileid)
+			left join file as logofile_db on (`mod`.cardlogofileid = logofile_db.fileid)
 		where
 			asset.statusid=2
 			and modid=?
@@ -222,7 +222,7 @@ function listMod($modid)
 		from 
 			`file` 
 		where assetid = ? and fileid not in (?, ?)
-	", array($modid, $row['logofileiddb'] ?? 0, $row['logofileidexternal'] ?? 0)); /* sql cant compare against null */
+	", array($modid, $row['cardlogofileid'] ?? 0, $row['embedlogofileid'] ?? 0)); /* sql cant compare against null */
 
 	$screenshots = array();
 	foreach ($srows as $screenshot) {
@@ -354,7 +354,7 @@ function listMods()
 			join asset on (`mod`.assetid = asset.assetid)
 			join user on (`asset`.createdbyuserid = user.userid)
 			left join `release` on `release`.modid = `mod`.modid
-			left join file as logofile_external on mod.logofileidexternal = logofile_external.fileid
+			left join file as logofile_external on mod.embedlogofileid = logofile_external.fileid
 		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "
 		group by `mod`.modid
 		order by $orderBy $orderDirection
