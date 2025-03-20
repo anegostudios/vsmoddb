@@ -20,7 +20,8 @@ class ModEditor extends AssetEditor
 		$this->declareColumn(7, array("title" => "Wiki url", "code" => "wikiurl", "datatype" => "url", "tablename" => "mod"));
 		$this->declareColumn(13, array("title" => "Donate url", "code" => "donateurl", "datatype" => "url", "tablename" => "mod"));
 		$this->declareColumn(8, array("title" => "Side", "code" => "side", "tablename" => "mod"));
-		$this->declareColumn(9, array("title" => "Logo image", "code" => "logofileid", "tablename" => "mod"));
+		$this->declareColumn(9, array("title" => "Logo image", "code" => "logofileiddb", "tablename" => "mod"));
+		$this->declareColumn(9, array("title" => "Logo image", "code" => "logofileidexternal", "tablename" => "mod"));
 		$this->declareColumn(10, array("title" => "Mod Type", "code" => "type", "tablename" => "mod"));
 		$this->declareColumn(11, array("title" => "URL Alias", "code" => "urlalias", "tablename" => "mod"));
 		$this->declareColumn(12, array("title" => "Summary", "code" => "summary", "tablename" => "mod", "datatype" => "name"));
@@ -67,10 +68,18 @@ class ModEditor extends AssetEditor
 			$this->handleRevokeNewOwnership($modId);
 		}
 
+		$logoData = $this->assetid ? $con->getRow('
+			select file_db.cdnpath as path_db, file_external.cdnpath as path_external
+			from `mod` 
+			left join file as file_db on file_db.fileid = `mod`.logofileiddb
+			left join file as file_external on file_external.fileid = `mod`.logofileidexternal
+			where `mod`.assetid = ?
+		', [$this->assetid]) : null; // @perf
 		$previewData = array_merge($this->asset, [
 			'statuscode'  => 'draft',
 			'legacylogo'  => false,
-			'logocdnpath' => $this->assetid ? $con->getOne('select file.cdnpath from `mod` join file on file.fileid = `mod`.logofileid where  `mod`.assetid = ?', [$this->assetid]) : null, // @perf
+			'logocdnpath' => $logoData['path_db'] ?? null, 
+			'logocdnpath_external' => $logoData['path_external'] ?? null, 
 			'modpath'     => '#',
 			'downloads'   => 123456,
 			'comments'    => 123456
@@ -105,14 +114,57 @@ class ModEditor extends AssetEditor
 			}
 		}
 
-		$oldLogoFileId = $con->getOne("select logofileid from `mod` where assetid=?", array($this->assetid));
-		$newLogoFileId = $_POST['logofileid'] ?? null;
+		$oldLogoData = $con->getRow("select logofileiddb, logofileidexternal from `mod` where assetid = ?", array($this->assetid));
+		$oldLogoFileIdDb = $oldLogoData['logofileiddb'] ?? null;
+		$newLogoFileIdDb = $_POST['logofileiddb'] ?? null;
+		$oldLogoFileIdExternal = $oldLogoData['logofileidexternal'] ?? null;
+		$newLogoFileIdExternal = $_POST['logofileidexternal'] ?? null;
 
-		$logoCheck = ['status' => 'ok'];
-		if (!empty($newLogoFileId) && $newLogoFileId != $oldLogoFileId) {
-			$logoCheck = $this->validateLogoImage($newLogoFileId);
+		$logoCheck = ['status' => 'ok', 'errormessage' => ''];
+		if (!empty($newLogoFileIdDb) && $newLogoFileIdDb != $oldLogoFileIdDb) {
+			$logoCheck = $this->validateLogoImage($newLogoFileIdDb);
 			if($logoCheck['status'] === 'error') {
-				$_POST['logofileid'] = $oldLogoFileId;
+				$_POST['logofileiddb'] = $oldLogoFileIdDb;
+			}
+		}
+
+		if (!empty($newLogoFileIdExternal) && $newLogoFileIdExternal != $oldLogoFileIdExternal) { // actual selected external logo changed
+			$logoCheckExternal = $this->validateLogoImage($newLogoFileIdExternal);
+			if($logoCheckExternal['status'] === 'error') {
+				// merge error
+				$logoCheck['status'] = 'error';
+				$logoCheck['errormessage'] .= $logoCheckExternal['errormessage'];
+
+				$_POST['logofileidexternal'] = $oldLogoFileIdExternal;
+			}
+		}
+		else if(empty($newLogoFileIdExternal)) {
+			if($logoCheck['status'] === 'ok') { // dblogo didn't change, need to fetch size
+				$imageSize = $con->getOne("select CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) from file where fileid = ?", array($newLogoFileIdDb));
+				//NOTE(Rennorb): This can fail for old images, but at that point we just give up. migration copies over the dbimages either way.
+				if($imageSize) {
+					$logoCheck['status'] = 'size';
+					$logoCheck['size'] = $imageSize;
+				}
+			}
+
+			if($logoCheck['status'] === 'size') { // no selected external logo but we have a db logo
+				if($logoCheck['size'] === '480x320') {
+					$_POST['logofileidexternal'] = $newLogoFileIdDb;
+				}
+				else {
+					// External image can be generated form the db one for ease of use.
+					$cropResult = $this->cropLogoImageAndUploadToCDN($newLogoFileIdDb);
+					if($cropResult['status'] === 'error') {
+						$logoCheck['status'] = 'error';
+						$logoCheck['errormessage'] .= $cropResult['errormessage'];
+
+						$_POST['logofileidexternal'] = $oldLogoFileIdExternal;
+					}
+					else {
+						$_POST['logofileidexternal'] = $cropResult['fileid'];
+					}
+				}
 			}
 		}
 
@@ -120,7 +172,7 @@ class ModEditor extends AssetEditor
 
 		if($logoCheck['status'] === 'error') {
 			$view->unsetVar("okmessage");
-			$view->assign("errormessage", 'Failed to generate logo image: '.$logoCheck['errormessage']);
+			$view->assign("errormessage", 'Failed to update logo image: '.$logoCheck['errormessage']);
 			return 'error';
 		}
 
@@ -186,21 +238,90 @@ class ModEditor extends AssetEditor
 	}
 
 	/**
-	 * @param int $logofileid
-	 * @return array{status : string, errormessage? : string}
+	 * @param int $imageFileId
+	 * @return array{status : 'ok'|'error'|'size', errormessage? : string, size? : '480x320'|'480x480'}
 	 */
-	function validateLogoImage($logofileid)
+	function validateLogoImage($imageFileId)
 	{
 		global $con;
 
-		$file = $con->getRow("select *, CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where fileid = ?", array($logofileid));
-		if (empty($file)) return ['status' => 'error', 'errormessage' => 'Invalid fileid.'];
+		$imageSize = $con->getOne("select CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where fileid = ?", array($imageFileId));
+		if (empty($imageSize)) return ['status' => 'error', 'errormessage' => 'Invalid fileid.'];
 
-		if($file['imagesize'] !== '480x320' && $file['imagesize'] !== '480x480') {
+		if($imageSize !== '480x320' && $imageSize !== '480x480') {
 			return array("status" => "error", "errormessage" => 'Invalid logo dimensions. Only 480x480 or 480x320 are allowed.'); // :ModLogoDimensions
 		}
 
-		return ['status' => 'ok'];
+		return ['status' => 'size', 'size' => $imageSize];
+	}
+
+	/** Assumes the file is 480x480, crops to 480x320. Validates that the cropped image doesnt already exist as best as it can. 
+	 * @param int $assetId
+	 * @param int $imageFileId
+	 * @return array{status : string, errormessage? : string, fileid? : int}
+	 */
+	function cropLogoImageAndUploadToCDN($imageFileId)
+	{
+		global $con;
+
+		$file = $con->getRow('select * from `file` where fileid = ? ', [$imageFileId]);
+		if(empty($file)) return ['status' => 'error', 'errormessage' => 'Invalid fileid.'];
+
+		splitOffExtension($file['filename'], $filebasename, $ext);
+		$filename = "{$filebasename}_480_320.{$ext}";
+
+		// Test for exisitng cropped image, so we dont create duplicates.
+		if($this->assetid) {
+			$candidate = $con->getOne('select fileid from `file` where assetid = ? and imagesize = POINT(480, 320) and filename = ?', [$this->assetid, $filename]);
+			if($candidate) return ['status' => 'ok', 'fileid' => intval($candidate)];
+		}
+
+		// Since we don't have the files locally anymore we unfortunately have to do this stunt and re-download the image thats supposed to be used as a logo.
+		// Upload happens asynchronously during drag-n-drop, so when the user saves the asset the files already don't exist locally anymore.
+		// Since changing the logo is not a action repeated very often this is ok for now, especially since the alternative would be to keep files around, but not abandon them if the user just navigates away from the asset editor, which is non-tirvial.
+
+		$localPath = tempnam(sys_get_temp_dir(), '');
+		$originalFile = @file_get_contents(formatCdnUrl($file));
+		if (!file_put_contents($localPath, $originalFile)) {
+			@unlink($localPath);
+			return ['status' => 'error', 'errormessage' => 'The logo file seems to be gone.'];
+		}
+
+		$croppedPath = tempnam(sys_get_temp_dir(), '');
+		$cropResult = cropImage($localPath, $croppedPath, 0, 0, 480, 320);
+		
+		if(!$cropResult) {
+			unlink($localPath);
+			unlink($croppedPath);
+			return ['status' => 'error', 'errormessage' => 'Failed to crop image.'];
+		}
+
+		splitOffExtension($file['cdnpath'], $ogCdnBasePath, $ext);
+		$cdnBasePath = "{$ogCdnBasePath}_480_320";
+
+		$thumbStatus = createThumbnailAndUploadToCDN($localPath, $cdnBasePath, $ext);
+		unlink($localPath);
+
+		if($thumbStatus['status'] !== 'ok') {
+			unlink($croppedPath);
+			return $thumbStatus;
+		}
+
+
+		$cdnPath = "$cdnBasePath.$ext";
+		$uploadResult = uploadToCdn($croppedPath, $cdnPath);
+		unlink($croppedPath);
+
+		if($uploadResult['error']) {
+			return ['status' => 'error', 'errormessage' => 'CDN Error: '.$uploadResult['error']];
+		}
+
+		$con->execute("
+			insert into file (created, assetid, assettypeid, userid, filename, cdnpath, hasthumbnail, imagesize)
+			values (now(), ?, ?, ?, ?, ?, 1, POINT(480, 320))
+		", [$file['assetid'], $file['assettypeid'], $file['userid'], $filename, $cdnPath]);
+
+		return ['status' => 'ok', 'fileid' => $con->Insert_ID()];
 	}
 
 	function handleRevokeNewOwnership($modId)

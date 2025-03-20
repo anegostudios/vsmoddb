@@ -54,7 +54,7 @@ function deleteFromCdn($cdnpath) {
  * Formats a "normal" url to the file.
  * This url is meant to be used for in-browser resources, e.g. a image to be placed onto a page, as compared to a download link for that image.
  * 
- * @param string|array{cdnpath: string} $file Either a file database row or the cdnpath directly;
+ * @param array{cdnpath: string} $file A file database row
  * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */
@@ -64,7 +64,7 @@ function formatCdnUrl($file, $filenamepostfix = '') {
 	// Evil hackery to test for the case where we use this internally to feed get_file_contents, where we cannot just pass a url fragment.
 	$trace = debug_backtrace(0, 2);
 	$caller = $trace[1]['function'];
-	if($caller === 'validateLogoImage' || $caller === 'migrateImageSizes') {
+	if($caller === 'cropLogoImageAndUploadToCDN' || $caller === 'migrateImageSizes') {
 		global $config;
 		return $config['basepath'].'files/'.substr($url, 8 /* /cdnfile */);
 	}

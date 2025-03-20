@@ -99,7 +99,7 @@ class ModList extends AssetList {
 		// I was not able to find a better solution for this, without rewriting the whole "assetcontroller" inheritance system.
 		// This is ugly, but should not incur any noticable overhead.
 		$logopathselector = $this->tablename === 'mod' ? "logofile.cdnpath as logocdnpath, logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo," : '';
-		$logopathjoiner   = $this->tablename === 'mod' ? 'left join file as logofile on `mod`.logofileid = logofile.fileid' : '';
+		$logopathjoiner   = $this->tablename === 'mod' ? 'left join file as logofile on `mod`.logofileiddb = logofile.fileid' : '';
 
 		$selfuserid = $user['userid'] ?? -1;
 		$sql = "

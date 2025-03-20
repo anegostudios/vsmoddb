@@ -89,20 +89,10 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 			return array("status" => "error", "errormessage" => 'Image too large! Limit is 1920x1080 pixels');
 		}
 
-		$localthumbnailfilename = tempnam(sys_get_temp_dir(), '');
-
-		$resizeresult = copyImageResized($localpath, 55, 60, true, 'file', '', $localthumbnailfilename);
-		if(!$resizeresult) {
-			@unlink($localthumbnailfilename);
-			return array("status" => "error", "errormessage" => 'Failed to resize image for thumbnail.');
-		}
-
-		$cdnthumbnailpath = "{$cdnbasepath}_55_60.{$ext}";
-		$uploadresult = uploadToCdn($localthumbnailfilename, $cdnthumbnailpath);
-		unlink($localthumbnailfilename);
-		if($uploadresult['error']) {
+		$thumbStatus = createThumbnailAndUploadToCDN($localpath, $cdnbasepath, $ext);
+		if($thumbStatus['status'] !== 'ok') {
 			unlink($localpath);
-			return array("status" => "error", "errormessage" => 'CDN Error: '.$uploadresult['error']);
+			return $thumbStatus;
 		}
 
 		$data['hasthumbnail'] = true;
@@ -132,7 +122,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 		"status" => "ok",
 		"fileid" => $fileid,
 		"filepath" => formatCdnUrlFromCdnPath($cdnfilepath),
-		"thumbnailfilepath" => isset($cdnthumbnailpath) ? formatCdnUrlFromCdnPath($cdnthumbnailpath) : null,
+		"thumbnailfilepath" => isset($thumbStatus) ? formatCdnUrlFromCdnPath($thumbStatus['cdnthumbnailpath']) : null,
 		"filename" => $file["name"],
 		"uploaddate" => date("M jS Y, H:i:s")
 	);

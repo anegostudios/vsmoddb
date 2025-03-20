@@ -1,5 +1,43 @@
 <?php
 
+/**
+ * @param string $localpath input filepath
+ * @param string $cdnbasepath basepath element for the cdn file, no ext, gets suffixed
+ * @param string $ext file ext
+ * @return array{status:'ok'|'error', errormessage?: string, cdnthumbnailpath?: stirng}
+ */
+function createThumbnailAndUploadToCDN($localpath, $cdnbasepath, $ext) {
+	$localthumbnailfilename = tempnam(sys_get_temp_dir(), '');
+
+	$resizeresult = copyImageResized($localpath, 55, 60, true, 'file', '', $localthumbnailfilename);
+	if(!$resizeresult) {
+		@unlink($localthumbnailfilename);
+		return ['status' => 'error', 'errormessage' => 'Failed to resize image for thumbnail.'];
+	}
+
+	$cdnthumbnailpath = "{$cdnbasepath}_55_60.{$ext}";
+	$uploadresult = uploadToCdn($localthumbnailfilename, $cdnthumbnailpath);
+	unlink($localthumbnailfilename);
+	
+	if($uploadresult['error']) return ['status' => 'error', 'errormessage' => 'CDN Error: '.$uploadresult['error']];
+
+	return ['status' => 'ok', 'cdnthumbnailpath' => $cdnthumbnailpath];
+}
+
+
+//TODO(Rennorb) @cleanup: This whole function is a mess.
+
+/**
+ * @param string           $file
+ * @param int              $width
+ * @param int              $height
+ * @param bool             $proportional
+ * @param 'file'|'browser' $output
+ * @param string           $ext filename suffix
+ * @param string|''        $newfile result filename
+ * @param array{w:int, h:int}|null $crop
+ * @return bool|null|string
+ */
 function copyImageResized($file, $width = 0, $height = 0, $proportional = true, $output = 'file', $ext = '_thumb', $newfile = '', $crop = null) {
 	if ($height <= 0 && $width <= 0) {
 		return false;
@@ -154,6 +192,38 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 	}
 	
 	return $filename;
+}
+
+/**
+ * @param string $pathIn
+ * @param string $pathOut
+ * @param int $x
+ * @param int $y
+ * @param int $w
+ * @param int $h
+ * @return bool
+ */
+function cropImage($pathIn, $pathOut, $x, $y, $w, $h) {
+	$info = getimagesize($pathIn);
+
+	switch ($info[2]) {
+	  case IMAGETYPE_GIF : $imageSrc = imagecreatefromgif($pathIn);  break;
+	  case IMAGETYPE_JPEG: $imageSrc = imagecreatefromjpeg($pathIn); break;
+	  case IMAGETYPE_PNG : $imageSrc = imagecreatefrompng($pathIn);  break;
+	  default: return false;
+	}
+
+	$imageDst = imagecreatetruecolor($w, $h);
+	fastimagecopyresampled($imageDst, $imageSrc, 0, 0, $x, $y, $w, $h, $w, $h);
+
+	switch ($info[2]) {
+		case IMAGETYPE_GIF : if(!imagegif($imageDst, $pathOut))      return false; break;
+		case IMAGETYPE_JPEG: if(!imagejpeg($imageDst, $pathOut, 95)) return false; break;
+		case IMAGETYPE_PNG : if(!imagepng($imageDst, $pathOut))      return false; break;
+		default: return false;
+	}
+
+	return true;
 }
 
 function fastimagecopyresampled (&$dst_image, $src_image, $dst_x, $dst_y, $src_x, $src_y, $dst_w, $dst_h, $src_w, $src_h, $quality = 3) {

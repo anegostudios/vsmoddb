@@ -105,6 +105,11 @@ li {
 	margin-left: 1em;
 }
 
+small {
+	display: inline-block;
+	font-size: .8em;
+}
+
 /* generic classes */
 .whitetext { color: var(--color-text-inv); }
 

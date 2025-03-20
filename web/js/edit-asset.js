@@ -1,13 +1,7 @@
 var wait = false;
 var uploading = 0;
 
-if (typeof (onUploadFinished) === 'undefined') {
-	console.log("define");
-	onUploadFinished = function (file) { };
-}
-
 $(document).ready(function () {
-	console.log("ready");
 	createEditor($("textarea.editor"), tinymceSettings);
 	
 	$(document).on("keydown", "#teammembers-box input.chosen-search-input", function(e) {
@@ -86,36 +80,24 @@ $(document).ready(function () {
 	});
 
 	$(document).on("click", ".file .delete", function () {
-		var $self = $(this);
-		var filename = $(this).parent().find(".filename").text();
-		var fileid = $(this).attr("data-fileid");
+		const $self = $(this);
+		const $fileEl = $self.parent();
+		const filename = $fileEl.find(".filename").text();
+		const fileid = $self.attr("data-fileid");
 
-		if ($self.parent().hasClass("error")) {
-			$self.parent().remove();
+		if ($fileEl.hasClass("error")) {
+			$fileEl.remove();
 			return false;
 		}
 
 		if (confirm("Really delete " + filename + "?")) {
-			$(".okmessagepopup").text(filename + " deleted.");
+			if(typeof(onFileDelete) === 'function') if(onFileDelete($fileEl, fileid) === false) return;
+
 			$.post("/edit-deletefile", { fileid: fileid, at: actiontoken }).done(function() {
+				$fileEl.remove();
+				$(".okmessagepopup").text(filename + " deleted.");
 				showMessage($(".okmessagepopup"));
-				$self.parent().remove();
 			});
-
-			const logo_picker_el = document.querySelector('select[name="logofileid"]');
-
-			if(logo_picker_el) {
-				const opt = logo_picker_el.querySelector(`option[value="${fileid}"]`);
-				if(opt) {
-					const previewImage = document.querySelector('#preview-box img');
-					if(previewImage && previewImage.src.endsWith(opt.dataset.url) /* fix for url vs path comparison */) {
-						previewImage.src = '/web/img/mod-default.png';
-					}
-
-					opt.remove();
-					$(logo_picker_el).trigger("chosen:updated");
-				}
-			}
 		}
 
 		return false;
@@ -242,19 +224,7 @@ $(document).ready(function () {
 			$(".uploaddate", $elem).text(response.uploaddate);
 			if(response.imagesize) $(".imagesize", $elem).text(response.imagesize+' px');
 
-			const logo_picker_el = document.querySelector('select[name="logofileid"]');
-
-			if(logo_picker_el && ['480x320', '480x480'].includes(response.imagesize)) {
-				const opt = document.createElement('option');
-				opt.value = response.fileid;
-				opt.textContent = `${file.name} [${response.imagesize} px]`;
-				opt.dataset.url = response.filepath;
-
-				logo_picker_el.append(opt);
-				$(logo_picker_el).trigger("chosen:updated");
-			}
-			
-			onUploadFinished(response);
+			if(typeof(onUploadFinished) === 'function') onUploadFinished(response);
 		},
 		progressUpdated: function (i, file, progress) {
 			// this function is used for large files and updates intermittently

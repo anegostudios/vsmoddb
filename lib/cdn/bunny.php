@@ -124,7 +124,7 @@ function deleteFromCdn($cdnpath) {
  * Formats a "normal" url to the file.
  * This url is meant to be used for in-browser resources, e.g. a image to be placed onto a page, as compared to a download link for that image.
  * 
- * @param string|array{cdnpath: string} $file Either a file database row or the cdnpath directly;
+ * @param array{cdnpath: string} $file A file database row
  * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */

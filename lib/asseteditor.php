@@ -240,13 +240,11 @@ class AssetEditor extends AssetController
 			update("asset", $this->assetid, array("createdbyuserid" => $user["userid"], "assettypeid" => $assettypeid));
 			update($this->tablename, $this->recordid, array("assetid" => $this->assetid));
 
-			$files = $con->getAll("select * from file where assetid is null and userid=? and assettypeid=?", array($user['userid'], $assettypeid));
+			$filesIds = $con->getCol("select * from file where assetid is null and userid=? and assettypeid=?", array($user['userid'], $assettypeid));
 
-			if (!empty($files)) {
+			if (!empty($filesIds)) {
 				// @security: We just grabbed the ids two lines above from the database, direct interpolation is fine.
-				$con->execute('update file set assetid = ? where fileid in (' . implode(array_map(function ($f) {
-					return $f['fileid'];
-				}, $files)) . ')', $this->assetid);
+				$con->execute('update file set assetid = ? where fileid in (' . implode(',', $filesIds) . ')', $this->assetid);
 			}
 
 			$this->asset = [

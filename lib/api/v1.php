@@ -166,14 +166,14 @@ function listMod($modid)
 			asset.tagscached,
 			user.name as author,
 			`mod`.*,
-			logofile.cdnpath as logocdnpath,
-			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
-			logofile.filename as logofilename
+			logofile_external.cdnpath as logocdnpath_external,
+			logofile_db.cdnpath as logocdnpath_db
 		from 
 			`mod` 
 			join asset on (`mod`.assetid = asset.assetid)
 			join user on (`asset`.createdbyuserid = user.userid)
-			left join file as logofile on (`mod`.logofileid = logofile.fileid)
+			left join file as logofile_external on (`mod`.logofileidexternal = logofile_external.fileid)
+			left join file as logofile_db on (`mod`.logofileiddb = logofile_db.fileid)
 		where
 			asset.statusid=2
 			and modid=?
@@ -221,8 +221,8 @@ function listMod($modid)
 			created
 		from 
 			`file` 
-		where assetid=?
-	", array($modid));
+		where assetid = ? and fileid not in (?, ?)
+	", array($modid, $row['logofileiddb'] ?? 0, $row['logofileidexternal'] ?? 0)); /* sql cant compare against null */
 
 	$screenshots = array();
 	foreach ($srows as $screenshot) {
@@ -235,7 +235,8 @@ function listMod($modid)
 		);
 	}
 
-	$logourl = $row['logocdnpath'] ? formatCdnUrlFromCdnPath($row['logocdnpath']) : null;
+	$logourlExternal = $row['logocdnpath_external'] ? formatCdnUrlFromCdnPath($row['logocdnpath_external']) : null;
+	$logourlDb = $row['logocdnpath_db'] ? formatCdnUrlFromCdnPath($row['logocdnpath_db']) : null;
 	$mod = array(
 		"modid"           => intval($row["modid"]),
 		"assetid"         => intval($row["assetid"]),
@@ -243,8 +244,9 @@ function listMod($modid)
 		"text"            => $row['text'],
 		"author"          => $row['author'],
 		"urlalias"        => $row['urlalias'],
-		"logofilename"    => $logourl, // deprecated //NOTE(Rennorb): This is not the filename, but just the link again.
-		"logofile"        => $logourl,
+		"logofilename"    => $logourlExternal, // @obsolete //NOTE(Rennorb): This is not the filename, but just the link again.
+		"logofile"        => $logourlExternal,
+		"logofiledb"      => $logourlDb,
 		"homepageurl"     => $row['homepageurl'],
 		"sourcecodeurl"   => $row['sourcecodeurl'],
 		"trailervideourl" => $row['trailervideourl'],
@@ -337,7 +339,7 @@ function listMods()
 			`mod`.type,
 			`mod`.urlalias,
 			asset.name,
-			logofile.cdnpath as logocdnpath,
+			logofile_external.cdnpath as logocdnpath_external,
 			mod.downloads,
 			follows,
 			comments, 
@@ -352,7 +354,7 @@ function listMods()
 			join asset on (`mod`.assetid = asset.assetid)
 			join user on (`asset`.createdbyuserid = user.userid)
 			left join `release` on `release`.modid = `mod`.modid
-			left join file as logofile on mod.logofileid = logofile.fileid
+			left join file as logofile_external on mod.logofileidexternal = logofile_external.fileid
 		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "
 		group by `mod`.modid
 		order by $orderBy $orderDirection
@@ -378,7 +380,7 @@ function listMods()
 			"urlalias"       => $row['urlalias'],
 			"side"           => $row['side'],
 			"type"           => $row['type'],
-			"logo"           => $row['logocdnpath'] ? formatCdnUrlFromCdnPath($row['logocdnpath']) : null,
+			"logo"           => $row['logocdnpath_external'] ? formatCdnUrlFromCdnPath($row['logocdnpath_external']) : null,
 			"tags"           => $tags,
 			"lastreleased"   => $row['lastreleased']
 		);

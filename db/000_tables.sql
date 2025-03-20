@@ -223,7 +223,8 @@ CREATE TABLE IF NOT EXISTS `moddb`.`mod` (
   `modid` INT NOT NULL AUTO_INCREMENT,
   `assetid` INT NULL,
   `urlalias` VARCHAR(45) NULL,
-  `logofileid` INT NULL,
+  `logofileiddb` INT NULL,
+  `logofileidexternal` INT NULL,
   `homepageurl` VARCHAR(255) NULL,
   `sourcecodeurl` VARCHAR(255) NULL,
   `trailervideourl` VARCHAR(255) NULL,
@@ -392,7 +393,7 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `moddb`;
-INSERT INTO `moddb`.`assettype` (`assettypeid`, `maxfiles`, `maxfilesizekb`, `allowedfiletypes`, `code`, `name`) VALUES (1, 10, 2000, 'png|jpg|gif', 'mod', 'Mod');
+INSERT INTO `moddb`.`assettype` (`assettypeid`, `maxfiles`, `maxfilesizekb`, `allowedfiletypes`, `code`, `name`) VALUES (1, 12, 2000, 'png|jpg|gif', 'mod', 'Mod');
 INSERT INTO `moddb`.`assettype` (`assettypeid`, `maxfiles`, `maxfilesizekb`, `allowedfiletypes`, `code`, `name`) VALUES (2, 1, 40000, 'dll|zip|cs', 'release', 'Release');
 
 COMMIT;

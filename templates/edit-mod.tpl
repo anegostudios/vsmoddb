@@ -150,13 +150,26 @@
 		</div>
 
 		<div class="editbox" style="align-self: baseline;">
-			<label>Logo/Thumbnail image</label>
-			<small>Logo is selected from the 'Screenshots', has to be 480x480 or 480x320 px and will not be displayed in the slideshow.</small>
-			<select name="logofileid">
-				<option value="">--- None ---</option>
+			<label>ModDB Logo image</label>
+			<small>The ModDB logo is selected from the 'Screenshots' and has to be 480x480 or 480x320 px. This image will be used for mod cards on the Mod DB. <span class="text-error">Images selected as logos will not be displayed in the slideshow.</span></small>
+			<select name="logofileiddb">
+				<option value="">--- Default ---</option>
 				{foreach from=$files item=file}
 					{if $file['imagesize'] === '480x320' || $file['imagesize'] === '480x480'}
-					<option value="{$file['fileid']}" data-url="{$file['url']}"{if $asset['logofileid']==$file['fileid']} selected="selected" {/if}>
+					<option value="{$file['fileid']}" data-url="{$file['url']}"{if $asset['logofileiddb']==$file['fileid']} selected="selected" {/if}>
+						{$file['filename']} [{$file['imagesize']} px]</option>
+					{/if}
+				{/foreach}
+			</select>
+		</div>
+		<div class="editbox" style="align-self: baseline;">
+			<label>External Logo image</label>
+			<small>The external logo is selected from the 'Screenshots', has to be 480x480 or 480x320 px. This image will be used for social media embeds. If no specific logo is selected here, but a ModDB logo is selected, the upper 480x320 px of that ModDB logo will be used. <span class="text-error">Images selected as logos will not be displayed in the slideshow.</span></small>
+			<select name="logofileidexternal">
+				<option value="">--- Default (crop ModDB image) ---</option>
+				{foreach from=$files item=file}
+					{if $file['imagesize'] === '480x320' || $file['imagesize'] === '480x480'}
+					<option value="{$file['fileid']}" data-url="{$file['url']}"{if $asset['logofileidexternal']==$file['fileid']} selected="selected" {/if}>
 						{$file['filename']} [{$file['imagesize']} px]</option>
 					{/if}
 				{/foreach}
@@ -164,9 +177,17 @@
 		</div>
 
 		<div class="flex-spacer"></div>
-		<div id="preview-box" class="editbox" style="width: calc(300px + .5em)">
-			<label>Preview</label>
+		<div id="preview-box-db" class="editbox" style="width: calc(300px + .5em); align-self: baseline;">
+			<label>ModDB Card Preview</label>
 			{include file="list-mod-entry"}
+		</div>
+		<div id="preview-box-external" class="editbox" style="width: calc(300px + .5em); align-self: baseline;">
+			<label><label><abbr title="Every platform uses this data differently, this is just an example of what it might look like.">External Preview</abbr></label></label>
+			<div>
+				<h4>{$mod['name']}</h4>
+				<div><small>Description...</small></div>
+				<img src="{empty($mod['logocdnpath_external']) ? '/web/img/mod-default.png' : formatCdnUrlFromCdnPath($mod['logocdnpath_external'])}" />
+			</div>
 		</div>
 
 		{if $asset['assetid'] && canEditAsset($asset, $user, false)}
@@ -236,32 +257,99 @@
 
 {capture name="footerjs"}
 	<script type="text/javascript">
+		const $dbLogoSelect = $('select[name="logofileiddb"]');
+		const $externalLogoSelect = $('select[name="logofileidexternal"]');
+		const dbPreviewBoxEl = document.getElementById('preview-box-db');
+		const externalPreviewBoxEl = document.getElementById('preview-box-external');
+
 		{
-			const previewBoxEl = document.getElementById('preview-box');
-			const imageEl = previewBoxEl.getElementsByTagName('img')[0];
-			const descriptionEl = previewBoxEl.querySelector('.moddesc>a');
-			const titleEl = descriptionEl.firstElementChild;
-			const summaryEl = descriptionEl.lastElementChild;
+			const dbImageEl = dbPreviewBoxEl.getElementsByTagName('img')[0];
+			const dbDescriptionEl = dbPreviewBoxEl.querySelector('.moddesc>a');
+			const dbTitleEl = dbDescriptionEl.firstElementChild;
+			const dbSummaryEl = dbDescriptionEl.lastElementChild;
+
+			const externalTitleEl = externalPreviewBoxEl.children[1].firstElementChild;
+			const externalImageEl = externalPreviewBoxEl.getElementsByTagName('img')[0];
 			
 			$('input[name="name"]').on('input', function(e) {
-				const text = e.target.value;
-				titleEl.textContent = text.length < 49 ? text : text.substr(0, 45)+'...';
+				let text = e.target.value;
+				if(text.length >= 49) text = text.substr(0, 45)+'...';
+				dbTitleEl.textContent = text;
+				externalTitleEl.textContent = text;
 			});
-			$('input[name="summary"]').on('input', function(e) { summaryEl.textContent = e.target.value; });
+			$('input[name="summary"]').on('input', function(e) {
+				dbSummaryEl.textContent = e.target.value;
+			});
 
 			const fileFrameEl = document.getElementsByClassName('files')[0];
-			const $logoSelect = $('select[name="logofileid"]');
-			$logoSelect.on('change', function(e, ex) {
+			
+			$dbLogoSelect.on('change', function(e, ex) {
 				let src = '/web/img/mod-default.png';
 				if(ex.selected) {
-					src = $(`option[value="${ex.selected}"]`, $logoSelect).data('url')
+					src = $(`option[value="${ex.selected}"]`, $dbLogoSelect).data('url')
 				}
-				imageEl.src = src;
+				dbImageEl.src = src;
+			});
+
+			$externalLogoSelect.on('change', function(e, ex) {
+				let src = '/web/img/mod-default.png';
+				if(ex.selected) {
+					src = $(`option[value="${ex.selected}"]`, $externalLogoSelect).data('url')
+				}
+				externalImageEl.src = src;
 			});
 		}
-	</script>
 
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=33" async></script>
+		function onUploadFinished(response) {
+			function addOption($select) {
+				const opt = document.createElement('option');
+				opt.value = response.fileid;
+				opt.textContent = `${response.filename} [${response.imagesize} px]`;
+				opt.dataset.url = response.filepath;
+
+				$select.append(opt);
+				$select.trigger("chosen:updated");
+			}
+
+			if(['480x320', '480x480'].includes(response.imagesize)) {
+				addOption($dbLogoSelect);
+				addOption($externalLogoSelect);
+			}
+		}
+
+		function onFileDelete($fileEl, fileid) {
+			function removeOpt($select, previewBox) {
+				const opt = $select[0].querySelector(`option[value="${fileid}"]`);
+				if(opt) {
+					const previewImage = previewBox.getElementsByTagName('img')[0];
+					if(previewImage && previewImage.src.endsWith(opt.dataset.url) /* fix for url vs path comparison */) {
+						previewImage.src = '/web/img/mod-default.png';
+					}
+
+					opt.remove();
+					$select.trigger("chosen:updated");
+				}
+			}
+
+			removeOpt($dbLogoSelect, dbPreviewBoxEl);
+			removeOpt($externalLogoSelect, externalPreviewBoxEl);
+		}
+	</script>
+	<style>
+		#preview-box-external>div {
+			background-color: var(--color-content-bg);
+			padding: .25em;
+		}
+		#preview-box-external h4,
+		#preview-box-external>div>div {
+			margin: 1em 0;
+		}
+		#preview-box-external img {
+			width: 100%;
+		}
+	</style>
+
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=34" async></script>
 {/capture}
 
 {include file="footer"}

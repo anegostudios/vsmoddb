@@ -21,7 +21,7 @@
 							</div>
 						</a>
 					{/if}
-					<a href="" class="delete" data-fileid="{$file['fileid']}"></a>
+					<a href="#" class="delete" data-fileid="{$file['fileid']}"></a>
 					<a href="{formatDownloadTrackingUrl($file)}" class="download">&#11123;</a>
 				</div>
 			{/foreach}
