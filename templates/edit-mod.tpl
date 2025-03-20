@@ -177,11 +177,11 @@
 		</div>
 
 		<div class="flex-spacer"></div>
-		<div id="preview-box-db" class="editbox" style="width: calc(300px + .5em); align-self: baseline;">
+		<div id="preview-box-card" class="editbox" style="width: calc(300px + .5em); align-self: baseline;" data-fid="{$mod['cardlogofileid']}">
 			<label>ModDB Card Preview</label>
 			{include file="list-mod-entry"}
 		</div>
-		<div id="preview-box-external" class="editbox" style="width: calc(300px + .5em); align-self: baseline;">
+		<div id="preview-box-embed" class="editbox" style="width: calc(300px + .5em); align-self: baseline;" data-fid="{$mod['embedlogofileid']}">
 			<label><label><abbr title="Every platform uses this data differently, this is just an example of what it might look like.">External Preview</abbr></label></label>
 			<div>
 				<h4>{$mod['name']}</h4>
@@ -257,46 +257,50 @@
 
 {capture name="footerjs"}
 	<script type="text/javascript">
-		const $dbLogoSelect = $('select[name="cardlogofileid"]');
-		const $externalLogoSelect = $('select[name="embedlogofileid"]');
-		const dbPreviewBoxEl = document.getElementById('preview-box-db');
-		const externalPreviewBoxEl = document.getElementById('preview-box-external');
+		const $cardLogoSelect = $('select[name="cardlogofileid"]');
+		const $embedLogoSelect = $('select[name="embedlogofileid"]');
+		const cardPreviewBoxEl = document.getElementById('preview-box-card');
+		const embedPreviewBoxEl = document.getElementById('preview-box-embed');
 
 		{
-			const dbImageEl = dbPreviewBoxEl.getElementsByTagName('img')[0];
-			const dbDescriptionEl = dbPreviewBoxEl.querySelector('.moddesc>a');
-			const dbTitleEl = dbDescriptionEl.firstElementChild;
-			const dbSummaryEl = dbDescriptionEl.lastElementChild;
+			const cardImageEl = cardPreviewBoxEl.getElementsByTagName('img')[0];
+			const cardDescriptionEl = cardPreviewBoxEl.querySelector('.moddesc>a');
+			const cardTitleEl = cardDescriptionEl.firstElementChild;
+			const cardSummaryEl = cardDescriptionEl.lastElementChild;
 
-			const externalTitleEl = externalPreviewBoxEl.children[1].firstElementChild;
-			const externalImageEl = externalPreviewBoxEl.getElementsByTagName('img')[0];
+			const embedTitleEl = embedPreviewBoxEl.children[1].firstElementChild;
+			const embedImageEl = embedPreviewBoxEl.getElementsByTagName('img')[0];
 			
 			$('input[name="name"]').on('input', function(e) {
 				let text = e.target.value;
 				if(text.length >= 49) text = text.substr(0, 45)+'...';
-				dbTitleEl.textContent = text;
-				externalTitleEl.textContent = text;
+				cardTitleEl.textContent = text;
+				embedTitleEl.textContent = text;
 			});
 			$('input[name="summary"]').on('input', function(e) {
-				dbSummaryEl.textContent = e.target.value;
+				cardSummaryEl.textContent = e.target.value;
 			});
 
 			const fileFrameEl = document.getElementsByClassName('files')[0];
 			
-			$dbLogoSelect.on('change', function(e, ex) {
+			$cardLogoSelect.on('change', function(e, ex) {
+				cardPreviewBoxEl.dataset.fid = ex.selected;
+
 				let src = '/web/img/mod-default.png';
 				if(ex.selected) {
-					src = $(`option[value="${ex.selected}"]`, $dbLogoSelect).data('url')
+					src = $(`option[value="${ex.selected}"]`, $cardLogoSelect).data('url')
 				}
-				dbImageEl.src = src;
+				cardImageEl.src = src;
 			});
 
-			$externalLogoSelect.on('change', function(e, ex) {
+			$embedLogoSelect.on('change', function(e, ex) {
+				embedPreviewBoxEl.dataset.fid = ex.selected;
+
 				let src = '/web/img/mod-default.png';
 				if(ex.selected) {
-					src = $(`option[value="${ex.selected}"]`, $externalLogoSelect).data('url')
+					src = $(`option[value="${ex.selected}"]`, $embedLogoSelect).data('url')
 				}
-				externalImageEl.src = src;
+				embedImageEl.src = src;
 			});
 		}
 
@@ -312,8 +316,8 @@
 			}
 
 			if(['480x320', '480x480'].includes(response.imagesize)) {
-				addOption($dbLogoSelect);
-				addOption($externalLogoSelect);
+				addOption($cardLogoSelect);
+				addOption($embedLogoSelect);
 			}
 		}
 
@@ -322,7 +326,7 @@
 				const opt = $select[0].querySelector(`option[value="${fileid}"]`);
 				if(opt) {
 					const previewImage = previewBox.getElementsByTagName('img')[0];
-					if(previewImage && previewImage.src.endsWith(opt.dataset.url) /* fix for url vs path comparison */) {
+					if(previewImage && previewBox.dataset.fid == opt.value) {
 						previewImage.src = '/web/img/mod-default.png';
 					}
 
@@ -331,20 +335,20 @@
 				}
 			}
 
-			removeOpt($dbLogoSelect, dbPreviewBoxEl);
-			removeOpt($externalLogoSelect, externalPreviewBoxEl);
+			removeOpt($cardLogoSelect, cardPreviewBoxEl);
+			removeOpt($embedLogoSelect, embedPreviewBoxEl);
 		}
 	</script>
 	<style>
-		#preview-box-external>div {
+		#preview-box-embed>div {
 			background-color: var(--color-content-bg);
 			padding: .25em;
 		}
-		#preview-box-external h4,
-		#preview-box-external>div>div {
+		#preview-box-embed h4,
+		#preview-box-embed>div>div {
 			margin: 1em 0;
 		}
-		#preview-box-external img {
+		#preview-box-embed img {
 			width: 100%;
 		}
 	</style>
