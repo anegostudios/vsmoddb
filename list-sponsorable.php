@@ -44,12 +44,14 @@ foreach($rawData as $row) {
 
 	if(array_key_exists($ownerId, $dataByUser)) {
 		$dataByUser[$ownerId]['mods'][] = $modData;
+		if($row['donateurl']) $dataByUser[$ownerId]['confirmedurls'][htmlspecialchars($row['donateurl'])] = 1;
 	}
 	else {
 		$dataByUser[$ownerId] = [
-			'userhash' => getUserHash($ownerId, $row['created']),
-			'username' => $row['username'],
-			'mods' => [$modData],
+			'userhash'      => getUserHash($ownerId, $row['created']),
+			'username'      => $row['username'],
+			'confirmedurls' => $row['donateurl'] ? [htmlspecialchars($row['donateurl']) => 1] : [],
+			'mods'          => [$modData],
 		];
 	}
 }
