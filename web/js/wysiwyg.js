@@ -21,7 +21,7 @@
 		relative_urls:false,
 		remove_script_host:false,
 		tinycomments_mode: 'embedded',
-		content_css: "/web/css/editor_content.css?ver=2",
+		content_css: "/web/css/editor_content.css?ver=3",
 		setup: function (editor) {
 			editor.on('change', function(e) { 
 				tinyMCE.triggerSave(); 
@@ -50,7 +50,7 @@
 		relative_urls:false,
 		remove_script_host:false,
 		tinycomments_mode: 'embedded',
-		content_css: "/web/css/editor_content.css?ver=2",
+		content_css: "/web/css/editor_content.css?ver=3",
 		mentions: mentions
 	};
 	tinymceSettingsCmt.setup = tinymceSettings.setup;

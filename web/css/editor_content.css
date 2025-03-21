@@ -1,11 +1,101 @@
-body {
-	font-size: 15px;
+/* reset */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
 }
 
-span.username:before {
+/* generic elements */
+
+body {
+	font-size: 16px;
+	line-height: 1.2;
+	text-rendering: optimizeSpeed;
+}
+
+blockquote {
+	border: solid 1px #CCC; /* @cleanup */
+	padding-left: .5em;
+	border-left-width: .5em;
+	background: rgba(255,255,255,0.25); /* @cleanup */
+	font-style: italic;
+}
+
+p:not(:last-child) {
+	margin-bottom: .5em;
+}
+
+h1:not(:first-child),
+h2:not(:first-child),
+h3:not(:first-child),
+h4:not(:first-child),
+h5:not(:first-child),
+h6:not(:first-child) {
+	margin-top: 1.5em;
+}
+
+a { color: var(--color-link); }
+a:hover { color: var(--color-link-active); }
+
+/*a[href^="http"]::before */ /* @cleanup needs font or svg image to sue currentcolor */
+a.external::before {
+	content: '';
+	display: inline-block;
+	height: 1.1em;
+	width: 1.1em;
+	vertical-align: sub;
+	margin-right: .5ch;
+
+	background-size: contain;
+	background-repeat: round;
+	background-image: url(/web/img/externallink.png);
+}
+
+a[href*="github.com"].external::before  { background-image: url(/web/img/logo-github.svg); }
+a[href*="gitlab.com"].external::before  { background-image: url(/web/img/logo-gitlab.svg); }
+a[href*="patreon.com"].external::before { background-image: url(/web/img/logo-patreon-b.png); }
+a[href*="ko-fi.com"].external::before   { background-image: url(/web/img/logo-kofi-c.svg); }
+a[href*="discord.gg"].external::before,
+a[href*="discord.com"].external::before { background-image: url(/web/img/logo-discord.svg); }
+
+li {
+	margin-left: 1em;
+}
+
+small {
+	display: inline-block;
+	font-size: .8em;
+}
+
+/* generic classes */
+.whitetext { color: var(--color-text-inv); }
+
+.flex-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .5em;
+}
+
+.flex-spacer {
+	flex-grow: 1;
+	min-width: 0 !important;
+	visibility: hidden;
+}
+
+.flex-fill {
+	flex-basis: 100%;
+}
+
+/* special editor stuff */
+
+html {
+	padding: .5em;
+}
+
+span.username::before {
 	content: "@"
 }
 
 span#autocomplete, span.username {
-    font-weight: bold;
+	font-weight: bold;
 }
