@@ -253,7 +253,6 @@
 	</span>
 {/if}
 
-
 {capture name="footerjs"}
 	<script type="text/javascript">
 		const $cardLogoSelect = $('select[name="cardlogofileid"]');
@@ -269,7 +268,13 @@
 
 			const embedTitleEl = embedPreviewBoxEl.children[1].firstElementChild;
 			const embedImageEl = embedPreviewBoxEl.getElementsByTagName('img')[0];
-			
+
+
+			if(!$cardLogoSelect.val() && !cardImageEl.src.endsWith('/web/img/mod-default.png')) {
+				alert("Saving this mod without selecting a new logo will remove its current legacy logo.");
+			}
+
+
 			$('input[name="name"]').on('input', function(e) {
 				let text = e.target.value;
 				if(text.length >= 49) text = text.substr(0, 45)+'...';
