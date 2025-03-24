@@ -29,6 +29,7 @@ class ReleaseEditor extends AssetEditor {
 	public function load() {
 		global $con, $view, $user;
 		
+		//TODO(Rennorb): If the assetid doesn't exist this errors.
 		$this->assetid = empty($_REQUEST["assetid"]) ? 0 : $_REQUEST["assetid"];
 		if ($this->assetid) {
 			$this->modid = $modid = $con->getOne("select modid from `release` where assetid=?", array($this->assetid));
@@ -104,7 +105,7 @@ class ReleaseEditor extends AssetEditor {
 
 			$con->execute("
 				update `mod`
-				set lastreleased = IFNULL((select created from `release` where modid = `mod`.modid order by created desc), `mod`.created)
+				set lastreleased = IFNULL((select created from `release` where modid = `mod`.modid order by created desc limit 1), `mod`.created)
 				where modid = ?;
 			", [$mod['modid']]);
 		
@@ -203,8 +204,8 @@ class ReleaseEditor extends AssetEditor {
 		$status = parent::saveFromBrowser();
 		
 		if ($this->moddtype === 'mod' /* detection will stil run even on external tools */ && ($status == 'saved' || $status == 'savednew')) {
-						if (!empty($file['detectedmodidstr']) && !empty($file['detectedmodversion'])) {
-$con->execute('update release set modidstr = ?, modversion = ? where assetid = ?', array($modidstr, $modversion, $this->assetid));
+			if (!empty($file['detectedmodidstr']) && !empty($file['detectedmodversion'])) {
+				$con->execute('update release set modidstr = ?, modversion = ? where assetid = ?', array($modidstr, $modversion, $this->assetid));
 			}
 		}
 
