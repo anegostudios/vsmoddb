@@ -205,7 +205,7 @@ class ReleaseEditor extends AssetEditor {
 		
 		if ($this->moddtype === 'mod' /* detection will stil run even on external tools */ && ($status == 'saved' || $status == 'savednew')) {
 			if (!empty($file['detectedmodidstr']) && !empty($file['detectedmodversion'])) {
-				$con->execute('update release set modidstr = ?, modversion = ? where assetid = ?', array($modidstr, $modversion, $this->assetid));
+				$con->execute('update `release` set modidstr = ?, modversion = ? where assetid = ?', array($modidstr, $modversion, $this->assetid));
 			}
 		}
 
