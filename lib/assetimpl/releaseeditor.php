@@ -202,11 +202,9 @@ class ReleaseEditor extends AssetEditor {
 		
 		$status = parent::saveFromBrowser();
 		
-		if ($status == 'saved' || $status == 'savednew') {
-			$releaseid = $con->getOne("select releaseid from `release` where assetid=?", array($this->assetid));
-			
-			if (!empty($file['detectedmodidstr']) && !empty($file['detectedmodversion'])) {
-				update("release", $releaseid, array("modidstr" => $modidstr, "modversion" => $modversion));
+		if ($this->moddtype === 'mod' /* detection will stil run even on external tools */ && ($status == 'saved' || $status == 'savednew')) {
+						if (!empty($file['detectedmodidstr']) && !empty($file['detectedmodversion'])) {
+$con->execute('update release set modidstr = ?, modversion = ? where assetid = ?', array($modidstr, $modversion, $this->assetid));
 			}
 		}
 

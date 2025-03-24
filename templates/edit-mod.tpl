@@ -72,8 +72,7 @@
 
 		<div class="editbox flex-fill">
 			<label>Text</label>
-			<textarea name="text" class="editor" data-editorname="text"
-				style="width: 100%; height: auto;">{$asset['text']}</textarea>
+			<textarea name="text" class="editor" data-editorname="text" style="width: 100%; height: auto;">{$asset['text']}</textarea>
 		</div>
 
 		{if file_exists("templates/edit-asset-$entrycode.tpl")}
