@@ -3,26 +3,14 @@ if (empty($user)) {
 	header("Location: /login");
 	exit();
 }
-if (!$user['roleid']) {
-	$view->display("403");
-	exit();
-}
+if (!$user['roleid']) showErrorPage(HTTP_FORBIDDEN);
 
-if($user['isbanned']) {
-	http_response_code(403);
-	$view->assign('reason', 'You are currently banned.');
-	$view->display("403");
-	exit();
-}
+if($user['isbanned']) showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
 
 $commentid = empty($_POST["commentid"]) ? 0 : $_POST["commentid"];
 
 if (!empty($_POST["save"])) {
-	if ($user['actiontoken'] != $_REQUEST['at']) {
-		$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Rennorb");
-		$view->display("400");
-		exit();
-	}
+	validateActionToken();
 	
 	$isnew = false;
 	$text = sanitizeHtml($_POST["text"], array('safe'=>1));
@@ -61,8 +49,7 @@ if (!empty($_POST["save"])) {
 		
 		$wasmodaction = $user['userid'] != $cmt['userid'];
 		if ($wasmodaction && $user['rolecode'] != 'admin' && $user['rolecode'] != 'moderator') {
-			$view->display("403");
-			exit();
+			showErrorPage(HTTP_FORBIDDEN);
 		}
 		
 		$changelog = array("Modified his comment.");

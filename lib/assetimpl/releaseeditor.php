@@ -38,10 +38,7 @@ class ReleaseEditor extends AssetEditor {
 			
 			$asset = $con->getRow("select asset.* from asset join `mod` on (`mod`.assetid=asset.assetid) where mod.modid = ?", array($this->modid));
 			$this->assetid=$asset['assetid'];
-			if (!canEditAsset($asset, $user)) {
-				$view->display("403");
-				exit();
-			}
+			if (!canEditAsset($asset, $user)) showErrorPage(HTTP_FORBIDDEN);
 		}
 		
 		$this->moddtype = $modtype = $con->getOne("select `type` from `mod` where modid=?", array($modid));
@@ -59,11 +56,7 @@ class ReleaseEditor extends AssetEditor {
 		if ($this->assetid) {
 			$modid = $this->asset["modid"];
 		} else {
-			if (empty($_REQUEST['modid'])) {
-				$view->assign("reason", "modid missing");
-				$view->display("404.tpl");
-				exit();
-			}
+			if (empty($_REQUEST['modid'])) showErrorPage(HTTP_BAD_REQUEST, 'Missing modid.');
 			
 			$modid = $_REQUEST['modid'];
 		}

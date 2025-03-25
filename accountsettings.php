@@ -1,7 +1,5 @@
 <?php
-if (empty($user)) {
-	$view->display("404");
-}
+if (empty($user)) showErrorPage(HTTP_UNAUTHORIZED);
 
 $view->assign("user", $user);
 

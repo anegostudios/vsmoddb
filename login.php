@@ -17,10 +17,9 @@ $jsonresponse = json_decode($response, true);
 
 
 if (empty($jsonresponse["valid"])) {
-	$view->assign("errormessage", "Hm, the auth server tells me your session is not valid. Please <a href=\"https://account.vintagestory.at/login?loginredir=mods\">log in again</>.", null, true);
-	$view->display("error");
-	
-} else {
+	showErrorPage(HTTP_UNAUTHORIZED, 'Hm, the auth server tells me your session is not valid. Please <a href="https://account.vintagestory.at/login?loginredir=mods">log in again</a>.', null, true);
+}
+else {
 	$account = $jsonresponse;
 	
 	$userid = $con->getOne("select userid from user where uid=?", array($account['uid']));

@@ -3,16 +3,9 @@ if (empty($user)) {
 	header("Location: /login");
 	exit();
 }
-if (!$user['roleid']) {
-	$view->display("403");
-	exit();
-}
+if (!$user['roleid']) showErrorPage(HTTP_FORBIDDEN);
 
-if ($user['actiontoken'] != $_REQUEST['at']) {
-	$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Rennorb");
-	$view->display("400");
-	exit();
-}
+validateActionToken();
 
 if (empty($_POST["fileid"])) {
 	exit(json_encode(array("status" => "error")));

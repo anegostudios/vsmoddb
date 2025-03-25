@@ -36,18 +36,11 @@ class AssetEditor extends AssetController
 
 			$asset = $con->getRow("select * from asset where assetid=?", array($this->assetid));
 
-			if (!canEditAsset($asset, $user)) {
-				$view->display("403");
-				exit();
-			}
+			if (!canEditAsset($asset, $user)) showErrorPage(HTTP_FORBIDDEN);
 		}
 
 		if (!empty($_POST["delete"])) {
-			if ($user['actiontoken'] != $_REQUEST['at']) {
-				$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Rennorb");
-				$view->display("400");
-				exit();
-			}
+			validateActionToken();
 
 			$this->delete();
 			exit();
@@ -224,11 +217,7 @@ class AssetEditor extends AssetController
 
 		$oldstatusid = 0;
 
-		if ($user['actiontoken'] != $_REQUEST['at']) {
-			$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Rennorb");
-			$view->display("400");
-			exit();
-		}
+		validateActionToken();
 
 		if (!$this->assetid) {
 			$this->assetid = insert("asset");

@@ -719,3 +719,61 @@ function maybeFormatDownloadTrackingUrlDependingOnFileExt($file)
 			return formatDownloadTrackingUrl($file);
 	}
 }
+
+const HTTP_BAD_REQUEST         = 400;
+const HTTP_UNAUTHORIZED        = 401;
+const HTTP_FORBIDDEN           = 403;
+const HTTP_NOT_FOUND           = 404;
+const HTTP_INTERNAL_ERROR      = 500;
+const HTTP_NOT_IMPLEMENTED     = 501;
+const HTTP_SERVICE_UNAVAILABLE = 503;
+
+/** Shows an error page based on the http error code and reason message. 
+ * This function terminates execution.
+ * @param int $errorCode
+ * @param string $reason
+ * @param bool|null $goBugRennorb Use `null` to pick a default based on the `$errorCode`, `bool` to overwrite the default.
+ * @param bool $rawReason If set to `true` prevents htmlescaping the reason. Only use if neccesary and never with user input.
+ */
+function showErrorPage($errorCode, $reason = '', $goBugRennorb = null, $rawReason = false)
+{
+	global $view;
+
+	switch($errorCode) {
+		case HTTP_BAD_REQUEST:
+			$statusMessage = '400 - The request was malformed.';
+			if($goBugRennorb === null) $goBugRennorb = true;
+			break;
+		case HTTP_UNAUTHORIZED:
+			$statusMessage = '401 - You need to log in.';
+			break;
+		case HTTP_FORBIDDEN:
+			$statusMessage = '403 - You do not have sufficient permissions to perform this action.';
+			break;
+		case HTTP_NOT_FOUND:
+			$statusMessage = '404 - Requested page was not found.';
+			break;
+		case HTTP_INTERNAL_ERROR:
+			$statusMessage = '500 - Internal server error.';
+			if($goBugRennorb === null) $goBugRennorb = true;
+			break;
+		case HTTP_NOT_IMPLEMENTED:
+			$statusMessage = '501 - This is not (yet) implemented.';
+			break;
+		case HTTP_SERVICE_UNAVAILABLE:
+			$statusMessage = '503 - Service currently unavailable.';
+			break;
+
+		default:
+			$statusMessage = $errorCode.' - Unknown error.';
+			if($goBugRennorb === null) $goBugRennorb = true;
+	}
+
+	http_response_code($errorCode);
+
+	$view->assign('goBugRennorb', $goBugRennorb);
+	$view->assign('statusMessage', $statusMessage);
+	$view->assign('reason', $reason, null, $rawReason);
+	$view->display('error');
+	exit();
+}

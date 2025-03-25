@@ -31,10 +31,7 @@ if ($assetid) {
 			asset.assetid = ?
 	", array($assetid));
 
-	if (!$asset) {
-		$view->display("404");
-		exit();
-	}
+	if (!$asset) showErrorPage(HTTP_NOT_FOUND);
 
 	$teammembers = $con->getAll("
 		select

@@ -69,8 +69,7 @@ if (!in_array($urlparts[0], $typewhitelist)) {
 
 		$urlparts = array("show", "mod", $modid);
 	} else {
-		$view->display("404.tpl");
-		exit();
+		showErrorPage(HTTP_NOT_FOUND);
 	}
 }
 
@@ -103,4 +102,4 @@ if (count($urlparts) > 1) {
 
 
 
-$view->display("404.tpl");
+showErrorPage(HTTP_NOT_FOUND);

@@ -1,9 +1,6 @@
 <?php
 
-if (empty($assettype)) {
-	$view->display("404.tpl");
-	exit();
-}
+if (empty($assettype)) showErrorPage(HTTP_BAD_REQUEST, "Missing assettype.");
 
 $classname = ucfirst($assettype) . "List";
 

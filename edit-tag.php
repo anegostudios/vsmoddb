@@ -3,10 +3,7 @@ if (empty($user)) {
 	header("Location: /login");
 	exit();
 }
-if ($user['rolecode'] != 'admin')  {
-	$view->display("403");
-	exit();
-}
+if ($user['rolecode'] != 'admin') showErrorPage(HTTP_FORBIDDEN);
 
 $view->assign("columns", array(array("cssclassname" => "", "code" => "code", "title" => "Code"), array("cssclassname" => "", "code" => "Name", "title" => "Name")));
 $view->assign("entrycode", "tag");
@@ -18,10 +15,8 @@ $tagid = empty($_REQUEST["tagid"]) ? 0 : $_REQUEST["tagid"];
 $save = !empty($_POST["save"]);
 $delete =!empty($_POST["delete"]);
 
-if (($save || $delete) && $user['actiontoken'] != $_REQUEST['at']) {
-	$view->assign("reason", "Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Rennorb");
-	$view->display("400");
-	exit();
+if (($save || $delete)) {
+	validateActionToken();
 }
 
 if ($save) {

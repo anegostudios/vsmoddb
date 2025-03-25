@@ -1,8 +1,5 @@
 <?php
 
-if (empty($user)) {
-	$view->display("401");
-	exit();
-}
+if (empty($user)) showErrorPage(HTTP_UNAUTHORIZED);
 
 $view->display('notifications');

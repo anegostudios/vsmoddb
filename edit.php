@@ -3,17 +3,10 @@ if (empty($user)) {
 	header("Location: /login");
 	exit();
 }
-if (!$user['roleid']) {
-	$view->display("403");
-	exit();
-}
 
-if ($user['isbanned']) {
-	http_response_code(403);
-	$view->assign('reason', 'You are currently banned.');
-	$view->display("403");
-	exit();
-}
+if (!$user['roleid'])  showErrorPage(HTTP_FORBIDDEN);
+
+if ($user['isbanned'])  showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
 
 $classname = ucfirst($assettype) . "Editor";
 

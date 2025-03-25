@@ -1,9 +1,6 @@
 <?php
 
-if ($user['rolecode'] !== 'admin' && $user['rolecode'] !== 'moderator')  {
-	$view->display("403");
-	exit();
-}
+if ($user['rolecode'] !== 'admin' && $user['rolecode'] !== 'moderator') showErrorPage(HTTP_FORBIDDEN);
 
 $view->assign("columns", array(
 	array("cssclassname" => "", "code" => "name", "title" => "Name"), 

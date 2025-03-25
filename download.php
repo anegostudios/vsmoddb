@@ -4,16 +4,10 @@
 // but the game client downloads it using ?fileid=1231 so we need to remain backwards compatible
 
 $fileid = intval($_GET["fileid"] ?? $urlparts[1] ?? 0);
-if($fileid === 0) {
-	http_response_code(400);
-	exit("Missing fileid.");
-}
+if($fileid === 0) showErrorPage(HTTP_BAD_REQUEST, 'Missing fileid.');
 
 $file = $con->getRow("select * from file where fileid=?", array($fileid));
-if (!$file) {
-	http_response_code(404);
-	exit("File not found.");
-}
+if (!$file) showErrorPage(HTTP_NOT_FOUND, 'File not found.');
 
 // do download tracking
 $date = $con->getOne("select date from downloadip where fileid=? and ipaddress=?", array($fileid, $_SERVER['REMOTE_ADDR']));

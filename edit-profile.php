@@ -1,16 +1,11 @@
 <?php
 $usertoken = $urlparts[2] ?? null;
-$shownuser = null;
+if(empty($usertoken)) showErrorPage(HTTP_BAD_REQUEST, 'Missing usertoken.');
 
-if (empty($usertoken) || empty($shownuser = getUserByHash($usertoken, $con))) {
-	$view->display("404");
-	exit();
-}
+$shownuser = getUserByHash($usertoken, $con);
+if (empty($shownuser)) showErrorPage(HTTP_NOT_FOUND, 'User not found.');
 
-if (!canEditProfile($shownuser, $user))  {
-	$view->display("403");
-	exit();
-}
+if (!canEditProfile($shownuser, $user)) showErrorPage(HTTP_FORBIDDEN);
 
 if (!empty($_POST["save"])) {	
 	$data = array(

@@ -1,18 +1,12 @@
 <?php
 
 $usertoken = $urlparts[2] ?? null;
+if(empty($usertoken)) showErrorPage(HTTP_BAD_REQUEST, 'Missing suertoken.');
 
-if(empty($usertoken) || empty($targetuser = getUserByHash($usertoken, $con))) {
-	http_response_code(404);
-	$view->display("404");
-	exit();
-}
+$targetuser = getUserByHash($usertoken, $con);
+if(empty($targetuser)) showErrorPage(HTTP_NOT_FOUND, 'User not found.');
 
-if(!canModerate($targetuser, $user)) {
-	http_response_code(403);
-	$view->display("403");
-	exit();
-}
+if(!canModerate($targetuser, $user)) showErrorPage(HTTP_FORBIDDEN);
 
 if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 	$fpost = filter_input_array(INPUT_POST, array(
@@ -39,7 +33,7 @@ if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 	}
 
 	if($errorreasons) {
-		http_response_code(400);
+		http_response_code(HTTP_BAD_REQUEST);
 		$view->assign('errormessage', "Missing $errorreasons for ban.");
 	}
 	else {
@@ -53,7 +47,7 @@ if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 else if(isset($_POST['submit']) && $_POST['submit'] == 'redeem') {
 	$reason = filter_input(INPUT_POST, 'modreason', FILTER_SANITIZE_SPECIAL_CHARS);
 	if(empty($reason)) {
-		http_response_code(400);
+		http_response_code(HTTP_BAD_REQUEST);
 		$view->assign('errormessage', 'Missing reason for redemption.');
 	}
 	else {
