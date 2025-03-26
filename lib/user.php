@@ -55,18 +55,26 @@ function canEditAsset($asset, $user, $includeTeam = true)
 
 	// @cleanup: cursed hackery, breaking the point of the oop asseteditor
 	if ($includeTeam && $asset['assettypeid'] === ASSETTYPE_MOD) {
-		$canEditAsTeamMember = $con->getOne("select 1 
+		$canEditAsTeamMember = $con->getOne("
+			select 1 
 			from teammember 
 			join `mod` on `mod`.modid = teammember.modid
-			where canedit = 1 and assetid = ? and userid = ?
+			where assetid = ? and userid = ? and canedit = 1
 		", array($asset['assetid'], $user['userid']));
 	}
 	else if ($includeTeam && $asset['assettypeid'] === ASSETTYPE_RELEASE) {
-		$canEditAsTeamMember = $con->getOne("select 1 
-			from teammember 
-			join `release` on `release`.modid = teammember.modid
-			where canedit = 1 and assetid = ? and userid = ?
-		", array($asset['assetid'], $user['userid']));
+		//NOTE(Rennorb): The second case checks if we are owner of the mod this release belongs to.
+		$canEditAsTeamMember = $con->getOne("
+				select 1 
+				from teammember 
+				join `release` on `release`.modid = teammember.modid
+				where assetid = ? and userid = ? and canedit = 1
+			union
+				select 1
+				from `mod`
+				join `release` on `release`.modid = `mod`.modid and `release`.assetid = ?
+				join asset on asset.assetid = `mod`.assetid and asset.createdbyuserid = ?
+		", array($asset['assetid'], $user['userid'], $asset['assetid'], $user['userid']));
 	}
 
 	return isset($user['userid']) && ($user['userid'] == $asset['createdbyuserid'] || $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator" || $canEditAsTeamMember);
