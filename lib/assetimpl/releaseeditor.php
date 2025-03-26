@@ -167,9 +167,9 @@ class ReleaseEditor extends AssetEditor {
 				return 'duplicateid';
 			}
 
-			// Make sure another user doesn't use this modid whiel allowing team members to release.
+			// Make sure another user doesn't use this modid while allowing team members to release.
 			$inUseBy = $con->getRow("
-				select user.*, asset.*
+				select user.*, asset.*, user.name
 				from `release`
 				join asset on asset.assetid = `release`.assetid
 				join user on user.userid = asset.createdbyuserid
