@@ -153,7 +153,7 @@ class ReleaseEditor extends AssetEditor {
 			}
 
 			
-			if (preg_match("/[^0-9a-zA-Z\-_]+/", $modidstr)) {
+			if (!preg_match("/^[0-9a-zA-Z]+$/", $modidstr)) {
 				return 'invalidmodid';
 			}
 			
