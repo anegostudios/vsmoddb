@@ -246,7 +246,7 @@ class ReleaseEditor extends AssetEditor {
 				break;
 
 			case 'invalidmodid':
-				$view->assign("errormessage", "Cannot save release, invalid mod info, please use only letters, numbers and -");
+				$view->assign("errormessage", "Cannot save release, invalid mod id, please use only letters and numbers.");
 				break;
 
 			case 'invalidmodversion':
