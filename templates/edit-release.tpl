@@ -155,7 +155,7 @@
 				$("input[name='modidstr']").removeAttr("disabled");
 				$("input[name='modversion']").removeAttr("disabled");
 				$("div.errormessagepopup .text").html("Unable to determine mod id and version from this file, please fill in id and version manually");
-				showErrorMessage();
+				showMessage($(".errormessagepopup"));
 			} else {
 				$("input[name='modidstr']").val(file.modid);
 				$("input[name='modversion']").val(file.modversion);
