@@ -85,6 +85,9 @@
 				{foreach from=$files item=file}
 					<img src="{$file['url']}">
 				{/foreach}
+				{if empty($files) && empty($asset['trailervideourl']) && !empty($asset['logourl'])}
+				<img src="{$asset['logourl']}">
+				{/if}
 			</div>
 
 			<div class="infobox{if empty($asset['trailervideourl']) && empty($files)} nomedia{/if}">
