@@ -605,7 +605,7 @@ function getModInfo($filepath)
 
 	// allow uploading files when DEBUG is set AND mono/windows is unavailable
 	if (isset($error)) {
-		if (DEBUG === 1) {
+		if (MODPEEK_ERROR_OVERRIDE === 1) {
 			return array("modparse" => "ok", "modid" => $_POST['modidstr'] ?? "ExampleMod", "modversion" => $_POST['modversion'] ?? "1.0.0");
 		}
 		return $error;

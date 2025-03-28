@@ -23,6 +23,7 @@ if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
 
 	if (!defined("DEBUG")) define("DEBUG", 1);
 	if (!defined("DEBUGUSER")) define("DEBUGUSER", 1);
+	if (!defined("MODPEEK_ERROR_OVERRIDE")) define("MODPEEK_ERROR_OVERRIDE", 0);
 } else {
 	$config["database"] = "moddb";
 	define("CDN", "bunny");
@@ -35,4 +36,5 @@ if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
 
 	if (!defined("DEBUG")) define("DEBUG", 0);
 	define("DEBUGUSER", 0);
+	define("MODPEEK_ERROR_OVERRIDE", 0);
 }
