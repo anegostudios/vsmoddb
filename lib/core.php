@@ -587,14 +587,12 @@ function sendPostData($path, $data, $remoteurl = null)
  */
 function getModInfo($filepath)
 {
-	$returncode = null;
-	if (substr(PHP_OS, 0, 3) === 'WIN') {
-		$idver = exec("util\\modpeek.exe -i -f " . escapeshellarg($filepath), $unused, $returncode);
-	} else {
-		$idver = exec("mono util/modpeek.exe -i -f " . escapeshellarg($filepath), $unused, $returncode);
-	}
+	$modpeek = substr(PHP_OS, 0, 3) === 'WIN' ? 'util\\modpeek.exe' : 'mono util/modpeek.exe';
+	//NOTE(Rennorb): Unfortunately we cannot use exec, because that trims its output and tehrefore allows versions with whitespace at the end.
+	// That happens for both, the last line returned by exec, and the output param.
+	$idver = trim(shell_exec($modpeek.' -i -f '.escapeshellarg($filepath)), "\r\n");
 
-	if ($returncode != 0) {
+	if (empty($idver)) {
 		$error = array("modparse" => "error", "parsemsg" => "Unable to find mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb");
 	}
 
