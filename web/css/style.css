@@ -25,6 +25,7 @@ input:active,
 	--color-input-g: #9bc45e;
 	--color-input-r: #c45e5e;
 	--color-input-disabled: hsl(0 0% 85%);
+	--color-input-text-disabled:hsl(0, 0%, 43%);
 	--color-border: #aaa;
 	--color-border-active: #333;
 	--color-link: #3d6594;
@@ -771,6 +772,11 @@ input[type="submit"]:active,
 	height: calc(1.75em - 1px);
 }
 
+input:disabled,
+.prefixed-input.disabled {
+	color: var(--color-input-text-disabled);
+}
+
 
 .button.large {
 	font-weight: bold;
@@ -872,6 +878,9 @@ input[type="submit"]:active,
 	display: flex;
 	flex-direction: row;
 	gap: .5em;
+}
+.file>a>div:nth-of-type(2) {
+	flex-grow: 1;
 }
 
 .file img {
@@ -1477,8 +1486,11 @@ span.username {
 }
 
 
+.flair {
+	display: unset; /* collapses on chrome with small screens if set to inline-block */
+}
 .flair::before {
-	padding: 1px 2px;
+	padding: 1px .25em;
 	border: 1px solid #3E372F;
 	border-radius: 5px;
 	unicode-bidi: isolate;
