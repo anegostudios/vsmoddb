@@ -150,17 +150,24 @@
 	modtype='{$modtype}';
 	
 	if (modtype=='mod') {
-		onUploadFinished = function(file) {
+		function onUploadFinished(file) {
 			if (file.modparse == "error") {
-				$("input[name='modidstr']").removeAttr("disabled");
-				$("input[name='modversion']").removeAttr("disabled");
+				$("input[name='modidstr']").removeProp("disabled");
+				$("input[name='modversion']").removeProp("disabled");
+				$(".prefixed-input[for='inp-modversion']").removeClass("disabled");
 				$("div.errormessagepopup .text").html("Unable to determine mod id and version from this file, please fill in id and version manually");
 				showMessage($(".errormessagepopup"));
 			} else {
 				$("input[name='modidstr']").val(file.modid);
 				$("input[name='modversion']").val(file.modversion);
 			}
-		};
+		}
+
+		function onFileDelete($fileEl, fileid) {
+			$("input[name='modidstr']").prop("disabled", 'true').val('');
+			$("input[name='modversion']").prop("disabled", 'true').val('');
+			$(".prefixed-input[for='inp-modversion']").addClass("disabled");
+		}
 	}
 	
 	

@@ -59,6 +59,14 @@ class ReleaseEditor extends AssetEditor {
 			if (empty($_REQUEST['modid'])) showErrorPage(HTTP_BAD_REQUEST, 'Missing modid.');
 			
 			$modid = $_REQUEST['modid'];
+
+			if(!empty($this->files)) {
+				$row = $con->getRow('select detectedmodidstr, detectedmodversion from modpeek_result where fileid = ?', [$this->files[0]['fileid']]);
+				if(!empty($row)) {
+					$this->asset['modidstr'] = $row['detectedmodidstr'];
+					$this->asset['modversion'] = $row['detectedmodversion'];
+				}
+			}
 		}
 		
 		$mod = $con->getRow("
@@ -222,7 +230,7 @@ class ReleaseEditor extends AssetEditor {
 		global $view;
 				
 		parent::loadFromDB();
-		
+
 		switch($this->savestatus) {
 			case 'duplicateid':
 				$view->assign("errormessage", "Cannot save release, there already exists a <a href=\"/edit/release/?assetid={$this->releaseIdDupl}\">release</a> with this mod id and version - please ensure a unique modid and avoid uploading of duplicate version numbers.", null, true);

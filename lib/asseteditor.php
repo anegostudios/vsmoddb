@@ -98,7 +98,7 @@ class AssetEditor extends AssetController
 		if ($this->assetid) {
 			$this->files = $con->getAll("select *, concat(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where assetid=?", array($this->assetid));
 		} else {
-			$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
+			$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename)); // @perf
 
 			$this->files = $con->getAll("select *, concat(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
 		}
