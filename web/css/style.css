@@ -384,6 +384,65 @@ small {
 
 
 
+/* messages (top of the screen) */
+
+#message-container {
+	background-color: var(--color-content-bg);
+	display: flex;
+	flex-direction: column;
+	gap: .5em;
+}
+#message-container:not(:empty) { /* be careful to not get any whitespace into the node so this works */
+	position: sticky;
+  top: 0;
+  z-index: 99;
+
+	padding: .5em;
+	border-bottom: solid 1px var(--color-border);
+}
+#message-container>* {
+	position: relative;
+	padding: .5em 1em;
+	border: solid 1px var(--color-border);
+	border-radius: .25em;
+}
+
+#message-container>*:not(.permanent)::before {
+	content: '\2716';
+	position: absolute;
+	left: .25em;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 200%;
+}
+#message-container>*.bg-success:not(.permanent)::before {
+	content: '\2713';
+}
+
+#message-container>*:not(.permanent) {
+	padding-left: 3em;
+	animation: .5s bounce;
+}
+
+@keyframes bounce {
+	50% { transform: translateY(-.25em) }
+	100% { transform: translateY(0) }
+}
+
+#message-container>*>.dismiss {
+	display: block;
+	position: absolute;
+	top: 0;
+	right: 0;
+	border-radius: .25em;
+	padding: 0 .25em;
+	cursor: pointer;
+}
+#message-container>*>.dismiss::before {
+	font-size: 150%;
+	content: '\2716';
+}
+
 /* from here on: TODO @cleanup */
 
 
@@ -812,6 +871,7 @@ input:disabled,
 	display: flex;
 	flex-direction: column;
 	gap: .5em;
+	z-index: 999;
 }
 
 
@@ -928,29 +988,6 @@ input:disabled,
 	min-height: 100px;
 }
 
-
-.messagepopup {
-	position: fixed;
-	left: 0px;
-	bottom: 0px;
-	padding: 10px 30px;
-	margin: 20px;
-
-	border: 1px solid #aaa;
-	font-weight:bold;
-	z-index: 30;
-}
-
-.messagepopup .checkmark {
-	display: inline-block;
-	font-size: 250%;
-	vertical-align: middle;
-}
-
-.messagepopup .text {
-	display:inline-block;
-	vertical-align: middle;
-}
 
 .buttonlinks.template {
 	display: none;

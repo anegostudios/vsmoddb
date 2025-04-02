@@ -95,8 +95,7 @@ $(document).ready(function () {
 
 			$.post("/edit-deletefile", { fileid: fileid, at: actiontoken }).done(function() {
 				$fileEl.remove();
-				$(".okmessagepopup").text(filename + " deleted.");
-				showMessage($(".okmessagepopup"));
+				addMessage(MSG_CLASS_OK, filename + ' deleted.');
 			});
 		}
 

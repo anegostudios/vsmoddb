@@ -26,9 +26,9 @@ if ($save) {
 		$isnew = true;
 		
 		$tagid = insert("tag");
-		$view->assign("okmessage", "Tag created.");
+		addMessage(MSG_CLASS_OK, 'Tag created.');
 	} else {
-		$view->assign("okmessage", "Tag saved.");
+		addMessage(MSG_CLASS_OK, 'Tag saved.');
 	}
 	
 	update("tag", $tagid, array("name" => $_POST["name"], "text" => $_POST["text"], "color" => $_POST["code"], "assettypeid" => $_POST["assettypeid"]));

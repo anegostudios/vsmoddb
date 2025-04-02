@@ -39,19 +39,6 @@
 </head>
 
 <body{if !empty($user) && $user['isbanned']} class="banned"{/if}>
-	<div class="okmessagepopup messagepopup bg-success text-success" style="display:none;">
-		<div class="checkmark">&#10003;</div>
-		<div class="text">{if isset($okmessage)}{$okmessage}{/if}</div>
-	</div>
-	<div class="warningmessagepopup messagepopup bg-warning text-warning" style="display:none;">
-		<div class="checkmark">&#10006;</div>
-		<div class="text">{if isset($warningmessage)}{$warningmessage}{/if}</div>
-	</div>
-	<div class="errormessagepopup messagepopup bg-error text-error" style="display:none;">
-		<div class="checkmark">&#10006;</div>
-		<div class="text">{if isset($errormessage)}{$errormessage}{/if}</div>
-	</div>
-	
 	<a name="top"></a>
 	
 	<div class="content">
@@ -112,14 +99,6 @@
 			{/if}
 		</nav>
 
-		{if !empty($user) && $user['isbanned']}
-			<div class="ban-notification" style="padding: 0.5em 1em; border: solid red 2px;">
-				<h3 style="text-align: center;">You are currently banned until {formatDateWhichMightBeForever($user['banneduntil'], 'M jS Y, H:i:s', 'further notice')}.</h3>
-				<p>
-					<h4 style="margin-bottom: 0.25em;">Reason:</h4>
-					{$user['bannedreason']}
-				</p>
-			</div>
-		{/if}
+		<div id="message-container">{foreach from=$messages item=message}<div class="{$message['class']}">{$message['html']}{if !contains($message['class'], 'permanent')}<span class="dismiss"></span>{/if}</div>{/foreach}</div>
 
 		<main class="innercontent">

@@ -92,7 +92,7 @@ class AssetEditor extends AssetController
 		}
 
 		if ($status == 'conflict') {
-			$view->assign("errormessage", "Cannot save, asset has been modified. Please open the asset in a new tab and manually merge your changes in the new tab and save there.");
+			addMessage(MSG_CLASS_ERROR, 'Cannot save, asset has been modified. Please open the asset in a new tab and manually merge your changes in the new tab and save there.');
 		}
 
 		if ($this->assetid) {
@@ -242,9 +242,9 @@ class AssetEditor extends AssetController
 				'createdbyuserid' => $user['userid'],
 			];
 
-			$view->assign("okmessage", $this->namesingular . " created.");
+			addMessage(MSG_CLASS_OK, $this->namesingular.' created.'); // @escurity: $this->namesingular is manually speciifed and contains no external input.
 		} else {
-			$view->assign("okmessage", $this->namesingular . " saved.");
+			addMessage(MSG_CLASS_OK, $this->namesingular.' saved.'); // @escurity: $this->namesingular is manually speciifed and contains no external input.
 			$this->loadFromDB();
 			$assetdb = $this->asset;
 			$oldstatusid = $this->asset["statusid"];
@@ -267,7 +267,7 @@ class AssetEditor extends AssetController
 
 				if ($datatype == "url") {
 					if (!isUrl($val)) {
-						$view->assign("errormessage", "Not saved. {$column['title']} is not valid. Please use only allowed characters and prefix with http(s)://");
+						addMessage(MSG_CLASS_ERROR, "Not saved. {$column['title']} is not valid. Please use only allowed characters and prefix with http(s)://"); // @security: Column titles are manualyl defined, no external input.
 						return 'error';
 					}
 				}

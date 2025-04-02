@@ -26,12 +26,6 @@
 
 </div>
 
-{if isset($errormessage)}
-	<div class="text-error" style="clear:both; margin-top:20px;">
-		{$errormessage}
-	</div>
-{/if}
-
 {capture name="footerjs"}
 	<script type="text/javascript">
 		$(document).ready(function());

@@ -117,10 +117,10 @@ class AssetList extends AssetController {
 		$view->assign("tags", $tags);
 
 		if (!empty($_GET["deleted"])) {
-			$view->assign("okmessage", "{$this->namesingular} deleted.");
+			addMessage(MSG_CLASS_OK, $this->namesingular.' deleted.'); // @escurity: $this->namesingular is manually speciifed and contains no external input.
 		}
 		if (!empty($_GET["saved"])) {
-			$view->assign("okmessage", "{$this->namesingular} saved.");
+			addMessage(MSG_CLASS_OK, $this->namesingular.' saved.'); // @escurity: $this->namesingular is manually speciifed and contains no external input.
 		}
 		
 		if (file_exists("templates/list-{$this->classname}.tpl")) {

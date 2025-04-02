@@ -28,12 +28,4 @@
 
 </form>
 
-
-{if isset($errormessage)}
-	<div class="text-error" style="clear:both; margin-top:20px;">
-		{$errormessage}
-	</div>
-{/if}
-
-
 {include file="footer"}

@@ -15,9 +15,9 @@ if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 		'until' => FILTER_UNSAFE_RAW,
 	));
 
-	$errorreasons = '';
+	$errorReasons = '';
 	if(empty($fpost['modreason'])) {
-		$errorreasons = 'reason';
+		$errorReasons = 'reason';
 	}
 	
 	if($fpost['forever']) {
@@ -28,13 +28,13 @@ if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 		$until = $until->format(SQL_DATE_FORMAT);
 	}
 	else {
-		if($errorreasons)  $errorreasons .= ' and ';
-		$errorreasons .= ' either end date or forever checkbox';
+		if($errorReasons)  $errorReasons .= ' and ';
+		$errorReasons .= ' either end date or forever checkbox';
 	}
 
-	if($errorreasons) {
+	if($errorReasons) {
 		http_response_code(HTTP_BAD_REQUEST);
-		$view->assign('errormessage', "Missing $errorreasons for ban.");
+		addMessage(MSG_CLASS_ERROR, "Missing $errorReasons for ban."); // @security no external input in $errorReasons
 	}
 	else {
 		$con->execute("update user set banneduntil = ? where userid = ?", array($until, $targetuser['userid']));
@@ -48,7 +48,7 @@ else if(isset($_POST['submit']) && $_POST['submit'] == 'redeem') {
 	$reason = filter_input(INPUT_POST, 'modreason', FILTER_SANITIZE_SPECIAL_CHARS);
 	if(empty($reason)) {
 		http_response_code(HTTP_BAD_REQUEST);
-		$view->assign('errormessage', 'Missing reason for redemption.');
+		addMessage(MSG_CLASS_ERROR, 'Missing reason for redemption.');
 	}
 	else {
 		$con->execute("update user set banneduntil = now() where userid = ?", array($targetuser['userid']));

@@ -357,7 +357,7 @@
 		}
 	</style>
 
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=34" async></script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=35" async></script>
 {/capture}
 
 {include file="footer"}

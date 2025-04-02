@@ -6,10 +6,10 @@ $view->assign("entryplural", "Connection types");
 $view->assign("entrysingular", "Connection type");
 
 if (!empty($_GET["deleted"])) {
-		$view->assign("okmessage", "Connection type deleted.");
+	addMessage(MSG_CLASS_OK, 'Connection type deleted.');
 }
 if (!empty($_GET["saved"])) {
-		$view->assign("okmessage", "Connection type saved.");
+	addMessage(MSG_CLASS_OK, 'Connection type saved.');
 }
 
 

@@ -28,15 +28,47 @@ if ($sessiontoken) {
 	);
 }
 
+global $messages;
+$messages = [];
+$view->assignRefUnfiltered('messages', $messages);
+
 if (!empty($user)) {
-	$user['banneduntil'] = parseSqlDateTime($user['banneduntil']);
 	$user['hash'] = getUserHash($user['userid'], $user['created']);
 	loadNotifications();
 
 	$view->assign("user", $user);
+
+	if($user['isbanned']) {
+		$until = formatDateWhichMightBeForever(parseSqlDateTime($user['banneduntil']), 'M jS Y, H:i:s', 'further notice');
+		$messages[] = [
+			'class' => 'bg-error text-error permanent',
+			'html'  => "
+				<h3 style='text-align: center;'>You are currently banned until {$until}.</h3>
+				<p>
+					<h4 style='margin-bottom: 0.25em;'>Reason:</h4>
+					{$user['bannedreason']}
+				</p>
+			"
+		];
+	}
 } else {
 	$view->assign("notificationcount", 0);
 }
+
+
+const MSG_CLASS_OK = 'bg-success text-success';
+const MSG_CLASS_WARN = 'bg-warning';
+const MSG_CLASS_ERROR = 'bg-error text-error';
+
+/** Add a non-permanent message to the list of messages. These don't persist thought reloads.
+ * @param string $html !UNFILTERED! html message
+ */
+function addMessage($class, $html)
+{
+	global $messages;
+	$messages[] = ['class' => $class, 'html' => $html];
+}
+
 
 const ASSETTYPE_MOD = 1;
 const ASSETTYPE_RELEASE = 2;

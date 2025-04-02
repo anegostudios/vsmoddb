@@ -104,12 +104,12 @@ class ModEditor extends AssetEditor
 		$_POST['urlalias'] = preg_replace("/[^a-z]+/", "", strtolower($_POST['urlalias']));
 		if (!empty($_POST['urlalias'])) {
 			if ($con->getOne("select modid from `mod` where urlalias=? and assetid!=?", array($_POST['urlalias'], $this->assetid))) {
-				$view->assign("errormessage", "Not saved. This url alias is already taken. Please choose another.");
+				addMessage(MSG_CLASS_ERROR, 'Not saved. This url alias is already taken. Please choose another.');
 				return 'error';
 			}
 
 			if (in_array($_POST['urlalias'], $typewhitelist)) {
-				$view->assign("errormessage", "Not saved. This url alias is reserved word. Please choose another.");
+				addMessage(MSG_CLASS_ERROR, 'Not saved. This url alias is reserved word. Please choose another.');
 				return 'error';
 			}
 		}
@@ -171,8 +171,11 @@ class ModEditor extends AssetEditor
 		$result = parent::saveFromBrowser();
 
 		if($logoCheck['status'] === 'error') {
-			$view->unsetVar("okmessage");
-			$view->assign("errormessage", 'Failed to update logo image: '.$logoCheck['errormessage']);
+			static::unsetOkMessages();
+
+			// @security: Just in case something wired happens with a potential curl error we escape the message here.
+			addMessage(MSG_CLASS_ERROR, 'Failed to update logo image: '.htmlspecialchars($logoCheck['errormessage']));
+
 			return 'error';
 		}
 
@@ -192,12 +195,26 @@ class ModEditor extends AssetEditor
 		if($this->asset['createdbyuserid'] == $user['userid']) $this->updateNewOwner($modid);
 
 		if ($statusreverted) {
-			$view->unsetVar("okmessage");
-			$view->assign("warningmessage", "Changes saved, but your mod remains in 'Draft' status. You must upload a playable mod/tool first.");
+			static::unsetOkMessages();
+
+			$modPath = formatModPath($this->asset);
+			addMessage(MSG_CLASS_WARN, "Changes saved, but your mod remains hidden as a 'Draft'.</br>To make your mod public you need to first create at least one <a href='{$modPath}#tab-files'>release</a>.");
+
 			return "error";
 		}
 
 		return $result;
+	}
+
+	/* TODO @cleanup: This is a transitional artefact from when there was only one message of each kind. We should remove this this when refactoring the asset editors. */
+	static function unsetOkMessages()
+	{
+		global $messages;
+		foreach($messages as $k => $message) {
+			if($message['class'] === 'bg-success text-success') {
+				unset($messages[$k]);
+			}
+		}
 	}
 
 	/** @return bool true if a file was updated */
@@ -417,13 +434,13 @@ class ModEditor extends AssetEditor
 
 		$currentNewOwnerId = $con->getOne("select userid from notification where type = 'modownershiptransfer' and `read` = 0 and recordid = ?", array($modId));
 		if ($currentNewOwnerId) {
-			$view->assign("errormessage", "An invitation to transfer ownership has already been sent to ".($currentNewOwnerId == $newOwnerId ? 'this user.' : 'a different user.'));
+			addMessage(MSG_CLASS_ERROR, 'An invitation to transfer ownership has already been sent to '.($currentNewOwnerId == $newOwnerId ? 'this user.' : 'a different user.'));
 			return;
 		}
 
 		$isTeamMember = $con->getOne("select 1 from teammember where modid = ? and userid = ?", array($modId, $newOwnerId));
 		if ($isTeamMember) {
-			$view->assign("errormessage", "The user selected for ownership transfer is not a team member.");
+			addMessage(MSG_CLASS_ERROR, 'The user selected for ownership transfer is not a team member.');
 			return;
 		}
 

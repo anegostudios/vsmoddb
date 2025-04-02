@@ -41,29 +41,26 @@
 			});
 			
 			$('form[name=form1]').areYouSure();
-		});		
-		
-		$(document).ready(function() \{
-			{if isset($okmessage)}
-				showMessage($(".okmessagepopup"));
-			{/if}
-			{if isset($warningmessage)}
-				showMessage($(".warningmessagepopup"));
-			{/if}
-			{if isset($errormessage)}
-				showMessage($(".errormessagepopup"));
-			{/if}
 		});
 
-		function showMessage(elem) {
-			elem
-				.css("bottom", "-200px")
-				.show()
-				.animate(\{bottom: "0px" }, 500)
-				.animate(\{bottom: "0px"}, 4000)
-				.animate(\{bottom: "-200px" }, 100, function() { $(this).hide(); })
-			;
+		const MSG_CLASS_OK = 'bg-success text-success';
+		const MSG_CLASS_WARN = 'bg-warning';
+		const MSG_CLASS_ERROR = 'bg-error text-error';
+
+		const msgContainer = document.getElementById('message-container');
+		function addMessage(clazz, html) {
+			const msgEl = document.createElement('div');
+			msgEl.classList.add(...(clazz.split(' ')));
+			msgEl.innerHTML = html+'<span class="dismiss"></span>';
+			msgContainer.append(msgEl);
 		}
+
+		msgContainer.addEventListener('click', function(e) {
+			let t = e.target;
+			if(!t || !t.classList.contains('dismiss')) return;
+			t = t.parentElement;
+			$(t).slideUp(400, () => t.remove());
+		})
 	</script>
 	{if !empty($footerjs)}{$footerjs}{/if}
 

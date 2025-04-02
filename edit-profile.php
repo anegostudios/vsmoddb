@@ -13,7 +13,7 @@ if (!empty($_POST["save"])) {
 	);
 	
 	update("user", $shownuser["userid"], $data);
-	$view->assign("okmessage", "New profile information saved.");
+	addMessage(MSG_CLASS_OK, 'New profile information saved.');
 	
 	$shownuser = array_merge($shownuser, $data);
 }

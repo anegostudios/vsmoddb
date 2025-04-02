@@ -47,10 +47,10 @@ class ReleaseEditor extends AssetEditor {
 		parent::load();
 		
 		if ($this->savestatus == "invalidfile") {
-			$view->assign("errormessage", $this->fileuploadstatus['errormessage']);
+			addMessage(MSG_CLASS_ERROR, htmlspecialchars($this->fileuploadstatus['errormessage'])); // @security: Just in case something wired happens with a potential curl error we escape the message here.
 		}
 		else if ($this->savestatus == "onlyonefile") {
-			$view->assign("errormessage", "There can only be one file per release. Please delete the old file first");
+			addMessage(MSG_CLASS_ERROR, 'There can only be one file per release. Please delete the old file first');
 		}
 		
 		if ($this->assetid) {
@@ -233,32 +233,32 @@ class ReleaseEditor extends AssetEditor {
 
 		switch($this->savestatus) {
 			case 'duplicateid':
-				$view->assign("errormessage", "Cannot save release, there already exists a <a href=\"/edit/release/?assetid={$this->releaseIdDupl}\">release</a> with this mod id and version - please ensure a unique modid and avoid uploading of duplicate version numbers.", null, true);
+				addMessage(MSG_CLASS_ERROR, "Cannot save release, there already exists a <a href=\"/edit/release/?assetid={$this->releaseIdDupl}\">release</a> with this mod id and version - please ensure a unique modid and avoid uploading of duplicate version numbers.");
 				break;
 
 			case 'duplicatemod':
-				$view->assign("errormessage", "Cannot save release, there already exists <a href=\"/show/mod/{$this->modAssetIdDupl}\">another mod</a> that uses this mod id - please ensure a unique modid.", null, true);
+				addMessage(MSG_CLASS_ERROR, "Cannot save release, there already exists <a href=\"/show/mod/{$this->modAssetIdDupl}\">another mod</a> that uses this mod id - please ensure a unique modid.");
 				break;
 
 			case 'modidinuse':
-				$name = $this->inUseByUser['name'];
-				$view->assign("errormessage", "Cannot save release, this mod id has been claimed by {$name}, please choose another one.", null, true);
+				$name = htmlspecialchars($this->inUseByUser['name']);
+				addMessage(MSG_CLASS_ERROR, "Cannot save release, this mod id has been claimed by {$name}, please choose another one."); // @security: Just in case the name gets escaped.
 				break;
 
 			case 'missingfile':
-				$view->assign("errormessage", "Cannot save release, no file has been uploaded.");
+				addMessage(MSG_CLASS_ERROR, 'Cannot save release, no file has been uploaded.');
 				break;
 
 			case 'missingmodinfo':
-				$view->assign("errormessage", "Cannot save release, could not load mod info from file and mod info fields were empty.");
+				addMessage(MSG_CLASS_ERROR, 'Cannot save release, could not load mod info from file and mod info fields were empty.');
 				break;
 
 			case 'invalidmodid':
-				$view->assign("errormessage", "Cannot save release, invalid mod id, please use only letters and numbers.");
+				addMessage(MSG_CLASS_ERROR, 'Cannot save release, invalid mod id, please use only letters and numbers.');
 				break;
 
 			case 'invalidmodversion':
-				$view->assign("errormessage", "Cannot save release, invalid mod version, please use the format n.n.n or n.n.n-(rc|pre|dev).n<br>E.g. 1.0.1 or 1.5.2-rc.1", null, true);
+				addMessage(MSG_CLASS_ERROR, 'Cannot save release, invalid mod version, please use the format <code>n.n.n</code> or <code>n.n.n-(rc|pre|dev).n</code><br/>E.g. <code>1.0.1</code> or <code>1.5.2-rc.1</code>');
 				break;
 		}
 	}

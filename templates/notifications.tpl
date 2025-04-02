@@ -67,8 +67,7 @@
 				})
 				.fail(function(jqXHR) \{
 					const d = JSON.parse(jqXHR.responseText);
-					$(".errormessagepopup").text('Failed to clear notification(s)' + (d.reason ? (': '+d.reason) : '.'));
-					showMessage($(".errormessagepopup"));
+					addMessage(MSG_CLASS_ERROR, 'Failed to clear notification(s)' + (d.reason ? (': '+d.reason) : '.'))
 				});
 		}
 	</script>

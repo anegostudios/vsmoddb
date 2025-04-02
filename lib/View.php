@@ -41,6 +41,10 @@ class View {
 		}
 		
 	}
+
+	function assignRefUnfiltered($name, &$value) {
+		$this->data[$name] = &$value;
+	}
 	
 	function unsetVar($name) {
 		unset($this->data[$name]);

@@ -155,8 +155,7 @@
 				$("input[name='modidstr']").removeProp("disabled");
 				$("input[name='modversion']").removeProp("disabled");
 				$(".prefixed-input[for='inp-modversion']").removeClass("disabled");
-				$("div.errormessagepopup .text").html("Unable to determine mod id and version from this file, please fill in id and version manually");
-				showMessage($(".errormessagepopup"));
+				addMessage(MSG_CLASS_ERROR, 'Unable to determine mod id and version from this file, please fill in id and version manually');
 			} else {
 				$("input[name='modidstr']").val(file.modid);
 				$("input[name='modversion']").val(file.modversion);
@@ -175,7 +174,7 @@
 		$('form[name=commentformtemplate]').areYouSure();
 	});
 </script>
-<script type="text/javascript" src="/web/js/edit-asset.js?version=34" async></script>
+<script type="text/javascript" src="/web/js/edit-asset.js?version=35" async></script>
 
 {/capture}
 

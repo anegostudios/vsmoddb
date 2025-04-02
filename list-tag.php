@@ -8,10 +8,10 @@ $view->assign("entryplural", "Tags");
 $view->assign("entrysingular", "Tag");
 
 if (!empty($_GET["deleted"])) {
-		$view->assign("okmessage", "Tag deleted.");
+	addMessage(MSG_CLASS_OK, 'Tag deleted.');
 }
 if (!empty($_GET["saved"])) {
-		$view->assign("okmessage", "Tag saved.");
+	addMessage(MSG_CLASS_OK, 'Tag saved.');
 }
 
 
