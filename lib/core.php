@@ -779,3 +779,7 @@ function showErrorPage($errorCode, $reason = '', $goBugRennorb = null, $rawReaso
 	$view->display('error');
 	exit();
 }
+
+
+const FOLLOW_FLAG_CREATE_NOTIFICATIONS = 1 << 0;
+//const FOLLOW_FLAG_SEND_MAIL          = 1 << 1; // @unused, for later mail sending feature

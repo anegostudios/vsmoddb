@@ -227,18 +227,28 @@
 			});
 
 			$("a[href='#follow']").click(function() {
-				var op = "follow";
-				var cnt = parseInt($(".count", $(this)).html());
+				const oldCount = parseInt($(".count", $(this)).text());
+
+				let promise;
 				if ($(this).hasClass("on")) {
-					op = "unfollow";
-					$(this).removeClass("on").addClass("off");
-					$(".count", $(this)).html("" + (cnt - 1));
+					$(this).toggleClass("on off");
+					$(".count", $(this)).text("" + (oldCount - 1));
+
+					promise = $.post(`/api/v2/notifications/settings/followed-mods/${modid}/unfollow`);
 				} else {
-					$(this).removeClass("off").addClass("on");
-					$(".count", $(this)).html("" + (cnt + 1));
+					$(this).toggleClass("on off");
+					$(".count", $(this)).text("" + (oldCount + 1));
+
+					promise = $.post(`/api/v2/notifications/settings/followed-mods/${modid}`, { 'new': 1 /* @hardcoded */ });
 				}
 
-				$.get("/set-follow", { op: op, modid: modid });
+				promise.fail(jqXHR => {
+					$(this).toggleClass("on off");
+					$(".count", $(this)).text("" + oldCount);
+
+					const d = JSON.parse(jqXHR.responseText);
+					addMessage(MSG_CLASS_ERROR, 'Failed to (un-)follow mod' + (d.reason ? (': '+d.reason) : '.'))
+				});
 			});
 		});
 	</script>

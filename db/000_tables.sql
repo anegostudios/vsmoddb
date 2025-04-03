@@ -354,6 +354,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`follow` (
   `modid` INT NULL,
   `userid` INT NULL,
   `created` DATETIME NULL DEFAULT NULL,
+  `flags` TINYINT NOT NULL DEFAULT 1, -- by default follow with notifications
   UNIQUE INDEX `modiduserid` (`modid` ASC, `userid` ASC),
   INDEX `userid` (`userid` ASC))
 ENGINE = InnoDB;
