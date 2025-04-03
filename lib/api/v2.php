@@ -27,4 +27,4 @@ function good($data = null)
 include($config["basepath"] . "lib/api/public/_routing.php");
 include($config["basepath"] . "lib/api/authenticated/_routing.php");
 
-fail(400);
+fail(404);

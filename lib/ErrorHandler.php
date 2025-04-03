@@ -123,7 +123,10 @@ class ErrorHandler {
 			} else {
 				$codename = $code;
 			}
-			
+
+			if(!headers_sent()) {
+				http_response_code(intval($code) ?: 500);
+			}
 
 			?>
 				<div style="text-align: left; background-color: #fcc; border: 1px solid #600; color: #600; display: block; margin: 1em 0; padding: .33em 6px">
@@ -152,6 +155,9 @@ class ErrorHandler {
 			}
 		}
 
+		if(!headers_sent()) {
+			http_response_code(isset($code) ? (intval($code) ?: 500) : 500);
+		}
 
 		?>
 			<div style="text-align: left; background-color: #fcc; border: 1px solid #600; color: #600; display: block; margin: 1em 0; padding: .33em 6px">

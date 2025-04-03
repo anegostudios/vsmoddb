@@ -215,7 +215,7 @@ class ReleaseEditor extends AssetEditor {
 		if ($status == 'savednew') {
 			$con->Execute("update `mod` set lastreleased=now() where modid=?", array($modid));
 			
-			$userids = $con->getCol("select userid from `follow` where modid=?", array($modid));
+			$userids = $con->getCol("select userid from follow where modid = ? and flags & ".FOLLOW_FLAG_CREATE_NOTIFICATIONS, array($modid));
 			foreach ($userids as $userid) {
 				$con->Execute("insert into notification (userid, type, recordid, created) values (?,?,?, now())", array($userid, 'newrelease', $modid));
 			}

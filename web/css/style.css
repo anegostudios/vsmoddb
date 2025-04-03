@@ -890,6 +890,37 @@ input:disabled,
 }
 
 
+label.toggle {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	width: 3rem;
+	height: 1.75rem;
+	background-color: var(--color-input);
+	border: solid 1px var(--color-border);
+	border-radius: .25em;
+	cursor: pointer;
+	user-select: none;
+}
+
+label.toggle>input[type="checkbox"] {
+	appearance: none;
+	position: absolute;
+	left: 2px;
+	top: 2px;
+	height: calc(1.75rem - 6px);
+	width: calc(1.75rem - 6px);
+	border-radius: .25em;
+
+	transform: translateX(0);
+	background-color: var(--color-input);
+	transition: transform .3s, background-color .3s;
+}
+label.toggle>input[type="checkbox"]:checked {
+	transform: translateX(calc(1.25rem - 2px));
+	background-color: var(--color-input-g);
+}
+
 
 /* uniform styling of editboxes */
 

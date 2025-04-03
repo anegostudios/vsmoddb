@@ -61,7 +61,7 @@ if ($urlparts[0] == "notifications") {
 	exit();
 }
 
-$typewhitelist = array("terms", "updateversiontags", "files", "show", "edit", "edit-comment", "delete-comment", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist", "get-usernames", "set-follow", "moderate");
+$typewhitelist = array("terms", "updateversiontags", "files", "show", "edit", "edit-comment", "delete-comment", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist", "get-usernames", "moderate");
 
 if (!in_array($urlparts[0], $typewhitelist)) {
 	$modid = $con->getOne("select assetid from `mod` where urlalias=?", array($urlparts[0]));

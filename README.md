@@ -102,6 +102,20 @@ Endpoints marked as `auth` require authentication and response with `401` if it 
 	- `403`: List of ids contains notifications that do not belong to the current user.
 	- `200`: Notifications were marked as read if they exist.
 
+### /api/v2/notifications/settings/followed-mods/{id} `auth`
+- `post`:
+	- Args:
+		- Path arg `{id}` specifies the target mod id. Specifying an id that is not already followed will follow that mod with specified settings.
+		- `new`: Integer value specifying the new settings.
+			- `1 << 0`: Should receive notifications when this mod is updated.
+	- `400`: No new value provided or argument is malformed.
+	- `200`: Successfully updated settings.
+
+### /api/v2/notifications/settings/followed-mods/{id}/unfollow `auth`
+- `post`: Path arg `{id}` specifies the target mod id.
+	- `400`: Argument is malformed.
+	- `200`: Successfully unfollowed if mod was followed.
+
 # Development setup
 ## VS Code - Remote Containers
 You can use the provided vscode devcontainer to get up a running without installing everything on your own.
