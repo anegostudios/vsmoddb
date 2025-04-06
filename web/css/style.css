@@ -1061,11 +1061,19 @@ p:last-child {
 
 .editbox.comment {
 	position: relative; /* fix for escaping elements covering other parts of the site */
+	overflow: hidden;
 	padding: 0px;
 	background: rgba(219, 208, 182, 0.7);
 }
 
+.comment.deleted {
+	background: rgb(228, 131, 131);
+}
 
+.comment.deleted .ribbon-tr {
+	background-color: rgb(184, 37, 37);
+	color: var(--color-text-inv);
+}
 
 
 

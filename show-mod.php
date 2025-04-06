@@ -88,6 +88,7 @@ if ($assetid) {
 
 	$view->assign("files", $files);
 
+	$deletedFilter = canModerate(null, $user) ? '' : 'and comment.deleted = 0';
 	$comments = $con->getAll("
 		select 
 			comment.*,
@@ -101,7 +102,7 @@ if ($assetid) {
 			comment 
 			join user on (comment.userid = user.userid)
 			left join role on (user.roleid = role.roleid)
-		where assetid=? and comment.deleted = 0
+		where assetid=? $deletedFilter
 		order by comment.created desc
 	", array($assetid));
 

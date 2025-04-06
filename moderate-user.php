@@ -62,14 +62,15 @@ else if(isset($_POST['submit']) && $_POST['submit'] == 'redeem') {
 
 $shownuser = $con->getRow("select * from user where userid = ?", array($targetuser['userid']));
 
-$sql = "
-			select rec.created, rec.kind, rec.until, moderator.name as moderatorname, rec.reason
-			from  moderationrecord as rec
-			join user as moderator on moderator.userid = rec.moderatorid
-			where rec.targetuserid = ?
-			order by rec.created desc
-		";
-$moderationrecord = $con->getAll($sql, array($targetuser['userid']));
+$moderationrecord = $con->getAll("
+	select rec.created, rec.kind, rec.until, moderator.name as moderatorname, rec.reason, comment.commentid, asset.assetid
+	from moderationrecord as rec
+	join user as moderator on moderator.userid = rec.moderatorid
+	left join comment on comment.lastmodaction = rec.actionid
+	left join asset on asset.assetid = comment.assetid
+	where rec.targetuserid = ?
+	order by rec.created desc
+", array($targetuser['userid']));
 
 foreach($moderationrecord as &$row) {
 	$row['until'] = parseSqlDateTime($row['until']);
