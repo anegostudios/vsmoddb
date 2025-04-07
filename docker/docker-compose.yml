@@ -12,6 +12,7 @@ services:
       - "80:80"
     volumes:
       - ..:/var/www/html
+      - ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
 
   db:
     image: mariadb:10.2.38

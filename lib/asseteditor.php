@@ -26,10 +26,14 @@ class AssetEditor extends AssetController
 
 	public function load()
 	{
-		global $con, $user, $view, $config;
+		global $con, $user, $view, $config, $maxFileUploadSizeMB;
 
 		$this->assetid = empty($_REQUEST["assetid"]) ? 0 : $_REQUEST["assetid"];
 		$this->recordid = null;
+
+		$maxAssetFileUploadSizeKB = $con->getOne("select maxfilesizekb from assettype where code = '{$this->tablename}'");
+		$maxFileUploadSizeMB = min($maxFileUploadSizeMB, round($maxAssetFileUploadSizeKB / 1024, 1));
+		$view->assign("fileuploadmaxsize", $maxFileUploadSizeMB);
 
 		if ($this->assetid) {
 			$this->recordid = $con->getOne("select {$this->tablename}id from `{$this->tablename}` where assetid=?", array($this->assetid));

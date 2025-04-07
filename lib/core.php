@@ -33,7 +33,11 @@ while (($file = readdir($rd))) {
 $con = createADOConnection($config);
 $view = new View();
 
-$view->assign("fileuploadmaxsize", round(file_upload_max_size() / 1024 / 1024, 1));
+// may later on be modified by asset specific overrides
+global $maxFileUploadSizeMB;
+$maxFileUploadSizeMB = round(file_upload_max_size() / (1024 * 1024), 1);
+$view->assign("fileuploadmaxsize", $maxFileUploadSizeMB);
+
 $view->assign("assetserver", $config['assetserver']);
 
 $ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;
