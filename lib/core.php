@@ -282,7 +282,7 @@ function logAssetChanges($changes, $assetid)
 			$changesdb = explode("\r\n", $changelogdb["text"]);
 			$changelogid = $changelogdb["changelogid"];
 
-			$changes = array_unique(array_merge($changes, $changesdb));
+			$changes = array_merge($changes, $changesdb);
 		}
 
 		if (!$changelogid) {
