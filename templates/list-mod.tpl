@@ -206,6 +206,9 @@
 			pageFetchUrl += pageFetchUrl ? '&paging=1' : '?paging=1';
 			function fetchMore() {
 				if(!fetchCursor) {
+					//TODO @cleanup: Remove trigger/button immediately after response without cursor.
+					// Will remove the trigger / button one request after the response where we already know that there is nothing more to get.
+					// This is only really noticeable with the fallback mode, since you click the button and it just adds nothing before it finally vanishes.
 					scrollTrigger.remove();
 					return Promise.reject('DONE');
 				}
