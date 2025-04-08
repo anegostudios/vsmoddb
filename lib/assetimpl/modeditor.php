@@ -173,8 +173,7 @@ class ModEditor extends AssetEditor
 		if($logoCheck['status'] === 'error') {
 			static::unsetOkMessages();
 
-			// @security: Just in case something wired happens with a potential curl error we escape the message here.
-			addMessage(MSG_CLASS_ERROR, 'Failed to update logo image: '.htmlspecialchars($logoCheck['errormessage']));
+			addMessage(MSG_CLASS_ERROR, 'Failed to update logo image: '.$logoCheck['errormessage'], true);
 
 			return 'error';
 		}

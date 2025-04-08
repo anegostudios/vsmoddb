@@ -1,0 +1,1 @@
+{foreach from=$mods item=mod}{include file="list-mod-entry"}{/foreach}

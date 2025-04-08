@@ -241,6 +241,21 @@ function stripQueryParam($query, $paramname)
 	return implode('&', $params);
 }
 
+/** Strips specific query parameters from the provided query string if they exists.
+ * @param string $query
+ * @param string[] $paramNames
+ * @return string
+ */
+function stripQueryParams($query, $paramNames)
+{
+	$params = explode('&', $query);
+	$params = array_filter($params, function($p) use ($paramNames) {
+		$pname = strchr($p, '=', true);
+		return !in_array($pname, $paramNames);
+	});
+	return implode('&', $params);
+}
+
 /** Formats the path to a mod page using the urlalias of the mod if possible.
  * @param array{urlalias : string, assetid : int} $mod
  * @return string Path to the mod page starting with the root slash.

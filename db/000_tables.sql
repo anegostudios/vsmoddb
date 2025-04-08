@@ -232,10 +232,10 @@ CREATE TABLE IF NOT EXISTS `moddb`.`mod` (
   `wikiurl` VARCHAR(255) NULL,
   `donateurl` VARCHAR(255) NULL,
   `summary` VARCHAR(100) NULL,
-  `downloads` INT NULL DEFAULT 0,
+  `downloads` INT NOT NULL DEFAULT 0,
   `follows` INT NULL DEFAULT 0,
   `trendingpoints` INT NOT NULL DEFAULT 0,
-  `comments` INT NULL,
+  `comments` INT NOT NULL DEFAULT 0,
   `side` ENUM('client', 'server', 'both') NULL,
   `type` ENUM('mod', 'externaltool', 'other') NULL DEFAULT 'mod',
   `created` DATETIME NULL,
@@ -244,7 +244,10 @@ CREATE TABLE IF NOT EXISTS `moddb`.`mod` (
   `supportedversions` TEXT NULL,
   PRIMARY KEY (`modid`),
   FULLTEXT INDEX `supportedversions` (`supportedversions`),
-  INDEX `urlalias` (`urlalias` ASC))
+  INDEX `urlalias` (`urlalias` ASC),
+  INDEX `trendingpoints_id` (`trendingpoints`, `modid`),
+  INDEX `lastreleased_id` (`lastreleased`, `modid`),
+  INDEX `downloads_id` (`downloads`, `modid`))
 ENGINE = InnoDB;
 
 

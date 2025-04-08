@@ -48,10 +48,19 @@
 		const MSG_CLASS_ERROR = 'bg-error text-error';
 
 		const msgContainer = document.getElementById('message-container');
-		function addMessage(clazz, html) {
+		function addMessage(clazz, html, escapeMessage) {
+			escapeMessage = escapeMessage || false;
 			const msgEl = document.createElement('div');
 			msgEl.classList.add(...(clazz.split(' ')));
-			msgEl.innerHTML = html+'<span class="dismiss"></span>';
+			if(escapeMessage) {
+				msgEl.textContent = html;
+				const d = document.createElement('span');
+				d.classList.add('dismiss');
+				msgEl.append(d)
+			}
+			else {
+				msgEl.innerHTML = html+'<span class="dismiss"></span>';
+			}
 			msgContainer.append(msgEl);
 		}
 

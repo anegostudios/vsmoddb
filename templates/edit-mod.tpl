@@ -84,7 +84,7 @@
 
 			<div id="teammembers-box" class="editbox wide pending-markers">
 				<label>Team Members</label>
-				<select name="teammemberids[]" multiple class="ajax-autocomplete" data-placeholder="Search Users"
+				<select name="teammemberids[]" multiple data-placeholder="Search Users"
 					data-url="/api/authors?name=\{name}" data-ownerid="{$asset['createdbyuserid']}">
 					{if !empty($teammembers)}
 						{foreach from=$teammembers item=teammember}

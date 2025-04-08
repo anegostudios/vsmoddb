@@ -47,7 +47,7 @@ class ReleaseEditor extends AssetEditor {
 		parent::load();
 		
 		if ($this->savestatus == "invalidfile") {
-			addMessage(MSG_CLASS_ERROR, htmlspecialchars($this->fileuploadstatus['errormessage'])); // @security: Just in case something wired happens with a potential curl error we escape the message here.
+			addMessage(MSG_CLASS_ERROR, $this->fileuploadstatus['errormessage'], true);
 		}
 		else if ($this->savestatus == "onlyonefile") {
 			addMessage(MSG_CLASS_ERROR, 'There can only be one file per release. Please delete the old file first');
