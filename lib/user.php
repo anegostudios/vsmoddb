@@ -34,7 +34,7 @@ $view->assignRefUnfiltered('messages', $messages);
 
 if (!empty($user)) {
 	$user['hash'] = getUserHash($user['userid'], $user['created']);
-	loadNotifications();
+	loadNotifications(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) == '/notifications'); // @cleanup
 
 	$view->assign("user", $user);
 
@@ -131,13 +131,17 @@ function canModerate($shownuser, $user)
 	return $user['rolecode'] == 'admin' || $user['rolecode'] == 'moderator';
 }
 
-function loadNotifications()
+/** Load all notifications and assign relevant fields in the view.
+ * @param bool $loadAll Wether to load all notifications or only 10. (used for the notifications page).
+ */
+function loadNotifications($loadAll)
 {
 	global $con, $view, $user;
 
 	$view->assign("notificationcount", $con->getOne("select count(*) from notification where userid=? and `read`=0", array($user['userid'])));
 
-	$notifications = $con->getAll("select * from notification where userid=? and `read`=0 order by created desc limit 10", array($user['userid']));
+	$limit = $loadAll ? '' : 'LIMIT 10';
+	$notifications = $con->getAll("select * from notification where userid=? and `read`=0 order by created desc $limit", array($user['userid']));
 
 	foreach ($notifications as &$notification) {
 		switch ($notification['type']) {
