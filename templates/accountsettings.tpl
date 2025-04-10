@@ -28,7 +28,7 @@
 
 </form>
 
-<h3>Accessability Settings</h3>
+<h3>Accessibility Settings</h3>
 <p><small>Changes apply immediately and are saved per device.</small></p>
 <label for="ch-a-opaque"><label class="toggle" for="ch-a-opaque"><input id="ch-a-opaque" type="checkbox" autocomplete="off" /></label> <abbr title="Turns the semi-transparent backgrounds of mod-card descriptions fully opaque.">Opaque mod-card descriptions</abbr></label>
 <script>{
