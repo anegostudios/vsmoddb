@@ -29,7 +29,7 @@
 	<link href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
 	<link href="/web/css/editor_content.css" as="style">
 
-	<link href="/web/css/style.css?version=65" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=66" rel="stylesheet" type="text/css">
 
 	{if isset($assetserver) && startsWith($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
 
@@ -39,6 +39,7 @@
 </head>
 
 <body{if !empty($user) && $user['isbanned']} class="banned"{/if}>
+	<script>try\{if(+window.localStorage.getItem('opaque-desc'))document.body.classList.add('opaque-desc')}catch\{}</script>
 	<a name="top"></a>
 	
 	<div class="content">

@@ -28,6 +28,20 @@
 
 </form>
 
+<h3>Accessability Settings</h3>
+<p><small>Changes apply immediately and are saved per device.</small></p>
+<label for="ch-a-opaque"><label class="toggle" for="ch-a-opaque"><input id="ch-a-opaque" type="checkbox" autocomplete="off" /></label> <abbr title="Turns the semi-transparent backgrounds of mod-card descriptions fully opaque.">Opaque mod-card descriptions</abbr></label>
+<script>{
+	const cb = document.getElementById('ch-a-opaque');
+	try {
+		cb.checked = +window.localStorage.getItem('opaque-desc');
+		cb.addEventListener('change', e => window.localStorage.setItem('opaque-desc', String(+e.target.checked)));
+	}
+	catch {
+		cb.parentElement.replaceWith('[Please allow local storage]');
+	}
+}</script>
+
 <h3>Notification Settings</h3>
 {if count($followedMods)}
 <p><small>Changes apply immediately.</small></p>
@@ -64,7 +78,8 @@
 
 {capture name="footerjs"}
 	<script type="text/javascript">
-		document.getElementById('followed-mods-settings').addEventListener('change', e => {
+		const fms = document.getElementById('followed-mods-settings');
+		if(fms) fms.addEventListener('change', e => {
 			const trEl = e.target.parentElement.parentElement.parentElement;
 			const targetModId = trEl.dataset.modid;
 			const oldFlags = parseInt(trEl.dataset.settings);

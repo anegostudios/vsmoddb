@@ -357,9 +357,11 @@ small {
 	width: 100%;
 	padding: .25em;
 	background-color: white; /* fallback */
-	background-color: #ffffffcc; /* fallback */
 	background-color: hsla(var(--c-mod-bg) / .8);
 	text-shadow: 1px white;
+}
+body.opaque-desc .mod .moddesc {
+	background-color: white;
 }
 
 .mod .stats {
@@ -911,6 +913,7 @@ label.toggle>input[type="checkbox"] {
 	height: calc(1.75rem - 6px);
 	width: calc(1.75rem - 6px);
 	border-radius: .25em;
+	cursor: pointer;
 
 	transform: translateX(0);
 	background-color: var(--color-input);
