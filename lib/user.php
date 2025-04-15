@@ -61,12 +61,13 @@ const MSG_CLASS_WARN = 'bg-warning';
 const MSG_CLASS_ERROR = 'bg-error text-error';
 
 /** Add a non-permanent message to the list of messages. These don't persist thought reloads.
- * @param string $html !UNFILTERED! html message
+ * @param string $html
+ * @param bool $escapeMessage Wether to html escape the message or not.
  */
-function addMessage($class, $html)
+function addMessage($class, $html, $escapeMessage = false)
 {
 	global $messages;
-	$messages[] = ['class' => $class, 'html' => $html];
+	$messages[] = ['class' => $class, 'html' => $escapeMessage ? $html : htmlSpecialChars($html)];
 }
 
 
