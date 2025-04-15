@@ -84,7 +84,7 @@ $(document).ready(function () {
 
 		createEditor($('.editcommenteditor'), tinymceSettingsCmt);
 
-		$elem.append($('<p class="updateCmt" style="margin:4px; margin-top:5px; clear:both;"><button type="submit" name="save">Update Comment</button>'));
+		$elem.append($('<p class="updateCmt" style="margin:4px; margin-top:5px;"><button class="shine" type="submit" name="save">Update Comment</button>'));
 
 		$("button[name='save']", $elem).click(function () {
 			var html = getEditorContents($('.editcommenteditor'));
@@ -95,7 +95,7 @@ $(document).ready(function () {
 				destroyEditor($('.editcommenteditor'));
 
 				var $cmt = $(
-					'<div class="editbox comment" style="clear:both;">' +
+					'<div class="editbox comment">' +
 					'<div class="title">' + data.username + ', ' + data.created + getCmtLinks(commentid) + '</div>' +
 					'<div class="body">' + data.text + '</div>' +
 					'</div>'
@@ -114,11 +114,14 @@ $(document).ready(function () {
 	$(".comments .comment.comment-editor button[name='save']").click(function () {
 		var $elem = $(this).parents(".comment");
 
-		$.post('/edit-comment', { assetid: assetid, text: getEditorContents($("textarea", $elem)), at: actiontoken, save: 1 }, function (response) {
+		const content = getEditorContents($("textarea", $elem));
+		if(!content) return;
+
+		$.post('/edit-comment', { assetid: assetid, text: content, at: actiontoken, save: 1 }, function (response) {
 			var data = $.parseJSON(response).comment;
 
 			var $cmt = $(
-				'<div class="editbox comment" style="clear:both;">' +
+				'<div class="editbox comment">' +
 				'<div class="title">' + data.username + ', ' + data.created + getCmtLinks(data.commentid) + '</div>' +
 				'<div class="body">' + data.text + '</div>' +
 				'</div>'

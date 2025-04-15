@@ -17,7 +17,7 @@
 				{/if}
 			
 				{foreach from=$comments item=comment}
-					<div id="cmt-{$comment['commentid']}" class="editbox comment{if $comment['deleted']} deleted{/if}" data-timestamp="{strtotime($comment['created'])}" style="clear:both;">
+					<div id="cmt-{$comment['commentid']}" class="editbox comment{if $comment['deleted']} deleted{/if}" data-timestamp="{strtotime($comment['created'])}">
 						<div class="title">
 							<a style="text-decoration:none;" href="#cmt-{$comment['commentid']}">&#128172;</a>
 							{$comment['username']}{if !empty($comment["flaircode"])} <small class="flair flair-{$comment['flaircode']}"></small>{/if}{if $comment['isbanned']}&nbsp;<span style="color:red;">[currently restricted]</span>{/if}, {fancyDate($comment['created'])} {if $comment['modifieddate']}(modified at {$comment['modifieddate']}){/if}{if $comment['lastmodaction']} (edited by moderator){/if}
