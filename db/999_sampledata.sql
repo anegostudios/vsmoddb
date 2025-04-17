@@ -11,6 +11,17 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 START TRANSACTION;
 USE `moddb`;
 INSERT INTO `moddb`.`tag` (assettypeid, tagtypeid, name, text, color, created) VALUES (2, 1, 'v1.17.4', NULL, '#C9C9C9', NULL);
+INSERT INTO `moddb`.`tag` (assettypeid, tagtypeid, name, text, color, created) VALUES (2, 1, 'v1.18.1', NULL, '#C9C9C9', NULL);
+
+COMMIT;
+
+-- -----------------------------------------------------
+-- Data for table `moddb`.`majorversion`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `moddb`;
+INSERT INTO `moddb`.`majorversion` (majorversionid, name) VALUES (1, '1.17.x');
+INSERT INTO `moddb`.`majorversion` (majorversionid, name) VALUES (2, '1.18.x');
 
 COMMIT;
 

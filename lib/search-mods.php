@@ -94,10 +94,9 @@ function validateModSearchInputs(&$outParams)
 	}
 
 	if(!empty($_REQUEST['mv'])) {
-		$majorversion = filter_var($_REQUEST['mv'], FILTER_VALIDATE_INT, FILTER_FORCE_ARRAY);
+		$majorversion = filter_var($_REQUEST['mv'], FILTER_VALIDATE_INT);
 		if($majorversion === false) {
-			$f = print_r($_REQUEST['mv'], true);
-			return "Invalid majorversion: $f.";
+			return "Invalid majorversion: {$_REQUEST['mv']}.";
 		}
 		$outParams['filters']['majorversion'] = $majorversion;
 	}
@@ -171,7 +170,12 @@ function queryModSearch($searchParams)
 				break;
 
 			case 'gameversions':
-				$joinClauses .= 'JOIN majormodversioncached mv ON mv.modid = m.modid AND mv.majorversionid IN ('.implode(',', $value).')'; // @security: value must be filtered
+				$joinClauses .= 'JOIN modversioncached mv ON mv.modid = m.modid AND mv.tagid IN ('.implode(',', $value).')'; // @security: value must be filtered
+				break;
+
+			case 'majorversion':
+				$joinClauses .= 'JOIN majormodversioncached mmv ON mmv.modid = m.modid AND mmv.majorversionid = ?';
+				$sqlParams[] = $value;
 				break;
 
 			default:
