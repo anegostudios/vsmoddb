@@ -1,16 +1,19 @@
 var mentions = {
 	source: function(query, process, delimiter) {
-		$.getJSON('/get-usernames?name=' + query, function(data) {
-			process(data);
+		if(!query) return;
+
+		$.getJSON('/api/v2/users/by-name/' + query, function(data) {
+			process(Object.entries(data));
 		});
 	},
+	queryBy: 1,
 	insert: function(item) {
-		return '<span class="mention username">' + item.name + '</span>';
+		return `<span class="mention username mceNonEditable" data-user-hash="${item[0]}">${item[1]}</span>`;
 	}
 };
 
 var tinymceSettings = {
-	plugins: 'paste print preview searchreplace autolink autoresize directionality visualblocks visualchars fullscreen image link media code codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime emoticons advlist lists wordcount imagetools textpattern help spoiler mention',
+	plugins: 'paste print preview searchreplace autolink autoresize directionality visualblocks visualchars fullscreen image link media code codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime emoticons advlist lists wordcount imagetools textpattern help spoiler mention noneditable',
 	toolbar: 'formatselect | bold italic strikethrough forecolor backcolor permanentpen formatpainter | link image media pageembed emoticons | alignleft aligncenter alignright alignjustify  | numlist bullist outdent indent | removeformat code | spoiler-add spoiler-remove',
 	image_advtab: true,
 	importcss_append: true,
@@ -33,12 +36,12 @@ var tinymceSettings = {
 			$form.trigger('checkform.areYouSure');
 			});
 	},
-	mentions: mentions
+	mentions: mentions,
 };
 
 var tinymceSettingsCmt = {
 	menubar: false,
-	plugins: 'paste searchreplace autolink autoresize directionality image link codesample charmap hr pagebreak nonbreaking anchor emoticons advlist lists wordcount imagetools textpattern help mention',
+	plugins: 'paste searchreplace autolink autoresize directionality image link codesample charmap hr pagebreak nonbreaking anchor emoticons advlist lists wordcount imagetools textpattern help mention noneditable',
 	toolbar: 'bold italic strikethrough | link image emoticons | alignleft aligncenter alignright alignjustify  | numlist bullist outdent indent | removeformat',
 	image_advtab: true,
 	importcss_append: true,
@@ -50,9 +53,9 @@ var tinymceSettingsCmt = {
 	remove_script_host:false,
 	tinycomments_mode: 'embedded',
 	content_css: "/web/css/editor_content.css?ver=3",
-	mentions: mentions
+	setup: tinymceSettings.setup,
+	mentions: mentions,
 };
-tinymceSettingsCmt.setup = tinymceSettings.setup;
 
 
 function createEditor($elem, settings) {

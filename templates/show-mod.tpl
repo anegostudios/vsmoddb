@@ -252,7 +252,7 @@
 			});
 		});
 	</script>
-	<script type="text/javascript" src="/web/js/comments.js?version=9" async></script>
+	<script type="text/javascript" src="/web/js/comments.js?version=10" async></script>
 {/capture}
 
 {include file="footer"}
