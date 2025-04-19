@@ -22,8 +22,7 @@ switch($urlparts[1]) {
 				validateUserNotBanned();
 				validateActionTokenAPI();
 
-				// @security: $modId is validated to be an integer
-				$assetId = intval($con->getOne("select assetid from `mod` where modid = $modId"));
+				$assetId = intval($con->getOne('select assetid from `mod` where modid = ?', [$modId]));
 				if(!$assetId)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown modid.']);
 
 				$commentText = trim(sanitizeHtml(file_get_contents('php://input')));
@@ -31,12 +30,11 @@ switch($urlparts[1]) {
 
 				$con->execute('insert into comment (assetid, userid, text, created) values (?, ?, ?, now())', [$assetId, $user['userid'], $commentText]);
 				$commentId = $con->insert_ID();
-				// @security: $assetId is validated to be an integer
-				$con->execute("update `mod` set comments = comments + 1 where assetid = $assetId");
+				$con->execute('update `mod` set comments = comments + 1 where assetid = ?', [$assetId]);
 
 				// user mentions
 				if(preg_match_all('/user-hash="([a-z0-9]{20})"/i', $commentText, $rawMatches)) {
-					// @security: $rawMatches are validated to be alphanumeric and therefore sql inert by the regex
+					// @security: $rawMatches are validated to be alphanumeric and therefore sql inert by the regex. $commentId is known to be an integer
 					$foldedHashes = implode(',', array_map(fn($h) => "'$h'", $rawMatches[1]));
 					$con->execute("
 						insert into notification (type, recordid, userid)
