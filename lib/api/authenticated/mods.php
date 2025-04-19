@@ -21,6 +21,7 @@ switch($urlparts[1]) {
 				validateMethod('POST');
 				validateUserNotBanned();
 				validateActionTokenAPI();
+				validateContentType('text/html');
 
 				$assetId = intval($con->getOne('select assetid from `mod` where modid = ?', [$modId]));
 				if(!$assetId)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown modid.']);

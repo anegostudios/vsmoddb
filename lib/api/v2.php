@@ -23,6 +23,19 @@ function validateMethod($allowedMethod)
 	}
 }
 
+/** Validates that the script was called using the correct content-type header.
+ * @param string $allowedType
+ */
+function validateContentType($allowedType)
+{
+	if(!isset($_SERVER['CONTENT_TYPE'])) {
+		fail(HTTP_BAD_REQUEST, ['reason' => "This endpoint requires a requests with Content-Type '$allowedType'."]);
+	}
+	else if($_SERVER['CONTENT_TYPE'] !== $allowedType) {
+		fail(HTTP_BAD_REQUEST, ['reason' => "This endpoint does not support requests of Content-Type '{$_SERVER['CONTENT_TYPE']}'. Try again using '$allowedType'."]);
+	}
+}
+
 if (empty($urlparts)) {
 	fail(HTTP_NOT_FOUND);
 }

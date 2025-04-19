@@ -97,7 +97,7 @@ $(document).ready(function () {
 			var content = getEditorContents($editor);
 			//TODO(Rennorb): optimistic update
 
-			$.post(`/api/v2/comments/${commentid}?at=`+actiontoken, content)
+			$.ajax({ url: `/api/v2/comments/${commentid}?at=`+actiontoken, method: 'POST', data: content, contentType: 'text/html' })
 				.done(function () {
 					destroyEditor($editor);
 					$form.remove();
@@ -133,7 +133,7 @@ $(document).ready(function () {
 		$cmt.insertAfter($editor);
 		$editor.hide();
 
-		$.post(`/api/v2/mods/${modid}/comments/new?at=`+actiontoken, content)
+		$.ajax({ url: `/api/v2/mods/${modid}/comments/new?at=`+actiontoken, method: 'POST', data: content, contentType: 'text/html' })
 			.done(function (response) {
 				const commentId = parseInt(response);
 				$('.title', $cmt)[0].innerHTML += getCmtLinks(commentId);

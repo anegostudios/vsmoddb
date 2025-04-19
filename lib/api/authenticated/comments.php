@@ -13,6 +13,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 	case 'POST':
 		validateActionTokenAPI();
 		validateUserNotBanned();
+		validateContentType('text/html');
 
 		$comment = $con->getRow("select assetid, userid, text from comment where commentid = ? and !deleted", [$commentId]);
 		if(!$comment)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown commentid.']);
@@ -44,6 +45,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 	case 'DELETE':
 		validateActionTokenAPI();
 		validateUserNotBanned();
+		validateContentType('text/html');
 
 		$comment = $con->getRow('
 			select comment.assetid, comment.userid, asset.createdbyuserid as modcreatedby
