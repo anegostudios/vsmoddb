@@ -40,7 +40,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 
 		logAssetChanges([$changelog], $comment['assetid']);
 
-		good(['html' => autoFormat($commentHtml)]);
+		good(['html' => postprocessCommentHtml($commentHtml)]);
 
 	case 'DELETE':
 		validateActionTokenAPI();

@@ -33,7 +33,7 @@
 										{/if}
 								{/if}
 						</div>
-						<div class="body">{autoFormat($comment['text'])}</div>
+						<div class="body">{postprocessCommentHtml($comment['text'])}</div>
 						{if $comment['deleted']}<span class="ribbon-tr">Deleted</span>{/if}
 					</div>
 				{/foreach}

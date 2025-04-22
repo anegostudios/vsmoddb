@@ -486,86 +486,116 @@ function getLocalTimeStamp($timestamp)
 	return $timestamp + 3600 * $hourdiff;
 }
 
-
-function autoFormat($html)
+/** Inflates links and creates spoiler elements.
+ * @param string $html
+ */
+function postprocessCommentHtml($html)
 {
 	// http:///..... => Create a link from it
-	$html = linkify($html, 1);
+	$html = inflateLinks($html);
 	// [spoiler] 
 	$html = preg_replace("/\[spoiler\]\s*(.*)\s*\[\/spoiler\]/Us", "<p><a href=\"#\" class=\"spoiler\">Spoiler</a></p><div class=\"spoiler\">\\1</div>", $html);
-
-	// Fix mention css issue caused by the editor
-	$html = preg_replace("/<span class=\"mention username\">([\w\d_\-]+)([^\w\d_\-])(.*)<\/span>/U", "<span class=\"mention username\">\\1</span>\\2\\3", $html);
 
 	return $html;
 }
 
-
-function linkify($value, $showimg = 1, $protocols = array('http', 'mail', 'https'), array $attributes = array('target' => '_blank'))
+/** Inflates links in text and anchor tags into iframes, images and/or anchor tags depending on the url.
+ * @param string html
+ */
+function inflateLinks($html)
 {
-	// Link attributes
-	$attr = '';
-	foreach ($attributes as $key => $val) {
-		$attr = ' ' . $key . '="' . htmlentities($val) . '"';
+	$doc = new DOMDocument();
+	$doc->recover = true;
+	$doc->strictErrorChecking = false;
+	$doc->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+	_inflateWalker($doc);
+	return $doc->saveHTML();
+}
+
+/** @param \DOMNode &$node */
+function _inflateWalker($node)
+{
+	$toReplace = [];
+
+	foreach($node->childNodes as $child) {
+		if($child->nodeType === XML_TEXT_NODE) {
+			$newHtml = preg_replace_callback(
+				'#https?://[\w.@:/\[\]!$&\'"()*+,;%=\#?]+#',
+				fn($match) => _inflateLink($match[0]),
+				$child->textContent, -1, $count
+			);
+			if($count) {
+				$d = new DOMDocument();
+				$d->loadHTML($newHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+				
+				$frag = $node->ownerDocument->createDocumentFragment();
+				foreach($d->childNodes as $c) {
+					$frag->appendChild($frag->ownerDocument->importNode($c));
+				}
+				//NOTE(Rennorb): Since we might turn the text node into multiple other nodes we cannot directly insert these new nodes while itterating.
+				// That would likely invalidate the iterator and/or skip children. We store the replacements instead and itterate over them after we inspected all children.
+				// We also cannot loop over the nodes in reverse, because that apparently doesnt work for DOMNodeList's.
+				$toReplace[] = [$child, $frag];
+			}
+			continue;
+		}
+
+		if($child->nodeType === XML_ELEMENT_NODE) {
+			if($child->nodeName === 'a') {
+				if(count($child->childNodes) < 2) {
+					$link = $child->attributes->getNamedItem('href');
+					if(!$link) {
+						if(preg_match('#https?://[\w.@:/\[\]!$&\'"()*+,;%=\#?]+#', $child->textContent, $matches))
+							$link = $matches[0];
+					}
+					if($link) {
+						$newHtml = _inflateLink($link);
+						$d = new DOMDocument();
+						$d->loadHTML($newHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+						// This is always one-to-one, so we can directly replace it.
+						$node->replaceChild($node->ownerDocument->importNode($frag->firstChild), $child);
+					}
+				}
+				continue;
+			}
+		}
+
+		_inflateWalker($child); // recurse
 	}
 
-	$links = array();
+	foreach($toReplace as [$n, $r]) {
+		$n->parentNode->replaceChild($r, $n);
+	}
+}
 
-	// Extract existing links and tags
-	$value = preg_replace_callback('~(<a .*?>.*?</a>|<.*?>)~i', function ($match) use (&$links) {
-		return '<' . array_push($links, $match[1]) . '>';
-	}, $value);
+/** Inflates a link into html. Always wrapped in a singular node.
+ * @param string $link
+ * @return string
+ */
+function _inflateLink($link)
+{
+	// https://youtu.be/XNV8SaaDi0o?si=ecgbd8PE_vfFKSDi
+	// https://www.youtube.com/watch?v=vkSP1pNpfEQ&list=PLMWVmegrv0fqF7kQGkQU-d_SBffJUjWIhyou
+	if(preg_match('#youtu(?:be.\w+/.+?v=|\.be/)([\w-]+)#', $link, $matches)) {
+		$ytid = $matches[1]; // @security: The id is alphanumeric and therefore inert
+		return "<iframe width='100%' height='315' src='https://www.youtube.com/embed/{$ytid}?rel=0&amp;showinfo=0&amp;color=orange&amp;iv_load_policy=3' frameborder='0' allowfullscreen></iframe>";
+	}
 
-	// Extract text links for each protocol
-	foreach ((array)$protocols as $protocol) {
-		switch ($protocol) {
-			case 'http':
-			case 'https':
-				$value = preg_replace_callback(
-					'~(?:(https?)://([^\s<]+)|(www\.[^\s<]+?\.[^\s<]+))(?<![\.,:])~i',
-					function ($match) use ($protocol, &$links, $attr, $showimg) {
-						if ($match[1]) {
-							$protocol = $match[1];
-							$link = $match[2] ?: $match[3];
-							// Youtube
-							if ($showimg == 1) {
-								if (strpos($link, 'youtube.com') > 0 || strpos($link, 'youtu.be') > 0) {
-									$parts = explode('=', $link);
-									$link = '<iframe width="100%" height="315" src="https://www.youtube.com/embed/'.end($parts).'?rel=0&showinfo=0&color=orange&iv_load_policy=3" frameborder="0" allowfullscreen></iframe>';
-									return '<' . array_push($links, $link) . '></a>';
-								}
-								if (strpos($link, '.png') > 0 || strpos($link, '.jpg') > 0 || strpos($link, '.jpeg') > 0 || strpos($link, '.gif') > 0 || strpos($link, '.bmp') > 0) {
-									return '<' . array_push($links, "<a $attr href=\"$protocol://$link\" class=\"htmllink\"><img src=\"$protocol://$link\" class=\"htmlimg\">") . '></a>';
-								}
-							}
-							return '<' . array_push($links, "<a $attr href=\"$protocol://$link\" class=\"htmllink\">$link</a>") . '>';
-						}
-					},
-					$value
-				);
-				break;
-			case 'mail':
-				$value = preg_replace_callback('~([^\s<]+?@[^\s<]+?\.[^\s<]+)(?<![\.,:])~', function ($match) use (&$links, $attr) {
-					return '<' . array_push($links, "<a $attr href=\"mailto:{$match[1]}\" class=\"htmllink\">{$match[1]}</a>") . '>';
-				}, $value);
-				break;
-			case 'twitter':
-				$value = preg_replace_callback('~(?<!\w)[@#](\w++)~', function ($match) use (&$links, $attr) {
-					return '<' . array_push($links, "<a $attr href=\"https://twitter.com/" . ($match[0][0] == '@' ? '' : 'search/%23') . $match[1]  . "\" class=\"htmllink\">{$match[0]}</a>") . '>';
-				}, $value);
-				break;
-			default:
-				$value = preg_replace_callback('~' . preg_quote($protocol, '~') . '://([^\s<]+?)(?<![\.,:])~i', function ($match) use ($protocol, &$links, $attr) {
-					return '<' . array_push($links, "<a $attr href=\"$protocol://{$match[1]}\" class=\"htmllink\">{$match[1]}</a>") . '>';
-				}, $value);
-				break;
+	$urlParts = parse_url($link);
+	$path = $urlParts['path'];
+	$relAttr = endsWith($urlParts['host'], 'vintagestory.at') ? ' rel="nofollow external"' : '';
+
+	$lastDot = strrpos($path, '.');
+	if($lastDot !== false && $lastDot + 1 < strlen($path)) {
+		if(in_array(substr($path, $lastDot + 1), ['png', 'jpg', 'jpeg', 'gif', 'bmp'])) {
+			$safeLink = str_replace("'", "%27", $link); // @security: We escape the single quote to prevent the link form being able to escape the href in the anchor tag.
+			return "<a target='_blank'{$relAttr} href='$safeLink'><img src='$safeLink' alt='' /></a>";
 		}
 	}
 
-	// Insert all link
-	return preg_replace_callback('/<(\d+)>/', function ($match) use (&$links) {
-		return $links[$match[1] - 1];
-	}, $value);
+	$safeLink = str_replace("'", "%27", $link); // @security: We escape the single quote to prevent the link form being able to escape the href in the anchor tag, but we cannot use htmlspecialchars since we need an actual link.
+	$content = htmlspecialchars($link);
+	return "<a target='_blank'{$relAttr} href='$safeLink'>$content</a>";
 }
 
 

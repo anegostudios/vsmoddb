@@ -47,6 +47,6 @@ switch($urlparts[1]) {
 
 				logAssetChanges(['Added a new comment.'], $assetId);
 
-				good(['id' => $commentId, 'html' => autoFormat($commentHtml)]);
+				good(['id' => $commentId, 'html' => postprocessCommentHtml($commentHtml)]);
 		}
 }
