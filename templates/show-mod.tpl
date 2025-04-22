@@ -49,23 +49,22 @@
 	{/if}
 
 	<ul class="tabs">
-		<li><a href="#tab-description">Description</a></li>
-		<li><a href="#tab-files">Files</a></li>
+		<li><a href="#tab-description" rel="bookmark">Description</a></li>
+		<li><a href="#tab-files" rel="bookmark">Files</a></li>
 		{if $asset['homepageurl']}
-			<li><a class="external" href="{$asset['homepageurl']}">Homepage</a></li>
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['homepageurl']}">Homepage</a></li>
 		{/if}
 		{if $asset['wikiurl']}
-			<li><a class="external" class="external" href="{$asset['wikiurl']}">Wiki</a></li>
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['wikiurl']}">Wiki</a></li>
 		{/if}
 		{if $asset['issuetrackerurl']}
-			<li><a class="external" href="{$asset['issuetrackerurl']}">Issue tracker</a>
-			</li>
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['issuetrackerurl']}">Issue tracker</a></li>
 		{/if}
 		{if $asset['sourcecodeurl']}
-			<li><a class="external" href="{$asset['sourcecodeurl']}">Source</a></li>
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['sourcecodeurl']}">Source</a></li>
 		{/if}
 		{if $asset['donateurl']}
-			<li><a class="external" href="{$asset['donateurl']}">Donate</a></li>
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['donateurl']}">Donate</a></li>
 		{/if}
 	</ul>
 
@@ -80,7 +79,7 @@
 
 			<div class="imageslideshow fotorama" data-max-width="800" data-max-height="450" data-autoplay="5000" data-nav="thumbs" data-allowfullscreen="true">
 				{if (!empty($asset['trailervideourl']))}
-					<a href="{$asset['trailervideourl']}">Trailer Video</a>
+					<a rel="nofollow" href="{$asset['trailervideourl']}">Trailer Video</a>
 				{/if}
 				{foreach from=$files item=file}
 					<img src="{$file['url']}">
@@ -178,7 +177,7 @@
 								<div class="tags">
 								{foreach from=$release['tags'] item=tag}
 									{if $tag['tagid']==0}<a href="#" class="tag" style="background-color:{$tag['color']}" title="{$tag['desc']}">{$tag['name']}*</a>
-									{else}<a href="/list/mod/?gv[]={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>{/if}
+									{else}<a href="/list/mod/?gv[]={$tag['tagid']}" class="tag" rel="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>{/if}
 								{/foreach}
 								</div>
 						</td>
@@ -252,7 +251,7 @@
 			});
 		});
 	</script>
-	<script type="text/javascript" src="/web/js/comments.js?version=9" async></script>
+	<script type="text/javascript" src="/web/js/comments.js?version=10" async></script>
 {/capture}
 
 {include file="footer"}

@@ -12,19 +12,43 @@ function fail($statuscode, $data = null)
 	exit(($data !== null) ? json_encode($data) : '{}');
 }
 
+/** Validates that the script was called using the correct HTTP method and `fail`s with a reason if it was not.
+ * @param 'PUT'|'GET'|'POST'|'DELETE' $allowedMethod
+ */
+function validateMethod($allowedMethod)
+{
+	if($_SERVER['REQUEST_METHOD'] !== $allowedMethod) {
+		header('Allow: '.$allowedMethod);
+		fail(HTTP_WRONG_METHOD, ['reason' => "This endpoint does not support {$_SERVER['REQUEST_METHOD']} requests. Try again using $allowedMethod."]);
+	}
+}
+
+/** Validates that the script was called using the correct content-type header.
+ * @param string $allowedType
+ */
+function validateContentType($allowedType)
+{
+	if(!isset($_SERVER['CONTENT_TYPE'])) {
+		fail(HTTP_BAD_REQUEST, ['reason' => "This endpoint requires a requests with Content-Type '$allowedType'."]);
+	}
+	else if($_SERVER['CONTENT_TYPE'] !== $allowedType) {
+		fail(HTTP_BAD_REQUEST, ['reason' => "This endpoint does not support requests of Content-Type '{$_SERVER['CONTENT_TYPE']}'. Try again using '$allowedType'."]);
+	}
+}
+
 if (empty($urlparts)) {
-	fail(404);
+	fail(HTTP_NOT_FOUND);
 }
 
 /** Formats the response as json and exits the program.
  * @param array|null $data
  */
-function good($data = null)
+function good($data = null, $flags = 0)
 {
-	exit(($data !== null) ? json_encode($data) : '{}');
+	exit(($data !== null) ? json_encode($data, $flags) : '{}');
 }
 
 include($config["basepath"] . "lib/api/public/_routing.php");
 include($config["basepath"] . "lib/api/authenticated/_routing.php");
 
-fail(404);
+fail(HTTP_NOT_FOUND);

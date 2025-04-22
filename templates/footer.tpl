@@ -11,7 +11,7 @@
 	<script type="text/javascript" src="/web/js/ays-beforeunload-shim.js"></script>
 	<script type="text/javascript" src="/web/js/jquery.cookie.js"></script>
 
-	<script type="text/javascript" src="/web/js/wysiwyg.js?version=27"></script>
+	<script type="text/javascript" src="/web/js/wysiwyg.js?version=28"></script>
 	<script type="text/javascript" src="/web/js/tinymce/tinymce.min.js"></script>
 
 	<script type="text/javascript" src="/web/js/jquery.filedrop.js?v=2"></script>
@@ -76,8 +76,8 @@
 	<ul class="footer">
 		<li style="float:left;">Copyright © 2021-2025 Anego Studios | <a href="https://www.vintagestory.at/impressum.html/">Impressum</a></li>
 		<li style="margin-left:10px;"><a href="https://github.com/anegostudios/vsmoddb#vs-mod-db-api-docs">Json Api</a></li>
-		<li style="margin-left:10px;"><a href="/terms">Terms of use</a></li>
-		<li style="margin-left:10px;"><a href="https://www.vintagestory.at/privacy/">Privacy Policy</a></li>
+		<li style="margin-left:10px;"><a rel="terms-of-service" href="/terms">Terms of use</a></li>
+		<li style="margin-left:10px;"><a rel="privacy-policy" href="https://www.vintagestory.at/privacy/">Privacy Policy</a></li>
 		<li><a rel="nofollow" href="https://www.vintagestory.at/contact/" data-ipsdialog="" data-ipsdialog-remotesubmit="" data-ipsdialog-flashmessage="Thanks, your message has been sent to the administrators." data-ipsdialog-title="Contact Us">Contact Us</a></li>
 	</ul>
 

@@ -42,69 +42,74 @@ $(document).ready(function () {
 
 
 	$(document).on("click", "a[href='#deletecomment']", function () {
-		$self = $(this);
 		if (confirm("Really delete comment?")) {
-			var commentid = $self.attr("data-commentid");
-			$.post('/delete-comment', { commentid: commentid, at: actiontoken, delete: 1 }, function (response) {
-				var $elem = $self.parents(".comment");
-				$elem.remove();
-			});
+			const $comment = $(this).parents(".comment");
+			$comment.hide();
+
+			const commentid = $(this).attr("data-commentid");
+			$.ajax({ url: `/api/v2/comments/${commentid}?at=`+actiontoken, method: 'DELETE'})
+				.fail(function(jqXHR) {
+					$comment.show();
+
+					const d = JSON.parse(jqXHR.responseText);
+					addMessage(MSG_CLASS_ERROR, 'Failed to delete comment' + (d.reason ? (': '+d.reason) : '.'))
+				});;
 		}
 	});
 
 	$(document).on("click", "a[href='#editcomment']", function () {
-		var $elem = $(this).parents(".comment");
+		const $comment = $(this).parents(".comment");
+		const $body = $('.body', $comment);
 
-		if ($elem.data("editing") == 1) {
-			if ($elem.find("form").hasClass("dirty")) {
+		if ($comment.data("editing") == 1) {
+			const $form = $comment.find("form");
+			if ($form.hasClass("dirty")) {
 				var ok = confirm("Discard changed comment data?");
 				if (!ok) return false;
 			}
 
-			destroyEditor($("textarea", $elem));
+			destroyEditor($("textarea", $comment));
+			$form.remove();
+			$body.show();
 
-			$(".updateCmt", $elem).remove();
-
-			$("textarea", $elem).replaceWith($elem.data("body"));
-
-			$elem.data("editing", 0);
+			$comment.data("editing", 0);
 			$('form[name=commentformedit]').trigger('reinitialize.areYouSure');
 			return false;
 		}
 
-		$elem.data("editing", 1);
+		$body.hide();
+		$comment.data("editing", 1);
 
-		var commentid = $(this).attr("data-commentid");
-
-		$elem.data("body", $(".body", $elem).html());
-		var $form = $('<form name="commentformedit"><textarea name="commenttext" class="editor editcommenteditor" data-editorname="editcomment" style="width: 100%; height: 135px;">' + $(".body", $elem).html() + '</textarea></form>');
-		$(".body", $elem).html($form);
-
+		const commentid = $(this).attr("data-commentid");
+		const $form = $(`
+			<form name="commentformedit" onsubmit="javascript:return false;">
+				<textarea name="commenttext" class="editor editcommenteditor" data-editorname="editcomment" style="width: 100%; height: 135px;">${$body.html()}</textarea>
+				<p style="margin:4px; margin-top:5px;"><button class="shine" type="submit" name="save">Update Comment</button></p>
+			</form>
+		`);
+		$form.appendTo($comment);
 		$form.areYouSure();
 
-		createEditor($('.editcommenteditor'), tinymceSettingsCmt);
+		const $editor = $("textarea", $form);
+		createEditor($editor, tinymceSettingsCmt);
 
-		$elem.append($('<p class="updateCmt" style="margin:4px; margin-top:5px;"><button class="shine" type="submit" name="save">Update Comment</button>'));
+		$("button[name='save']", $form).click(function() {
+			var content = getEditorContents($editor);
+			//TODO(Rennorb): optimistic update
 
-		$("button[name='save']", $elem).click(function () {
-			var html = getEditorContents($('.editcommenteditor'));
+			$.ajax({ url: `/api/v2/comments/${commentid}?at=`+actiontoken, method: 'POST', data: content, contentType: 'text/html', dataType: 'json' })
+				.done(function(response) {
+					destroyEditor($editor);
+					$form.remove();
 
-			$.post('/edit-comment', { commentid: commentid, text: html, at: actiontoken, save: 1 }, function (response) {
-				var data = $.parseJSON(response).comment;
-
-				destroyEditor($('.editcommenteditor'));
-
-				var $cmt = $(
-					'<div class="editbox comment">' +
-					'<div class="title">' + data.username + ', ' + data.created + getCmtLinks(commentid) + '</div>' +
-					'<div class="body">' + data.text + '</div>' +
-					'</div>'
-				);
-
-				$elem.replaceWith($cmt);
-				$elem.data("editing", 0);
-			});
-
+					$body.html(response.html);
+					$comment.data("editing", 0);
+					$body.show();
+				})
+				.fail(function(jqXHR) {
+					const d = JSON.parse(jqXHR.responseText);
+					addMessage(MSG_CLASS_ERROR, 'Failed to edit comment' + (d.reason ? (': '+d.reason) : '.'))
+				});
 		});
 
 		return false;
@@ -112,27 +117,36 @@ $(document).ready(function () {
 
 
 	$(".comments .comment.comment-editor button[name='save']").click(function () {
-		var $elem = $(this).parents(".comment");
+		const $comment = $(this).parents(".comment");
 
-		const content = getEditorContents($("textarea", $elem));
+		const content = getEditorContents($("textarea", $comment));
 		if(!content) return;
 
-		$.post('/edit-comment', { assetid: assetid, text: content, at: actiontoken, save: 1 }, function (response) {
-			var data = $.parseJSON(response).comment;
+		const $editor = $(".comments .comment.comment-editor");
 
-			var $cmt = $(
-				'<div class="editbox comment">' +
-				'<div class="title">' + data.username + ', ' + data.created + getCmtLinks(data.commentid) + '</div>' +
-				'<div class="body">' + data.text + '</div>' +
-				'</div>'
-			);
+		const $cmt = $(`
+			<div class="editbox comment">
+			<div class="title"><a style="text-decoration:none;" href="#">&#128172;</a>You, just now</div>
+			<div class="body">${content}</div>
+			</div>
+		`);
+		$cmt.insertAfter($editor);
+		$editor.hide();
 
-			setEditorContents($("textarea", $elem), "");
-			$cmt.insertAfter($(".comments .comment.comment-editor"));
-			$(".comments .comment.comment-editor").toggle();
-		});
-	});
+		$.ajax({ url: `/api/v2/mods/${modid}/comments/new?at=`+actiontoken, method: 'POST', data: content, contentType: 'text/html', dataType: 'json' })
+			.done(function (response) {
+				$('.title a', $cmt)[0].href = '#cmt-'+response.id;
+				$('.title', $cmt)[0].innerHTML += getCmtLinks(response.id);
+				$('.body', $cmt)[0].innerHTML = response.html;
+			})
+			.fail(function(jqXHR) {
+				$cmt.remove();
+				$editor.show();
 
+				const d = JSON.parse(jqXHR.responseText);
+				addMessage(MSG_CLASS_ERROR, 'Failed to submit comment' + (d.reason ? (': '+d.reason) : '.'))
+			});
+	})
 });
 
 

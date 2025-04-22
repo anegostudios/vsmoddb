@@ -79,7 +79,46 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 
 ## V2 - still under development
 
-Endpoints marked as `auth` require authentication and response with `401` if it is missing.
+### /api/v2/users/by-name/{search}
+- `get`:
+	- Args:
+		- Path arg `{search}`
+		- `limit`: Optional result count limit between 1 and 200 inclusive. Defaults to 10.
+	- `200`: string - string dictionary, where keys are user hashes and values are usernames.
+
+Endpoints marked as `auth` require authentication and response with `401` if it is missing.  
+Endpoints marked as `at` additionally require a valid actiontoken and response with `400` if it is missing. The token can be provided as a query parameter or in the POST body.  
+
+
+### /api/v2/mods/{modid}/comments
+- `get`: Path arg `{modid}`
+	- `404`: Not implemented.
+
+### /api/v2/mods/{modid}/comments/new `auth` `at`
+- `post`:
+	- Args:
+		- Path arg `{modid}`
+		- Request body: Desired comment html.
+	- `400`: Invalid action token or malformed request
+	- `404`: Target mod does not exist.
+	- `403`: Active user is currently restricted.
+	- `200`: Comment got created. Returns the id and the processed html of the newly created comment as a object `{id: number, html: string}`.
+
+### /api/v2/comments/{commentid} `auth` `at`
+- `post`:
+	- Args:
+		- Path arg `{commentid}`
+		- Request body: Desired comment html.
+	- `400`: Invalid action token or malformed request
+	- `404`: Target comment does not exist.
+	- `403`: Active user is currently restricted or does not have permissions to edit the comment.
+	- `200`: Comment got updated. Returns the processed comment html as a object `{html: string}`.
+
+- `delete`: Path arg `{commentid}`
+	- `400`: Invalid action token or malformed request
+	- `404`: Target comment does not exist.
+	- `403`: Active user is currently restricted or does not have permissions to delete the comment.
+	- `200`: Comment got deleted.
 
 ### /api/v2/notifications `auth`
 - `get`: No args.

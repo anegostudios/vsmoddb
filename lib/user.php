@@ -129,7 +129,7 @@ function canEditProfile($shownuser, $user)
  */
 function canModerate($shownuser, $user)
 {
-	return $user['rolecode'] == 'admin' || $user['rolecode'] == 'moderator';
+	return $user['rolecode'] === 'admin' || $user['rolecode'] === 'moderator';
 }
 
 /** Load all notifications and assign relevant fields in the view.
@@ -225,7 +225,7 @@ function loadNotifications($loadAll)
 function validateActionToken()
 {
 	global $user;
-	if ($user['actiontoken'] != $_REQUEST['at']) {
+	if (!isset($_REQUEST['at']) || $user['actiontoken'] != $_REQUEST['at']) {
 		showErrorPage(HTTP_BAD_REQUEST, 'Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Rennorb <a class="external" href="https://discord.com/channels/302152934249070593/810541931469078568">on Discord</a>.', false, true);
 	}
 }
