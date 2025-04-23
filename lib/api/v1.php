@@ -104,29 +104,16 @@ switch ($action) {
 		break;
 
 	case "changelogs":
-		$wheresql = '';
-		$wherevalue = array();
-		$limit = 'limit 100';
-
-		if (intval($urlparts[1] ?? 0) > 0) {
-			$wheresql = 'where assetid=?';
-			$wherevalue = array(intval($urlparts[1]));
-			$limit = '';
-		}
-
-		$rows = $con->getAll("select changelogid, assetid, userid, text, created, lastmodified from changelog $wheresql order by lastmodified $limit", $wherevalue);
-		$changelogs = array();
-		foreach ($rows as $row) {
-			$changelogs[] = array(
-				"changelogid" => intval($row["changelogid"]),
-				"assetid" => intval($row["assetid"]),
-				"userid" => intval($row["userid"]),
-				"text" => $row['text'],
-				"created" => $row['created'],
-				"lastmodified" => $row['lastmodified']
-			);
-		}
-		good(array("statuscode" => 200, "changelogs" => $changelogs));
+		$error = 'This information was previously available, but is no longer distributed. Version 2 of the api might provide this information at some point in the future.';
+		header('Cache-Control: no-cache, no-store');
+		header('Clear-Site-Data: "cache"');
+		exit(json_encode(array(
+			"statuscode" => "410",
+			"changelogs" => [
+				'changelogid' => 0, 'assetid' => 0, 'userid' => 0, 'text' => $error, 'created' => '0000-00-00 00:00:00', 'lastmodified' => '0000-00-00 00:00:00',
+			],
+			"reason" => $error,
+		)));
 		break;
 
 	case "updates":
