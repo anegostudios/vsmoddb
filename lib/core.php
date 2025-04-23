@@ -571,6 +571,7 @@ function _inflateWalker($node)
 	}
 }
 
+//TODO(Rennorb): Transform this into a preprocessing + migration function for the old data. Having to run this on every render is quite bad.
 /** Inflates a link into html. Always wrapped in a singular node.
  * @param string $link
  * @return string
@@ -585,7 +586,7 @@ function _inflateLink($link)
 	}
 
 	$urlParts = parse_url($link);
-	$path = $urlParts['path'];
+	$path = $urlParts['path'] ?? '';
 	$relAttr = endsWith($urlParts['host'], 'vintagestory.at') ? ' rel="nofollow external"' : '';
 
 	$lastDot = strrpos($path, '.');
