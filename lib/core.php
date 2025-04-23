@@ -534,7 +534,7 @@ function _inflateWalker($node)
 				
 				$frag = $node->ownerDocument->createDocumentFragment();
 				foreach($d->childNodes as $c) {
-					$frag->appendChild($frag->ownerDocument->importNode($c));
+					$frag->appendChild($frag->ownerDocument->importNode($c, true));
 				}
 				//NOTE(Rennorb): Since we might turn the text node into multiple other nodes we cannot directly insert these new nodes while itterating.
 				// That would likely invalidate the iterator and/or skip children. We store the replacements instead and itterate over them after we inspected all children.
@@ -560,7 +560,7 @@ function _inflateWalker($node)
 						$d = new DOMDocument();
 						$d->loadHTML($newHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 						// This is always one-to-one, so we can directly replace it.
-						$node->replaceChild($node->ownerDocument->importNode($d->firstChild), $child);
+						$node->replaceChild($node->ownerDocument->importNode($d->firstChild, true), $child);
 					}
 				}
 				continue;
