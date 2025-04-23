@@ -2,23 +2,21 @@
 
 //NOTE(Rennorb): Assume the user object exists.
 
-if(count($urlparts) < 2) {
-	fail(HTTP_BAD_REQUEST);
-}
+if(count($urlparts) < 2)   fail(HTTP_BAD_REQUEST);
 
 $modId = filter_var($urlparts[0], FILTER_VALIDATE_INT);
 if($modId === false) fail(HTTP_BAD_REQUEST, ['reason' => 'Malformed query param.']);
 
 switch($urlparts[1]) {
 	case 'comments':
-		switch(count($urlparts)) {
-			case 2:
+		if(count($urlparts) !== 2)   fail(HTTP_BAD_REQUEST);
+
+		switch($_SERVER['REQUEST_METHOD']) {
+			case 'GET':
 				//TODO return comment data for mod
 				fail(HTTP_NOT_FOUND);
 
-			case 3:
-				if($urlparts[2] !== 'new')  fail(HTTP_NOT_FOUND);
-				validateMethod('POST');
+			case 'PUT':
 				validateUserNotBanned();
 				validateActionTokenAPI();
 				validateContentType('text/html');
@@ -47,6 +45,11 @@ switch($urlparts[1]) {
 
 				logAssetChanges(['Added a new comment.'], $assetId);
 
-				good(['id' => $commentId, 'html' => postprocessCommentHtml($commentHtml)]);
+				header('Location: #cmt-'.$commentId, true, HTTP_CREATED);
+				exit(postprocessCommentHtml($commentHtml));
+
+			default:
+				header('Allow: GET, PUT');
+				fail(HTTP_WRONG_METHOD);
 		}
 }

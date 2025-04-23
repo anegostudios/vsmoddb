@@ -135,11 +135,12 @@ $(document).ready(function () {
 		attachSpoilerToggle($('.spoiler-toggle', $cmt));
 		$editor.hide();
 
-		$.ajax({ url: `/api/v2/mods/${modid}/comments/new?at=`+actiontoken, method: 'POST', data: content, contentType: 'text/html', dataType: 'json' })
-			.done(function (response) {
-				$('.title a', $cmt)[0].href = '#cmt-'+response.id;
-				$('.title', $cmt)[0].innerHTML += getCmtLinks(response.id);
-				$('.body', $cmt)[0].innerHTML = response.html;
+		$.ajax({ url: `/api/v2/mods/${modid}/comments?at=`+actiontoken, method: 'PUT', data: content, contentType: 'text/html', dataType: 'text' })
+			.done(function (response, _, jqXHR) {
+				const cmtFrag = jqXHR.getResponseHeader('Location');
+				$('.title a', $cmt)[0].href = cmtFrag;
+				$('.title', $cmt)[0].innerHTML += getCmtLinks(cmtFrag.split('-')[1]);
+				$('.body', $cmt)[0].innerHTML = response;
 				attachSpoilerToggle($('.spoiler-toggle', $cmt));
 			})
 			.fail(function(jqXHR) {

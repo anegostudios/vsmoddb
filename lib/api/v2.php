@@ -1,13 +1,12 @@
 <?php
 
-header('Content-Type: application/json');
-
 /** Formats a json error response and exits the program.
  * @param int $statuscode
  * @param array? $data
  */
 function fail($statuscode, $data = null)
 {
+	header('Content-Type: application/json');
 	http_response_code($statuscode);
 	exit(($data !== null) ? json_encode($data) : '{}');
 }
@@ -45,6 +44,7 @@ if (empty($urlparts)) {
  */
 function good($data = null, $flags = 0)
 {
+	header('Content-Type: application/json');
 	exit(($data !== null) ? json_encode($data, $flags) : '{}');
 }
 
