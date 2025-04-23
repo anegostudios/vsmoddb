@@ -175,7 +175,7 @@ function queryModSearch($searchParams)
 
 			case 'majorversion':
 				$joinClauses .= 'JOIN majormodversioncached mmv ON mmv.modid = m.modid AND mmv.majorversionid = ?';
-				$sqlParams[] = $value;
+				array_unshift($sqlParams, $value); // This needs to be in front of others because JOIN happens before WHERE.
 				break;
 
 			default:
