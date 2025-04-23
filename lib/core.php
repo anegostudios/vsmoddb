@@ -494,7 +494,11 @@ function postprocessCommentHtml($html)
 	// http:///..... => Create a link from it
 	$html = inflateLinks($html);
 	// [spoiler] 
-	$html = preg_replace("/\[spoiler\]\s*(.*)\s*\[\/spoiler\]/Us", "<p><a href=\"#\" class=\"spoiler\">Spoiler</a></p><div class=\"spoiler\">\\1</div>", $html);
+	$html = preg_replace(
+		'/\[spoiler\]\s*(.*)\s*\[\/spoiler\]/Us',
+		'<div class="spoiler"><div class="spoiler-toggle">Spoiler!</div><div class="spoiler-text" style="display: none;">\1</div></div>',
+		$html
+	);
 
 	return $html;
 }

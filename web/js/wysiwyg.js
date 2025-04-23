@@ -41,8 +41,8 @@ var tinymceSettings = {
 
 var tinymceSettingsCmt = {
 	menubar: false,
-	plugins: 'paste searchreplace autolink autoresize directionality image link codesample charmap hr pagebreak nonbreaking anchor emoticons advlist lists wordcount imagetools textpattern help mention noneditable',
-	toolbar: 'bold italic strikethrough | link image emoticons | alignleft aligncenter alignright alignjustify  | numlist bullist outdent indent | removeformat',
+	plugins: 'paste searchreplace autolink autoresize directionality image link codesample charmap hr pagebreak nonbreaking anchor emoticons advlist lists wordcount imagetools textpattern help spoiler mention noneditable',
+	toolbar: 'bold italic strikethrough | link image emoticons | alignleft aligncenter alignright alignjustify  | numlist bullist outdent indent | removeformat | spoiler-add spoiler-remove',
 	image_advtab: true,
 	importcss_append: true,
 	min_height: 400 /* @hack: required for mobile */,
@@ -87,11 +87,14 @@ function setEditorContents($elem, html) {
 	tinyMCE.get($elem[0].id).setContent(html);
 }
 
-
-$(function(){
-	$('.spoiler-text').hide();
-	$('.spoiler-toggle').click(function(){
+function attachSpoilerToggle($sel) {
+	$sel.each(function(_, e) {
+		if(!e.classList.contains('expanded')) $(e).next().hide();
+	})
+	.click(function(){
 		$(this).toggleClass("expanded");
 		$(this).next().toggle();
-	}); // end spoiler-toggle
-}); // end document ready
+	});
+}
+
+$(function() { attachSpoilerToggle($('.spoiler-toggle')); });

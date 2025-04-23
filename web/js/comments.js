@@ -103,6 +103,7 @@ $(document).ready(function () {
 					$form.remove();
 
 					$body.html(response.html);
+					attachSpoilerToggle($('.spoiler-toggle', $body));
 					$comment.data("editing", 0);
 					$body.show();
 				})
@@ -126,11 +127,12 @@ $(document).ready(function () {
 
 		const $cmt = $(`
 			<div class="editbox comment">
-			<div class="title"><a style="text-decoration:none;" href="#">&#128172;</a>You, just now</div>
+			<div class="title"><a style="text-decoration:none;" href="#">&#128172;</a> You, just now</div>
 			<div class="body">${content}</div>
 			</div>
 		`);
 		$cmt.insertAfter($editor);
+		attachSpoilerToggle($('.spoiler-toggle', $cmt));
 		$editor.hide();
 
 		$.ajax({ url: `/api/v2/mods/${modid}/comments/new?at=`+actiontoken, method: 'POST', data: content, contentType: 'text/html', dataType: 'json' })
@@ -138,6 +140,7 @@ $(document).ready(function () {
 				$('.title a', $cmt)[0].href = '#cmt-'+response.id;
 				$('.title', $cmt)[0].innerHTML += getCmtLinks(response.id);
 				$('.body', $cmt)[0].innerHTML = response.html;
+				attachSpoilerToggle($('.spoiler-toggle', $cmt));
 			})
 			.fail(function(jqXHR) {
 				$cmt.remove();
