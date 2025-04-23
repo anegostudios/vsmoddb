@@ -544,16 +544,19 @@ function _inflateWalker($node)
 			if($child->nodeName === 'a') {
 				if(count($child->childNodes) < 2) {
 					$link = $child->attributes->getNamedItem('href');
+					if($link) $link = $link->textContent;
+
 					if(!$link) {
 						if(preg_match('#https?://[\w.@:/\[\]!$&\'"()*+,;%=\#?]+#', $child->textContent, $matches))
 							$link = $matches[0];
 					}
+
 					if($link) {
 						$newHtml = _inflateLink($link);
 						$d = new DOMDocument();
 						$d->loadHTML($newHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 						// This is always one-to-one, so we can directly replace it.
-						$node->replaceChild($node->ownerDocument->importNode($frag->firstChild), $child);
+						$node->replaceChild($node->ownerDocument->importNode($d->firstChild), $child);
 					}
 				}
 				continue;
