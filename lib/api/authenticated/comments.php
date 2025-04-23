@@ -45,7 +45,6 @@ switch($_SERVER['REQUEST_METHOD']) {
 	case 'DELETE':
 		validateActionTokenAPI();
 		validateUserNotBanned();
-		validateContentType('text/html');
 
 		$comment = $con->getRow('
 			select comment.assetid, comment.userid, asset.createdbyuserid as modcreatedby
