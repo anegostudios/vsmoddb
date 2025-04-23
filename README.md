@@ -48,11 +48,6 @@ Lists all comments for given assetid or latest 100 if assetid is not specified
 
 Example: http://mods.vintagestory.at/api/comments
 
-### /api/changelogs/[assetid]
-Lists all changelogs for given assetid or latest 100 if assetid is not specified
-
-Example: http://mods.vintagestory.at/api/changelogs
-
 ### /api/mods
 List all mods
 
@@ -93,16 +88,14 @@ Endpoints marked as `at` additionally require a valid actiontoken and response w
 ### /api/v2/mods/{modid}/comments
 - `get`: Path arg `{modid}`
 	- `404`: Not implemented.
-
-### /api/v2/mods/{modid}/comments/new `auth` `at`
-- `post`:
+- `put`: `auth` `at`
 	- Args:
 		- Path arg `{modid}`
 		- Request body: Desired comment html.
 	- `400`: Invalid action token or malformed request
 	- `404`: Target mod does not exist.
 	- `403`: Active user is currently restricted.
-	- `200`: Comment got created. Returns the id and the processed html of the newly created comment as a object `{id: number, html: string}`.
+	- `200`: Comment got created. Returns the processed html of the newly created comment as the response body, and the link to the comment in the Location header.
 
 ### /api/v2/comments/{commentid} `auth` `at`
 - `post`:

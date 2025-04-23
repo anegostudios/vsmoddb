@@ -21,7 +21,13 @@ switch($urlparts[1]) {
 				validateActionTokenAPI();
 				validateContentType('text/html');
 
-				$assetId = intval($con->getOne('select assetid from `mod` where modid = ?', [$modId]));
+				$modData = $con->getRow('
+					select m.assetid, a.createdbyuserid
+					from `mod` m
+					join asset a on a.assetid = m.assetid
+					where modid = ?
+				', [$modId]);
+				$assetId = intval($modData['assetid']);
 				if(!$assetId)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown modid.']);
 
 				$commentHtml = trim(sanitizeHtml(file_get_contents('php://input')));
@@ -42,6 +48,10 @@ switch($urlparts[1]) {
 						where substring(sha2(concat(user.userid, user.created), 512), 1, 20) in ($foldedHashes)
 					");
 				}
+
+				// send notification about the new comment to the main mod author
+				$creatorUserId = intval($modData['createdbyuserid']);
+				$con->execute("insert into notification (type, recordid, userid) values ('newcomment', $commentId, $creatorUserId)");
 
 				logAssetChanges(['Added a new comment.'], $assetId);
 
