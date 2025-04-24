@@ -65,35 +65,6 @@
 		<div style="clear:both;"></div>
 		<h3>Files<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$asset['assetid']}">download all as zip</a>{/if})</span></h3>
 		{include file="edit-asset-files.tpl"}
-
-		<div style="clear:both;"></div>
-		<h3>Connections <a href="#addconnection" class="add" title="Add a connection"></a></h3>
-
-		<div class="connections">
-			{foreach from=$connections item=connection}
-				<div class="connection editbox" style="clear:both;">
-					<input type="hidden" name="connectionid[]" value="{$connection['connectionid']}">
-					<select name="connectiontypeid[]" class="required" style="width:150px;">
-						{foreach from=$connectiontypes item=connectiontype}
-							<option value="{$connectiontype['connectiontypeid']}" {if $connection['connectiontypeid'] == $connectiontype['connectiontypeid']}selected="selected"{/if}>{$connectiontype['name']}</option>
-						{/foreach}
-					</select>
-					
-					<select name="assettypeid[]" class="required" style="width: 150px">
-						<option value="">-</option>
-						{foreach from=$assettypes item=assettype}
-							<option value="{$assettype['assettypeid']}" {if $connection['asset']['assettypeid'] == $assettype['assettypeid']}selected="selected"{/if}>{$assettype['name']}</option>
-						{/foreach}
-					</select>
-
-					<select name="toassetid[]" class="required" style="width: 300px">
-						<option value="{$connection['asset']['assetid']}">{$connection['asset']['name']}</option>
-					</select>
-					
-					<a href="#" class="delete"></a>
-				</div>
-			{/foreach}
-		</div>
 		</form>
 
 		{if $asset['assetid']} 
@@ -138,33 +109,10 @@
 
 {include file="edit-asset-files-template.tpl"}
 
-<div class="connection template editbox" style="clear:both;">
-	<input type="hidden" name="connectionid[]" value="">
-	<select name="connectiontypeid[]" class="required" style="width:150px;">
-		{foreach from=$connectiontypes item=connectiontype}
-			<option value="{$connectiontype['connectiontypeid']}">{$connectiontype['name']}</option>
-		{/foreach}
-	</select>
-	
-	<select name="assettypeid[]" class="required" style="width: 150px">
-		<option value="">-</option>
-		{foreach from=$assettypes item=assettype}
-			<option value="{$assettype['assettypeid']}">{$assettype['name']}</option>
-		{/foreach}
-	</select>
-
-	<select name="toassetid[]" class="required" style="width: 300px">
-	</select>
-	
-	<a href="#" class="delete"></a>
-</div>
-
 {capture name="buttons"}
 	<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
 	<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
 	
-	<div style="height: 1em"></div>
-	<a class="button large shine" href="/reclassify?assetid={$asset['assetid']}">Reclassify</a>
 	{if $asset['assetid']}
 		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete {$entrysingular}</a>
 	{/if}

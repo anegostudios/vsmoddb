@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS `moddb`.`asset` (
   `editedbyuserid` INT NULL,
   `statusid` INT NULL,
   `assettypeid` INT NULL,
-  `code` VARCHAR(255) NULL,
   `name` VARCHAR(255) NULL,
   `text` TEXT NULL,
   `tagscached` TEXT NULL,

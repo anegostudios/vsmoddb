@@ -69,16 +69,6 @@ $(document).ready(function () {
 	}
 	
 
-	$("a[href='#addconnection']").click(function () {
-		var $elem = $(".connection.template").clone();
-		$elem.removeClass("template");
-
-		$(".connections").append($elem);
-		$("select", $elem).chosen({ placeholder_text_multiple: " " });
-
-		return false;
-	});
-
 	$(document).on("click", ".file .delete", function () {
 		const $self = $(this);
 		const $fileEl = $self.parent();
@@ -101,28 +91,6 @@ $(document).ready(function () {
 
 		return false;
 	});
-
-	$(document).on("click", ".connection .delete", function () {
-		$(this).parent().remove();
-		return false;
-	});
-
-	$(".edit-asset .connection select[name='toassetid[]']").each(function () {
-		var $elem = $("select[name='assettypeid[]']", $(this).parent());
-
-		$(this).next().click(function () {
-			if ($(this).data("loaded") == 1) return;
-			loadAssets($elem);
-			$(this).data("loaded", 1);
-		});
-
-
-	});
-
-	$(document).on("change", ".connection select[name='assettypeid[]']", function () {
-		loadAssets($(this));
-	});
-
 
 	$(document).filedrop({
 		url: '/edit-uploadfile',
@@ -259,27 +227,6 @@ $(document).ready(function () {
 	});
 
 });
-
-
-
-
-
-function loadAssets($self) {
-	$.get('/get-assetlist', { assettypeid: $self.val() }, function (data) {
-		var jsondata = $.parseJSON(data);
-
-		var $elem = $self.parents('.connection');
-
-		var $select = $("select[name='toassetid[]']", $elem);
-		$select.html("");
-
-		jsondata.assets.forEach(function (asset) {
-			$select.append($('<option value="' + asset.assetid + '">' + asset.name + '</option>'));
-		});
-
-		$select.trigger("chosen:updated");
-	});
-}
 
 
 function submitForm(returntolist) {

@@ -7,15 +7,15 @@ if ($user['rolecode'] != 'admin') showErrorPage(HTTP_FORBIDDEN);
 
 $view->assign("columns", array(array("cssclassname" => "", "code" => "code", "title" => "Code"), array("cssclassname" => "", "code" => "Name", "title" => "Name")));
 $view->assign("entrycode", "tag");
-$view->assign("entryplural", "Connection types");
-$view->assign("entrysingular", "Connection type");
+$view->assign("entryplural", "Tags");
+$view->assign("entrysingular", "Tag");
 
 $tagid = empty($_REQUEST["tagid"]) ? 0 : $_REQUEST["tagid"];
 
 $save = !empty($_POST["save"]);
-$delete =!empty($_POST["delete"]);
+$delete = !empty($_POST["delete"]);
 
-if (($save || $delete)) {
+if ($save || $delete) {
 	validateActionToken();
 }
 

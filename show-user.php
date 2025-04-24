@@ -4,12 +4,12 @@ $usertoken = $urlparts[2] ?? null;
 $shownuser = null;
 
 if (strlen($usertoken) > 20) {
-	$view->display("404");
+	showErrorPage(HTTP_NOT_FOUND);
 	exit();
 }
 
 if (empty($usertoken) || empty($shownuser = getUserByHash($usertoken, $con))) {
-	$view->display("404");
+	showErrorPage(HTTP_NOT_FOUND);
 	exit();
 }
 

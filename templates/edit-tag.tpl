@@ -59,7 +59,7 @@
 	<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
 	<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
 	
-	{if $asset['tagid']}
+	{if $row['tagid']}
 		<div style="height: 1em"></div>
 		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete Tag</a>
 	{/if}

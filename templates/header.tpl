@@ -77,7 +77,7 @@
 				</span>
 				
 				{if ($user['rolecode'] == 'admin')}
-					<span class="icon-only submenu{if in_array($urltarget, array('list/user', 'list/tag', 'list/connectiontype', 'list/stati', 'list/assettypes', 'list/sponsorable'))} active{/if}">
+					<span class="icon-only submenu{if in_array($urltarget, array('list/user', 'list/tag', 'list/sponsorable'))} active{/if}">
 						<span><i class="bx bxs-cog"></i></span>
 						<nav>
 							<a href="/list/user">Users</a>

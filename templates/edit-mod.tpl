@@ -222,27 +222,6 @@
 </div>
 {include file="edit-asset-files-template.tpl"}
 
-<div class="connection template editbox" style="clear:both;">
-	<input type="hidden" name="connectionid[]" value="">
-	<select name="connectiontypeid[]" class="required" style="width:150px;">
-		{foreach from=$connectiontypes item=connectiontype}
-			<option value="{$connectiontype['connectiontypeid']}">{$connectiontype['name']}</option>
-		{/foreach}
-	</select>
-
-	<select name="assettypeid[]" class="required" style="width: 150px">
-		<option value="">-</option>
-		{foreach from=$assettypes item=assettype}
-			<option value="{$assettype['assettypeid']}">{$assettype['name']}</option>
-		{/foreach}
-	</select>
-
-	<select name="toassetid[]" class="required" style="width: 300px">
-	</select>
-
-	<a href="#" class="delete"></a>
-</div>
-
 <p style="clear:both"><br/></p>
 
 <a class="button large submit shine" href="javascript:submitForm(0)">Save</a>

@@ -1,11 +1,10 @@
 <?php
-$view->display("404.tpl");
-exit();
+showErrorPage(HTTP_NOT_FOUND);
 
 $view->assign("columns", array(array("cssclassname" => "", "code" => "code", "title" => "Code"), array("cssclassname" => "", "code" => "Name", "title" => "Name")));
 $view->assign("entrycode", "tag");
-$view->assign("entryplural", "Connection types");
-$view->assign("entrysingular", "Connection type");
+$view->assign("entryplural", "Releases");
+$view->assign("entrysingular", "Release");
 
 $assetid = $urlparts[2];
 

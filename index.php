@@ -31,9 +31,6 @@ if (empty($target)) {
 
 $urlparts = explode("/", $target);
 
-if (preg_match("/[^\-\d\w]/", $urlparts[0])) $target="dashboard";
-if (count($urlparts) > 1 && preg_match("/[^\-\d\w]/", $urlparts[1])) $target="dashboard";
-
 //TODO(Rennorb) @cleanup: This routing mess...
 if ($urlparts[0] == "download") {
 	include("download.php");
@@ -66,7 +63,6 @@ $typewhitelist = array("terms", "updateversiontags", "files", "show", "edit", "e
 if (!in_array($urlparts[0], $typewhitelist)) {
 	$modid = $con->getOne("select assetid from `mod` where urlalias=?", array($urlparts[0]));
 	if ($modid) {
-
 		$urlparts = array("show", "mod", $modid);
 	} else {
 		showErrorPage(HTTP_NOT_FOUND);
@@ -83,6 +79,7 @@ if (file_exists($filename)) {
 } 
 
 
+//TODO(Rennorb) @cleanup: All of this can only happen for 'mod' and 'release', since those are the only two asset types.
 $filename = $urlparts[0] . ".php";
 
 if (count($urlparts) > 1) {
@@ -99,7 +96,5 @@ if (count($urlparts) > 1) {
 } else {
 	include($filename);
 }
-
-
 
 showErrorPage(HTTP_NOT_FOUND);

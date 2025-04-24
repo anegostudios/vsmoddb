@@ -2,8 +2,8 @@
 
 $view->assign("columns", array(array("cssclassname" => "", "code" => "code", "title" => "Code"), array("cssclassname" => "", "code" => "Name", "title" => "Name")));
 $view->assign("entrycode", "tag");
-$view->assign("entryplural", "Connection types");
-$view->assign("entrysingular", "Connection type");
+$view->assign("entryplural", "Mods");
+$view->assign("entrysingular", "Mod");
 
 $assetid = $urlparts[2];
 
