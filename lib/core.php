@@ -525,7 +525,7 @@ function _inflateWalker($node)
 		if($child->nodeType === XML_TEXT_NODE) {
 			$newHtml = preg_replace_callback(
 				'#https?://[\w.@:/\[\]!$&\'"()*+,;%=\#?]+#',
-				fn($match) => _inflateLink($match[0]),
+				fn($match) => _inflateLink($match[0], true),
 				$child->textContent, -1, $count
 			);
 			if($count) {
@@ -556,11 +556,13 @@ function _inflateWalker($node)
 					}
 
 					if($link) {
-						$newHtml = _inflateLink($link);
-						$d = new DOMDocument();
-						$d->loadHTML($newHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-						// This is always one-to-one, so we can directly replace it.
-						$node->replaceChild($node->ownerDocument->importNode($d->firstChild, true), $child);
+						$newHtml = _inflateLink($link, false);
+						if($newHtml) {
+							$d = new DOMDocument();
+							$d->loadHTML($newHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+							// This is always one-to-one, so we can directly replace it.
+							$node->replaceChild($node->ownerDocument->importNode($d->firstChild, true), $child);
+						}
 					}
 				}
 				continue;
@@ -578,9 +580,10 @@ function _inflateWalker($node)
 //TODO(Rennorb): Transform this into a preprocessing + migration function for the old data. Having to run this on every render is quite bad.
 /** Inflates a link into html. Always wrapped in a singular node.
  * @param string $link
- * @return string
+ * @param bool   $wrapUnmatchedLink Wrap links that do not have special treatment with anchor tags.
+ * @return string|false
  */
-function _inflateLink($link)
+function _inflateLink($link, $wrapUnmatchedLink)
 {
 	// https://youtu.be/XNV8SaaDi0o?si=ecgbd8PE_vfFKSDi
 	// https://www.youtube.com/watch?v=vkSP1pNpfEQ&list=PLMWVmegrv0fqF7kQGkQU-d_SBffJUjWIhyou
@@ -591,7 +594,7 @@ function _inflateLink($link)
 
 	$urlParts = parse_url($link);
 	$path = $urlParts['path'] ?? '';
-	$relAttr = endsWith($urlParts['host'], 'vintagestory.at') ? ' rel="nofollow external"' : '';
+	$relAttr = empty($urlParts['host']) || endsWith($urlParts['host'], 'vintagestory.at') ? '' : ' rel="nofollow external"';
 
 	$lastDot = strrpos($path, '.');
 	if($lastDot !== false && $lastDot + 1 < strlen($path)) {
@@ -600,6 +603,8 @@ function _inflateLink($link)
 			return "<a target='_blank'{$relAttr} href='$safeLink'><img src='$safeLink' alt='' /></a>";
 		}
 	}
+
+	if(!$wrapUnmatchedLink) return false;
 
 	$safeLink = str_replace("'", "%27", $link); // @security: We escape the single quote to prevent the link form being able to escape the href in the anchor tag, but we cannot use htmlspecialchars since we need an actual link.
 	$content = htmlspecialchars($link);
