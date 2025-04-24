@@ -50,8 +50,11 @@ switch($urlparts[1]) {
 				}
 
 				// send notification about the new comment to the main mod author
+				//TODO(Rennorb): Send notifications to all opt-in contributors, requires adding config option and table changes.
 				$creatorUserId = intval($modData['createdbyuserid']);
-				$con->execute("insert into notification (type, recordid, userid) values ('newcomment', $commentId, $creatorUserId)");
+				if($user['userid'] != $creatorUserId) {
+					$con->execute("insert into notification (type, recordid, userid) values ('newcomment', $commentId, $creatorUserId)");
+				}
 
 				logAssetChanges(['Added a new comment.'], $assetId);
 
