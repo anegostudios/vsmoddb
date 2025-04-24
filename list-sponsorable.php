@@ -58,4 +58,5 @@ foreach($rawData as $row) {
 
 
 $view->assign('dataByUser', $dataByUser, null, true);
+$view->assign('headerHighlight', HEADER_HIGHLIGHT_ADMIN_TOOLS, null, true);
 $view->display("list-sponsorable");

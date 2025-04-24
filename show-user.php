@@ -61,6 +61,8 @@ if (canModerate($shownuser, $user)) {
 	$view->assign("changelog", $changelog);
 }
 
+if($shownuser['userid'] == $user['userid']) $view->assign('headerHighlight', HEADER_HIGHLIGHT_CURRENT_USER, null, true);
+
 $view->assign("mods", $authormods);
 $view->assign("user", $user);
 $view->assign("shownuser", $shownuser);

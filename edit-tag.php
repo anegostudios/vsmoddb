@@ -61,4 +61,5 @@ $view->assign("tagtypes", $con->getAll("select * from tagtype order by name"));
 
 
 $view->assign("row", $row);
+$view->assign('headerHighlight', HEADER_HIGHLIGHT_ADMIN_TOOLS, null, true);
 $view->display("edit-tag");

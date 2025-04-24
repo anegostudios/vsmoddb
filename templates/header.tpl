@@ -46,10 +46,10 @@
 		<a href="/" class="logo"><img src="/web/img/vsmoddb-logo-s.png" align="left"></a>
 		
 		<nav id="main-nav">
-			<a href="/home"{if in_array($urltarget, array('home', ''))} class="active"{/if}>Home</a>
-			<a href="/list/mod"{if ($urltarget === 'list/mod')} class="active"{/if}>All Mods</a>
+			<a href="/home"{if $headerHighlight === HEADER_HIGHLIGHT_HOME} class="active"{/if}>Home</a>
+			<a href="/list/mod"{if $headerHighlight === HEADER_HIGHLIGHT_MODS} class="active"{/if}>All Mods</a>
 			{if (!empty($user))}
-				<a href="/edit/mod"{if ($urltarget === 'edit/mod')} class="active"{/if}><img src="/web/img/upload.png"><span>Submit a mod</span></a>
+				<a href="/edit/mod"{if $headerHighlight === HEADER_HIGHLIGHT_SUBMIT_MOD} class="active"{/if}><img src="/web/img/upload.png"><span>Submit a mod</span></a>
 			{/if}
 			<span class="flex-spacer" style="max-width: 6em; flex-grow: .5"></span>
 			<a class="external" href="https://wiki.vintagestory.at/Troubleshooting_Mods" target="_blank">Mod Troubleshooting</a>
@@ -57,13 +57,13 @@
 			<span class="flex-spacer"></span>
 
 			{if (!empty($user))}
-				<span class="icon-only submenu notifications{if $urltarget === 'notifications'} active{/if}">
+				<span class="icon-only submenu notifications{if $headerHighlight === HEADER_HIGHLIGHT_NOTIFICATIONS} active{/if}">
 					<a href="/notifications">
-						<span class="notificationcount{if $notificationcount && $urltarget !== 'notifications'} visible{/if}">{$notificationcount}</span>
+						<span class="notificationcount{if $notificationcount && $headerHighlight !== HEADER_HIGHLIGHT_NOTIFICATIONS} visible{/if}">{$notificationcount}</span>
 						<i class="bx bxs-bell"></i>
 					</a>
 					<nav>
-						{if $urltarget !== 'notifications'}
+						{if $headerHighlight !== HEADER_HIGHLIGHT_NOTIFICATIONS}
 							{foreach from=$notifications item=notification}
 								<a href="{$notification['link']}">{$notification['text']}<br>{fancyDate($notification['created'])}</a>
 							{/foreach}
@@ -77,7 +77,7 @@
 				</span>
 				
 				{if ($user['rolecode'] == 'admin')}
-					<span class="icon-only submenu{if in_array($urltarget, array('list/user', 'list/tag', 'list/sponsorable'))} active{/if}">
+					<span class="icon-only submenu{if $headerHighlight === HEADER_HIGHLIGHT_ADMIN_TOOLS} active{/if}">
 						<span><i class="bx bxs-cog"></i></span>
 						<nav>
 							<a href="/list/user">Users</a>
@@ -87,7 +87,7 @@
 					</span>
 				{/if}
 
-				<span class="submenu{if in_array($urltarget, array('accountsettings', 'show/user', 'show/user/'.$user['hash'], 'edit/profile/'.$user['hash']))} active{/if}">
+				<span class="submenu{if $headerHighlight === HEADER_HIGHLIGHT_CURRENT_USER} active{/if}">
 					<span>{$user["name"]}</span>
 					<nav>
 						<a href="/show/user/{$user['hash']}">Profile</a>

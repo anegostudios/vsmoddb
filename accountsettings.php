@@ -22,6 +22,7 @@ $followedMods = $con->getAll('
 ', [$user['userid']]);
 
 
+$view->assign('headerHighlight', HEADER_HIGHLIGHT_CURRENT_USER, null, true);
 $view->assign("followedMods", $followedMods);
 $view->assign("timezones", array_keys($timezones));
 $view->display("accountsettings.tpl");

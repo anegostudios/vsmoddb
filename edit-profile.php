@@ -18,6 +18,7 @@ if (!empty($_POST["save"])) {
 	$shownuser = array_merge($shownuser, $data);
 }
 
+if($shownuser['userid'] == $user['userid']) $view->assign('headerHighlight', HEADER_HIGHLIGHT_CURRENT_USER, null, true);
 $view->assign("usertoken", $usertoken);
 $view->assign("bio", $shownuser['bio']);
 $view->display("edit-profile.tpl");

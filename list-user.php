@@ -24,4 +24,5 @@ if (isset($searchvalues["name"])) {
 	$view->assign("rows", array());
 }
 
+$view->assign('headerHighlight', HEADER_HIGHLIGHT_ADMIN_TOOLS, null, true);
 $view->display("list-user");

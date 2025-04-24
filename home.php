@@ -137,4 +137,5 @@ $latestcomments = $con->getAll("
 
 $view->assign("latestcomments", $latestcomments, null, true);
 
+$view->assign('headerHighlight', HEADER_HIGHLIGHT_HOME, null, true);
 $view->display("home.tpl");

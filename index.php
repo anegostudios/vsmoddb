@@ -18,26 +18,15 @@ if(CDN !== 'none') include("lib/core.php");
 
 
 
-$urlpath = getURLPath();
-$target = explode("?", $urlpath)[0];
+$urlpath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$urlpath = trim($urlpath, " \n\r\t\v\0/"); // Strip spaces and slashes from start / end.
+if(empty($urlpath))  $urlpath = 'home';
 
+// @security: Filter out directory traversal segments.
+// Just discard them completely, they are not used in any actual application.
+$urlparts = array_filter(explode('/', $urlpath), fn($s) => !startsWith($s, '.'));
 
-
-$view->assign("urltarget", $target);
-
-if (empty($target)) {
-	$target = "home";
-}
-
-$urlparts = explode("/", $target);
-
-//TODO(Rennorb) @cleanup: This routing mess...
-if ($urlparts[0] == "download") {
-	include("download.php");
-	exit();
-}
-
-if ($urlparts[0] == "api") {
+if($urlparts[0] === 'api') {
 	array_shift($urlparts);
 	if(count($urlparts) > 0 && $urlparts[0] === 'v2') {
 		array_shift($urlparts);
@@ -49,52 +38,57 @@ if ($urlparts[0] == "api") {
 	exit();
 }
 
-if ($urlparts[0] == "notification") {
-	include("lib/notification.php");
-	exit();
-}
-if ($urlparts[0] == "notifications") {
-	include("notifications.php");
-	exit();
-}
-
-$typewhitelist = array("terms", "updateversiontags", "files", "show", "edit", "edit-uploadfile", "edit-deletefile", "list", "accountsettings", "logout", "login", "home", "get-assetlist", "moderate");
-
-if (!in_array($urlparts[0], $typewhitelist)) {
-	$modid = $con->getOne("select assetid from `mod` where urlalias=?", array($urlparts[0]));
-	if ($modid) {
-		$urlparts = array("show", "mod", $modid);
-	} else {
-		showErrorPage(HTTP_NOT_FOUND);
-	}
-}
-
-// Try to compose filename from the first two segemnts of the url:
-// edit/profile -> edit-profile.php 
-$filename = implode("-", array_slice($urlparts, 0, 2)) . ".php";
-
-if (file_exists($filename)) {
-	include($filename);
-	exit();
-} 
+//TODO(Rennorb) @cleanup @perf: Move view initialization here, after api branch.
+$view->assign('headerHighlight', null, null, true);
 
 
-//TODO(Rennorb) @cleanup: All of this can only happen for 'mod' and 'release', since those are the only two asset types.
-$filename = $urlparts[0] . ".php";
+switch($urlparts[0]) {
+	case 'home':
+	case 'terms':
+	case 'accountsettings':
+	case 'login':
+	case 'logout':
+	case 'edit-uploadfile':
+	case 'edit-deletefile':
 
-if (count($urlparts) > 1) {
-	$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($urlparts[1]));
-	
-	if ($assettypeid && file_exists($filename)) {
-		$assettype = $urlparts[1];
-		
-		if (in_array($assettype, array('user', 'stati', 'assettype', 'tag')) && $user['rolecode'] != 'admin') exit("noprivilege");
-		
-		include($filename);
+	case 'download':
+	case 'notifications':
+	case 'updateversiontags':
+		include($urlparts[0].'.php');
 		exit();
-	} 
-} else {
-	include($filename);
+	
+	case 'notification':
+		include("lib/notification.php");
+		exit();
+
+	case 'list':
+	case 'show':
+	case 'edit':
+	case 'moderate':
+	case 'cmd':
+		// Try to compose filename from the first two segemnts of the url:
+		// edit/profile -> edit-profile.php 
+		$filename = implode("-", array_slice($urlparts, 0, 2)) . ".php";
+		if (file_exists($filename)) {
+			include($filename);
+			exit();
+		}
+
+		$filename = $urlparts[0].'.php';
+		if (file_exists($filename)) {
+			$assettype = $urlparts[1];
+			include($filename);
+			exit();
+		}
+
+		break;
+
+	default: // @security: Check for url-aliases last. Don't allow mods to overwrite urls.
+		if ($modid = $con->getOne('select assetid from `mod` where urlalias = ?', [$urlparts[0]])) {
+			$urlparts = ['show', 'mod', $modid]; // Update $urlparts for selected header highlighting in the header template.
+			include('show-mod.php');
+			exit();
+		}
 }
 
 showErrorPage(HTTP_NOT_FOUND);

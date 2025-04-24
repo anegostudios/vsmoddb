@@ -53,6 +53,7 @@ usort($majorversions, 'cmpVersionTag');
 $tags = $con->getAll('SELECT tagid, `name`, `text` FROM tag WHERE assettypeid = 1 ORDER BY `name`');
 
 
+$view->assign('headerHighlight', HEADER_HIGHLIGHT_MODS, null, true);
 $view->assign('selectedParams', $selectedParams, null, true);
 $view->assign('strippedQuery', $strippedQuery, null, true);
 $view->assign('fetchCursorJS', $fetchCursorJS, null, true);

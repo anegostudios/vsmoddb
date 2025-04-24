@@ -165,20 +165,6 @@ function createADOConnection($config, $persistent = true)
 	return $con;
 }
 
-function getURLPath()
-{
-	global $con, $language;
-
-	$scripturl = $_SERVER['REQUEST_URI'];
-	if (strstr($scripturl, "?")) {
-		$scripturl = substr($scripturl, 0, strpos($scripturl, "?"));
-	}
-	$urlcode = substr($scripturl, 1);
-
-
-	return $urlcode;
-}
-
 /** This function forces a location header to the the current uri, as well as status 303.
  * This causes the browser to GET the (same) page again, and prevents "resend with data" on page reloads.
  * This function does not terminate execution. You likely want to exit() after calling this.
@@ -833,6 +819,7 @@ function showErrorPage($errorCode, $reason = '', $goBugRennorb = null, $rawReaso
 
 	http_response_code($errorCode);
 
+	$view->assign('headerHighlight', null, null, true);
 	$view->assign('goBugRennorb', $goBugRennorb);
 	$view->assign('statusMessage', $statusMessage);
 	$view->assign('reason', $reason, null, $rawReason);
@@ -843,3 +830,12 @@ function showErrorPage($errorCode, $reason = '', $goBugRennorb = null, $rawReaso
 
 const FOLLOW_FLAG_CREATE_NOTIFICATIONS = 1 << 0;
 //const FOLLOW_FLAG_SEND_MAIL          = 1 << 1; // @unused, for later mail sending feature
+
+
+
+const HEADER_HIGHLIGHT_HOME          = 1;
+const HEADER_HIGHLIGHT_MODS          = 2;
+const HEADER_HIGHLIGHT_SUBMIT_MOD    = 3;
+const HEADER_HIGHLIGHT_NOTIFICATIONS = 4;
+const HEADER_HIGHLIGHT_ADMIN_TOOLS   = 5;
+const HEADER_HIGHLIGHT_CURRENT_USER  = 6;

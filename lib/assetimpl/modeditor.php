@@ -46,6 +46,8 @@ class ModEditor extends AssetEditor
 		if (!$this->assetid) {
 			$this->asset['type'] = 'mod';
 			$this->asset['createdbyuserid'] = $user['userid'];
+
+			$view->assign('headerHighlight', HEADER_HIGHLIGHT_SUBMIT_MOD, null, true);
 		}
 
 		if ($this->assetid && ($this->asset['createdbyuserid'] === $user['userid'])) {
