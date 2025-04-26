@@ -497,7 +497,7 @@ function inflateLinks($html)
 	$doc = new DOMDocument();
 	$doc->recover = true;
 	$doc->strictErrorChecking = false;
-	$doc->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+	$doc->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 	_inflateWalker($doc);
 	return $doc->saveHTML();
 }
