@@ -67,7 +67,7 @@ const MSG_CLASS_ERROR = 'bg-error text-error';
 function addMessage($class, $html, $escapeMessage = false)
 {
 	global $messages;
-	$messages[] = ['class' => $class, 'html' => $escapeMessage ? $html : htmlSpecialChars($html)];
+	$messages[] = ['class' => $class, 'html' => $escapeMessage ? htmlSpecialChars($html) : $html];
 }
 
 

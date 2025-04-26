@@ -67,7 +67,7 @@
 				})
 				.fail(function(jqXHR) \{
 					const d = JSON.parse(jqXHR.responseText);
-					addMessage(MSG_CLASS_ERROR, 'Failed to clear notification(s)' + (d.reason ? (': '+d.reason) : '.'))
+					addMessage(MSG_CLASS_ERROR, 'Failed to clear notification(s)' + (d.reason ? (': '+d.reason) : '.'), true)
 				});
 		}
 	</script>

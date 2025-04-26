@@ -52,7 +52,7 @@ $(document).ready(function () {
 					$comment.show();
 
 					const d = JSON.parse(jqXHR.responseText);
-					addMessage(MSG_CLASS_ERROR, 'Failed to delete comment' + (d.reason ? (': '+d.reason) : '.'))
+					addMessage(MSG_CLASS_ERROR, 'Failed to delete comment' + (d.reason ? (': '+d.reason) : '.'), true)
 				});;
 		}
 	});
@@ -109,7 +109,7 @@ $(document).ready(function () {
 				})
 				.fail(function(jqXHR) {
 					const d = JSON.parse(jqXHR.responseText);
-					addMessage(MSG_CLASS_ERROR, 'Failed to edit comment' + (d.reason ? (': '+d.reason) : '.'))
+					addMessage(MSG_CLASS_ERROR, 'Failed to edit comment' + (d.reason ? (': '+d.reason) : '.'), true)
 				});
 		});
 
@@ -148,7 +148,7 @@ $(document).ready(function () {
 				$editor.show();
 
 				const d = JSON.parse(jqXHR.responseText);
-				addMessage(MSG_CLASS_ERROR, 'Failed to submit comment' + (d.reason ? (': '+d.reason) : '.'))
+				addMessage(MSG_CLASS_ERROR, 'Failed to submit comment' + (d.reason ? (': '+d.reason) : '.'), true)
 			});
 	})
 });

@@ -246,12 +246,12 @@
 					$(".count", $(this)).text("" + oldCount);
 
 					const d = JSON.parse(jqXHR.responseText);
-					addMessage(MSG_CLASS_ERROR, 'Failed to (un-)follow mod' + (d.reason ? (': '+d.reason) : '.'))
+					addMessage(MSG_CLASS_ERROR, 'Failed to (un-)follow mod' + (d.reason ? (': '+d.reason) : '.'), true)
 				});
 			});
 		});
 	</script>
-	<script type="text/javascript" src="/web/js/comments.js?version=12" async></script>
+	<script type="text/javascript" src="/web/js/comments.js?version=13" async></script>
 {/capture}
 
 {include file="footer"}

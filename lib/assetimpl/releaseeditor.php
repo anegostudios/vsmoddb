@@ -242,7 +242,7 @@ class ReleaseEditor extends AssetEditor {
 
 			case 'modidinuse':
 				$name = htmlspecialchars($this->inUseByUser['name']);
-				addMessage(MSG_CLASS_ERROR, "Cannot save release, this mod id has been claimed by {$name}, please choose another one."); // @security: Just in case the name gets escaped.
+				addMessage(MSG_CLASS_ERROR, "Cannot save release, this mod id has been claimed by {$name}, please choose another one.", true); // @security: Just in case the name gets escaped.
 				break;
 
 			case 'missingfile':

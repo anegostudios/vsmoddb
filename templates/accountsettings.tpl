@@ -96,7 +96,7 @@
 					trEl.dataset.settings = !targetBitState ? (oldFlags | targetBitMask) : (oldFlags & ~targetBitMask);
 
 					const d = JSON.parse(jqXHR.responseText);
-					addMessage(MSG_CLASS_ERROR, 'Failed to clear change setting' + (d.reason ? (': '+d.reason) : '.'))
+					addMessage(MSG_CLASS_ERROR, 'Failed to clear change setting' + (d.reason ? (': '+d.reason) : '.'), true)
 				});
 		});
 	</script>
