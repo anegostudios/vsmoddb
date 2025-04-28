@@ -215,7 +215,7 @@ function queryModSearch($searchParams)
 	$currentUserId = $user['userid'] ?? 0;
 
 	return $con->getAll("
-		SELECT
+		SELECT DISTINCT
 			a.createdbyuserid,
 			a.name,
 			a.created,
