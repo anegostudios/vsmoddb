@@ -118,16 +118,27 @@
 					<span class="count">{$asset["follows"]}</span>
 				</a>
 
-				{if count($releases) && !empty($releases[0]['file'])}
+				{if $latestReleaseStable || $latestReleaseUnstable}
 					<p>
-						{if count($releases[0]['tags']) > 0}<span class="text-weak">Latest file for
-								{$releases[0]['tags'][count($releases[0]['tags'])-1]['name']}:</span><br>
-						{else}<span class="text-weak">Latest version:</span><br>
+						{if $latestReleaseStable}
+							{if count($latestReleaseStable['compatibleGameVersions']) > 0}<span class="text-weak">Recommended download (for game {$latestReleaseStable['compatibleGameVersions'][count($latestReleaseStable['compatibleGameVersions'])-1]['name']}):</span><br>
+							{else}<span class="text-weak">Recommended download:</span><br>
+							{/if}
+
+
+							<a class="downloadbutton" href="{formatDownloadTrackingUrl($latestReleaseStable['file'])}">{$latestReleaseStable['file']['filename']}</a>
+							{if !empty($latestReleaseStable['modidstr'])}&nbsp;<a href="vintagestorymodinstall://{$latestReleaseStable['modidstr']}@{$latestReleaseStable['modversion']}"><abbr title="Requires game version v1.18.0-rc.1 or later, currently not supported on MacOS.">1-click install</abbr></a>{/if}
 						{/if}
+						<br>
+						{if $latestReleaseUnstable}
+							{if count($latestReleaseUnstable['compatibleGameVersions']) > 0}<span class="text-weak">For testers (for game {$latestReleaseUnstable['compatibleGameVersions'][count($latestReleaseUnstable['compatibleGameVersions'])-1]['name']}):</span><br>
+							{else}<span class="text-weak">For testers:</span><br>
+							{/if}
 
 
-						<a class="downloadbutton" href="{formatDownloadTrackingUrl($releases[0]['file'])}">{$releases[0]['file']['filename']}</a>
-						{if !empty($releases[0]['modidstr'])}<a style="padding-left:10px;" href="vintagestorymodinstall://{$releases[0]['modidstr']}@{$releases[0]['modversion']}"><abbr title="Works only on Windows and v1.18.0-rc.1 or newer">1-click install</abbr></a>{/if}
+							<a class="downloadbutton pre-release" href="{formatDownloadTrackingUrl($latestReleaseUnstable['file'])}">{$latestReleaseUnstable['file']['filename']}</a>
+							{if !empty($latestReleaseUnstable['modidstr'])}&nbsp;<a href="vintagestorymodinstall://{$latestReleaseUnstable['modidstr']}@{$latestReleaseUnstable['modversion']}"><abbr title="Requires game version v1.18.0-rc.1 or later, currently not supported on MacOS.">1-click install</abbr></a>{/if}
+						{/if}
 					</p>
 				{/if}
 			</div>
@@ -146,7 +157,7 @@
 			</div>
 
 			<p></p>
-			<table class="stdtable" id="{$entryplural}" style="min-width: 900px">
+			<table class="stdtable" style="min-width: 900px">
 				<thead>
 					<tr>
 						<th class="version">Version</th>
@@ -155,9 +166,7 @@
 						<th class="releasedate">Release date</th>
 						<th class="changelog">Changelog</th>
 						<th class="download">Download</th>
-						<th><abbr
-								title="Works only on game version v1.18.0-rc.1 or newer. Requires MS Windows or using the AUR package on Linux">1-click
-								mod install*</abbr></th>
+						<th><abbr title="Requires game version v1.18.0-rc.1 or later, currently not supported on MacOS.">1-click mod install*</abbr></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -175,7 +184,7 @@
 							</td>
 							<td>
 								<div class="tags">
-								{foreach from=$release['tags'] item=tag}
+								{foreach from=$release['compatibleGameVersions'] item=tag}
 									{if $tag['tagid']==0}<a href="#" class="tag" style="background-color:{$tag['color']}" title="{$tag['desc']}">{$tag['name']}*</a>
 									{else}<a href="/list/mod/?gv[]={$tag['tagid']}" class="tag" rel="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>{/if}
 								{/foreach}
@@ -184,7 +193,7 @@
 							<td>{if !empty($release['file'])}{intval($release['file']['downloads'])}{/if}</td>
 							<td>{fancyDate($release['created'])}</td>
 							<td><a href="#showchangelog">Show</a></td>
-							<td>{if !empty($release['file'])}<a class="downloadbutton" href="{formatDownloadTrackingUrl($release['file'])}">{$release['file']['filename']}</a>{/if}</td>
+							<td>{if !empty($release['file'])}<a class="downloadbutton{if $release['isPreRelease']} pre-release{/if}" href="{formatDownloadTrackingUrl($release['file'])}">{$release['file']['filename']}</a>{/if}</td>
 							<td>{if !empty($release['modidstr'])}<a href="vintagestorymodinstall://{$release['modidstr']}@{$release['modversion']}">Install now</a>{/if}</td>
 						</tr>
 						{assign var="first" value="1"}

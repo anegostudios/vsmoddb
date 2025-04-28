@@ -1108,15 +1108,10 @@ a.add {
 	background: radial-gradient(ellipse at center, #E4E0DC 0%,#E4E0DC 54%,#90A2B8 100%);
 }
 
-
-a.downloadbutton:hover {
-  background-color: #5585d4;
-}
-
 a.downloadbutton {
 	background-image: url(/web/img/download-w.png);
 	background-repeat: no-repeat;
-	background-color: #4a75bb;
+	background-color: hsl(217, 45%, 51%);
 	display: inline-block;
 	box-shadow: 1px 1px 3px #aaa;
 	padding: 4px 4px 4px 40px;
@@ -1126,6 +1121,18 @@ a.downloadbutton {
 	text-decoration: none;
 	background-size: 20px;
 	background-position: 10px;
+}
+
+a.downloadbutton:hover {
+  background-color: hsl(217, 45%, 54%);
+}
+
+a.downloadbutton.pre-release {
+	background-color: hsl(217, 45%, 70%);
+}
+
+a.downloadbutton.pre-release:hover {
+  background-color: hsl(217, 45%, 73%);
 }
 
 a.edit:before {

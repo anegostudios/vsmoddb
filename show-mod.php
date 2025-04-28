@@ -1,179 +1,194 @@
 <?php
 
-$view->assign("columns", array(array("cssclassname" => "", "code" => "code", "title" => "Code"), array("cssclassname" => "", "code" => "Name", "title" => "Name")));
-$view->assign("entrycode", "tag");
-$view->assign("entryplural", "Mods");
-$view->assign("entrysingular", "Mod");
+$assetid = $urlparts[2] ?? 0;
 
-$assetid = $urlparts[2];
+if (!$assetid) {
+	showErrorPage(404);
+}
 
-if ($assetid) {
-	$asset = $con->getRow("
-		select 
-			asset.*, 
-			`mod`.*,
-			logofile.cdnpath as logourl,
-			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
-			createduser.userid as createduserid,
-			createduser.created as createduserjoindate,
-			createduser.name as createdusername,
-			editeduser.userid as editeduserid,
-			editeduser.name as editedusername,
-			status.code as statuscode
-		from 
-			asset 
-			join `mod` on asset.assetid=`mod`.assetid
-			left join user as createduser on asset.createdbyuserid = createduser.userid
-			left join user as editeduser on asset.editedbyuserid = editeduser.userid
-			left join status on asset.statusid = status.statusid
-			left join file as logofile on mod.embedlogofileid = logofile.fileid
-		where
-			asset.assetid = ?
-	", array($assetid));
+$asset = $con->getRow("
+	select 
+		asset.*, 
+		`mod`.*,
+		logofile.cdnpath as logourl,
+		logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
+		createduser.userid as createduserid,
+		createduser.created as createduserjoindate,
+		createduser.name as createdusername,
+		editeduser.userid as editeduserid,
+		editeduser.name as editedusername,
+		status.code as statuscode
+	from 
+		asset 
+		join `mod` on asset.assetid=`mod`.assetid
+		left join user as createduser on asset.createdbyuserid = createduser.userid
+		left join user as editeduser on asset.editedbyuserid = editeduser.userid
+		left join status on asset.statusid = status.statusid
+		left join file as logofile on mod.embedlogofileid = logofile.fileid
+	where
+		asset.assetid = ?
+", array($assetid));
 
-	if (!$asset) showErrorPage(HTTP_NOT_FOUND);
+if (!$asset) showErrorPage(HTTP_NOT_FOUND);
 
-	$teammembers = $con->getAll("
-		select
-			user.userid,
-			user.name,
-			substring(sha2(concat(user.userid, user.created), 512), 1, 20) as usertoken
-		from 
-			teammember
-			join user on teammember.userid = user.userid 
-		where 
-			teammember.modid = ?
-		", array($asset['modid']));
-	$view->assign("teammembers", $teammembers);
+$teammembers = $con->getAll("
+	select
+		user.userid,
+		user.name,
+		substring(sha2(concat(user.userid, user.created), 512), 1, 20) as usertoken
+	from 
+		teammember
+		join user on teammember.userid = user.userid 
+	where 
+		teammember.modid = ?
+	", array($asset['modid']));
+$view->assign("teammembers", $teammembers);
 
-	$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);
-	$view->assign("createdusertoken", $createdusertoken);
+$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);
+$view->assign("createdusertoken", $createdusertoken);
 
-	$files = $con->getAll("select * from file where assetid = ? and fileid not in (?, ?)", 
-		array($assetid, $asset['cardlogofileid'] ?? 0, $asset['embedlogofileid'] ?? 0));  /* sql cant compare against null */
+$files = $con->getAll("select * from file where assetid = ? and fileid not in (?, ?)", 
+	array($assetid, $asset['cardlogofileid'] ?? 0, $asset['embedlogofileid'] ?? 0));  /* sql cant compare against null */
 
-	//NOTE(Rennorb): There was a time where we rescaled images for logos. We no longer do that, but in ~140 cases there are still two images for the logo: the actual logo image, and the original one that was uploaded.
-	// Since we don't show the logo in the slideshow anymore, we also need to remove that second file that got uploaded, without removing it from the database so it stays downloadable for the mod author until they replace it.
-	// Here is a sql query to get a list of such mods:
-	/*
-		select modid, urlalias, user.name from `mod`
-		join file f on f.fileid = `mod`.cardlogofileid
-		join file f2 on f2.cdnpath = concat(substr(f.cdnpath, 1, length(f.cdnpath) - 12), substr(f.cdnpath, -4))
-		join asset on `mod`.assetid = asset.assetid
-		join user on user.userid = asset.createdbyuserid;
-	*/
-	if($asset['legacylogo']) {
-		splitOffExtension($asset['logourl'], $base, $ext);
-		if(endsWith($base, '_480_320')) {
-			$legacyLogoPath = substr($base, 0, strlen($base) - 8).'.'.$ext;
-			foreach ($files as $k => $file) {
-				if($file['cdnpath'] === $legacyLogoPath) {
-					unset($files[$k]);
-					break;
-				}
+//NOTE(Rennorb): There was a time where we rescaled images for logos. We no longer do that, but in ~140 cases there are still two images for the logo: the actual logo image, and the original one that was uploaded.
+// Since we don't show the logo in the slideshow anymore, we also need to remove that second file that got uploaded, without removing it from the database so it stays downloadable for the mod author until they replace it.
+// Here is a sql query to get a list of such mods:
+/*
+	select modid, urlalias, user.name from `mod`
+	join file f on f.fileid = `mod`.cardlogofileid
+	join file f2 on f2.cdnpath = concat(substr(f.cdnpath, 1, length(f.cdnpath) - 12), substr(f.cdnpath, -4))
+	join asset on `mod`.assetid = asset.assetid
+	join user on user.userid = asset.createdbyuserid;
+*/
+if($asset['legacylogo']) {
+	splitOffExtension($asset['logourl'], $base, $ext);
+	if(endsWith($base, '_480_320')) {
+		$legacyLogoPath = substr($base, 0, strlen($base) - 8).'.'.$ext;
+		foreach ($files as $k => $file) {
+			if($file['cdnpath'] === $legacyLogoPath) {
+				unset($files[$k]);
+				break;
 			}
 		}
 	}
+}
 
-	if(!empty($asset['logourl'])) {
-		$asset['logourl'] = formatCdnUrlFromCdnPath($asset['logourl']);
+if(!empty($asset['logourl'])) {
+	$asset['logourl'] = formatCdnUrlFromCdnPath($asset['logourl']);
+}
+
+foreach ($files as &$file) {
+	$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
+	$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
+	$file["url"] = formatCdnUrl($file);
+}
+unset($file);
+
+$view->assign("files", $files);
+
+$deletedFilter = canModerate(null, $user) ? '' : 'and comment.deleted = 0';
+$comments = $con->getAll("
+	select 
+		comment.*,
+		user.name as username,
+		user.roleid as roleid,
+		substring(sha2(concat(user.userid, user.created), 512), 1, 20) as usertoken,
+		ifnull(user.banneduntil >= now(), 0) as `isbanned`,
+		role.code as rolecode,
+		role.name as rolename
+	from 
+		comment 
+		join user on (comment.userid = user.userid)
+		left join role on (user.roleid = role.roleid)
+	where assetid=? $deletedFilter
+	order by comment.created desc
+", array($assetid));
+
+foreach ($comments as $idx => $comment) {
+	if ($asset['createduserid'] == $comment["userid"]) {
+		$comments[$idx]["flaircode"] = "author";
 	}
 
-	foreach ($files as &$file) {
-		$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
-		$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
-		$file["url"] = formatCdnUrl($file);
+	// player, player_nc
+	if ($comment["roleid"] != 3 && $comment["roleid"] != 4) {
+		$comments[$idx]["flaircode"] = $comment["rolecode"];
 	}
-	unset($file);
+}
 
-	$view->assign("files", $files);
+$view->assign("comments", $comments, null, true);
 
-	$deletedFilter = canModerate(null, $user) ? '' : 'and comment.deleted = 0';
-	$comments = $con->getAll("
-		select 
-			comment.*,
-			user.name as username,
-			user.roleid as roleid,
-			substring(sha2(concat(user.userid, user.created), 512), 1, 20) as usertoken,
-			ifnull(user.banneduntil >= now(), 0) as `isbanned`,
-			role.code as rolecode,
-			role.name as rolename
-		from 
-			comment 
-			join user on (comment.userid = user.userid)
-			left join role on (user.roleid = role.roleid)
-		where assetid=? $deletedFilter
-		order by comment.created desc
-	", array($assetid));
+$alltags = $con->getAssoc("select tagid, name from tag where assettypeid=1");
 
-	foreach ($comments as $idx => $comment) {
-		if ($asset['createduserid'] == $comment["userid"]) {
-			$comments[$idx]["flaircode"] = "author";
-		}
-
-		// player, player_nc
-		if ($comment["roleid"] != 3 && $comment["roleid"] != 4) {
-			$comments[$idx]["flaircode"] = $comment["rolecode"];
-		}
+$tags = array();
+$tagscached = trim($asset["tagscached"]);
+if (!empty($tagscached)) {
+	$tagdata = explode("\r\n", $tagscached);
+	foreach ($tagdata as $tagrow) {
+		$row = explode(",", $tagrow);
+		$tags[] = array('name' => $row[0], 'color' => $row[1], 'tagid' => $row[2], 'text' => $alltags[$row[2]]);
 	}
+}
 
-	$view->assign("comments", $comments, null, true);
+$view->assign("tags", $tags);
 
-	$alltags = $con->getAssoc("select tagid, name from tag where assettypeid=1");
+$releases = $con->getAll("
+	select 
+		`release`.*,
+		asset.*
+	from 
+		`release` 
+		join asset on (asset.assetid = `release`.assetid)
+	where modid=?
+	order by release.created desc
+", array($asset['modid']));
 
-	$tags = array();
-	$tagscached = trim($asset["tagscached"]);
-	if (!empty($tagscached)) {
-		$tagdata = explode("\r\n", $tagscached);
+foreach ($releases as &$release) {
+	$compatibleGameVersions = array();
+	if (!empty($compatibleGameVersionsCached = trim($release["tagscached"]))) {
+		$tagdata = explode("\r\n", $compatibleGameVersionsCached);
 		foreach ($tagdata as $tagrow) {
 			$row = explode(",", $tagrow);
-			$tags[] = array('name' => $row[0], 'color' => $row[1], 'tagid' => $row[2], 'text' => $alltags[$row[2]]);
+			$compatibleGameVersions[] = array('name' => $row[0], 'color' => $row[1], 'tagid' => $row[2]);
 		}
 	}
-
-	$view->assign("tags", $tags);
-
-	$releases = $con->getAll("
-		select 
-			`release`.*,
-			asset.*
-		from 
-			`release` 
-			join asset on (asset.assetid = `release`.assetid)
-		where modid=?
-		order by release.created desc
-	", array($asset['modid']));
-
-	foreach ($releases as $idx => $release) {
-		$tags = array();
-		$tagscached = trim($release["tagscached"]);
-		if (!empty($tagscached)) {
-			$tagdata = explode("\r\n", $tagscached);
-			foreach ($tagdata as $tagrow) {
-				$row = explode(",", $tagrow);
-				$tags[] = array('name' => $row[0], 'color' => $row[1], 'tagid' => $row[2]);
-			}
-		}
-		if (count($tags)) {
-			usort($tags, 'rcmpVersionTag');
-			$releases[$idx]['highestver'] = $tags[count($tags) - 1]['name'];
-		} else {
-			$releases[$idx]['highestver'] = "";
-		}
-
-		$tags = groupMinorVersionTags($tags);
-
-		$releases[$idx]['tags'] = $tags;
-		$releases[$idx]['file'] = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
+	if (count($compatibleGameVersions)) {
+		usort($compatibleGameVersions, 'rcmpVersionTag');
+		$release['highestver'] = $compatibleGameVersions[count($compatibleGameVersions) - 1]['name'];
+	} else {
+		$release['highestver'] = "";
 	}
 
-	usort($releases, "cmpReleases");
-	$releases = array_reverse($releases);
+	$compatibleGameVersions = groupMinorVersionTags($compatibleGameVersions);
 
-	$view->assign("releases", $releases, null, true);
-} else {
-	$asset = array("modid" => 0, "name" => "", "text" => "", "color" => "", "assettypeid" => "", "tagtypeid" => "");
+	$release['isPreRelease'] = preg_match('/[a-z]/', $release['modversion']); // @perf
+	$release['compatibleGameVersions'] = $compatibleGameVersions;
+	$release['file'] = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
 }
+unset($release);
+
+usort($releases, "cmpReleases");
+$releases = array_reverse($releases);
+
+// Find the latest stable version, and if there is a release thtas even newer or equal but a pre-release verison find that aswell.
+// Crucially, don't select old pre-release versions. 
+$latestReleaseStable = null;
+$latestReleaseUnstable = null;
+foreach($releases as $release) { // Releases are already sorted by version, so we dont need additional sorting here.
+	if($release['isPreRelease']) {
+		if(!$latestReleaseUnstable) {
+			$latestReleaseUnstable = $release;
+		}
+	}
+	else {
+		$latestReleaseStable = $release;
+		break; // If there is a newer unstable version we already found it.
+	}
+}
+
+$view->assign("releases", $releases, null, true);
+
+$view->assign("latestReleaseStable", $latestReleaseStable, null, true);
+$view->assign("latestReleaseUnstable", $latestReleaseUnstable, null, true);
 
 $view->assign("assettypes", $con->getAll("select * from assettype order by name"));
 $view->assign("tagtypes", $con->getAll("select * from tagtype order by name"));
