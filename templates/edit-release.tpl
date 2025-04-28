@@ -61,7 +61,7 @@
 		
 		
 		<div class="editbox flex-fill">
-			<label>Text</label>
+			<label>Changelog</label>
 			<textarea name="text" class="editor" data-editorname="text" style="width: 100%; height: auto;">{$asset['text']}</textarea>
 		</div>
 		

@@ -19,7 +19,6 @@
 
 		<span data-label="Tags">
 			<select style="width:300px;" name="tagids[]" multiple>
-				<option value="">-</option>
 				{foreach from=$tags item=tag}
 					<option value="{$tag['tagid']}" title="{$tag['text']}"{if isset($selectedParams['tags'][$tag['tagid']])} selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
@@ -44,7 +43,6 @@
 		
 		<span data-label="Game Version Exact">
 			<select style="width:160px;" name="gv[]" multiple>
-				<option value="">-</option>
 				{foreach from=$gameversions item=tag}
 					<option value="{$tag['tagid']}"{if isset($selectedParams['gameversions'][$tag['tagid']])} selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
