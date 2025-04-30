@@ -395,7 +395,7 @@ class ModEditor extends AssetEditor
 			if (!array_key_exists($newMemberId, $oldMembers)) {
 				$invitation = $con->getRow("select notificationid, recordid from notification where type = 'teaminvite' and `read` = 0 and userid = ? and (recordid & ((1 << 30) - 1)) = ?", array($newMemberId, $modId));
 				if(empty($invitation)) {
-					$con->execute("insert into notification (type, userid, recordid, created) VALUES ('teaminvite', ?, ?, now())", array($newMemberId, $mergedId));
+					$con->execute("insert into notification (type, userid, recordid) VALUES ('teaminvite', ?, ?)", array($newMemberId, $mergedId));
 
 					$changes[] = "User #{$user['userid']} invited user #{$newMemberId} to join the team".($editBit ? ' with edit permissions' : '').'.';
 				}
@@ -445,7 +445,7 @@ class ModEditor extends AssetEditor
 			return;
 		}
 
-		$con->Execute("insert into notification (type, userid, recordid, created) VALUES ('modownershiptransfer', ?, ?, now())", array($newOwnerId, $modId));
+		$con->Execute("insert into notification (type, userid, recordid) VALUES ('modownershiptransfer', ?, ?)", array($newOwnerId, $modId));
 
 		logAssetChanges(["User #{$user['userid']} initiated a ownership transfer to user #{$newOwnerId}"], $this->assetid);
 

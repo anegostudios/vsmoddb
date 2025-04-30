@@ -321,7 +321,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`notification` (
   `userid` VARCHAR(255) NULL,
   `type` ENUM('newcomment', 'mentioncomment', 'newrelease', 'teaminvite', 'modownershiptransfer') NULL,
   `recordid` INT NULL,
-  `created` DATETIME NULL,
+  `created` DATETIME NOT NULL DEFAULT NOW(),
   PRIMARY KEY (`notificationid`),
   INDEX `userid` (`userid` ASC))
 ENGINE = InnoDB;
