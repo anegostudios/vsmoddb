@@ -1,20 +1,12 @@
-var mentions = {
-	source: function(query, process, delimiter) {
-		if(!query) return;
-
-		$.getJSON('/api/v2/users/by-name/' + query, function(data) {
-			process(Object.entries(data));
-		});
-	},
-	queryBy: 1,
-	insert: function(item) {
-		return `<span class="mention username mceNonEditable" data-user-hash="${item[0]}">${item[1]}</span>`;
-	}
-};
-
 var tinymceSettings = {
+	//NOTE(Rennorb): TinyMCE mobile has a whitelist for plugins, so if we want specific ones we need to use the external_plugins directive.
+	// Better practice either way, became it makes updating TinyMCE a lot easer.
 	plugins: 'paste print preview searchreplace autolink autoresize directionality visualblocks visualchars fullscreen image link media code codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime emoticons advlist lists wordcount imagetools textpattern help spoiler mention noneditable',
+	external_plugins: {
+		'mention': '/web/js/tinymce-custom/plugins/mention/plugin.min.js',
+	},
 	toolbar: 'formatselect | bold italic strikethrough forecolor backcolor permanentpen formatpainter | link image media pageembed emoticons | alignleft aligncenter alignright alignjustify  | numlist bullist outdent indent | removeformat code | spoiler-add spoiler-remove',
+	toolbar_sticky: true,
 	image_advtab: true,
 	importcss_append: true,
 	height: 400,
@@ -36,13 +28,27 @@ var tinymceSettings = {
 			$form.trigger('checkform.areYouSure');
 			});
 	},
-	mentions: mentions,
+	mentions: {
+		source: function(query, process, delimiter) {
+			if(!query) return;
+	
+			$.getJSON('/api/v2/users/by-name/' + query, function(data) {
+				process(Object.entries(data));
+			});
+		},
+		queryBy: 1,
+		insert: function(item) {
+			return `<span class="mention username mceNonEditable" data-user-hash="${item[0]}">${item[1]}</span>`;
+		}
+	},
 };
 
 var tinymceSettingsCmt = {
 	menubar: false,
 	plugins: 'paste searchreplace autolink autoresize directionality image link codesample charmap hr pagebreak nonbreaking anchor emoticons advlist lists wordcount imagetools textpattern help spoiler mention noneditable',
+	external_plugins: tinymceSettings.external_plugins,
 	toolbar: 'bold italic strikethrough | link image emoticons | alignleft aligncenter alignright alignjustify  | numlist bullist outdent indent | removeformat | spoiler-add spoiler-remove',
+	toolbar_sticky: true,
 	image_advtab: true,
 	importcss_append: true,
 	min_height: 400 /* @hack: required for mobile */,
@@ -54,7 +60,7 @@ var tinymceSettingsCmt = {
 	tinycomments_mode: 'embedded',
 	content_css: "/web/css/editor_content.css?ver=3",
 	setup: tinymceSettings.setup,
-	mentions: mentions,
+	mentions: tinymceSettings.mentions,
 };
 
 

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>{if isset($pagetitle)}{$pagetitle}{/if}Vintage Story Mod DB</title>
 	
 	<link rel="apple-touch-icon" sizes="180x180" href="/web/favicon/apple-touch-icon.png">
