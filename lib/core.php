@@ -479,10 +479,18 @@ function postprocessCommentHtml($html)
 {
 	// http:///..... => Create a link from it
 	$html = inflateLinks($html);
-	// [spoiler] 
+
 	$html = preg_replace(
-		'/\[spoiler\]\s*(.*)\s*\[\/spoiler\]/Us',
-		'<div class="spoiler"><div class="spoiler-toggle">Spoiler!</div><div class="spoiler-text" style="display: none;">\1</div></div>',
+		[
+			'#\[spoiler\]\s*(.*)\s*\[/spoiler\]#Us', // [spoiler] ... [/spoiler]  to proper html tags
+			'#^\s*(?:<p>\s*</p>)+#', // strip empty leading paragraphs @brittle
+			'#(?:<p>\s*</p>)+\s*$#', // strip empty trailing paragraphs @brittle
+		],
+		[
+			'<div class="spoiler"><div class="spoiler-toggle">Spoiler!</div><div class="spoiler-text" style="display: none;">\1</div></div>',
+			'',
+			'',
+		],
 		$html
 	);
 
@@ -497,9 +505,14 @@ function inflateLinks($html)
 	$doc = new DOMDocument();
 	$doc->recover = true;
 	$doc->strictErrorChecking = false;
-	$doc->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+	// @hack: The parser realy doesnt like having multiple root elements, so we first synthesize one and then strip it from the result...
+	//  :WrapUnwrapForDomParser
+	//TODO(Rennorb): Update to php 8 so we can use the proper htmldom parser with html5, which should get rid of this reencoding requirement here.
+	$doc->loadHTML('<body>'.mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8').'</body>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 	_inflateWalker($doc);
-	return $doc->saveHTML();
+	$result = $doc->saveHTML();
+	$result = $result ? substr($result, 6, strlen($result) - 1 - 6 - 7) : ''; // :WrapUnwrapForDomParser
+	return $result;
 }
 
 /** @param \DOMNode &$node */
