@@ -85,21 +85,19 @@ function delete($tablename, $recordid)
 
 
 
-function print_p($var)
+function dump($var)
 {
-	echo "<pre>";
-	print_r($var);
+	echo "<pre style='background: #fff; color: #000'>";
+	var_dump($var);
 	echo "</pre>";
 }
 
 function dump_die($var)
 {
-	echo "<pre>";
-	var_dump($var);
-	echo "</pre>";
-
+	dump($var);
 	die();
 }
+
 
 
 function endsWith($string, $part) //TODO(Rennorb)  @perf: use str_ends_with() instead, if we can get a newer version of php

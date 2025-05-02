@@ -12,6 +12,7 @@ START TRANSACTION;
 USE `moddb`;
 INSERT INTO `moddb`.`tag` (assettypeid, tagtypeid, name, text, color, created) VALUES (2, 1, 'v1.17.4', NULL, '#C9C9C9', NULL);
 INSERT INTO `moddb`.`tag` (assettypeid, tagtypeid, name, text, color, created) VALUES (2, 1, 'v1.18.1', NULL, '#C9C9C9', NULL);
+INSERT INTO `moddb`.`tag` (assettypeid, tagtypeid, name, text, color, created) VALUES (2, 1, 'v1.18.2-rc1', NULL, '#C9C9C9', NULL);
 
 COMMIT;
 

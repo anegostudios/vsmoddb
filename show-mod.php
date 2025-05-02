@@ -158,10 +158,9 @@ foreach ($releases as &$release) {
 		$release['highestver'] = "";
 	}
 
-	$compatibleGameVersions = groupMinorVersionTags($compatibleGameVersions);
-
-	$release['isPreRelease'] = preg_match('/[a-z]/', $release['modversion']); // @perf
-	$release['compatibleGameVersions'] = $compatibleGameVersions;
+	$release['isPreRelease'] = isPreRelease($release['modversion']);
+	$release['compatibleGameVersionIds'] = array_map(fn($t) => intval($t['tagid']), $compatibleGameVersions);
+	$release['compatibleGameVersions'] = groupMinorVersionTags($compatibleGameVersions);
 	$release['file'] = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
 }
 unset($release);
@@ -169,32 +168,178 @@ unset($release);
 usort($releases, "cmpReleases");
 $releases = array_reverse($releases);
 
-// Find the latest stable version, and if there is a release thtas even newer or equal but a pre-release verison find that aswell.
-// Crucially, don't select old pre-release versions. 
-$latestReleaseStable = null;
-$latestReleaseUnstable = null;
-foreach($releases as $release) { // Releases are already sorted by version, so we dont need additional sorting here.
-	if($release['isPreRelease']) {
-		if(!$latestReleaseUnstable) {
-			$latestReleaseUnstable = $release;
-		}
+
+/*
+	Determine the game versions of interest:
+		stable and
+		unstable (newer than current stable if any)
+
+	Match mod releases:
+		latest stable release that is for the stable version of the game -> recommend
+		latest unstable version that is either
+			for the unstable version of the game, or
+			for the stable version of the game, if the release is a newer unstable version than the stable release (only if there is no release for the unstable game version)
+		-> recommend for testers
+		If there are not releases for for either of these, select the latest release -> latest release for an outdated version of the game
+
+	Examples assuming current game version = 5, an a newer unstable version = 5p, GV = game version, RV = mod release version:
+		GV  RV
+		5   2.5
+		5   3
+		5   4.1  -> Recommended
+		5p  4.2  -> For testers
+
+		5   2.5
+		5   3    -> Recommended
+		5   4.p1
+		5   4.p2 -> For testers
+
+		5   2.5
+		5   3    -> Recommended
+		5   4.p1
+		5p  4.p2 -> For testers
+
+		2   2.5
+		2   3
+		3   4.p1
+		3   4.p2 -> Latest outdated
+
+		Assuming we came herey by searching for mods for GV 2:
+		2   2.5
+		2   3    -> Recommended*
+		3   4.p1
+		3   4.p2
+*/
+
+/*
+	NOTE(Rennorb): The mod list/search should pass information about the currently searched for game versions to this script, so we can recommend the correct release when user is searching with a specific gv in mind.
+	This could be accomplished in one of three ways:
+		Post parameter:
+			pros:
+			- Invisible (does not pollute url)
+			cons:
+			- Causes the browser to query for "are you sure you want to resend information" when the page gets reloaded.
+			- Does not get transferred over if the link gets copy pasted to another user, potentially causing confusion because the site displays something different for the other user.
+		Get parameter:
+			pros:
+			- Does get copied over to other users, preserving that specific recommendation in the process.
+			cons:
+			- Pollutes the page link when it gets copy pasted to be presented on some social media outlet -> discord mod showcase links would likely get polluted.
+			- Recommendation is pinned with this link -> stored links 'degrade' since they won't recommend the latest release but the one for the specified game version.
+		Cookie:
+			pros:
+			- Invisible (does not pollute url)
+			cons:
+			- Potential misinterpretation if the cookie is not correctly reset before the user navigates to the mod page without a specific version search.
+			- Does not get transferred by copying the link, potentially causing confusion in a third party that will get a different recommendation.
+			- Likely does not persist between page reloads, so reloading the page will reset the recommendation to the general recommendation.
+		Referrer:
+			pros:
+			- Invisible (does not pollute url)
+			- Persistent across reloads, but resets on navigation.
+			- Does not require javascript.
+			cons:
+			- Does not get transferred by copying the link, potentially causing confusion in a third party that will get a different recommendation.
+			- Sending a correct referrer is up to the client.
+
+
+	I've decided that the referrer approach is best here, because;
+	- of all the cons between all the options the unwanted recommendation pinning of the 'get' approach is the worst offender and should be avoided,
+	- post naviagation is complicated to implement, and
+	- cookies have to decay between reloads to avoid other staleness issues or be a lot verry complicated.
+*/
+
+$allGameVersions = $con->getAll('select tagid, name from tag where assettypeid = 2');
+foreach($allGameVersions as &$gv) $gv['tagid'] = intval($gv['tagid']);
+usort($allGameVersions, fn($a, $b) => cmpVersion($a['name'], $b['name'])); // sort in reverse order new -> old
+
+$highestTargetVersion = $allGameVersions[0]['tagid'];
+
+if(!empty($_SERVER['HTTP_REFERER'])) {
+	parse_str(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_QUERY), $refererQuerryArgs);
+
+	$mv = !empty($refererQuerryArgs['mv']) ? filter_var($refererQuerryArgs['mv'], FILTER_VALIDATE_INT) : false;
+	if($mv !== false) {
+		$mv = $con->getOne('select name from majorversion where majorversionid = ?', [$mv]);
+		if($mv) $mv = 'v'.substr($mv, 0, strrpos($mv, '.')); // turn 1.2.x into 1.2
+		//TODO(Rennorb): Unify the formatting of majorversions and version tags.
+		// For some reason individual tags have v1.2.3 while majorversiosn dont have the 'v'.
 	}
-	else {
-		$latestReleaseStable = $release;
-		break; // If there is a newer unstable version we already found it.
+
+	$gvs = isset($refererQuerryArgs['gv']) ? filter_var($refererQuerryArgs['gv'], FILTER_VALIDATE_INT, FILTER_FORCE_ARRAY) : false;
+
+	foreach($allGameVersions as $gameversion) {
+		if(
+		   ($mv && startsWith($gameversion['name'], $mv))
+		|| ($gvs && in_array($gameversion['tagid'], $gvs, true))
+		) {
+			$highestTargetVersion = $gameversion['tagid'];
+			break;
+		}
 	}
 }
 
+$recommendationIsInfluencedBySearch = $highestTargetVersion !== $allGameVersions[0]['tagid'];
+
+
+$tagetRecommendedGameVersionStable = null;
+$tagetRecommendedGameVersionUnstable = null;
+
+{
+	$highestTargetVersionReached = false;
+	foreach($allGameVersions as $gameversion) {
+		if(!$highestTargetVersionReached && $gameversion['tagid'] !== $highestTargetVersion) continue;
+		else $highestTargetVersionReached = true;
+
+		if(isPreRelease($gameversion['name'])) {
+			if(!$tagetRecommendedGameVersionUnstable) {
+				$tagetRecommendedGameVersionUnstable = $gameversion['tagid'];
+			}
+		}
+		else {
+			if(!$tagetRecommendedGameVersionStable) {
+				$tagetRecommendedGameVersionStable = $gameversion['tagid'];
+			}
+			break;
+		}
+	}
+}
+
+$recommendedReleaseStable = null;
+$recommendedReleaseUnstable = null;
+$fallbackRelease = null;
+
+foreach($releases as $release) { // Releases are already sorted by version, so we dont need additional sorting here. We iterate new -> old
+	if($release['isPreRelease']) {
+		if(!$recommendedReleaseUnstable) {
+			if(
+				   in_array($tagetRecommendedGameVersionUnstable, $release['compatibleGameVersionIds']) // First try and get a release for a pre-release version of the game.
+				|| in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersionIds'])  // If we cannot find such a release, look for a newer, unstable release of the mod for the current stable version of the game.
+			) {
+				$recommendedReleaseUnstable = $release;
+			}
+		}
+	}
+	else if(in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersionIds'])) {
+		$recommendedReleaseStable = $release;
+		break; // If there is a newer unstable version we already found it.
+	}
+	else if(!$fallbackRelease) {
+		$fallbackRelease = $release;
+	}
+}
+
+
 $view->assign("releases", $releases, null, true);
 
-$view->assign("latestReleaseStable", $latestReleaseStable, null, true);
-$view->assign("latestReleaseUnstable", $latestReleaseUnstable, null, true);
-
-$view->assign("assettypes", $con->getAll("select * from assettype order by name"));
-$view->assign("tagtypes", $con->getAll("select * from tagtype order by name"));
+$view->assign("recommendedReleaseStable", $recommendedReleaseStable, null, true);
+$view->assign("recommendedReleaseUnstable", $recommendedReleaseUnstable, null, true);
+$view->assign("fallbackRelease", $fallbackRelease, null, true);
+$view->assign("recommendationIsInfluencedBySearch", $recommendationIsInfluencedBySearch, null, true);
 
 $view->assign("asset", $asset);
 
+$view->assign("shouldShowOneClickInstall", !preg_match('/macintosh|mac os x|mac_powerpc|iphone|ipod|ipad|android|blackberry|webos|mobile/i', $_SERVER['HTTP_USER_AGENT']), null, false);
 $view->assign("isfollowing", empty($user) ? 0 : $con->getOne("select modid from `follow` where modid=? and userid=?", array($asset['modid'], $user['userid'])));
 
 if (!empty($user)) {
