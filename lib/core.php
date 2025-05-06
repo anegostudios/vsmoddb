@@ -125,6 +125,11 @@ function isUrl($url)
 	return strlen(filter_var($url, FILTER_VALIDATE_URL));
 }
 
+function last($array)
+{
+	return $array[count($array) - 1];
+}
+
 function sanitizeHtml($text)
 {
 	global $config;

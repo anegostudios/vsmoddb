@@ -359,48 +359,101 @@ function cmpReleases($r1, $r2)
 	return $val;
 }
 
-
+/** Fold several monor version tags, e.g. 1.2.3, 1.2.4, 1.2.5 into 'Various 1.2.x' with a description containing the original versions.
+ * @param array $tags
+ * @return array
+ */
 function groupMinorVersionTags($tags)
 {
-	$mainvercnt = 0;
-	$curver = "0";
-	$gtags = array();
-	foreach ($tags as $idx => $tag) {
-		$parts = explode(".", $tag['name']);
-		$mainver = $parts[0] . "." . $parts[1];
+	$result = [];
 
-		if ($curver == $mainver) {
-			$mainvercnt++;
-		} else {
-			$curver = $mainver;
-			$mainvercnt = 1;
+	$currentMajorVersion = null;
+	$minorVersions = [];
+	foreach ($tags as &$tag) {
+		$parts = $tag['parts'] = explode(".", $tag['name']);
+		$majorVersion = $parts[0] . "." . $parts[1];
+
+		if($majorVersion !== $currentMajorVersion) {
+			mergeAndPush($result, $minorVersions, $currentMajorVersion);
+			$minorVersions = [];
+			$currentMajorVersion = $majorVersion;
 		}
 
-		if ($mainvercnt == 3) {
-			$otag1 = array_pop($gtags);
-			$otag2 = array_pop($gtags);
-			$otag3 = $tag;
-			$gtags[] = array('name' => "Various " . $curver . ".x", 'desc' => $otag1['name'] . ", " . $otag2['name'] . ", " . $otag3['name'], 'color' => $tag['color'], 'tagid' => 0);
-		}
-
-		if ($mainvercnt > 3) {
-			$gtags[count($gtags) - 1]['desc'] .= ", " . $tag['name'];
-		}
-
-		if ($mainvercnt < 3) {
-			$gtags[] = $tag;
-		}
+		$minorVersions[] = $tag;
 	}
+	mergeAndPush($result, $minorVersions, $currentMajorVersion);
 
-	foreach ($gtags as $idx => $tag) {
-		if (strstr($tag["name"], "Various")) {
-			$vers = explode(", ", $tag["desc"]);
-			usort($vers, "cmpVersion");
-			$gtags[$idx]["desc"] = implode(", ", array_reverse($vers));
-		}
+	return $result;
+}
+
+function mergeAndPush(&$result, $minorVersions, $majorVersion)
+{
+	switch(count($minorVersions)) {
+		case 0:
+			break;
+
+		case 1:
+			$result[] = $minorVersions[0];
+			break;
+
+		default:
+			$consecutiveSections = [];
+
+			$refNumber = last($minorVersions[0]['parts']);
+			$refOffset = 1;
+			for($i = 1; $i < count($minorVersions); $i++) {
+				$currNumber = last($minorVersions[$i]['parts']);
+				if($currNumber != ($refNumber + $refOffset)) {
+					formatAndPushConsecutive($consecutiveSections, $minorVersions, $i, $refNumber, $refOffset);
+					$refNumber = $currNumber;
+					$refOffset = 1;
+				}
+				else {
+					$refOffset++;
+				}
+			}
+			formatAndPushConsecutive($consecutiveSections, $minorVersions, $i, $refNumber, $refOffset);
+
+			$description = $consecutiveSections[0];
+			for($i = 1; $i < count($consecutiveSections) - 1; $i++) {
+				$description .= ', '.$consecutiveSections[$i];
+			}
+			if($i > 1) {
+				$name = "$majorVersion.x";
+				$description .= ' and '.$consecutiveSections[$i];
+			}
+			else {
+				$name = $description;
+			}
+
+			$result[] = [
+				'name'  => $name,
+				'desc'  => $description,
+				'color' => $minorVersions[0]['color'],
+				'tagid' => 0,
+			];
 	}
+}
 
-	return $gtags;
+function formatAndPushConsecutive(&$consecutiveSections, $minorVersions, $i, $refNumber, $refOffset)
+{
+	switch($refOffset) {
+		case 2: // not worth space wise to do the a - b  thing for two consecutive tags
+			$consecutiveSections[] = $minorVersions[$i - 2]['name'];
+		case 1:
+			$consecutiveSections[] = $minorVersions[$i - 1]['name'];
+			break;
+
+		default:
+			$primary = substr($minorVersions[0]['name'], 0, strrpos($minorVersions[0]['name'], '.'));
+			$endNumber = $refNumber + $refOffset - 1;
+			$consecutiveSections[] = "$primary.$refNumber - $primary.$endNumber";
+	}
+}
+
+function formatVersionTagMaybeVarious($tag)
+{
+	return ($tag['tagid'] !== 0 || contains($tag['name'], ' - ')) ? $tag['name'] : "<abbr title='{$tag['desc']}'>{$tag['name']}</abbr>";
 }
 
 function processTeamInvitation($asset, $user)

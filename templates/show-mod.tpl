@@ -122,7 +122,7 @@
 						{if $recommendedReleaseStable}
 							{if count($recommendedReleaseStable['compatibleGameVersions']) > 0}<strong>
 								{if $recommendationIsInfluencedBySearch}<abbr title="Based on coming here from a search for a specific game version.&#010;This is temporary and will reset on your next visit.">Recommended*</abbr>{else}Recommended{/if}
-								download (for Vintage Story {$recommendedReleaseStable['compatibleGameVersions'][count($recommendedReleaseStable['compatibleGameVersions'])-1]['name']}):</strong><br>
+								download (for Vintage Story {formatVersionTagMaybeVarious(last($recommendedReleaseStable['compatibleGameVersions']))}):</strong><br>
 							{else}<strong>Recommended download:</strong><br>
 							{/if}
 
@@ -131,7 +131,7 @@
 						{/if}
 						{if $recommendedReleaseStable && $recommendedReleaseUnstable}<br>{/if}
 						{if $recommendedReleaseUnstable}
-							{if count($recommendedReleaseUnstable['compatibleGameVersions']) > 0}<strong>For testers (for Vintage Story {$recommendedReleaseUnstable['compatibleGameVersions'][count($recommendedReleaseUnstable['compatibleGameVersions'])-1]['name']}):</strong><br>
+							{if count($recommendedReleaseUnstable['compatibleGameVersions']) > 0}<strong>For testers (for Vintage Story {formatVersionTagMaybeVarious(last($recommendedReleaseUnstable['compatibleGameVersions']))}):</strong><br>
 							{else}<strong>For testers:</strong><br>
 							{/if}
 
@@ -139,7 +139,7 @@
 							{if !empty($recommendedReleaseUnstable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
 						{/if}
 					{elseif $fallbackRelease}
-						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>Latest release (for <span style="color:#b00;"><i class="ico alert"></i> outdated</span> Vintage Story {$fallbackRelease['compatibleGameVersions'][count($fallbackRelease['compatibleGameVersions'])-1]['name']}):</strong><br>
+						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>Latest release (for <span style="color:#b00;"><i class="ico alert"></i> outdated</span> Vintage Story {formatVersionTagMaybeVarious(last($fallbackRelease['compatibleGameVersions']))}):</strong><br>
 						{else}<strong>Latest release:</strong><br>
 						{/if}
 
@@ -191,7 +191,7 @@
 							<td>
 								<div class="tags">
 								{foreach from=$release['compatibleGameVersions'] item=tag}
-									{if $tag['tagid']==0}<a href="#" class="tag" style="background-color:{$tag['color']}" title="{$tag['desc']}">{$tag['name']}*</a>
+									{if $tag['tagid'] === 0}<a href="#" class="tag" style="background-color:{$tag['color']}" title="{$tag['desc']}">{$tag['name']}*</a>
 									{else}<a href="/list/mod/?gv[]={$tag['tagid']}" class="tag" rel="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>{/if}
 								{/foreach}
 								</div>
