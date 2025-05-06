@@ -139,8 +139,8 @@
 							{if !empty($recommendedReleaseUnstable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
 						{/if}
 					{elseif $fallbackRelease}
-						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>Latest release (for outdated Vintage Story {$fallbackRelease['compatibleGameVersions'][count($fallbackRelease['compatibleGameVersions'])-1]['name']}):</strong><br>
-						{else}<strong>Latest release (might be outdated):</strong><br>
+						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>Latest release (for <span style="color:#b00;"><i class="ico alert"></i> outdated</span> Vintage Story {$fallbackRelease['compatibleGameVersions'][count($fallbackRelease['compatibleGameVersions'])-1]['name']}):</strong><br>
+						{else}<strong>Latest release (might be <span style="color:#b00;"><i class="ico alert"></i> outdated</span>):</strong><br>
 						{/if}
 
 						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($fallbackRelease['file'])}">{$fallbackRelease['file']['filename']}</a>

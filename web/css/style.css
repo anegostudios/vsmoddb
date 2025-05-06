@@ -474,6 +474,7 @@ body.opaque-desc .mod .moddesc {
 	position: absolute;
 	top: 0;
 	right: 0;
+	width: 1em;
 	color: #5189ca;
 	text-shadow: rgba(0,0,0,0.5) 1px 1px 3px;
 }
@@ -1428,15 +1429,16 @@ ul.footer {
 .fi-list{font-size:0;margin:0 -10px}
 .fi-list .fi{margin:0 10px 10px;display:inline-block}
 
-
-
-.fa-star::before {
-	content: '★';
+i.ico {
 	font-style: normal;
-	display: inline-block;
-	width: 1em;
-	height: 1em;
 }
+i.ico,
+i.ico::before {
+	display: inline-block;
+}
+
+i.ico.alert::before { content: '⚠' }
+.ico.star::before { content: '★'; }
 
 
 
