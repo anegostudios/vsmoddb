@@ -127,7 +127,7 @@
 							{/if}
 
 							<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseStable['file'])}">{$recommendedReleaseStable['file']['filename']}</a>
-							{if !empty($recommendedReleaseStable['modidstr'])}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseStable}{/if}
+							{if !empty($recommendedReleaseStable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseStable}{/if}
 						{/if}
 						{if $recommendedReleaseStable && $recommendedReleaseUnstable}<br>{/if}
 						{if $recommendedReleaseUnstable}
@@ -136,7 +136,7 @@
 							{/if}
 
 							<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseUnstable['file'])}">{$recommendedReleaseUnstable['file']['filename']}</a>
-							{if !empty($recommendedReleaseUnstable['modidstr'])}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
+							{if !empty($recommendedReleaseUnstable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
 						{/if}
 					{elseif $fallbackRelease}
 						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>Latest release (for outdated Vintage Story {$fallbackRelease['compatibleGameVersions'][count($fallbackRelease['compatibleGameVersions'])-1]['name']}):</strong><br>
@@ -144,7 +144,7 @@
 						{/if}
 
 						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($fallbackRelease['file'])}">{$fallbackRelease['file']['filename']}</a>
-						{if !empty($fallbackRelease['modidstr'])}&nbsp;{include file="button-one-click-install" release=$fallbackRelease}{/if}
+						{if !empty($fallbackRelease['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$fallbackRelease}{/if}
 					{/if}
 				</p>
 			</div>
@@ -172,7 +172,7 @@
 						<th class="releasedate">Release date</th>
 						<th class="changelog">Changelog</th>
 						<th class="download">Download</th>
-						<th><abbr title="Requires game version v1.18.0-rc.1 or later, currently not supported on MacOS.">1-click mod install*</abbr></th>
+						{if $shouldShowOneClickInstall}<th><abbr title="Requires game version v1.18.0-rc.1 or later, currently not supported on MacOS.">1-click mod install*</abbr></th>{/if}
 					</tr>
 				</thead>
 				<tbody>
@@ -200,7 +200,7 @@
 							<td>{fancyDate($release['created'])}</td>
 							<td><a href="#showchangelog">Show</a></td>
 							<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{$release['file']['filename']}</a>{/if}</td>
-							<td>{if !empty($release['modidstr'])}{include file="button-one-click-install"}{/if}</td>
+							{if $shouldShowOneClickInstall}<td>{if !empty($release['modidstr'])}{include file="button-one-click-install"}{/if}</td>{/if}
 						</tr>
 						{assign var="first" value="1"}
 					{/foreach}
