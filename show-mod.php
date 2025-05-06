@@ -182,7 +182,8 @@ $releases = array_reverse($releases);
 		-> recommend for testers
 		If there are not releases for for either of these, select the latest release -> latest release for an outdated version of the game
 
-	Examples assuming current game version = 5, an a newer unstable version = 5p, GV = game version, RV = mod release version:
+	Examples assuming current game version = 5, and a newer unstable version = 5p also exists,
+	RV = mod release version, GV = game version required by the corresponding mod release version:
 		GV  RV
 		5   2.5
 		5   3
@@ -204,7 +205,7 @@ $releases = array_reverse($releases);
 		3   4.p1
 		3   4.p2 -> Latest outdated
 
-		Assuming we came herey by searching for mods for GV 2:
+		Assuming we came here by searching for mods for GV 2:
 		2   2.5
 		2   3    -> Recommended*
 		3   4.p1
@@ -245,8 +246,8 @@ $releases = array_reverse($releases);
 
 	I've decided that the referrer approach is best here, because;
 	- of all the cons between all the options the unwanted recommendation pinning of the 'get' approach is the worst offender and should be avoided,
-	- post naviagation is complicated to implement, and
-	- cookies have to decay between reloads to avoid other staleness issues or be a lot verry complicated.
+	- post navigation is complicated to implement, and
+	- cookies have to decay between reloads to avoid other staleness issues or be a lot very complicated.
 */
 
 $allGameVersions = $con->getAll('select tagid, name from tag where assettypeid = 2');
