@@ -140,7 +140,7 @@
 						{/if}
 					{elseif $fallbackRelease}
 						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>Latest release (for <span style="color:#b00;"><i class="ico alert"></i> outdated</span> Vintage Story {$fallbackRelease['compatibleGameVersions'][count($fallbackRelease['compatibleGameVersions'])-1]['name']}):</strong><br>
-						{else}<strong>Latest release (might be <span style="color:#b00;"><i class="ico alert"></i> outdated</span>):</strong><br>
+						{else}<strong>Latest release:</strong><br>
 						{/if}
 
 						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($fallbackRelease['file'])}">{$fallbackRelease['file']['filename']}</a>
