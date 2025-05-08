@@ -418,7 +418,7 @@ function mergeAndPush(&$result, $minorVersions, $majorVersion)
 			for($i = 1; $i < count($consecutiveSections) - 1; $i++) {
 				$description .= ', '.$consecutiveSections[$i];
 			}
-			if($i > 1) {
+			if(count($consecutiveSections) > 1) {
 				$name = "$majorVersion.x";
 				$description .= ' and '.$consecutiveSections[$i];
 			}
@@ -438,7 +438,7 @@ function mergeAndPush(&$result, $minorVersions, $majorVersion)
 function formatAndPushConsecutive(&$consecutiveSections, $minorVersions, $i, $refNumber, $refOffset)
 {
 	switch($refOffset) {
-		case 2: // not worth space wise to do the a - b  thing for two consecutive tags
+		case 2: // It's not worth space wise to format two consecutive tags as a - b, we just print add them individualy.
 			$consecutiveSections[] = $minorVersions[$i - 2]['name'];
 		case 1:
 			$consecutiveSections[] = $minorVersions[$i - 1]['name'];
