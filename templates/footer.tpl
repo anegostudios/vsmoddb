@@ -74,6 +74,7 @@
 	{if !empty($footerjs)}{$footerjs}{/if}
 
 	<ul class="footer">
+		<li style="width: 100%; display: block; text-align: center;">Currently hosting {$totalModCount} Mods</li>
 		<li style="float:left;">Copyright © 2021-2025 Anego Studios | <a href="https://www.vintagestory.at/impressum.html/">Impressum</a></li>
 		<li style="margin-left:10px;"><a href="https://github.com/anegostudios/vsmoddb#vs-mod-db-api-docs">Json Api</a></li>
 		<li style="margin-left:10px;"><a rel="terms-of-service" href="/terms">Terms of use</a></li>

@@ -43,6 +43,9 @@ $view->assign("assetserver", $config['assetserver']);
 $ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;
 
 
+//NOTE(Rennorb): Technically we should only count the public mods, but in reality this probably doesn't matter for production and just counting all mods makes the query simpler.
+$view->assign('totalModCount', $con->getOne('SELECT COUNT(*) from `mod`'), null, true);
+
 
 // insert db record
 function insert($tablename, $recordid = null, $con = null)
