@@ -122,7 +122,7 @@
 						{if $recommendedReleaseStable}
 							{if count($recommendedReleaseStable['compatibleGameVersions']) > 0}<strong>
 								{if $recommendationIsInfluencedBySearch}<abbr title="Based on coming here from a search for a specific game version.&#010;This is temporary and will reset on your next visit.">Recommended*</abbr>{else}Recommended{/if}
-								download (for Vintage Story {formatVersionTagMaybeVarious(last($recommendedReleaseStable['compatibleGameVersions']))}):</strong><br>
+								download (for Vintage Story {formatGrammaticallyCorrectEnumeration($recommendedReleaseStable['compatibleGameVersionsFolded'])}):</strong><br>
 							{else}<strong>Recommended download:</strong><br>
 							{/if}
 
@@ -131,7 +131,7 @@
 						{/if}
 						{if $recommendedReleaseStable && $recommendedReleaseUnstable}<br>{/if}
 						{if $recommendedReleaseUnstable}
-							{if count($recommendedReleaseUnstable['compatibleGameVersions']) > 0}<strong>For testers (for Vintage Story {formatVersionTagMaybeVarious(last($recommendedReleaseUnstable['compatibleGameVersions']))}):</strong><br>
+							{if count($recommendedReleaseUnstable['compatibleGameVersions']) > 0}<strong>For testers (for Vintage Story {formatGrammaticallyCorrectEnumeration($recommendedReleaseUnstable['compatibleGameVersionsFolded'])}):</strong><br>
 							{else}<strong>For testers:</strong><br>
 							{/if}
 
@@ -139,7 +139,7 @@
 							{if !empty($recommendedReleaseUnstable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
 						{/if}
 					{elseif $fallbackRelease}
-						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>Latest release (for <span style="color:#b00;"><i class="ico alert"></i> outdated</span> Vintage Story {formatVersionTagMaybeVarious(last($fallbackRelease['compatibleGameVersions']))}):</strong><br>
+						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>Latest release (for <span style="color:#b00;"><i class="ico alert"></i> outdated</span> Vintage Story {formatGrammaticallyCorrectEnumeration($fallbackRelease['compatibleGameVersionsFolded'])}):</strong><br>
 						{else}<strong>Latest release:</strong><br>
 						{/if}
 
@@ -166,7 +166,7 @@
 			<table class="stdtable" style="min-width: 900px">
 				<thead>
 					<tr>
-						<th class="version">Version</th>
+						<th class="version">Mod Version</th>
 						<th class="gameversion">For Game version</th>
 						<th class="downloads">Downloads</th>
 						<th class="releasedate">Release date</th>
@@ -181,7 +181,7 @@
 						<tr data-assetid="{$release['assetid']}" {if !isset($first)} class="latest"{/if}>
 							<td>
 								{if isset($user) && canEditAsset($asset, $user)}
-									<a style="display:block;" href="/edit/release?assetid={$release['assetid']}">v{$release['modversion']}</a>
+									<a style="display:block;" href="/edit/release?assetid={$release['assetid']}">v{formatSemanticVersion($release['modversion'])}</a>
 								{else}v{$release['modversion']}{/if}
 								<div class="changelogtext" style="display:none;">
 									<strong>v{$release['modversion']}</strong><br>
@@ -190,9 +190,9 @@
 							</td>
 							<td>
 								<div class="tags">
-								{foreach from=$release['compatibleGameVersions'] item=tag}
-									{if $tag['tagid'] === 0}<a href="#" class="tag" style="background-color:{$tag['color']}" title="{$tag['desc']}">{$tag['name']}*</a>
-									{else}<a href="/list/mod/?gv[]={$tag['tagid']}" class="tag" rel="tag" style="background-color:{$tag['color']}">#{$tag['name']}</a>{/if}
+								{foreach from=$release['compatibleGameVersionsFolded'] item=versionStr}
+									{if contains($versionStr, ' - ')}<span class="tag">{$versionStr}</span>
+									{else}<a href="/list/mod/?gv[]={$versionStr}" class="tag" rel="tag">{$versionStr}</a>{/if}
 								{/foreach}
 								</div>
 						</td>

@@ -21,7 +21,6 @@ class ReleaseEditor extends AssetEditor {
 		
 		array_shift($this->columns); // remove name
 		$this->declareColumn(2, array("title" => "modid", "code" => "modid", "tablename" => "release"));
-		$this->declareColumn(3, array("title" => "Mod Version", "code" => "modversion", "tablename" => "release"));
 		$this->declareColumn(4, array("title" => "Mod Id", "code" => "modidstr", "tablename" => "release"));
 	}
 	
@@ -81,6 +80,16 @@ class ReleaseEditor extends AssetEditor {
 		", array($modid));
 		
 		$view->assign("mod", $mod);
+
+		$this->asset['compatibleGameVersions'] = array_flip($con->getCol('SELECT gameVersion FROM ModReleaseCompatibleGameVersions WHERE releaseId = ?', [$this->asset['releaseid']]));
+
+		$allGameVersions = $con->getAll('SELECT version FROM GameVersions ORDER BY version DESC');
+		foreach($allGameVersions as &$gameVersion) {
+			$gameVersion['version'] = intval($gameVersion['version']);
+			$gameVersion['name'] = formatSemanticVersion($gameVersion['version']);
+		}
+		unset($gameVersion);
+		$view->assign('allGameVersions', $allGameVersions);
 	}
 	
 	function delete() {
@@ -154,7 +163,10 @@ class ReleaseEditor extends AssetEditor {
 
 				if (!empty($_POST['modidstr']) && !empty($_POST['modversion'])) {
 					$modidstr = $_POST['modidstr'];
-					$modversion = $_POST['modversion'];
+					$modversion = compileSemanticVersion($_POST['modversion']);
+					if ($modversion === false) {
+						return 'invalidmodversion';
+					}
 				} else {
 					return 'missingmodinfo';
 				}
@@ -164,11 +176,7 @@ class ReleaseEditor extends AssetEditor {
 			if (!preg_match("/^[0-9a-zA-Z]+$/", $modidstr)) {
 				return 'invalidmodid';
 			}
-			
-			if (!preg_match("/^[0-9]{1,5}\.[0-9]{1,4}\.[0-9]{1,4}(-(rc|pre|dev)\.[0-9]{1,4})?$/", $modversion)) {
-				return 'invalidmodversion';
-			}
-			
+
 			// Make sure there isn't an exact duplicate of this
 			$this->releaseIdDupl = $con->getOne("select assetid from `release` where modidstr=? and modversion=? and assetid!=?", array($modidstr, $modversion, $this->assetid));
 			if ($this->releaseIdDupl) {
@@ -207,6 +215,37 @@ class ReleaseEditor extends AssetEditor {
 		if ($this->moddtype === 'mod' /* detection will stil run even on external tools */ && ($status == 'saved' || $status == 'savednew')) {
 			if (!empty($file['detectedmodidstr']) && !empty($file['detectedmodversion'])) {
 				$con->execute('update `release` set modidstr = ?, modversion = ? where assetid = ?', array($modidstr, $modversion, $this->assetid));
+			}
+		}
+
+		if($status == 'saved' || $status == 'savednew') {
+			$compatibleGameVersions = array_filter(array_map('compileSemanticVersion', $_POST['cgvs']));
+			if($compatibleGameVersions) {
+				$releaseId = intval($this->asset['releaseid']);
+				$folded = implode(',', array_map(fn($v) => "($releaseId, $v)", $compatibleGameVersions));
+
+				//TODO @cleanup:
+				$oldCompat = $con->getCol('SELECT gameVersion FROM ModReleaseCompatibleGameVersions WHERE releaseId = ?', [$this->asset['releaseid']]);
+
+				$con->startTrans();
+				$con->execute('DELETE FROM ModReleaseCompatibleGameVersions WHERE releaseId = ?', [$this->asset['releaseid']]);
+				// @security: Version numbers and releaseIds are numeric and therefore SQL Inert.
+				$con->execute("INSERT INTO ModReleaseCompatibleGameVersions (releaseId, gameVersion) VALUES $folded");
+				$con->completeTrans();
+
+
+				//TODO @cleanup:
+				$removedCompat = array_values(array_diff($oldCompat, $compatibleGameVersions));
+				$addedCompat = array_values(array_diff($compatibleGameVersions, $oldCompat));
+
+				$change = '';
+				if($removedCompat) $change .= 'removed '.formatGrammaticallyCorrectEnumeration(array_map('formatSemanticVersion', $removedCompat));
+				if($addedCompat) {
+					if($removedCompat) $change .= ', ';
+					$change .= 'added '.formatGrammaticallyCorrectEnumeration(array_map('formatSemanticVersion', $addedCompat));
+				}
+
+				if($change) logAssetChanges(['Modified game version compat: '.$change], $this->assetid);
 			}
 		}
 

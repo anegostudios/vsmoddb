@@ -29,9 +29,9 @@
 		{if $modtype == "mod"}
 			<div class="editbox">
 				<label>Compatible with game versions</label>
-				<select name="tagids[]" class="required" multiple>
-					{foreach from=$tags item=tag}
-						<option value="{$tag['tagid']}" {if !empty($asset['tags'][$tag['tagid']])}selected="selected"{/if}>{$tag['name']}</option>
+				<select name="cgvs[]" class="required" multiple>
+					{foreach from=$allGameVersions item=version}
+						<option value="{$version['name']}" {if isset($asset['compatibleGameVersions'][$version['version']])}selected="selected"{/if}>{$version['name']}</option>
 					{/foreach}
 				</select>
 			</div>
@@ -50,7 +50,7 @@
 			</div>
 			<div class="editbox">
 				<label><abbr title="This value is autodetected, please upload a file.">Mod Version Number</abbr></label>
-				<label for="inp-modversion" class="prefixed-input{if empty($allowinfoedit)} disabled{/if}" data-prefix="v"><input id="inp-modversion" type="text" name="modversion" value="{$asset['modversion']}" class="required" style="width: 10ch"{if empty($allowinfoedit)} disabled=""{/if} /></label>
+				<label for="inp-modversion" class="prefixed-input{if empty($allowinfoedit)} disabled{/if}" data-prefix="v"><input id="inp-modversion" type="text" name="modversion" value="{formatSemanticVersion($asset['modversion'])}" class="required" style="width: 10ch"{if empty($allowinfoedit)} disabled=""{/if} /></label>
 			</div>
 		{else}
 			<div class="editbox">
