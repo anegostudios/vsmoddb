@@ -1,29 +1,36 @@
 <?php
 
-$versions = array_keys(json_decode(file_get_contents("http://api.vintagestory.at/stable-unstable.json"), true));
-$dbtags = $con->getCol("select substr(name, 2) as version from tag where assettypeid=2");
-$newversions = array_diff($versions, $dbtags);
+$availableVersionsStrs = array_keys(json_decode(file_get_contents('http://api.vintagestory.at/stable-unstable.json'), true));
 
-foreach ($newversions as $newversion) {
-	$con->Execute("insert into tag (assettypeid, tagtypeid, name, color, created) values (?,?,?,?,now())", array(2, 1, "v".$newversion, "#C9C9C9"));
+$availableVersions = [];
+$malformedAvailableVersions = [];
+foreach ($availableVersionsStrs as $versionStr) {
+	$compiled = compileSemanticVersion($versionStr);
+	if($compiled === false)   $malformedAvailableVersions[] = $versionStr;
+	else                      $availableVersions[] = $compiled;
+}
+
+if($malformedAvailableVersions) {
+	$foldedErrors = implode(', ', array_map(fn($v) => "'$v'", $malformedAvailableVersions));
+	showErrorPage(HTTP_INTERNAL_ERROR, 'The following provided version strings do not parse as semantic versions: '.$foldedErrors.'. A semantic version must match /^\d+\.\d+\.\d+(-(dev|pre|rc)\.\d+)?$/.');
 }
 
 
+// Merge existing values with the new/current ones and recalculate the sort index.
+//NOTE(Rennorb): The sort index is an ascending n+1 index that is used to find consecutive sequences of versions.
+// We just use the index in the array after sorting the values for this.
+$storedVersions = array_map('intval', $con->getCol('SELECT `version` FROM GameVersions'));
+$allVersions = array_unique(array_merge($storedVersions, $availableVersions));
+sort($allVersions); // sort ascending so the keys are in the correct order
 
-$majorversions = array();
-foreach ($versions as $version) {
-	$parts = explode(".", $version);
-	$key = $parts[0] . "." . $parts[1] . ".x";
-	$majorversions[$key] = 1;
-}
-$majorversions = array_keys($majorversions);
-$dbmv = $con->getCol("select name from majorversion");
+$foldedValues = implode(', ', array_map(fn($k, $v) => "($v, $k)", array_keys($allVersions), $allVersions));
 
-$newmajorversions = array_diff($majorversions, $dbmv);
-foreach ($newmajorversions as $newversion) {
-	$con->Execute("insert into majorversion (name) values (?)", array($newversion));
-}
+// @security: All keys and values are numeric and therefore SQL inert.
+$con->Execute("
+	INSERT INTO GameVersions (version, sortIndex)
+		VALUES $foldedValues
+	ON DUPLICATE KEY UPDATE
+		sortIndex = VALUES(sortIndex)
+");
 
-
-
-echo count($newversions) . " new versions added";
+echo count(array_diff($allVersions, $storedVersions)) . ' new versions added.';

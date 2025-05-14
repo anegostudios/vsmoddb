@@ -44,11 +44,21 @@ $strippedQuery = stripQueryParams(parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUE
 
 $fetchCursorJS = getNextFetchCursor($searchParams, $mods);
 
-$gameversions = $con->getAll('SELECT tagid, `name` FROM tag WHERE assettypeid = 2');
-usort($gameversions, 'cmpVersionTag');
+$gameVersions = $con->getAll('SELECT `version` FROM GameVersions ORDER BY `version` desc');
+$majorGameVersions = [];
+foreach($gameVersions as &$version) {
+	$version['version'] = intval($version['version']);
+	$version['name'] = formatSemanticVersion($version['version']);
 
-$majorversions = $con->getAll('SELECT * FROM majorversion');
-usort($majorversions, 'cmpVersionTag');
+	$majorVersion = $version['version'] & 0xffff_ffff_0000_0000;
+	foreach($majorGameVersions as $mv) {
+		if($mv['version'] === $majorVersion) {
+			continue 2;
+		}
+	}
+	$majorGameVersions[] = ['version' => $majorVersion, 'name' => substr(formatSemanticVersion($majorVersion), 0, -2)];
+}
+unset($version);
 
 $tags = $con->getAll('SELECT tagid, `name`, `text` FROM tag WHERE assettypeid = 1 ORDER BY `name`');
 
@@ -58,8 +68,8 @@ $view->assign('selectedParams', $selectedParams, null, true);
 $view->assign('strippedQuery', $strippedQuery, null, true);
 $view->assign('fetchCursorJS', $fetchCursorJS, null, true);
 $view->assign('sortOptions', VALID_ORDER_BY_COLUMNS, null, true);
-$view->assign('gameversions', $gameversions);
-$view->assign('majorversions', $majorversions);
+$view->assign('gameVersions', $gameVersions);
+$view->assign('majorGameVersions', $majorGameVersions);
 $view->assign('tags', $tags);
 $view->assign('mods', $mods);
 $view->display('list-mod');

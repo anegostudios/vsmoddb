@@ -20,6 +20,7 @@ include($config["basepath"] . "lib/assetcontroller.php");
 include($config["basepath"] . "lib/assetlist.php");
 include($config["basepath"] . "lib/asseteditor.php");
 include($config["basepath"] . "lib/fileupload.php");
+include($config["basepath"] . "lib/version.php");
 
 
 $rd = opendir($config["basepath"] . "lib/assetimpl");
@@ -90,7 +91,7 @@ function delete($tablename, $recordid)
 
 function dump($var)
 {
-	echo "<pre style='background: #fff; color: #000'>";
+	echo "<pre style='background: #fff; color: #000; padding: .5em; border: solid 1px currentcolor;'>";
 	var_dump($var);
 	echo "</pre>";
 }
@@ -117,6 +118,32 @@ function contains($string, $part)
 {
 	return mb_strstr($string, $part) !== false;
 }
+
+/** Formats the elements of the array into a string in the shape of '1, 2, 3 and 4'.
+ * @param array $array 
+ * @return string
+ */
+function formatGrammaticallyCorrectEnumeration($array)
+{
+	switch(count($array)) {
+		case 0:
+			return '';
+
+		case 1:
+			return $array[0];
+
+		default:
+			$str = $array[0];
+			for($i = 1; $i < count($array) - 1; $i++) {
+				$str .= ', ';
+				$str .= $array[$i];
+			}
+			$str .= ' and ';
+			$str .= $array[$i];
+			return $str;
+	}
+}
+
 
 function isNumber($val)
 {
@@ -689,31 +716,33 @@ function getModInfo($filepath)
 	return array("modparse" => "ok", "modid" => $parts[0], "modversion" => $parts[1]);
 }
 
-function updateGameVersionsCached($modid)
+function updateGameVersionsCached($modId)
 {
 	global $con;
-	$modid = intval($modid);
 
-	$tags = $con->getAll("select distinct tag.tagid, tag.name from `release` join assettag on (`release`.assetid = assettag.assetid) join `tag` on (assettag.tagid = tag.tagid) where modid=?", array($modid));
-	$inserts = array();
-	$majorversions = array();
-	foreach ($tags as $tag) {
-		$inserts[] = "({$tag['tagid']}, {$modid})";
+	$modId = intval($modId);
 
-		$parts = explode(".", substr($tag['name'], 1));
-		$key = $parts[0] . "." . $parts[1] . ".x";
-		$majorversions[$key] = 1;
-	}
+	$con->startTrans();
 
+	$con->execute('DELETE FROM ModCompatibleGameVersionsCached WHERE modId = ?', [$modId]);
+	$con->execute('DELETE FROM ModCompatibleMajorGameVersionsCached WHERE modId = ?', [$modId]);
 
-	foreach ($majorversions as $majorversion => $val) {
-		$mvid = $con->getOne("select majorversionid from majorversion where name=?", array($majorversion));
-		$con->Execute("INSERT IGNORE INTO majormodversioncached (majorversionid, modid) values (?,?)", array($mvid, $modid));
-	}
+	// @security: modId is numeric and therefore SQL inert.
+	$con->execute("INSERT INTO ModCompatibleGameVersionsCached (modId, gameVersion)
+		SELECT DISTINCT {$modId}, cgv.gameVersion
+		FROM `release` r
+		JOIN ModReleaseCompatibleGameVersions cgv
+		where r.modid = {$modId}
+	");
 
-	$con->Execute("delete from modversioncached where modid=?", array($modid));
+	$con->execute("INSERT INTO ModCompatibleMajorGameVersionsCached (modId, majorGameVersion)
+		SELECT DISTINCT {$modId}, cgv.gameVersion & 0xffffffff00000000
+		FROM `release` r
+		JOIN ModReleaseCompatibleGameVersions cgv
+		where r.modid = {$modId}
+	");
 
-	if (count($tags) > 0) $con->Execute("insert into modversioncached values " . implode(",", $inserts));
+	$con->completeTrans();
 }
 
 function getUserHash($userid, $joindate)

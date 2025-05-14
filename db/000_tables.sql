@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`modpeek_result` (
   `fileid` INT NOT NULL,
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `detectedmodidstr` VARCHAR(255),
-  `detectedmodversion` VARCHAR(255),
+  `detectedmodversion` BIGINT UNSIGNED NOT NULL,
   PRIMARY KEY (`fileid`))
 ENGINE = InnoDB;
 
@@ -160,7 +160,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`release` (
   `assetid` INT NULL,
   `modid` INT NULL,
   `modidstr` VARCHAR(255) NULL,
-  `modversion` VARCHAR(50) NULL,
+  `modversion` BIGINT UNSIGNED NOT NULL,
   `releasedate` VARCHAR(255) NULL,
   `inprogress` TINYINT NULL,
   `detailtext` TEXT NULL,
@@ -303,16 +303,6 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `moddb`.`modversioncached`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`modversioncached` (
-  `tagid` INT NULL,
-  `modid` INT NULL,
-  INDEX `modid` (`modid` ASC))
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
 -- Table `moddb`.`notification`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `moddb`.`notification` (
@@ -327,27 +317,32 @@ CREATE TABLE IF NOT EXISTS `moddb`.`notification` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `moddb`.`majormodversioncached`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`majormodversioncached` (
-  `majorversionid` INT NULL,
-  `modid` INT NULL,
-  INDEX `modid` (`modid` ASC),
-  INDEX `majorversionid` (`majorversionid` ASC),
-  UNIQUE INDEX `index` (`majorversionid` ASC, `modid` ASC))
+CREATE TABLE IF NOT EXISTS `GameVersions` (
+  `version` BIGINT UNSIGNED NOT NULL,   -- compiled version
+  `sortIndex` INT NOT NULL, -- sequential n+1 sort order to check for sequential sequences
+  PRIMARY KEY (`version`))
 ENGINE = InnoDB;
 
-
--- -----------------------------------------------------
--- Table `moddb`.`majorversion`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`majorversion` (
-  `majorversionid` INT NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(255) NULL,
-  INDEX `modid` (`name` ASC),
-  PRIMARY KEY (`majorversionid`))
+CREATE TABLE IF NOT EXISTS `ModReleaseCompatibleGameVersions` (
+  `releaseId` INT NOT NULL,
+  `gameVersion` BIGINT UNSIGNED NOT NULL, -- compiled version
+  PRIMARY KEY (`releaseId`, `gameVersion`))
 ENGINE = InnoDB;
+
+-- same information as joining mod + rleease + ReleaseCompatGameversions, cached for searching
+CREATE TABLE IF NOT EXISTS `ModCompatibleGameVersionsCached` (
+  `modId` INT NOT NULL,
+  `gameVersion` BIGINT UNSIGNED NOT NULL, -- compiled version
+  PRIMARY KEY (`modId`, `gameVersion`))
+ENGINE = InnoDB;
+
+-- same information as unique floorToMajor(joining mod + rleease + ReleaseCompatGameversions), cached for searching
+CREATE TABLE IF NOT EXISTS `ModCompatibleMajorGameVersionsCached` (
+  `modId` INT NOT NULL,
+  `majorGameVersion` BIGINT UNSIGNED NOT NULL, -- compiled version
+  PRIMARY KEY (`majorGameVersion`, `modId`))
+ENGINE = InnoDB;
+
 
 -- -----------------------------------------------------
 -- Table `moddb`.`follow`
@@ -419,7 +414,6 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `moddb`;
-INSERT INTO `moddb`.`tagtype` (`tagtypeid`, `code`, `name`, `text`, `created`, `lastmodified`) VALUES (1, 'gameversion', 'Game version', NULL, NULL, NULL);
 INSERT INTO `moddb`.`tagtype` (`tagtypeid`, `code`, `name`, `text`, `created`, `lastmodified`) VALUES (2, 'category', 'Category', NULL, NULL, NULL);
 
 COMMIT;

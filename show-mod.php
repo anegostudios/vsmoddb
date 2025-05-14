@@ -132,41 +132,35 @@ if (!empty($tagscached)) {
 $view->assign("tags", $tags);
 
 $releases = $con->getAll("
-	select 
-		`release`.*,
-		asset.*
-	from 
-		`release` 
-		join asset on (asset.assetid = `release`.assetid)
-	where modid=?
-	order by release.created desc
-", array($asset['modid']));
+	SELECT
+		r.*,
+		GROUP_CONCAT(cgv.gameVersion ORDER BY cgv.gameVersion ASC SEPARATOR ',') AS compatibleGameVersions,
+		GROUP_CONCAT(gv.sortIndex   ORDER BY cgv.gameVersion ASC SEPARATOR ',') AS compatibleGameVersionsIndices
+	FROM `release` r
+	LEFT JOIN ModReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseid
+	LEFT JOIN GameVersions gv ON gv.version = cgv.gameVersion
+	WHERE modid = ?
+	GROUP BY r.releaseid
+	ORDER BY r.modversion DESC, MAX(cgv.gameVersion) DESC, r.created DESC
+", [$asset['modid']]);
+
+$releaseFiles = [];
+if(count($releases)) {
+	$foldedAssetIds = implode(',', array_map(fn($r) => $r['assetid'], $releases));
+	// @security: assetid's come from the database and are numeric, and are therefore sql inert.
+	$releaseFiles = $con->getAssoc("SELECT `file`.assetid, `file`.* FROM `file` WHERE assetid IN ($foldedAssetIds)");
+}
 
 foreach ($releases as &$release) {
-	$compatibleGameVersions = array();
-	if (!empty($compatibleGameVersionsCached = trim($release["tagscached"]))) {
-		$tagdata = explode("\r\n", $compatibleGameVersionsCached);
-		foreach ($tagdata as $tagrow) {
-			$row = explode(",", $tagrow);
-			$compatibleGameVersions[] = array('name' => $row[0], 'color' => $row[1], 'tagid' => $row[2]);
-		}
-	}
-	if (count($compatibleGameVersions)) {
-		usort($compatibleGameVersions, 'rcmpVersionTag');
-		$release['highestver'] = $compatibleGameVersions[count($compatibleGameVersions) - 1]['name'];
-	} else {
-		$release['highestver'] = "";
-	}
-
-	$release['isPreRelease'] = isPreRelease($release['modversion']);
-	$release['compatibleGameVersionIds'] = array_map(fn($t) => intval($t['tagid']), $compatibleGameVersions);
-	$release['compatibleGameVersions'] = groupMinorVersionTags($compatibleGameVersions);
-	$release['file'] = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
+	$release['file'] = $releaseFiles[$release['assetid']];
+	
+	$compatibleGameVersions      = array_map('intval', explode(',', $release['compatibleGameVersions'])); // sorted ascending
+	$compatibleGameVersionsIndices = array_map('intval', explode(',', $release['compatibleGameVersionsIndices'])); // sorted ascending
+	$release['maxCompatibleGameVersion'] = $compatibleGameVersions ? last($compatibleGameVersions) : 0;
+	$release['compatibleGameVersions'] = $compatibleGameVersions;
+	$release['compatibleGameVersionsFolded'] = foldSequentialVersionRanges($compatibleGameVersions, $compatibleGameVersionsIndices);
 }
 unset($release);
-
-usort($releases, "cmpReleases");
-$releases = array_reverse($releases);
 
 
 /*
@@ -250,37 +244,33 @@ $releases = array_reverse($releases);
 	- cookies have to decay between reloads to avoid other staleness issues or be a lot very complicated.
 */
 
-$allGameVersions = $con->getAll('select tagid, name from tag where assettypeid = 2');
-foreach($allGameVersions as &$gv) $gv['tagid'] = intval($gv['tagid']);
-usort($allGameVersions, fn($a, $b) => cmpVersion($a['name'], $b['name'])); // sort in reverse order new -> old
+$allGameVersions = array_map('intval', $con->getCol('SELECT version FROM GameVersions ORDER BY version DESC'));
 
-$highestTargetVersion = $allGameVersions[0]['tagid'];
+$highestTargetVersion = $allGameVersions[0];
 
 if(!empty($_SERVER['HTTP_REFERER'])) {
 	parse_str(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_QUERY), $refererQuerryArgs);
 
-	$mv = !empty($refererQuerryArgs['mv']) ? filter_var($refererQuerryArgs['mv'], FILTER_VALIDATE_INT) : false;
-	if($mv !== false) {
-		$mv = $con->getOne('select name from majorversion where majorversionid = ?', [$mv]);
-		if($mv) $mv = 'v'.substr($mv, 0, strrpos($mv, '.')); // turn 1.2.x into 1.2
-		//TODO(Rennorb): Unify the formatting of majorversions and version tags.
-		// For some reason individual tags have v1.2.3 while majorversiosn dont have the 'v'.
+	$mv = !empty($refererQuerryArgs['mv']) ? compileMajorVersion($refererQuerryArgs['mv']) : false;
+	if(isset($refererQuerryArgs['gv']) && is_array($refererQuerryArgs['gv'])) {
+		$gvs = array_filter(array_map('compileSemanticVersion', $refererQuerryArgs['gv']));
 	}
-
-	$gvs = isset($refererQuerryArgs['gv']) ? filter_var($refererQuerryArgs['gv'], FILTER_VALIDATE_INT, FILTER_FORCE_ARRAY) : false;
+	else {
+		$gvs = false;
+	}
 
 	foreach($allGameVersions as $gameversion) {
 		if(
-		   ($mv && startsWith($gameversion['name'], $mv))
-		|| ($gvs && in_array($gameversion['tagid'], $gvs, true))
+		   ($mv && (($gameversion & (VERSION_MASK_MAJOR | VERSION_MASK_MINOR)) === $mv))
+		|| ($gvs && in_array($gameversion, $gvs, true))
 		) {
-			$highestTargetVersion = $gameversion['tagid'];
+			$highestTargetVersion = $gameversion;
 			break;
 		}
 	}
 }
 
-$recommendationIsInfluencedBySearch = $highestTargetVersion !== $allGameVersions[0]['tagid'];
+$recommendationIsInfluencedBySearch = $highestTargetVersion !== $allGameVersions[0];
 
 
 $tagetRecommendedGameVersionStable = null;
@@ -289,17 +279,17 @@ $tagetRecommendedGameVersionUnstable = null;
 {
 	$highestTargetVersionReached = false;
 	foreach($allGameVersions as $gameversion) {
-		if(!$highestTargetVersionReached && $gameversion['tagid'] !== $highestTargetVersion) continue;
+		if(!$highestTargetVersionReached && $gameversion !== $highestTargetVersion) continue;
 		else $highestTargetVersionReached = true;
 
-		if(isPreRelease($gameversion['name'])) {
+		if(isPreReleaseVersion($gameversion)) {
 			if(!$tagetRecommendedGameVersionUnstable) {
-				$tagetRecommendedGameVersionUnstable = $gameversion['tagid'];
+				$tagetRecommendedGameVersionUnstable = $gameversion;
 			}
 		}
 		else {
 			if(!$tagetRecommendedGameVersionStable) {
-				$tagetRecommendedGameVersionStable = $gameversion['tagid'];
+				$tagetRecommendedGameVersionStable = $gameversion;
 			}
 			break;
 		}
@@ -310,18 +300,24 @@ $recommendedReleaseStable = null;
 $recommendedReleaseUnstable = null;
 $fallbackRelease = null;
 
-foreach($releases as $release) { // Releases are already sorted by version, so we dont need additional sorting here. We iterate new -> old
-	if($release['isPreRelease']) {
+// Sort releases by max supproted game version to find the reccomendation.
+//NOTE(Rennorb): This is not the default sorting from the db, because we want the releaes in mod version order (if we can) for the files tab.
+// Could considder swapping this around for @perf.
+$releasesByMaxGameVersion = $releases;
+usort($releasesByMaxGameVersion, fn($a, $b) => $b['maxCompatibleGameVersion'] - $a['maxCompatibleGameVersion']);
+
+foreach($releasesByMaxGameVersion as $release) {
+	if(isPreReleaseVersion($release['modversion'])) {
 		if(!$recommendedReleaseUnstable) {
 			if(
-				   in_array($tagetRecommendedGameVersionUnstable, $release['compatibleGameVersionIds']) // First try and get a release for a pre-release version of the game.
-				|| in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersionIds'])  // If we cannot find such a release, look for a newer, unstable release of the mod for the current stable version of the game.
+				   in_array($tagetRecommendedGameVersionUnstable, $release['compatibleGameVersions']) // First try and get a release for a pre-release version of the game.
+				|| in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'])  // If we cannot find such a release, look for a newer, unstable release of the mod for the current stable version of the game.
 			) {
 				$recommendedReleaseUnstable = $release;
 			}
 		}
 	}
-	else if(in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersionIds'])) {
+	else if(in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'])) {
 		$recommendedReleaseStable = $release;
 		break; // If there is a newer unstable version we already found it.
 	}
@@ -350,110 +346,42 @@ if (!empty($user)) {
 
 $view->display("show-mod");
 
-function cmpReleases($r1, $r2)
-{
-	$val = cmpVersion($r2['highestver'], $r1['highestver']);
-	if ($r2['highestver'] == $r1['highestver']) {
-		$val = cmpVersion($r2['modversion'], $r1['modversion']);
-	}
-	return $val;
-}
-
-/** Fold several monor version tags, e.g. 1.2.3, 1.2.4, 1.2.5 into 'Various 1.2.x' with a description containing the original versions.
- * @param array $tags
- * @return array
+/** Fold several sequential version tags, e.g. 1.2.3, 1.2.4, 1.2.5 into '1.2.3 - 1.2.5' with a description containing the original versions.
+ * Folds accross all layers of versions.
+ * @param int[] $versions       must be sorted for the algo to work
+ * @param int[] $versionIndices must be sorted for the algo to work
+ * @return string[]
  */
-function groupMinorVersionTags($tags)
+function foldSequentialVersionRanges($versions, $versionIndices)
 {
+	assert(count($versions) == count($versionIndices));
+
 	$result = [];
 
-	$currentMajorVersion = null;
-	$minorVersions = [];
-	foreach ($tags as &$tag) {
-		$parts = $tag['parts'] = explode(".", $tag['name']);
-		$majorVersion = $parts[0] . "." . $parts[1];
-
-		if($majorVersion !== $currentMajorVersion) {
-			mergeAndPush($result, $minorVersions, $currentMajorVersion);
-			$minorVersions = [];
-			$currentMajorVersion = $majorVersion;
+	$startSortIndex = $versionIndices[0];
+	$sequenceLength = 1;
+	for($i = 1; $i < count($versionIndices); $i++) {
+		if($versionIndices[$i] !== $startSortIndex + $sequenceLength) {
+			mergeAndPush($result, $versions, $i - $sequenceLength, $sequenceLength);
+			$startSortIndex = $versionIndices[$i];
+			$sequenceLength = 1;
 		}
-
-		$minorVersions[] = $tag;
+		else {
+			$sequenceLength++;
+		}
 	}
-	mergeAndPush($result, $minorVersions, $currentMajorVersion);
+	mergeAndPush($result, $versions, $i - $sequenceLength, $sequenceLength);
 
 	return $result;
 }
 
-function mergeAndPush(&$result, $minorVersions, $majorVersion)
+function mergeAndPush(&$result, &$versions, $startIndex, $sequenceLength)
 {
-	switch(count($minorVersions)) {
-		case 0:
-			break;
-
-		case 1:
-			$result[] = $minorVersions[0];
-			break;
-
-		default:
-			$consecutiveSections = [];
-
-			$refNumber = last($minorVersions[0]['parts']);
-			$refOffset = 1;
-			for($i = 1; $i < count($minorVersions); $i++) {
-				$currNumber = last($minorVersions[$i]['parts']);
-				if($currNumber != ($refNumber + $refOffset)) {
-					formatAndPushConsecutive($consecutiveSections, $minorVersions, $i, $refNumber, $refOffset);
-					$refNumber = $currNumber;
-					$refOffset = 1;
-				}
-				else {
-					$refOffset++;
-				}
-			}
-			formatAndPushConsecutive($consecutiveSections, $minorVersions, $i, $refNumber, $refOffset);
-
-			$description = $consecutiveSections[0];
-			for($i = 1; $i < count($consecutiveSections) - 1; $i++) {
-				$description .= ', '.$consecutiveSections[$i];
-			}
-			if(count($consecutiveSections) > 1) {
-				$name = "$majorVersion.x";
-				$description .= ' and '.$consecutiveSections[$i];
-			}
-			else {
-				$name = $description;
-			}
-
-			$result[] = [
-				'name'  => $name,
-				'desc'  => $description,
-				'color' => $minorVersions[0]['color'],
-				'tagid' => 0,
-			];
+	switch($sequenceLength) {
+		case  0: break;
+		case  1: $result[] = formatSemanticVersion($versions[$startIndex]); break;
+		default: $result[] = formatSemanticVersion($versions[$startIndex]).' - '.formatSemanticVersion($versions[$startIndex + $sequenceLength - 1]);
 	}
-}
-
-function formatAndPushConsecutive(&$consecutiveSections, $minorVersions, $i, $refNumber, $refOffset)
-{
-	switch($refOffset) {
-		case 2: // It's not worth space wise to format two consecutive tags as a - b, we just print add them individualy.
-			$consecutiveSections[] = $minorVersions[$i - 2]['name'];
-		case 1:
-			$consecutiveSections[] = $minorVersions[$i - 1]['name'];
-			break;
-
-		default:
-			$primary = substr($minorVersions[0]['name'], 0, strrpos($minorVersions[0]['name'], '.'));
-			$endNumber = $refNumber + $refOffset - 1;
-			$consecutiveSections[] = "$primary.$refNumber - $primary.$endNumber";
-	}
-}
-
-function formatVersionTagMaybeVarious($tag)
-{
-	return ($tag['tagid'] !== 0 || contains($tag['name'], ' - ')) ? $tag['name'] : "<abbr title='{$tag['desc']}'>{$tag['name']}</abbr>";
 }
 
 function processTeamInvitation($asset, $user)
