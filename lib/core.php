@@ -310,16 +310,21 @@ function logAssetChanges($changes, $assetid)
 	global $con, $user;
 
 	if (!empty($changes)) {
-		$changelogdb = $con->getRow("select * from changelog order by created desc limit 1");
-		$changelogid = 0;
-		if ($changelogdb && $changelogdb["assetid"] == $assetid && $changelogdb["userid"] == $user["userid"]) {
-			$changesdb = explode("\r\n", $changelogdb["text"]);
-			$changelogid = $changelogdb["changelogid"];
+		$change = $con->getRow('
+			SELECT *
+			FROM changelog
+			WHERE userid = ? AND assetid = ? AND lastmodified >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+			ORDER BY created DESC
+			LIMIT 1
+		', [$user['userid'], $assetid]);
+		if ($change) {
+			$changesdb = explode("\r\n", $change["text"]);
+			$changelogid = $change["changelogid"];
 
 			$changes = array_merge($changes, $changesdb);
 		}
 
-		if (!$changelogid) {
+		if (!$change) {
 			$changelogid = insert("changelog");
 		}
 
@@ -676,44 +681,38 @@ function sendPostData($path, $data, $remoteurl = null)
 	$context = stream_context_create($httpopts);
 	$result = file_get_contents($remoteurl, false, $context);
 
-	if (!empty($GLOBALS["authDebug"])) {
-		echo "request sent. Result is";
-		print_p($result);
-	}
-
 	return $result;
 }
 
 
 /**
  * @param string $filepath
- * @return array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:string}
+ * @return array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:int}
  */
 function getModInfo($filepath)
 {
 	$modpeek = substr(PHP_OS, 0, 3) === 'WIN' ? 'util\\modpeek.exe' : 'mono util/modpeek.exe';
-	//NOTE(Rennorb): Unfortunately we cannot use exec, because that trims its output and tehrefore allows versions with whitespace at the end.
+	//NOTE(Rennorb): Unfortunately we cannot use exec, because that trims its output and therefore allows versions with whitespace at the end.
 	// That happens for both, the last line returned by exec, and the output param.
 	$idver = trim(shell_exec($modpeek.' -i -f '.escapeshellarg($filepath)), "\r\n");
 
 	if (empty($idver)) {
-		$error = array("modparse" => "error", "parsemsg" => "Unable to find mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb");
+		return ["modparse" => "error", "parsemsg" => "Unable to find mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb"];
 	}
 
 	$parts = explode(":", $idver);
 	if (count($parts) != 2) {
-		$error = array("modparse" => "error", "parsemsg" => "Unable to determine mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb");
+		return ["modparse" => "error", "parsemsg" => "Unable to determine mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb"];
 	}
 
-	// allow uploading files when DEBUG is set AND mono/windows is unavailable
-	if (isset($error)) {
-		if (MODPEEK_ERROR_OVERRIDE === 1) {
-			return array("modparse" => "ok", "modid" => $_POST['modidstr'] ?? "ExampleMod", "modversion" => $_POST['modversion'] ?? "1.0.0");
-		}
-		return $error;
+	//TODO(Rennorb) @cleanup: Move this check out of here once modpeek upgrades are implemented.
+	// Since errors cause the data to not be saved, this can cause misleading error messages when roundtripping.
+	$version = compileSemanticVersion($parts[1]);
+	if($version === false) {
+		return ["modparse" => "error", "parsemsg" => "Mod version was malformed and could not be parsed as a semantic version (n.n.n[-{dev|pre|rc}.n])."];
 	}
 
-	return array("modparse" => "ok", "modid" => $parts[0], "modversion" => $parts[1]);
+	return ["modparse" => "ok", "modid" => $parts[0], "modversion" => $version];
 }
 
 function updateGameVersionsCached($modId)
