@@ -478,6 +478,16 @@ function getLocalTimeStamp($timestamp)
 	return $timestamp + 3600 * $hourdiff;
 }
 
+/**
+ * @param string $str
+ * @return string
+ */
+function escapeStringForLikeQuery($str)
+{
+	return str_replace(['_', '%'], ['\_', '\%'], $str);
+}
+
+
 /** Inflates links and creates spoiler elements.
  * @param string $html
  */

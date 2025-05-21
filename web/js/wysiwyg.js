@@ -32,7 +32,7 @@ var tinymceSettings = {
 		source: function(query, process, delimiter) {
 			if(!query) return;
 	
-			$.getJSON('/api/v2/users/by-name/' + query, function(data) {
+			$.getJSON('/api/v2/users/by-name/' + encodeURIComponent(query), function(data) {
 				process(Object.entries(data));
 			});
 		},

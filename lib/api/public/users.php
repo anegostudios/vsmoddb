@@ -23,7 +23,7 @@ switch($urlparts[0]) {
 					name,
 					substring(sha2(concat(userid, created), 512), 1, 20) as hash
 				from user
-				where name like ?
+				where name = ?
 			union
 				select
 					name,
@@ -31,7 +31,7 @@ switch($urlparts[0]) {
 				from user
 				where name like ?
 			limit ?
-		", [$search, '%'.$search.'%', $limit]);
+		", [$search, '%'.escapeStringForLikeQuery($search).'%', $limit]);
 		$map = [];
 		foreach($rows as $row) {
 			$map[$row['hash']] = $row['name'];

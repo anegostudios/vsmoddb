@@ -78,8 +78,8 @@ class AssetList extends AssetController {
 
 			$this->wheresql[] = "(asset.name like ? or asset.text like ?)";
 			
-			$this->wherevalues[] = "%" . $_GET["text"] . "%";
-			$this->wherevalues[] = "%" . $_GET["text"] . "%";
+			$this->wherevalues[] = "%" . escapeStringForLikeQuery($_GET["text"]) . "%";
+			$this->wherevalues[] = "%" . escapeStringForLikeQuery($_GET["text"]) . "%";
 
 			$this->searchvalues["text"] = $_GET["text"];
 		}

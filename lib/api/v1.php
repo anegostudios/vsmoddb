@@ -63,7 +63,7 @@ switch ($action) {
 
 	case "authors":
 		if (isset($_GET["name"])) {
-			$rows = $con->getAll("select userid, name from user where (banneduntil is null or banneduntil < now()) and name like ? limit 10", "%".substr($_GET["name"], 0, 20)."%");
+			$rows = $con->getAll("select userid, name from user where (banneduntil is null or banneduntil < now()) and name like ? limit 10", "%".escapeStringForLikeQuery(substr($_GET["name"], 0, 20))."%");
 		} else {		
 			$rows = $con->getAll("select userid, name from user");
 		}
@@ -279,8 +279,8 @@ function listMods()
 
 	if (!empty($_GET["text"])) {
 		$wheresql[] = "(asset.name like ? or asset.text like ?)";
-		$wherevalues[] = "%" . $_GET["text"] . "%";
-		$wherevalues[] = "%" . $_GET["text"] . "%";
+		$wherevalues[] = "%" . escapeStringForLikeQuery($_GET["text"]) . "%";
+		$wherevalues[] = "%" . escapeStringForLikeQuery($_GET["text"]) . "%";
 	}
 
 	if (!empty($_GET["tagids"])) {
