@@ -79,7 +79,7 @@
 				{/if}
 			</div>
 
-			<div class="imageslideshow fotorama" data-max-width="800" data-max-height="450" data-autoplay="5000" data-nav="thumbs" data-allowfullscreen="true">
+			<div class="imageslideshow fotorama" data-max-width="min(800px, 100%)" data-max-height="450" data-autoplay="5000" data-nav="thumbs" data-allowfullscreen="true">
 				{if (!empty($asset['trailervideourl']))}
 					<a rel="nofollow" href="{$asset['trailervideourl']}">Trailer Video</a>
 				{/if}
