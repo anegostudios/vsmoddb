@@ -30,7 +30,7 @@
 	<link href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
 	<link href="/web/css/editor_content.css" as="style">
 
-	<link href="/web/css/style.css?version=70" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=71" rel="stylesheet" type="text/css">
 
 	{if isset($assetserver) && startsWith($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
 
@@ -88,7 +88,7 @@
 					</span>
 				{/if}
 
-				<span class="submenu{if $headerHighlight === HEADER_HIGHLIGHT_CURRENT_USER} active{/if}">
+				<span class="submenu{if $headerHighlight === HEADER_HIGHLIGHT_CURRENT_USER} active{/if}" tabindex="0">
 					<span>{$user["name"]}</span>
 					<nav>
 						<a href="/show/user/{$user['hash']}">Profile</a>

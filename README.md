@@ -149,7 +149,7 @@ Endpoints marked as `at` additionally require a valid actiontoken and response w
 	- `200`: Successfully unfollowed if mod was followed.
 
 # Development setup
-## VS Code - Remote Containers
+## VS Code - Remote Containers (untested for a while now)
 You can use the provided vscode devcontainer to get up a running without installing everything on your own.
 
 Required for that is docker installed aswell as docker-compose and vscode with the [Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
@@ -182,5 +182,4 @@ Result:
 
 Note: the mysql container is set up to automatically execute the provided [DB structure + sample data](db/tables.sql).
 
-Note: in staging environments oyu can append `?showas=<id>` to any url to load the page the user with that id. This can be used debugging and testing role related features. 
-
+Note: in staging environments you can append `?showas=<id>` to any url to load the page the user with that id. This can be used debugging and testing role related features. 

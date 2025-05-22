@@ -1,8 +1,7 @@
-/templates_c/*
-/files/*
+/templates_c
+/files
 /db/model.mwb.bak
-/templates_c/*.tpl
-/tmp/*
+/tmp
 /.idea
 /.vs
 /.vscode
