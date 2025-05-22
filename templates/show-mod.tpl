@@ -48,9 +48,9 @@
 			still visible to everyone via direct link</div>
 	{/if}
 
-	<ul class="tabs">
-		<li><a href="#tab-description" rel="bookmark">Description</a></li>
-		<li><a href="#tab-files" rel="bookmark">Files</a></li>
+	<ul class="tabs no-mark">
+		<li><label for="tab-description" onclick="location.hash = 'tab-description'">Description</label></li>
+		<li><label for="tab-files" onclick="location.hash = 'tab-files'">Files</label></li>
 		{if $asset['homepageurl']}
 			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['homepageurl']}">Homepage</a></li>
 		{/if}
@@ -68,8 +68,10 @@
 		{/if}
 	</ul>
 
-	<div class="tab_container">
-		<div class="tab_content" id="description">
+	<div class="tab-container">
+		<input class="tab-trigger" id="tab-description" type="radio" name="tab" autocomplete="off">
+		<div class="tab-content">
+			<script>if(location.hash !== '#tab-files') document.getElementById('tab-description').checked = true;</script>
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
 					<a class="button large shine strikethrough-when-banned" href="/edit/mod/?assetid={$asset['assetid']}">Edit</a>&nbsp;
@@ -154,8 +156,9 @@
 			<div style="clear:both;"></div>
 		</div>
 
-
-		<div class="tab_content" id="files">
+		<input class="tab-trigger" id="tab-files" type="radio" name="tab" autocomplete="off">
+		<div class="tab-content">
+			<script>if(location.hash === '#tab-files') document.getElementById('tab-files').checked = true;</script>
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
 					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modid']}">Add release</a>

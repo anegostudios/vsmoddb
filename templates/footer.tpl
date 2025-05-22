@@ -17,9 +17,7 @@
 	<script type="text/javascript" src="/web/js/jquery.filedrop.js?v=2"></script>
 	<script type="text/javascript" src="/web/js/datepicker.min.js"></script>
 	<script type="text/javascript" src="/web/js/i18n/datepicker.en.js"></script>
-	
-	<script type="text/javascript" src="/web/js/tabs.js?version=6"></script>
-	
+
 	<script type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 
 	<link  href="https://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.css" rel="stylesheet">
@@ -31,8 +29,6 @@
 		actiontoken = {if isset($user)}"{$user['actiontoken']}"{else}""{/if};
 		
 		$(document).ready(function() {
-			makeTabs();
-			
 			$("select").each(function() {
 				if ($(this).parents(".template").length == 0) {
 					var ds = $(this).attr("noSearch") == 'noSearch';

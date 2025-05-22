@@ -645,100 +645,78 @@ body.opaque-desc .mod .moddesc {
 /******** Tabs *******/
 
 
-/* Simple Tabs for Settings page */
 ul.tabs {
-	float: left;
-	list-style: none;
-	height: 32px; /*--Set height of tabs--*/
-	border-bottom: 2px solid rgba(0,0,0,0.3);
 	width: 100%;
+	border-bottom: 2px solid #888;
+
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
 }
 
-ul.tabs li {
-	margin: 0;
-	float: left;
-	height: 31px; /*--Subtract 1px from the height of the unordered list--*/
-	line-height: 31px; /*--Vertically aligns the text within the tab--*/
-	border: 1px solid #999;
-	border-left: none !important;
-	margin-bottom: -1px; /*--Pull the list item down 1px--*/
-	overflow: hidden;
-	position: relative;
-	background: rgba(0,0,0,0.2);
+ul.tabs>li, ul.tabs>li>* {
+	height: 2em;
+	line-height: 2em;
 }
 
-ul.tabs li:first-child {
-	border-left: 1px solid #999;
+ul.tabs>li {
+	border: 1px solid var(--color-border);
+	border-bottom: none;
+	box-sizing: content-box;
+	background: hsla(0, 0%, 0%, 0.2);
+	flex-grow: 1;
 }
 
-ul.tabs li:first-child, ul.tabs li:first-child a {
-	border-top-left-radius: 6px;
+@media (min-width: 768px)  {
+	ul.tabs>li {
+		flex-grow: unset;
+	}
 }
 
-ul.tabs li:last-child, ul.tabs li:last-child a {
-	border-top-right-radius: 6px;
-}
-
-ul.tabs li:first-child a {
-	border-left: 1px solid #999;
-}
-
-ul.tabs li a {
-	text-decoration: none;
-	color: #000;
-	display: block;
-	font-size: 1.0em;
-	font-weight: bold;
-	padding: 0 20px;
-	border: 1px solid #fff;
-	outline: none;
-}
-
-ul.tabs li a img {
-	vertical-align: sub;
-}
-
-ul.tabs li:hover {
+ul.tabs>li:not(.active):hover {
 	background: #ccc;
 }
 
-html ul.tabs li.active, html ul.tabs li.active:hover { /*--Makes sure that the active tab does not listen to the hover properties--*/
-  border-bottom: 2px solid rgba(156, 145, 58, 0.2);
-  background: rgba(156, 145, 58, 0.2);
+ul.tabs>li>* {
+	cursor: pointer;
+	text-decoration: none;
+	color: #000;
+	display: block;
+	font-size: 1em;
+	font-weight: bold;
+	padding: 0 1em;
+	border: 1px solid #fff;
+	border-bottom: none;
+	outline: none;
 }
 
-.tab_container {
+ul.tabs>li>* img {
+	vertical-align: sub;
+}
+
+/* .tab-container {
 	border: 0px solid #999;
 	border-top: 0px;
 	clear: both;
 	position: relative;
 	z-index: 2;
+} */
+
+.tab-trigger {
+	display: none;
 }
 
-.tab_content {
+.tab-content {
 	padding: 10px 0px;
+	display: none;
 }
 
-ul.tabs li.disabled a {
-  color: #a3a3a3;
-}
-
-ul.tabs li.disabled {
-	background-color: #c0c0c0;
-}
-
-ul.tabs li.active:first-child {
-	z-index: 1;
-	height: 32px;
+.tab-trigger:checked + .tab-content{
+	display: unset;
 }
 
 td {
 	position: relative;
-}
-
-div.unconfirmed {
-	position: absolute;
-	left: -20px;
 }
 
 h2 .title {
