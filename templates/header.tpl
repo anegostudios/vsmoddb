@@ -30,12 +30,12 @@
 	<link href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
 	<link href="/web/css/editor_content.css" as="style">
 
-	<link href="/web/css/style.css?version=68" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=69" rel="stylesheet" type="text/css">
 
 	{if isset($assetserver) && startsWith($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
 
 	<script type="text/javascript" src="/web/js/jquery-1.11.1.min.js"></script>
-	<script type="text/javascript" src="/web/js/chosen/chosen.jquery.min.js?v=2"></script>
+	<script type="text/javascript" src="/web/js/chosen/chosen.jquery.min.js?v=3"></script>
 	{if isset($head)}{$head}{/if}
 </head>
 

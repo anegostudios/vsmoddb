@@ -162,7 +162,8 @@
 				{/if}
 			</div>
 
-			<p></p>
+			<p style="clear: both"></p>
+			<div style="overflow-x: auto;">
 			<table class="stdtable" style="min-width: 900px">
 				<thead>
 					<tr>
@@ -211,6 +212,7 @@
 				{/if}
 				</tbody>
 			</table>
+			</div>
 
 			<div style="clear:both;"></div>
 

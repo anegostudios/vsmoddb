@@ -73,15 +73,16 @@
 	</script>
 	{if !empty($footerjs)}{$footerjs}{/if}
 
-	<ul class="footer">
-		<li style="width: 100%; display: block; text-align: center;">Currently hosting {$totalModCount} Mods</li>
-		<li style="float:left;">Copyright © 2021-2025 Anego Studios | <a href="https://www.vintagestory.at/impressum.html/">Impressum</a></li>
-		<li style="margin-left:10px;"><a href="https://github.com/anegostudios/vsmoddb#vs-mod-db-api-docs">Json Api</a></li>
-		<li style="margin-left:10px;"><a rel="terms-of-service" href="/terms">Terms of use</a></li>
-		<li style="margin-left:10px;"><a rel="privacy-policy" href="https://www.vintagestory.at/privacy/">Privacy Policy</a></li>
-		<li><a rel="nofollow" href="https://www.vintagestory.at/contact/" data-ipsdialog="" data-ipsdialog-remotesubmit="" data-ipsdialog-flashmessage="Thanks, your message has been sent to the administrators." data-ipsdialog-title="Contact Us">Contact Us</a></li>
-	</ul>
-
-
+	<footer>
+		<ul class="no-mark">
+			<li style="flex-basis: 100%; text-align: center;">Currently hosting {$totalModCount} Mods</li>
+			<li>Copyright © 2021-2025 Anego Studios</li>
+			<li><a href="https://www.vintagestory.at/impressum.html/">Impressum</a></li>
+			<li><a href="https://github.com/anegostudios/vsmoddb#vs-mod-db-api-docs">Json Api</a></li>
+			<li><a rel="terms-of-service" href="/terms">Terms of use</a></li>
+			<li><a rel="privacy-policy" href="https://www.vintagestory.at/privacy/">Privacy Policy</a></li>
+			<li><a rel="nofollow" href="https://www.vintagestory.at/contact/">Contact Us</a></li>
+		</ul>
+	</footer>
 </body>
 </html>

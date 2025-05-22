@@ -102,8 +102,16 @@ a[href*="ko-fi.com"].external::before   { background-image: url(/web/img/logo-ko
 a[href*="discord.gg"].external::before,
 a[href*="discord.com"].external::before { background-image: url(/web/img/logo-discord.svg); }
 
+ul.no-mark, ol.no-mark {
+	list-style: none;
+}
+
 li {
 	margin-left: 1em;
+}
+
+ul.no-mark>li, ol.no-mark>li {
+	margin-left: unset;
 }
 
 small {
@@ -511,8 +519,14 @@ body.opaque-desc .mod .moddesc {
 
 .content {
 	margin: 1em 1em 0 1em;
+}
+
+.content, footer {
+	margin-left: 1em;
 	margin-right: calc(1em - (100vw - 100%)); /* remove scrollbar */
 }
+
+
 
 .innercontent {
 	position: relative;
@@ -1229,22 +1243,18 @@ a.add:before {
 }
 
 
-
-ul.footer {
-	list-style: none;
-	margin: 6px 1em;
-	margin-right: calc(1em - (100vw - 100%)); /* remove scrollbar */
-	padding: 0px;
-	background: rgba(255,255,255,0.6);
-	text-align: Right;
+footer {
+	margin-top: 1em;
 }
-
-.footer li {
-	margin: 0;
-	padding: 3px;
-	display: inline-block;
+footer>ul {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 1em;
+	justify-content: space-between;
+	padding: .5em;
+	background: hsla(0, 0%, 100%, 0.6);
 }
-
 
 
 
