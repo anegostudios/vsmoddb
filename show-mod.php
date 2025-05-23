@@ -134,9 +134,11 @@ $view->assign("tags", $tags);
 $releases = $con->getAll("
 	SELECT
 		r.*,
+		a.text,
 		GROUP_CONCAT(cgv.gameVersion ORDER BY cgv.gameVersion ASC SEPARATOR ',') AS compatibleGameVersions,
 		GROUP_CONCAT(gv.sortIndex   ORDER BY cgv.gameVersion ASC SEPARATOR ',') AS compatibleGameVersionsIndices
 	FROM `release` r
+	JOIN asset a ON a.assetid = r.assetid
 	LEFT JOIN ModReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseid
 	LEFT JOIN GameVersions gv ON gv.version = cgv.gameVersion
 	WHERE modid = ?

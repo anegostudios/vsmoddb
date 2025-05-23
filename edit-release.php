@@ -1,6 +1,8 @@
 <?php
 if (empty($user))   showErrorPage(HTTP_UNAUTHORIZED);
 
+include($config['basepath'] . 'lib/edit-release.php');
+
 $existingRelease = null;
 $targetMod = null;
 
@@ -127,7 +129,7 @@ if(!empty($_POST['save'])) {
 			}
 			else {
 				if (in_array($newData['modidstr'], ["game", "creative", "survival"])) { // Reserve special mod ids
-					addMessage(MSG_CLASS_ERROR, "This modid ('$mid') is reserved.");
+					addMessage(MSG_CLASS_ERROR, "This modid ('{$newData['modidstr']}') is reserved.");
 				}
 				else {
 					$inUseBy = $con->getRow('
@@ -186,67 +188,7 @@ if(!empty($_POST['save'])) {
 		//
 
 		if($existingRelease) {
-			$actualChanges = [];
-			foreach($newData as $k => $newVal) {
-				if($existingRelease[$k] != $newVal) $actualChanges[$k] = $newVal;
-			}
-			
-			$compatibleGameVersionsChange = false;
-			if($targetMod['type'] === 'mod') {
-				$oldCompatibleGameVersions = array_map('intval', $con->getCol('SELECT gameVersion FROM ModReleaseCompatibleGameVersions WHERE releaseId = ? ORDER BY gameVersion', [$existingRelease['releaseid']]));
-				sort($newCompatibleGameVersions); // Order the arrays the same way for the comparison.
-				$compatibleGameVersionsChange = $newCompatibleGameVersions !== $oldCompatibleGameVersions;
-			}
-
-			$ok = true;
-			if($actualChanges || $compatibleGameVersionsChange) {
-				$changesToLog = [];
-
-				$con->startTrans();
-
-				if(isset($actualChanges['text'])) {
-					$con->execute('UPDATE asset SET text = ? WHERE assetid = ?', [$actualChanges['text'], $existingRelease['assetid']]);
-
-					$changesToLog[] = 'Updated description.';
-				}
-				if(isset($actualChanges['modidstr']) || isset($actualChanges['modversion'])) {
-					$con->execute('UPDATE `release` SET modidstr = ?, modversion = ? WHERE releaseid = ?', [
-						$actualChanges['modidstr']   ?? $existingRelease['modidstr'],
-						$actualChanges['modversion'] ?? $existingRelease['modversion'],
-						$existingRelease['releaseid']],
-					);
-
-					if(isset($actualChanges['modidstr'])) $changesToLog[] = "Updated modid: {$existingRelease['modidstr']} -> {$actualChanges['modidstr']}.";
-					if(isset($actualChanges['modversion'])) $changesToLog[] = 'Updated modversion: '.formatSemanticVersion($existingRelease['modversion']).' -> '.formatSemanticVersion($actualChanges['modversion']).'.';
-				}
-
-				if($compatibleGameVersionsChange) {
-					$releaseId = intval($existingRelease['releaseid']);
-					$folded = implode(',', array_map(fn($v) => "($releaseId, $v)", $newCompatibleGameVersions));
-
-					$con->execute('DELETE FROM ModReleaseCompatibleGameVersions WHERE releaseId = ?', [$releaseId]);
-					// @security: Version numbers and releaseIds are numeric and therefore SQL Inert.
-					$con->execute("INSERT INTO ModReleaseCompatibleGameVersions (releaseId, gameVersion) VALUES $folded");
-
-					$removedCompat = array_values(array_diff($oldCompatibleGameVersions, $newCompatibleGameVersions));
-					$addedCompat = array_values(array_diff($newCompatibleGameVersions, $oldCompatibleGameVersions));
-
-					$change = 'Modified game version compat: ';
-					if($removedCompat) $change .= 'removed '.formatGrammaticallyCorrectEnumeration(array_map('formatSemanticVersion', $removedCompat));
-					if($addedCompat) {
-						if($removedCompat) $change .= ', ';
-						$change .= 'added '.formatGrammaticallyCorrectEnumeration(array_map('formatSemanticVersion', $addedCompat));
-					}
-					$changesToLog[] = $change;
-				}
-
-				logAssetChanges($changesToLog, $existingRelease['assetid']);
-
-				updateGameVersionsCached($targetMod['modid']);
-
-				$ok = $con->completeTrans();
-			}
-
+			$ok = updateRelease($targetMod, $existingRelease, $newData, $newCompatibleGameVersions, $currentFiles[0]);
 			if($ok) {
 				if(!empty($_POST['saveandback'])) forceRedirect(formatModPath($targetMod).'#tab-files');
 				else                              forceRedirectAfterPOST();
@@ -254,35 +196,8 @@ if(!empty($_POST['save'])) {
 			}
 		}
 		else { // adding a new release, no $existingRelease
-			$con->startTrans();
-
-			$con->execute('INSERT INTO asset (numsaved, text) VALUES(1, ?)', [$newData['text']]);
-			$assetId = $con->insert_ID();
-			
-			$con->execute('INSERT INTO `release` (modid, assetid, modidstr, modversion) VALUES(?, ?, ?, ?)', [$targetMod['modid'], $assetId, $newData['modidstr'] ?? NULL, $newData['modversion']]);
-			$releaseId = $con->insert_ID();
-
-			// attach hovering files
-			$file = $currentFiles[0];
-			if($file['assetid'] == 0) {
-				$con->execute('UPDATE file SET assetid = ? WHERE fileid = ?', [$assetId, $file['fileid']]);
-			}
-
-			$changeToLog = 'Created new release v'.formatSemanticVersion($newData['modversion']);
-
-			if($targetMod['type'] === 'mod') {
-				$folded = implode(',', array_map(fn($v) => "($releaseId, $v)", $newCompatibleGameVersions));
-				// @security: Version numbers and releaseIds are numeric and therefore SQL Inert.
-				$con->execute("INSERT INTO ModReleaseCompatibleGameVersions (releaseId, gameVersion) VALUES $folded");
-
-				$changeToLog .= " for {$newData['modidstr']} with compatible game versions ".formatGrammaticallyCorrectEnumeration(array_map('formatSemanticVersion', $newCompatibleGameVersions));
-			}
-
-			logAssetChanges([$changeToLog], $assetId);
-
-			updateGameVersionsCached($targetMod['modid']);
-
-			if($con->completeTrans()) {
+			$assetId = createNewRelease($targetMod, $newData, $newCompatibleGameVersions, $currentFiles[0]);
+			if($assetId) {
 				if(!empty($_POST['saveandback'])) forceRedirect(formatModPath($targetMod).'#tab-files');
 				else                              forceRedirect('/edit/release/?assetid='.$assetId);
 				exit();
@@ -293,41 +208,11 @@ if(!empty($_POST['save'])) {
 else if($existingRelease && !empty($_POST['delete'])) {
 	validateActionToken();
 
-	$con->startTrans();
-	$con->execute('DELETE FROM asset where assetid = ?', [$existingRelease['assetid']]);
-	$con->execute('DELETE FROM `release` where releaseid = ?', [$existingRelease['releaseid']]);
-
-	$usedFiles = $con->getAll('SELECT fileid, cdnpath FROM file WHERE assetid = ?', [$existingRelease['assetid']]);
-	foreach($usedFiles as $file) {
-		
+	$ok = deleteRelease($targetMod['modid'], $existingRelease);
+	if($ok) {
+		forceRedirect(formatModPath($targetMod).'#tab-files');
+		exit();
 	}
-
-	//TODO(Rennorb) @correctness: Remove / hide unread release notifications for deleted releases.
-	// We cannot remove notifications for deleted releases trivially like we do with comment notifications because release notifications are tracked by modid, not by releaseid.
-	// Since we only have the modid in the notification entry we could run into the following scenario:
-	// 1. new release 1 for mod 1 -> notification 1 (unread)
-	// 2. new release 2 for mod 1 -> notification 2 (unread)
-	// 3. delete release 2 -> we would delete both notifications even though only one should be removed, because both of them are tracked by the same modid
-	// I think it is possible to figure out a solution to this using the creation dates for releases and notifications, or change the notifications to be tracking releaseid instead of modid.
-	// Both of those would however be a larger change, and right now I'm just supplying a small fix for notifications.
-	// For now we just let these "invalid" notifications exist, as to not potentially remove valid ones which would be a lot worse.
-
-	updateGameVersionsCached($targetMod['modid']);
-
-	// Reset lastreleased to the last release, or the mod creation date if there is no other release.
-	$con->execute('
-		UPDATE `mod`
-		SET lastreleased = IFNULL(
-			(SELECT created FROM `release` WHERE modid = `mod`.modid ORDER BY created DESC LIMIT 1),
-			`mod`.created
-		)
-		WHERE modid = ?;
-	', [$targetMod['modid']]);
-
-	$con->completeTrans();
-
-	forceRedirect(formatModPath($targetMod).'#tab-files');
-	exit();
 }
 
 

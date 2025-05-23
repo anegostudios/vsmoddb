@@ -186,9 +186,9 @@
 							<td>
 								{if isset($user) && canEditAsset($asset, $user)}
 									<a style="display:block;" href="/edit/release?assetid={$release['assetid']}">v{formatSemanticVersion($release['modversion'])}</a>
-								{else}v{$release['modversion']}{/if}
+								{else}v{formatSemanticVersion($release['modversion'])}{/if}
 								<div class="changelogtext" style="display:none;">
-									<strong>v{$release['modversion']}</strong><br>
+									<strong>v{formatSemanticVersion($release['modversion'])}</strong><br>
 									{$release["text"]}
 								</div>
 							</td>
@@ -242,7 +242,7 @@
 						.hide();
 				}); // hide others
 				$self.toggle();
-				return true;
+				return false;
 			});
 
 			$("a[href='#follow']").click(function() {
