@@ -8,6 +8,7 @@
  * |4 Bit Kind|12 Bit Suffix Version|
  * 
  * Kind, suffix name.    Space between numbers is future proofing in case we want more at some point.
+ *    0 with version 0x0000 is 'reserved' - it denotes a 'major version' (see compileMajorVersion).
  *    4, dev
  *    8, pre
  *   12, rc
@@ -35,6 +36,12 @@ function compileSemanticVersion($versionStr)
 	     | $compliedSuffix;
 }
 
+/** Does the same asc compileSemanticVersion except it matches only two components, the major and minor.
+ *  The result also uses pre-release kind 0 to allow for masked comparisons against this 'major version',
+ *  e.g. compileMajorVersion('1.2') == (compileSemanticVersion('1.2.3-pre.1') & (VERSION_MASK_MAJOR | VERSION_MASK_MINOR)).
+ * @param string $versionStr
+ * @return int
+ */
 function compileMajorVersion($versionStr)
 {
 	if(!preg_match('/^(\d+)\.(\d+)$/', $versionStr, $matches)) return false; // @perf
