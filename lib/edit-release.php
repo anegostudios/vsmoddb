@@ -140,7 +140,7 @@ function deleteRelease($modId, $release)
 	// @perf: This could be merged into less queries, but in theory a release can only have one fiel either way, so this should not matter.
 	foreach($usedFiles as $fileId => $cdnpath) {
 		if($con->getOne('SELECT COUNT(*) FROM file WHERE cdnpath = ?', [$cdnpath]) == 1) {
-			// Only delete abandoned files! (Unlikely for release files, but might aswell be safe.)
+			// Only delete abandoned files! Unlikely to not be the case for release files, but might aswell be safe.
 			deleteFromCdn($cdnpath);
 		}
 		$con->execute('DELETE FROM file WHERE fileid = ?', [$fileId]);
