@@ -77,12 +77,3 @@ function splitVersion($version) {
 	$parts[3] = 0;
 	return $parts;
 }
-
-/**
- * @param string $versionString
- * @return bool
- */
-function isPreRelease($versionString)
-{
-	return preg_match('/[a-uw-z]/', $versionString); // @perf
-}

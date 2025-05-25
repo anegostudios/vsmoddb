@@ -78,7 +78,7 @@
 
 			<p><br></p>
 			<h3>Change log</h3>
-			<table class="stdtable activitystream" style="min-width:900px;">
+			<table class="stdtable" style="min-width:900px;">
 				<thead>
 					<tr>
 						<th>Changes</th>

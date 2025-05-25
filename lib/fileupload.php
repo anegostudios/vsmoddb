@@ -6,7 +6,7 @@
  * @param int   $parentassetid
  * @return array{status:'error', errormessage:string}|(
  *   array{status:'ok', fileid:int, thumbnailfilepath:string, filename:string, uploaddate:string, releaseid?:int}
- *  &(array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:string})
+ *  &(array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:int})
  * )
  */
 function processFileUpload($file, $assettypeid, $parentassetid) {
@@ -63,7 +63,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 		return array("status" => "error", "errormessage" => 'Not allowed file type! Allowed is ' . implode(", ", $exts));
 	}
 	
-	if ($_REQUEST["assetid"]) {
+	if ($parentassetid) {
 		$quantityfiles = $con->getOne("select count(*) from file where assetid=?", array($parentassetid));
 	} else {
 		$quantityfiles = $con->getOne("select count(*) from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
@@ -78,9 +78,8 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	$cdnbasepath = generateCdnFileBasenameWithPath($user['userid'], $localpath, $filebasename);
 	$cdnfilepath = "{$cdnbasepath}.{$ext}";
 
-	$data = $parentassetid
-		? array("filename" => $file['name'], "cdnpath" => $cdnfilepath, "assetid" => $parentassetid)
-		: array("filename" => $file["name"], "cdnpath" => $cdnfilepath, "assettypeid" => $assettypeid, "userid" => $user['userid']);
+	$data = array("filename" => $file['name'], "cdnpath" => $cdnfilepath, "assettypeid" => $assettypeid, "userid" => $user['userid']);
+	if($parentassetid) $data["assetid"] = $parentassetid;
 
 	list($width, $height, $type, $attr) = getimagesize($file["tmp_name"]);
 	if ($type == IMAGETYPE_GIF || $type == IMAGETYPE_JPEG || $type == IMAGETYPE_PNG) {
@@ -129,8 +128,8 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	if(isset($width)) $data['imagesize'] = "{$width}x{$height}";
 
 	if ($assettype['code'] == 'release') {
-		//NOTE(Rennorb): Since we append the extesion teh buildin collision-prevention mechanisms of tempnam wont work.
-		// For this reason we prepend a token to the filename, taht should be enough entropy to not collide with others.
+		//NOTE(Rennorb): Since we append the extension the builtin collision-prevention mechanisms of tempnam wont work.
+		// For this reason we prepend a token to the filename, that should be enough entropy to not collide with others.
 		$localpathwithcorrectext = tempnam(sys_get_temp_dir(), genToken()).'.'.$ext;
 		rename($localpath, $localpathwithcorrectext);
 

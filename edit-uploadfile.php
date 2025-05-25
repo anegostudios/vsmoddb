@@ -16,6 +16,8 @@ if (!empty($_POST["upload"]) && @$_FILES["file"]) {
 	}
 	
 	$res = processFileUpload($file, $_REQUEST['assettypeid'], $_REQUEST["assetid"]);
+
+	if(isset($res['modversion'])) $res['modversion'] = formatSemanticVersion($res['modversion']);
 	
 	exit(json_encode($res));
 }

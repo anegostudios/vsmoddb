@@ -81,9 +81,34 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 		- `limit`: Optional result count limit between 1 and 200 inclusive. Defaults to 10.
 	- `200`: string - string dictionary, where keys are user hashes and values are usernames.
 
-Endpoints marked as `auth` require authentication and response with `401` if it is missing.  
-Endpoints marked as `at` additionally require a valid actiontoken and response with `400` if it is missing. The token can be provided as a query parameter or in the POST body.  
+> [!IMPORTANT]  
+> Endpoints marked as `auth` require authentication and response with `401` if it is missing.  
+> Endpoints marked as `at` additionally require a valid actiontoken and response with `400` if it is missing. The token can be provided as a query parameter or in the POST body.  
 
+
+### /api/v2/mods/{modid}/releases
+- `get`: Path arg `{modid}`
+	- `404`: Not implemented
+
+### /api/v2/mods/{modid}/releases/all
+- `get`: Path arg `{modid}`
+	- `404`: Not implemented
+
+### /api/v2/mods/{modid}/releases/{releaseid}
+- `get`
+	- Args:
+		- Path arg `{modid}`
+		- Path arg `{releaseid}`
+	- `404`: Not implemented
+- `post` `auth` `at`
+	- Args:
+		- Path arg `{modid}`
+		- Path arg `{releaseid}`
+	- `404`: Not implemented
+
+### /api/v2/mods/{modid}/releases/new `auth` `at`
+- `put`: Path arg `{modid}`
+	- `404`: Not implemented
 
 ### /api/v2/mods/{modid}/comments
 - `get`: Path arg `{modid}`

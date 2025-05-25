@@ -35,16 +35,16 @@
 		<span data-label="Game Version">
 			<select style="width:100px;" name="mv" noSearch="noSearch">
 				<option value="">-</option>
-				{foreach from=$majorversions item=majorversion}
-					<option value="{$majorversion['majorversionid']}"{if $selectedParams['majorversion'] == $majorversion['majorversionid']} selected="selected"{/if}>{$majorversion['name']}</option>
+				{foreach from=$majorGameVersions item=version}
+					<option value="{$version['name']}"{if $selectedParams['majorversion'] === $version['version']} selected="selected"{/if}>{$version['name']}.x</option>
 				{/foreach}
 			</select>
 		</span>
 		
 		<span data-label="Game Version Exact">
 			<select style="width:160px;" name="gv[]" multiple>
-				{foreach from=$gameversions item=tag}
-					<option value="{$tag['tagid']}"{if isset($selectedParams['gameversions'][$tag['tagid']])} selected="selected"{/if}>{$tag['name']}</option>
+				{foreach from=$gameVersions item=version}
+					<option value="{$version['name']}"{if isset($selectedParams['gameversions'][$version['version']])} selected="selected"{/if}>{$version['name']}</option>
 				{/foreach}
 			</select>
 		</span>

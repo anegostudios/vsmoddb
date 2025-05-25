@@ -20,6 +20,7 @@ include($config["basepath"] . "lib/assetcontroller.php");
 include($config["basepath"] . "lib/assetlist.php");
 include($config["basepath"] . "lib/asseteditor.php");
 include($config["basepath"] . "lib/fileupload.php");
+include($config["basepath"] . "lib/version.php");
 
 
 $rd = opendir($config["basepath"] . "lib/assetimpl");
@@ -90,7 +91,7 @@ function delete($tablename, $recordid)
 
 function dump($var)
 {
-	echo "<pre style='background: #fff; color: #000'>";
+	echo "<pre style='background: #fff; color: #000; padding: .5em; border: solid 1px currentcolor;'>";
 	var_dump($var);
 	echo "</pre>";
 }
@@ -117,6 +118,32 @@ function contains($string, $part)
 {
 	return mb_strstr($string, $part) !== false;
 }
+
+/** Formats the elements of the array into a string in the shape of '1, 2, 3 and 4'.
+ * @param array $array 
+ * @return string
+ */
+function formatGrammaticallyCorrectEnumeration($array)
+{
+	switch(count($array)) {
+		case 0:
+			return '';
+
+		case 1:
+			return $array[0];
+
+		default:
+			$str = $array[0];
+			for($i = 1; $i < count($array) - 1; $i++) {
+				$str .= ', ';
+				$str .= $array[$i];
+			}
+			$str .= ' and ';
+			$str .= $array[$i];
+			return $str;
+	}
+}
+
 
 function isNumber($val)
 {
@@ -283,16 +310,21 @@ function logAssetChanges($changes, $assetid)
 	global $con, $user;
 
 	if (!empty($changes)) {
-		$changelogdb = $con->getRow("select * from changelog order by created desc limit 1");
-		$changelogid = 0;
-		if ($changelogdb && $changelogdb["assetid"] == $assetid && $changelogdb["userid"] == $user["userid"]) {
-			$changesdb = explode("\r\n", $changelogdb["text"]);
-			$changelogid = $changelogdb["changelogid"];
+		$change = $con->getRow('
+			SELECT *
+			FROM changelog
+			WHERE userid = ? AND assetid = ? AND lastmodified >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+			ORDER BY created DESC
+			LIMIT 1
+		', [$user['userid'], $assetid]);
+		if ($change) {
+			$changesdb = explode("\r\n", $change["text"]);
+			$changelogid = $change["changelogid"];
 
 			$changes = array_merge($changes, $changesdb);
 		}
 
-		if (!$changelogid) {
+		if (!$change) {
 			$changelogid = insert("changelog");
 		}
 
@@ -649,71 +681,67 @@ function sendPostData($path, $data, $remoteurl = null)
 	$context = stream_context_create($httpopts);
 	$result = file_get_contents($remoteurl, false, $context);
 
-	if (!empty($GLOBALS["authDebug"])) {
-		echo "request sent. Result is";
-		print_p($result);
-	}
-
 	return $result;
 }
 
 
 /**
  * @param string $filepath
- * @return array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:string}
+ * @return array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:int}
  */
 function getModInfo($filepath)
 {
 	$modpeek = substr(PHP_OS, 0, 3) === 'WIN' ? 'util\\modpeek.exe' : 'mono util/modpeek.exe';
-	//NOTE(Rennorb): Unfortunately we cannot use exec, because that trims its output and tehrefore allows versions with whitespace at the end.
+	//NOTE(Rennorb): Unfortunately we cannot use exec, because that trims its output and therefore allows versions with whitespace at the end.
 	// That happens for both, the last line returned by exec, and the output param.
 	$idver = trim(shell_exec($modpeek.' -i -f '.escapeshellarg($filepath)), "\r\n");
 
 	if (empty($idver)) {
-		$error = array("modparse" => "error", "parsemsg" => "Unable to find mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb");
+		return ["modparse" => "error", "parsemsg" => "Unable to find mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb"];
 	}
 
 	$parts = explode(":", $idver);
 	if (count($parts) != 2) {
-		$error = array("modparse" => "error", "parsemsg" => "Unable to determine mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb");
+		return ["modparse" => "error", "parsemsg" => "Unable to determine mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb"];
 	}
 
-	// allow uploading files when DEBUG is set AND mono/windows is unavailable
-	if (isset($error)) {
-		if (MODPEEK_ERROR_OVERRIDE === 1) {
-			return array("modparse" => "ok", "modid" => $_POST['modidstr'] ?? "ExampleMod", "modversion" => $_POST['modversion'] ?? "1.0.0");
-		}
-		return $error;
+	//TODO(Rennorb) @cleanup: Move this check out of here once modpeek upgrades are implemented.
+	// Since errors cause the data to not be saved, this can cause misleading error messages when roundtripping.
+	$version = compileSemanticVersion($parts[1]);
+	if($version === false) {
+		return ["modparse" => "error", "parsemsg" => "Mod version was malformed and could not be parsed as a semantic version (n.n.n[-{dev|pre|rc}.n])."];
 	}
 
-	return array("modparse" => "ok", "modid" => $parts[0], "modversion" => $parts[1]);
+	return ["modparse" => "ok", "modid" => $parts[0], "modversion" => $version];
 }
 
-function updateGameVersionsCached($modid)
+function updateGameVersionsCached($modId)
 {
 	global $con;
-	$modid = intval($modid);
 
-	$tags = $con->getAll("select distinct tag.tagid, tag.name from `release` join assettag on (`release`.assetid = assettag.assetid) join `tag` on (assettag.tagid = tag.tagid) where modid=?", array($modid));
-	$inserts = array();
-	$majorversions = array();
-	foreach ($tags as $tag) {
-		$inserts[] = "({$tag['tagid']}, {$modid})";
+	$modId = intval($modId);
 
-		$parts = explode(".", substr($tag['name'], 1));
-		$key = $parts[0] . "." . $parts[1] . ".x";
-		$majorversions[$key] = 1;
-	}
+	$con->startTrans();
 
+	$con->execute('DELETE FROM ModCompatibleGameVersionsCached WHERE modId = ?', [$modId]);
+	$con->execute('DELETE FROM ModCompatibleMajorGameVersionsCached WHERE modId = ?', [$modId]);
 
-	foreach ($majorversions as $majorversion => $val) {
-		$mvid = $con->getOne("select majorversionid from majorversion where name=?", array($majorversion));
-		$con->Execute("INSERT IGNORE INTO majormodversioncached (majorversionid, modid) values (?,?)", array($mvid, $modid));
-	}
+	// @security: modId is numeric and therefore SQL inert.
+	$con->execute("INSERT INTO ModCompatibleGameVersionsCached (modId, gameVersion)
+		SELECT DISTINCT {$modId}, cgv.gameVersion
+		FROM `release` r
+		JOIN ModReleaseCompatibleGameVersions cgv
+		where r.modid = {$modId}
+	");
 
-	$con->Execute("delete from modversioncached where modid=?", array($modid));
+	$con->execute("INSERT INTO ModCompatibleMajorGameVersionsCached (modId, majorGameVersion)
+		SELECT DISTINCT {$modId}, cgv.gameVersion & 0xffffffff00000000
+		FROM `release` r
+		JOIN ModReleaseCompatibleGameVersions cgv
+		where r.modid = {$modId}
+	");
 
-	if (count($tags) > 0) $con->Execute("insert into modversioncached values " . implode(",", $inserts));
+	$con->completeTrans();
 }
 
 function getUserHash($userid, $joindate)

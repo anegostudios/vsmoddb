@@ -1218,6 +1218,7 @@ a.add:before {
 	border-radius: 3px;
 	text-decoration: none;
 	color: #333;
+	background-color: #ccc;
 	border: 1px solid gray;
 	display: inline-block;
 	font-size: 90%;

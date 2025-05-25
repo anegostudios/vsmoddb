@@ -46,11 +46,11 @@ function validateModSearchInputs(&$outParams)
 
 	if(!empty($_REQUEST['sortdir'])) {
 		$sortDir = $_REQUEST['sortdir'];
-		if(!in_array($sortDir, ['a', 'd'], true)) {
+		if(!in_array($sortDir, ['a', 'asc', 'd', 'desc'], true)) {
 			return "Invalid sortdir: '$sortDir'.";
 		}
 
-		$outParams['order'][1] = $sortDir === 'a' ? 'asc' : 'desc';
+		$outParams['order'][1] = ($sortDir === 'a' || $sortDir === 'asc') ? 'asc' : 'desc';
 	}
 
 	if(!empty($_REQUEST['text'])) {
@@ -85,8 +85,8 @@ function validateModSearchInputs(&$outParams)
 
 	if(!empty($_REQUEST['gv']) || !empty($_REQUEST['gameversions'])) {
 		$rawGameversions = !empty($_REQUEST['gv']) ? $_REQUEST['gv'] : $_REQUEST['gameversions'];
-		$gameversions = filter_var($rawGameversions, FILTER_VALIDATE_INT, FILTER_FORCE_ARRAY);
-		if($gameversions === false) {
+		$gameversions = array_filter(array_map('compileSemanticVersion', $rawGameversions));
+		if(count($gameversions) !== count($rawGameversions)) {
 			$f = print_r($rawGameversions, true);
 			return "Invalid gameversions: $f.";
 		}
@@ -94,7 +94,7 @@ function validateModSearchInputs(&$outParams)
 	}
 
 	if(!empty($_REQUEST['mv'])) {
-		$majorversion = filter_var($_REQUEST['mv'], FILTER_VALIDATE_INT);
+		$majorversion = compileMajorVersion($_REQUEST['mv']);
 		if($majorversion === false) {
 			return "Invalid majorversion: {$_REQUEST['mv']}.";
 		}
@@ -170,11 +170,11 @@ function queryModSearch($searchParams)
 				break;
 
 			case 'gameversions':
-				$joinClauses .= 'JOIN modversioncached mv ON mv.modid = m.modid AND mv.tagid IN ('.implode(',', $value).')'; // @security: value must be filtered
+				$joinClauses .= 'JOIN ModCompatibleGameVersionsCached mcv ON mcv.modId = m.modid AND mcv.gameVersion IN ('.implode(',', $value).')'; // @security: value must be filtered
 				break;
 
 			case 'majorversion':
-				$joinClauses .= 'JOIN majormodversioncached mmv ON mmv.modid = m.modid AND mmv.majorversionid = ?';
+				$joinClauses .= 'JOIN ModCompatibleMajorGameVersionsCached mcmv ON mcmv.modId = m.modid AND mcmv.majorGameVersion = ?';
 				array_unshift($sqlParams, $value); // This needs to be in front of others because JOIN happens before WHERE.
 				break;
 
