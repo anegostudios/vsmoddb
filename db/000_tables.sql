@@ -168,7 +168,9 @@ CREATE TABLE IF NOT EXISTS `moddb`.`release` (
   `created` DATETIME NULL,
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`releaseid`),
-  UNIQUE INDEX `modidstr` (`modidstr` ASC, `modversion` ASC))
+  -- This has to include modidstr, as one mod can contain releases for multiple modidstr's.
+  -- This also has to include the modid, as tool/other mods dont need to have a modidstr.
+  UNIQUE INDEX `identifier` (`modid`, `modidstr`, `modversion`))
 ENGINE = InnoDB;
 
 
@@ -333,14 +335,16 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `ModCompatibleGameVersionsCached` (
   `modId` INT NOT NULL,
   `gameVersion` BIGINT UNSIGNED NOT NULL, -- compiled version
-  PRIMARY KEY (`modId`, `gameVersion`))
+  PRIMARY KEY (`modId`, `gameVersion`),
+  INDEX `version` (`gameVersion` ASC))
 ENGINE = InnoDB;
 
 -- same information as unique floorToMajor(joining mod + rleease + ReleaseCompatGameversions), cached for searching
 CREATE TABLE IF NOT EXISTS `ModCompatibleMajorGameVersionsCached` (
   `modId` INT NOT NULL,
   `majorGameVersion` BIGINT UNSIGNED NOT NULL, -- compiled version
-  PRIMARY KEY (`majorGameVersion`, `modId`))
+  PRIMARY KEY (`majorGameVersion`, `modId`),
+  INDEX `version` (`majorGameVersion` ASC))
 ENGINE = InnoDB;
 
 
