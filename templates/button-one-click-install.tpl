@@ -1,1 +1,1 @@
-<a class="button square ico-button one-click-dl" href="vintagestorymodinstall://{$release['modidstr']}@{$release['modversion']}" target="_blank"><abbr title="Requires game version v1.18.0-rc.1 or later, currently not supported on MacOS.">1-click install</abbr></a>
+<a class="button square ico-button one-click-dl" href="vintagestorymodinstall://{$release['modidstr']}@{formatSemanticVersion($release['modversion'])}" target="_blank"><abbr title="Requires game version v1.18.0-rc.1 or later, currently not supported on MacOS.">1-click install</abbr></a>
