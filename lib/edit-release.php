@@ -41,6 +41,7 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	logAssetChanges([$changeToLog], $assetId);
 
 	updateGameVersionsCached($mod['modid']);
+	$con->execute('UPDATE `mod` set lastreleased = NOW() WHERE modid = ?', [$mod['modid']]);
 
 	return $con->completeTrans() ? $assetId : 0;
 }
@@ -117,6 +118,7 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 		logAssetChanges($changesToLog, $existingRelease['assetid']);
 
 		updateGameVersionsCached($mod['modid']);
+		$con->execute('UPDATE `mod` set lastreleased = NOW() WHERE modid = ?', [$mod['modid']]);
 
 		$ok = $con->completeTrans();
 	}
