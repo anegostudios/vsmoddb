@@ -20,7 +20,7 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	', [$newData['text'], $user['userid'], $user['userid']]);
 	$assetId = $con->insert_ID();
 	
-	$con->execute('INSERT INTO `release` (modid, assetid, modidstr, modversion) VALUES(?, ?, ?, ?)', [$mod['modid'], $assetId, $newData['modidstr'] ?? NULL, $newData['modversion']]);
+	$con->execute('INSERT INTO `release` (created, modid, assetid, modidstr, modversion) VALUES(NOW(), ?, ?, ?, ?)', [$mod['modid'], $assetId, $newData['modidstr'] ?? NULL, $newData['modversion']]);
 	$releaseId = $con->insert_ID();
 
 	// attach hovering files
