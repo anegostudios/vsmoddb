@@ -185,10 +185,10 @@
 						<tr data-assetid="{$release['assetid']}" {if !isset($first)} class="latest"{/if}>
 							<td>
 								{if isset($user) && canEditAsset($asset, $user)}
-									<a style="display:block;" href="/edit/release?assetid={$release['assetid']}">v{formatSemanticVersion($release['modversion'])}</a>
-								{else}v{formatSemanticVersion($release['modversion'])}{/if}
+									<a style="display:block;" href="/edit/release?assetid={$release['assetid']}">{formatSemanticVersion($release['modversion'])}</a>
+								{else}{formatSemanticVersion($release['modversion'])}{/if}
 								<div class="changelogtext" style="display:none;">
-									<strong>v{formatSemanticVersion($release['modversion'])}</strong><br>
+									<strong>{formatSemanticVersion($release['modversion'])}</strong><br>
 									{$release["text"]}
 								</div>
 							</td>

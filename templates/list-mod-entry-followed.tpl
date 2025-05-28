@@ -17,7 +17,7 @@
 			<br>by {$mod['from']}
 		</a>
 		<br>
-		Latest version: <a href="{$mod['modpath']}#tab-files">v{$mod['releaseversion']} from
+		Latest version: <a href="{$mod['modpath']}#tab-files">{formatSemanticVersion($mod['releaseversion'])} from
 		<br>{fancyDate($mod['releasedate'])}</a>
 	</div>
 
