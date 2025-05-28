@@ -198,7 +198,7 @@
 							</td>
 							<td>{if !empty($release['file'])}{intval($release['file']['downloads'])}{/if}</td>
 							<td>{fancyDate($release['created'])}</td>
-							<td><label for="cl-trigger-{$release['assetid']}" class="button square cl-trigger">Show</label></td>
+							<td>{if $release["text"]}<label for="cl-trigger-{$release['assetid']}" class="button square cl-trigger">Show</label>{else}Empty{/if}</td>
 							<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{$release['file']['filename']}</a>{/if}</td>
 							{if $shouldShowOneClickInstall}<td>{if !empty($release['modidstr'])}{include file="button-one-click-install"}{/if}</td>{/if}
 						</tr>
