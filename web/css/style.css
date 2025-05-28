@@ -635,7 +635,7 @@ body.opaque-desc .mod .moddesc {
 	text-decoration: none;
 }
 
-.stdtable th, .stdtable td {
+.stdtable th, .stdtable td:not(.collapsable) {
 	border: 1px solid gray;
 	padding:2px;
 }
@@ -792,6 +792,7 @@ input[type="submit"],
 	text-decoration: none;
 	border-radius: .25em;
 	box-shadow: 0px 2px 3px #0008;
+	user-select: none;
 }
 
 button[type="submit"]:hover,
@@ -1052,6 +1053,52 @@ label.toggle>input[type="checkbox"]:checked {
 	font-weight: bold;
 	top: .25em;
 }
+
+/* release changelogs (animated collapse wrapper) */
+
+.collapsable>input {
+	display: none;
+	overflow-y: hidden;
+}
+
+.collapsable>div {
+	display: grid;
+	grid-template-rows: 0fr;
+	transition: grid-template-rows .5s ease-out;
+}
+
+.collapsable>input:checked + div {
+	grid-template-rows: 1fr;
+}
+
+.collapsable>div>* {
+	overflow-y: hidden;
+}
+
+.release-changelog {
+	padding: .25em;
+}
+
+@media (max-width: 767px) { /* @perf */
+	.collapsable.cl-changelog {
+		position: absolute;
+		z-index: 99;
+		background-color: var(--color-content-bg);
+		margin: 0 -.5em;
+		max-width: calc(100vw - 3em);
+	}
+}
+
+
+
+.release-table {
+	min-width: 900px;
+}
+
+/* downloads */
+.release-table tr>td:nth-child(3) { text-align: right; }
+/* changelog button */
+.release-table tr>td:nth-child(5) { text-align: center; }
 
 /* from here on: todo @cleanup */
 
@@ -1469,21 +1516,6 @@ div.betanotice {
 
 .stdtable.latestmods a {
 	display: block;
-}
-
-.changelogtext {
-	position: absolute;
-	background: white;
-	border: 1px solid #666;
-	min-width: 800px;
-	font-weight: normal;
-	box-shadow: 2px 2px 6px #666;
-	z-index: 99;
-	padding: 8px;
-}
-
-.changelogtext p:first-of-type {
-	margin-top: 0px;
 }
 
 span.username:before {

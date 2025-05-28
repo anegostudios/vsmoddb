@@ -167,7 +167,7 @@
 
 			<p style="clear: both"></p>
 			<div style="overflow-x: auto;">
-			<table class="stdtable" style="min-width: 900px">
+			<table class="stdtable release-table">
 				<thead>
 					<tr>
 						<th class="version">Mod Version</th>
@@ -187,10 +187,6 @@
 								{if isset($user) && canEditAsset($asset, $user)}
 									<a style="display:block;" href="/edit/release?assetid={$release['assetid']}">{formatSemanticVersion($release['modversion'])}</a>
 								{else}{formatSemanticVersion($release['modversion'])}{/if}
-								<div class="changelogtext" style="display:none;">
-									<strong>{formatSemanticVersion($release['modversion'])}</strong><br>
-									{$release["text"]}
-								</div>
 							</td>
 							<td>
 								<div class="tags">
@@ -199,13 +195,19 @@
 									{else}<a href="/list/mod/?gv[]={$versionStr}" class="tag" rel="tag">{$versionStr}</a>{/if}
 								{/foreach}
 								</div>
-						</td>
+							</td>
 							<td>{if !empty($release['file'])}{intval($release['file']['downloads'])}{/if}</td>
 							<td>{fancyDate($release['created'])}</td>
-							<td><a href="#showchangelog">Show</a></td>
+							<td><label for="cl-trigger-{$release['assetid']}" class="button square cl-trigger">Show</label></td>
 							<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{$release['file']['filename']}</a>{/if}</td>
 							{if $shouldShowOneClickInstall}<td>{if !empty($release['modidstr'])}{include file="button-one-click-install"}{/if}</td>{/if}
 						</tr>
+						{if $release["text"]}
+						<tr><td class="collapsable cl-changelog" colspan="{$shouldShowOneClickInstall ? 7 : 6}">
+							<input type="checkbox" id="cl-trigger-{$release['assetid']}" autocomplete="off">
+							<div><div><div class="release-changelog">{$release["text"]}</div></div></div>
+						</td></tr>
+						{/if}
 						{assign var="first" value="1"}
 					{/foreach}
 				{else}
@@ -217,10 +219,17 @@
 			</table>
 			</div>
 
+			<script type="text/javascript">
+			{
+				const table = document.getElementsByClassName('release-table')[0];
+				table.addEventListener('change', e => {
+					const t = e.target;
+					table.querySelector(`label[for="${t.id}"]`).textContent = t.checked ? 'Hide' : 'Show';
+				})
+			}
+			</script>
+
 			<div style="clear:both;"></div>
-
-
-
 		</div>
 
 	</div>
@@ -235,16 +244,6 @@
 		modid = {$asset['modid']};
 
 		$(document).ready(function() {
-			$("a[href='#showchangelog']").click(function() {
-				$self = $(this).parent().parent().find(".changelogtext");
-				$(".changelogtext").each(function() {
-					if ($(this)[0] != $self[0]) $(this)
-						.hide();
-				}); // hide others
-				$self.toggle();
-				return false;
-			});
-
 			$("a[href='#follow']").click(function() {
 				const oldCount = parseInt($(".count", $(this)).text());
 

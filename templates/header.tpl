@@ -30,7 +30,7 @@
 	<link href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
 	<link href="/web/css/editor_content.css" as="style">
 
-	<link href="/web/css/style.css?version=72" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=73" rel="stylesheet" type="text/css">
 
 	{if isset($assetserver) && startsWith($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
 
