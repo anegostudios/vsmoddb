@@ -1100,6 +1100,11 @@ label.toggle>input[type="checkbox"]:checked {
 /* changelog button */
 .release-table tr>td:nth-child(5) { text-align: center; }
 
+.release-table tr:not(.collapsable)>td:nth-last-child(n+4) {
+	padding-left: .25em;
+	padding-right: .25em;
+}
+
 /* from here on: todo @cleanup */
 
 .ck.ck-editor {
