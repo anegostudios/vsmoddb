@@ -43,6 +43,13 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	updateGameVersionsCached($mod['modid']);
 	$con->execute('UPDATE `mod` set lastreleased = NOW() WHERE modid = ?', [$mod['modid']]);
 
+	$con->Execute("
+		INSERT INTO notification (userid, type, recordid)
+		SELECT userid, 'newrelease', ?
+		FROM follow
+		WHERE modid = ? AND flags & ".FOLLOW_FLAG_CREATE_NOTIFICATIONS."
+	", [$mod['modid'], $mod['modid']]);
+
 	return $con->completeTrans() ? $assetId : 0;
 }
 
@@ -174,4 +181,34 @@ function deleteRelease($modId, $release)
 	', [$modId]);
 
 	return $con->completeTrans();
+}
+
+/** @param int $modId */
+function updateGameVersionsCached($modId)
+{
+	global $con;
+
+	$modId = intval($modId);
+
+	$con->startTrans();
+
+	$con->execute('DELETE FROM ModCompatibleGameVersionsCached WHERE modId = ?', [$modId]);
+	$con->execute('DELETE FROM ModCompatibleMajorGameVersionsCached WHERE modId = ?', [$modId]);
+
+	// @security: modId is numeric and therefore SQL inert.
+	$con->execute("INSERT INTO ModCompatibleGameVersionsCached (modId, gameVersion)
+		SELECT DISTINCT {$modId}, cgv.gameVersion
+		FROM `release` r
+		JOIN ModReleaseCompatibleGameVersions cgv
+		where r.modid = {$modId}
+	");
+
+	$con->execute("INSERT INTO ModCompatibleMajorGameVersionsCached (modId, majorGameVersion)
+		SELECT DISTINCT {$modId}, cgv.gameVersion & 0xffffffff00000000
+		FROM `release` r
+		JOIN ModReleaseCompatibleGameVersions cgv
+		where r.modid = {$modId}
+	");
+
+	$con->completeTrans();
 }

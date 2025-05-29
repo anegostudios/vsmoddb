@@ -725,35 +725,6 @@ function getModInfo($filepath)
 	return ["modparse" => "ok", "modid" => $parts[0], "modversion" => $version];
 }
 
-function updateGameVersionsCached($modId)
-{
-	global $con;
-
-	$modId = intval($modId);
-
-	$con->startTrans();
-
-	$con->execute('DELETE FROM ModCompatibleGameVersionsCached WHERE modId = ?', [$modId]);
-	$con->execute('DELETE FROM ModCompatibleMajorGameVersionsCached WHERE modId = ?', [$modId]);
-
-	// @security: modId is numeric and therefore SQL inert.
-	$con->execute("INSERT INTO ModCompatibleGameVersionsCached (modId, gameVersion)
-		SELECT DISTINCT {$modId}, cgv.gameVersion
-		FROM `release` r
-		JOIN ModReleaseCompatibleGameVersions cgv
-		where r.modid = {$modId}
-	");
-
-	$con->execute("INSERT INTO ModCompatibleMajorGameVersionsCached (modId, majorGameVersion)
-		SELECT DISTINCT {$modId}, cgv.gameVersion & 0xffffffff00000000
-		FROM `release` r
-		JOIN ModReleaseCompatibleGameVersions cgv
-		where r.modid = {$modId}
-	");
-
-	$con->completeTrans();
-}
-
 function getUserHash($userid, $joindate)
 {
 	return substr(hash("sha512", $userid . $joindate), 0, 20);
