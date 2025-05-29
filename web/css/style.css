@@ -1523,14 +1523,15 @@ div.betanotice {
 	display: block;
 }
 
-span.username:before {
+.username:before {
 	content: "@";
 }
 
-span.username {
+.username {
 	background-color: rgba(159, 207, 52, 0.5);
 	border-radius: 4px;
 	padding: 2px 3px;
+	text-decoration: none;
 }
 
 

@@ -92,10 +92,10 @@ html {
 	padding: .5em;
 }
 
-span.username::before {
+.username::before {
 	content: "@"
 }
 
-span#autocomplete, span.username {
+span#autocomplete, .username {
 	font-weight: bold;
 }

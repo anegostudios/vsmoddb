@@ -28,9 +28,9 @@
 
 	<link href="/web/js/tinymce/skins/ui/oxide/skin.min.css" as="style">
 	<link href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
-	<link href="/web/css/editor_content.css" as="style">
+	<link href="/web/css/editor_content.css?ver=4" as="style">
 
-	<link href="/web/css/style.css?version=74" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=75" rel="stylesheet" type="text/css">
 
 	{if isset($assetserver) && startsWith($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
 

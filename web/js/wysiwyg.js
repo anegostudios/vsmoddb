@@ -15,7 +15,7 @@ var tinymceSettings = {
 	relative_urls:false,
 	remove_script_host:false,
 	tinycomments_mode: 'embedded',
-	content_css: "/web/css/editor_content.css?ver=3",
+	content_css: "/web/css/editor_content.css?ver=4",
 	setup: function (editor) {
 		editor.on('change', function(e) { 
 			tinyMCE.triggerSave(); 
@@ -38,7 +38,7 @@ var tinymceSettings = {
 		},
 		queryBy: 1,
 		insert: function(item) {
-			return `<span class="mention username mceNonEditable" data-user-hash="${item[0]}">${item[1]}</span>`;
+			return `<a class="mention username mceNonEditable" data-user-hash="${item[0]}" href="/show/user/${item[0]}">${item[1]}</a>`;
 		}
 	},
 };
@@ -58,7 +58,7 @@ var tinymceSettingsCmt = {
 	relative_urls:false,
 	remove_script_host:false,
 	tinycomments_mode: 'embedded',
-	content_css: "/web/css/editor_content.css?ver=3",
+	content_css: "/web/css/editor_content.css?ver=4",
 	setup: tinymceSettings.setup,
 	mentions: tinymceSettings.mentions,
 };

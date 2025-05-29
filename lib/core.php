@@ -614,6 +614,16 @@ function _inflateWalker($node)
 				}
 				continue;
 			}
+			else if(($userHash = $child->attributes->getNamedItem('data-user-hash')) && preg_match('/[a-z0-9]{20}/', $userHash->value)) {
+				//NOTE(Rennorb): unfortunately, we cant just rename the node, so we have to copy the data onto another one.
+				$replacement = $child->ownerDocument->createElement('a');
+				$replacement->setAttribute('class', $child->attributes->getNamedItem('class')->value);
+				$replacement->setAttribute('data-user-hash', $userHash->value);
+				$replacement->setAttribute('href', '/show/user/'.$userHash->value);
+				$replacement->textContent = $child->textContent;
+				$toReplace[] = [$child, $replacement];
+				continue;
+			}
 		}
 
 		_inflateWalker($child); // recurse
