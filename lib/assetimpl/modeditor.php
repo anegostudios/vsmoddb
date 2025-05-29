@@ -50,7 +50,7 @@ class ModEditor extends AssetEditor
 			$view->assign('headerHighlight', HEADER_HIGHLIGHT_SUBMIT_MOD, null, true);
 		}
 
-		if ($this->assetid && ($this->asset['createdbyuserid'] === $user['userid'])) {
+		if ($this->assetid && canEditAsset($this->asset, $user, false)) {
 			$modId = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
 
 			$teammembers = $con->getAll("
