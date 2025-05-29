@@ -33,21 +33,20 @@ ENGINE = InnoDB;
 -- Table `moddb`.`user`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `moddb`.`user` (
-  `userid` INT NOT NULL AUTO_INCREMENT,
-  `roleid` INT NULL DEFAULT 3,
-  `uid` VARCHAR(255) NULL,
-  `name` VARCHAR(255) NULL,
-  `password` VARCHAR(255) NULL,
-  `email` VARCHAR(255) NULL,
-  `actiontoken` VARCHAR(255) NULL,
-  `sessiontoken` VARCHAR(255) NULL,
-  `sessiontokenvaliduntil` DATETIME NULL,
-  `timezone` VARCHAR(255) NULL,
-  `created` DATETIME NULL,
-  `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `lastonline` DATETIME NULL,
-  `banneduntil` DATETIME NULL,
-  `bio` TEXT NULL,
+  `userid`                 INT          NOT NULL AUTO_INCREMENT,
+  `roleid`                 INT          NOT NULL DEFAULT 3,
+  `uid`                    VARCHAR(255) NOT NULL,
+  `name`                   VARCHAR(255) NOT NULL,
+  `email`                  VARCHAR(255) NOT NULL,
+  `actiontoken`            BIGINT       NOT NULL, -- signed for reasons of php compatibility
+  `sessiontoken`           VARCHAR(255)     NULL,
+  `sessiontokenvaliduntil` DATETIME     NOT NULL,
+  `timezone`               VARCHAR(255)     NULL,
+  `created`                DATETIME     NOT NULL DEFAULT NOW(),
+  `lastmodified`           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastonline`             DATETIME         NULL, -- unused
+  `banneduntil`            DATETIME         NULL,
+  `bio`                    TEXT             NULL,
   PRIMARY KEY (`userid`),
   UNIQUE INDEX `email_UNIQUE` (`email` ASC),
   INDEX `uid` (`uid` ASC))

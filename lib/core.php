@@ -79,14 +79,31 @@ function update($tablename, $recordid, $data, $con = null)
 	));
 }
 
-// delete db record
-function delete($tablename, $recordid)
+/** Updates a row in the table $tableName identified by $recordId or inserts a new row with the given data if the $recordId is falsy.
+ * @remark does not perform INSERT ON DUPLICATE KEY!
+ * @security $tableName and $data keys are not properly escaped!
+ * @param  string $tableName
+ * @param  int|null|false $recordId
+ * @param  array $data
+ * @return mixed
+ */
+function createOrUpdate($tableName, $recordId, $data)
 {
 	global $con;
 
-	$con->Execute("delete from `{$tablename}` where `{$tablename}id` = ?", array($recordid));
-}
+	$values = array_values($data);
+	
+	if($recordId) {
+		$columnsFolded = join(', ', array_map(fn($k) => "`{$k}` = ?", array_keys($data)));
 
+		array_push($values, $recordId);
+		return $con->execute("UPDATE `{$tableName}` SET $columnsFolded WHERE {$tableName}id = ?", $values);
+	}
+	else {
+		$placeholders = substr(str_repeat(',?', count($data)), 1);
+		return $con->execute("INSERT INTO `{$tableName}` VALUES ($placeholders)", $values);
+	}
+}
 
 
 function dump($var)

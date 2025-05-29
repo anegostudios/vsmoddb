@@ -1,9 +1,8 @@
 <?php
 
 if ($user) {
-	if ($user['actiontoken'] != $_GET['at']) exit("invalid token");
-
-	update("user", $user['userid'], array("sessiontoken" => null));
+	validateActionToken();
+	$con->execute('UPDATE user SET sessiontoken = NULL WHERE userid = ?', [$user['userid']]);
 }
 
 header("Location: /");

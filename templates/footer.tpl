@@ -26,7 +26,7 @@
 	<script type="text/javascript">
 		assetid = {$asset['assetid'] ?? 0};
 		assettypeid = {$asset['assettypeid'] ?? 0};
-		actiontoken = "{$user['actiontoken'] ?? ''}";
+		actiontoken = "{$user['actiontoken'] ?? 0}"; // 64 bit > maxsafeinteger
 		
 		$(document).ready(function() {
 			$("select").each(function() {
