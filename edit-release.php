@@ -1,5 +1,7 @@
 <?php
 if (empty($user))   showErrorPage(HTTP_UNAUTHORIZED);
+if ($user['isbanned'])  showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
+
 
 include($config['basepath'] . 'lib/edit-release.php');
 
@@ -39,7 +41,6 @@ else if(!empty($_REQUEST['modid'])) {
 //NOTE(Rennorb): Do as little work as possible before this permission check, but don't unnecessarily split queries.
 if(!$targetMod)   showErrorPage(HTTP_NOT_FOUND, 'Target mod was not found.');
 if(!canEditAsset($targetMod, $user))   showErrorPage(HTTP_FORBIDDEN);
-validateUserNotBanned();
 
 //
 // Actions
