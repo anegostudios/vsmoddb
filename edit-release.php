@@ -59,21 +59,22 @@ if(!empty($_POST['save'])) {
 	//TODO(Rennorb) @cleanup @correctness: Attach files on save instead of on upload.
 	if($existingRelease) {
 		$currentFiles = $con->getAll('
-			SELECT file.assetid, file.fileid, mpr.detectedmodidstr, mpr.detectedmodversion
+			SELECT file.assetid, file.fileid, mpr.modIdentifier AS modIdentifier, mpr.modVersion AS modVersion
 			FROM file
-			LEFT JOIN modpeek_result mpr ON mpr.fileid = file.fileid
+			LEFT JOIN ModPeekResult mpr ON mpr.fileId = file.fileid
 			WHERE assetid = ?
 		', [$existingRelease['assetid']]);
 	}
 	else {
 		// hovering files
 		$currentFiles = $con->getAll('
-			SELECT file.assetid, file.fileid, mpr.detectedmodidstr, mpr.detectedmodversion
+			SELECT file.assetid, file.fileid, mpr.modIdentifier AS modIdentifier, mpr.modVersion AS modVersion
 			FROM file
-			LEFT JOIN modpeek_result mpr ON mpr.fileid = file.fileid
+			LEFT JOIN ModPeekResult mpr ON mpr.fileId = file.fileid
 			WHERE assetid IS NULL AND assettypeid = 2 AND userid = ?
 		', [$user['userid']]);
 	}
+	/** @var array{'assetid':int, 'fileid':int, 'modIdentifier':string|null, 'modVersion':string|null}[] $currentFiles */
 
 	//TODO(Rennorb) @cleanup: This exists for the case that the user used the "Browse" button instead of drag and drop, that doesn't immediately upload the file. 
 	if(!empty($_FILES['newfile']) && $_FILES['newfile']['error'] != 4) {
@@ -95,8 +96,8 @@ if(!empty($_POST['save'])) {
 					$currentFiles[] = [
 						'assetid'            => $assetId,
 						'fileid'             => $processedFile['fileid'],
-						'detectedmodidstr'   => $processedFile['modid'],
-						'detectedmodversion' => $processedFile['modversion'],
+						'modIdentifier'      => $processedFile['modid'],
+						'modVersion'         => $processedFile['modversion'],
 					];
 				}
 			}
@@ -123,8 +124,8 @@ if(!empty($_POST['save'])) {
 	if($targetMod['type'] === 'mod') {
 		// Mods take modid and version from the attached file. We no longer allow manual entry.
 		if($currentFiles) {
-			$newData['modidstr']   = $currentFiles[0]['detectedmodidstr'];
-			$newData['modversion'] = $currentFiles[0]['detectedmodversion'];
+			$newData['modidstr']   = $currentFiles[0]['modIdentifier'];
+			$newData['modversion'] = $currentFiles[0]['modVersion'];
 
 			if (!preg_match('/^[0-9a-zA-Z]+$/', $newData['modidstr'])) {
 				addMessage(MSG_CLASS_ERROR, "Detected modid '{$newData['modidstr']}' is not valid.", true); // @cleanup once modpeek is better
@@ -236,9 +237,9 @@ if($existingRelease) {
 else {
 	// hovering files
 	$files = $con->getAll("
-		SELECT *, file.fileid, CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) AS imagesize, mpr.detectedmodidstr, mpr.detectedmodversion
+		SELECT *, file.fileid, CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) AS imagesize, mpr.modIdentifier, mpr.modVersion
 		FROM file
-		LEFT JOIN modpeek_result mpr ON mpr.fileid = file.fileid
+		LEFT JOIN ModPeekResult mpr ON mpr.fileId = file.fileid
 		WHERE assetid IS NULL AND assettypeid = 2 AND userid = ?
 	", [$user['userid']]);
 }
@@ -281,8 +282,8 @@ if(!$existingRelease) {
 	];
 
 	if($targetMod['type'] === 'mod') {
-		$existingRelease['modidstr']   = $files ? $files[0]['detectedmodidstr'] : '';
-		$existingRelease['modversion'] = $files ? $files[0]['detectedmodversion'] : '';
+		$existingRelease['modidstr']   = $files ? $files[0]['modIdentifier'] : '';
+		$existingRelease['modversion'] = $files ? formatSemanticVersion(intval($files[0]['modVersion'])) : '';
 	}
 	else {
 		$existingRelease['modidstr']   = '';
