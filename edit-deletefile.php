@@ -39,7 +39,6 @@ splitOffExtension($file['cdnpath'], $noext, $ext);
 
 $con->Execute("update `mod` set cardlogofileid = NULL where cardlogofileid = ?", array($fileid));
 $con->Execute("update `mod` set embedlogofileid = NULL where embedlogofileid = ?", array($fileid));
-$con->Execute("delete from modpeek_result where fileid = ?", array($fileid));
 $con->Execute("delete from file where fileid = ?", array($fileid));
 
 $countOfFilesUsingThisCDNPath = $con->getOne('select count(*) from `file` where cdnpath = ?', [$file['cdnpath']]);

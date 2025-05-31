@@ -1,5 +1,7 @@
 <?php
 
+include_once $config['basepath'] . 'lib/modinfo.php';
+
 /**
  * @param array $file
  * @param int   $assettypeid
@@ -10,7 +12,7 @@
  * )
  */
 function processFileUpload($file, $assettypeid, $parentassetid) {
-	global $con, $user, $config;
+	global $con, $user;
 	
 	switch($file['error']) {
 		case 0: break;
@@ -105,13 +107,13 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	}
 
 	$foldedKeys = implode(', ', array_keys($data));
-	$placeholders = str_repeat(', ?', count($data));
+	$placeholders = substr(str_repeat(',?', count($data)), 1);
 	if(!isset($data['hasthumbnail'])) {
-		$con->execute("insert into file (created, $foldedKeys) values (now() $placeholders)", array_values($data)); // no comma before $placeholders on purpose
+		$con->execute("insert into file (created, $foldedKeys) values ($placeholders)", array_values($data));
 	}
 	else {
 		// :BrokenSqlPointType
-		$con->execute("insert into file (created, imagesize, $foldedKeys) values (now(), POINT($width, $height) $placeholders)", array_values($data)); // no comma before $placeholders on purpose
+		$con->execute("insert into file (created, imagesize, $foldedKeys) values (POINT($width, $height), $placeholders)", array_values($data));
 	}
 	$fileid = $con->Insert_ID();
 
@@ -128,21 +130,24 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	if(isset($width)) $data['imagesize'] = "{$width}x{$height}";
 
 	if ($assettype['code'] == 'release') {
-		//NOTE(Rennorb): Since we append the extension the builtin collision-prevention mechanisms of tempnam wont work.
-		// For this reason we prepend a token to the filename, that should be enough entropy to not collide with others.
-		$localpathwithcorrectext = tempnam(sys_get_temp_dir(), genToken()).'.'.$ext;
-		rename($localpath, $localpathwithcorrectext);
+		$ok = modpeek($localpath, $modInfo);
+		$con->Execute('insert into ModPeekResult (fileId, errors, modIdentifier, modVersion, networkVersion, description, website, rawAuthors, rawContributors, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?)',
+			[$fileid, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawDependencies']]
+		);
 
-		$info = getModInfo($localpathwithcorrectext);
-
-		unlink($localpathwithcorrectext);
-
-		if($info['modparse'] === 'ok') {
-			$con->Execute('insert into modpeek_result (fileid, detectedmodidstr, detectedmodversion) VALUES (?,?,?)', [$fileid, $info['modid'], $info['modversion']]);
+		// array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:int}
+		if($ok) {
+			$data['modparse']   = 'ok';
+			$data['modid']      = $modInfo['id'];
+			$data['modversion'] = $modInfo['version'];
 		}
-
-		$data = array_merge($data, $info);
+		else {
+			$data['modparse'] = 'ok';
+			$data['parsemsg'] = $modInfo['errors'];
+		}
 	}
+
+	//TODO(Rennorb) @perf: unlink $localpath here?
 
 	return $data;
 }
