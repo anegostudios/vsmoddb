@@ -109,11 +109,11 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	$foldedKeys = implode(', ', array_keys($data));
 	$placeholders = substr(str_repeat(',?', count($data)), 1);
 	if(!isset($data['hasthumbnail'])) {
-		$con->execute("insert into file (created, $foldedKeys) values ($placeholders)", array_values($data));
+		$con->execute("insert into file ($foldedKeys) values ($placeholders)", array_values($data));
 	}
 	else {
 		// :BrokenSqlPointType
-		$con->execute("insert into file (created, imagesize, $foldedKeys) values (POINT($width, $height), $placeholders)", array_values($data));
+		$con->execute("insert into file (imagesize, $foldedKeys) values (POINT($width, $height), $placeholders)", array_values($data));
 	}
 	$fileid = $con->Insert_ID();
 
