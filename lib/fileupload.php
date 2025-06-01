@@ -131,8 +131,8 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 
 	if ($assettype['code'] == 'release') {
 		$ok = modpeek($localpath, $modInfo);
-		$con->Execute('insert into ModPeekResult (fileId, errors, modIdentifier, modVersion, networkVersion, description, website, rawAuthors, rawContributors, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?)',
-			[$fileid, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawDependencies']]
+		$con->Execute('insert into ModPeekResult (fileId, errors, modIdentifier, modVersion, type, networkVersion, description, website, rawAuthors, rawContributors, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+			[$fileid, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawDependencies']]
 		);
 
 		// array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:int}

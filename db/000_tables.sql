@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`ModPeekResult` (
   `errors`          TEXT                NULL,
   `modIdentifier`   VARCHAR(255)        NULL,
   `modVersion`      BIGINT UNSIGNED NOT NULL,
+  `type`            ENUM('Theme', 'Content', 'Code') NULL,
   `networkVersion`  BIGINT UNSIGNED NOT NULL,
   `description`     TEXT                NULL,
   `website`         VARCHAR(255)        NULL,
