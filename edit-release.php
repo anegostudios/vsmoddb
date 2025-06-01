@@ -141,7 +141,7 @@ if(!empty($_POST['save'])) {
 						JOIN `mod` m ON m.modid = r.modid
 						WHERE r.modidstr = ? AND (r.modid != ? || r.modversion = ?)
 						LIMIT 1
-					', [$targetMod['modid'], $newData['modidstr'], $newData['modversion']]);
+					', [$newData['modidstr'], $targetMod['modid'], $newData['modversion']]);
 
 					if ($inUseBy) {
 						if($inUseBy['modid'] == $targetMod['modid'] && $inUseBy['modversion'] == $newData['modversion']) {
