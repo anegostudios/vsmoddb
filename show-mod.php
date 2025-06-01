@@ -156,11 +156,18 @@ if(count($releases)) {
 foreach ($releases as &$release) {
 	$release['file'] = $releaseFiles[$release['assetid']];
 	
-	$compatibleGameVersions      = array_map('intval', explode(',', $release['compatibleGameVersions'])); // sorted ascending
-	$compatibleGameVersionsIndices = array_map('intval', explode(',', $release['compatibleGameVersionsIndices'])); // sorted ascending
-	$release['maxCompatibleGameVersion'] = $compatibleGameVersions ? last($compatibleGameVersions) : 0;
-	$release['compatibleGameVersions'] = $compatibleGameVersions;
-	$release['compatibleGameVersionsFolded'] = foldSequentialVersionRanges($compatibleGameVersions, $compatibleGameVersionsIndices);
+	if($release['compatibleGameVersions']) {
+		$compatibleGameVersions        = array_map('intval', explode(',', $release['compatibleGameVersions'])); // sorted ascending
+		$compatibleGameVersionsIndices = array_map('intval', explode(',', $release['compatibleGameVersionsIndices'])); // sorted ascending
+		$release['maxCompatibleGameVersion'] = last($compatibleGameVersions);
+		$release['compatibleGameVersions'] = $compatibleGameVersions;
+		$release['compatibleGameVersionsFolded'] = foldSequentialVersionRanges($compatibleGameVersions, $compatibleGameVersionsIndices);
+	}
+	else {
+		$release['maxCompatibleGameVersion'] = 0;
+		$release['compatibleGameVersions'] = [];
+		$release['compatibleGameVersionsFolded'] = [];
+	}
 }
 unset($release);
 
@@ -338,7 +345,10 @@ $view->assign("recommendationIsInfluencedBySearch", $recommendationIsInfluencedB
 
 $view->assign("asset", $asset);
 
-$view->assign("shouldShowOneClickInstall", !preg_match('/macintosh|mac os x|mac_powerpc|iphone|ipod|ipad|android|blackberry|webos|mobile/i', $_SERVER['HTTP_USER_AGENT']), null, false);
+$oneClickInstallWorks = !preg_match('/macintosh|mac os x|mac_powerpc|iphone|ipod|ipad|android|blackberry|webos|mobile/i', $_SERVER['HTTP_USER_AGENT']);
+$view->assign("shouldShowOneClickInstall", $oneClickInstallWorks && $asset['type'] === 'mod', null, false);
+$view->assign("shouldListCompatibleGameVersion", $asset['type'] === 'mod', null, false);
+$view->assign("changelogColspan", 5 + ($asset['type'] === 'mod' ? ($oneClickInstallWorks ? 2 : 1) : 0), null, false);
 $view->assign("isfollowing", empty($user) ? 0 : $con->getOne("select modid from `follow` where modid=? and userid=?", array($asset['modid'], $user['userid'])));
 
 if (!empty($user)) {

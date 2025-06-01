@@ -1095,14 +1095,21 @@ label.toggle>input[type="checkbox"]:checked {
 	min-width: 900px;
 }
 
-/* downloads */
-.release-table tr>td:nth-child(3) { text-align: right; }
+/* download count */
+.release-table.gv tr>td:nth-child(3),
+.release-table.no-gv tr>td:nth-child(2) { text-align: right; }
 /* changelog button */
-.release-table tr>td:nth-child(5) { text-align: center; }
+.release-table.gv tr>td:nth-child(5),
+.release-table.no-gv tr>td:nth-child(4) { text-align: center; }
 
 .release-table tr:not(.collapsable)>td:nth-last-child(n+4) {
 	padding-left: .25em;
 	padding-right: .25em;
+}
+
+.release-table.gv tr>td:nth-child(n+5)>*,
+.release-table.no-gv tr>td:nth-child(n+4)>* {
+	width: 100%;
 }
 
 /* from here on: todo @cleanup */

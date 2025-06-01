@@ -167,11 +167,11 @@
 
 			<p style="clear: both"></p>
 			<div style="overflow-x: auto;">
-			<table class="stdtable release-table">
+			<table class="stdtable release-table {$shouldListCompatibleGameVersion ? 'gv' : 'no-gv'}">
 				<thead>
 					<tr>
 						<th class="version">Mod Version</th>
-						<th class="gameversion">For Game version</th>
+						{if $shouldListCompatibleGameVersion}<th class="gameversion">For Game version</th>{/if}
 						<th class="downloads">Downloads</th>
 						<th class="releasedate">Release date</th>
 						<th class="changelog">Changelog</th>
@@ -188,14 +188,14 @@
 									<a style="display:block;" href="/edit/release?assetid={$release['assetid']}">{formatSemanticVersion($release['modversion'])}</a>
 								{else}{formatSemanticVersion($release['modversion'])}{/if}
 							</td>
-							<td>
+							{if $shouldListCompatibleGameVersion}<td>
 								<div class="tags">
 								{foreach from=$release['compatibleGameVersionsFolded'] item=versionStr}
 									{if contains($versionStr, ' - ')}<span class="tag">{$versionStr}</span>
 									{else}<a href="/list/mod/?gv[]={$versionStr}" class="tag" rel="tag">{$versionStr}</a>{/if}
 								{/foreach}
 								</div>
-							</td>
+							</td>{/if}
 							<td>{if !empty($release['file'])}{intval($release['file']['downloads'])}{/if}</td>
 							<td>{fancyDate($release['created'])}</td>
 							<td>{if $release["text"]}<label for="cl-trigger-{$release['assetid']}" class="button square cl-trigger">Show</label>{else}Empty{/if}</td>
@@ -203,7 +203,7 @@
 							{if $shouldShowOneClickInstall}<td>{if !empty($release['modidstr'])}{include file="button-one-click-install"}{/if}</td>{/if}
 						</tr>
 						{if $release["text"]}
-						<tr><td class="collapsable cl-changelog" colspan="{$shouldShowOneClickInstall ? 7 : 6}">
+						<tr><td class="collapsable cl-changelog" colspan="{$changelogColspan}">
 							<input type="checkbox" id="cl-trigger-{$release['assetid']}" autocomplete="off">
 							<div><div><div class="release-changelog">{$release["text"]}</div></div></div>
 						</td></tr>
