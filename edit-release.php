@@ -134,14 +134,15 @@ if(!empty($_POST['save'])) {
 					addMessage(MSG_CLASS_ERROR, "This modid ('{$newData['modidstr']}') is reserved.");
 				}
 				else {
-					$inUseBy = $con->getRow('
+					$sqlIgnoreExistingRelease = $existingRelease ? "r.releaseid != {$existingRelease['releaseid']} AND" : ''; // @security $existingRelease['releaseid'] comes from the database and is numeric, therefore sql inert.
+					$inUseBy = $con->getRow("
 						SELECT a.*, r.modid, r.modversion, m.assetid as modassetid, m.urlalias
 						FROM `release` r
 						JOIN asset a ON a.assetid = r.assetid
 						JOIN `mod` m ON m.modid = r.modid
-						WHERE r.modidstr = ? AND (r.modid != ? || r.modversion = ?)
+						WHERE $sqlIgnoreExistingRelease r.modidstr = ? AND (r.modid != ? || r.modversion = ?)
 						LIMIT 1
-					', [$newData['modidstr'], $targetMod['modid'], $newData['modversion']]);
+					", [$newData['modidstr'], $targetMod['modid'], $newData['modversion']]);
 
 					if ($inUseBy) {
 						if($inUseBy['modid'] == $targetMod['modid'] && $inUseBy['modversion'] == $newData['modversion']) {
