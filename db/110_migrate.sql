@@ -18,6 +18,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `modpeek_result` DROP COLUMN `created`; -- this is always identical to the file created column
     ALTER TABLE `modpeek_result` CHANGE COLUMN `detectedmodidstr` `modIdentifier` VARCHAR(255) NULL;
     ALTER TABLE `modpeek_result` CHANGE COLUMN `detectedmodversion` `modVersion` BIGINT UNSIGNED NOT NULL;
+    ALTER TABLE `modpeek_result` ADD COLUMN `type` ENUM('Theme', 'Content', 'Code') NULL,
     ALTER TABLE `modpeek_result` ADD COLUMN `networkVersion` BIGINT UNSIGNED NOT NULL;
     ALTER TABLE `modpeek_result` ADD COLUMN `description` TEXT NULL;
     ALTER TABLE `modpeek_result` ADD COLUMN `website` VARCHAR(255) NULL;

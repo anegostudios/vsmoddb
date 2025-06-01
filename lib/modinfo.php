@@ -7,7 +7,7 @@
 
 /**
  * @param string $filepath
- * @param array{'id':string|null, 'name':string|null, 'version':int, 'networkVersion':int, 'description':string|null, 'rawAuthors':string|null, 'rawContributors':string|null, 'website':string|null, 'rawDependencies':string|null, 'errors':string|null} &$modInfo
+ * @param array{'id':string|null, 'name':string|null, 'version':int, 'type':'Theme'|'Content'|'Code'|null, 'networkVersion':int, 'description':string|null, 'rawAuthors':string|null, 'rawContributors':string|null, 'website':string|null, 'rawDependencies':string|null, 'errors':string|null} &$modInfo
  * @return bool false on error
  */
 function modpeek($filepath, &$modInfo)
@@ -34,6 +34,7 @@ function modpeek($filepath, &$modInfo)
 		'id'              => null,
 		'name'            => null,
 		'version'         => 0,
+		'type'            => null,
 		'networkVersion'  => 0,
 		'description'     => null,
 		'website'         => null,
@@ -50,6 +51,7 @@ function modpeek($filepath, &$modInfo)
 			case 'Id':          $modInfo['id']          = $rawValue ?: null; break;
 			case 'Name':        $modInfo['name']        = $rawValue ?: null; break;
 			case 'Website':     $modInfo['website']     = $rawValue ?: null; break;
+			case 'Type':        $modInfo['type']        = $rawValue ?: null; break;
 
 			case 'Description': $modInfo['description'] = str_replace('\n', "\n", $rawValue) ?: null; break;
 
@@ -61,7 +63,6 @@ function modpeek($filepath, &$modInfo)
 			case 'Dependencies': $modInfo['rawDependencies'] = $rawValue ?: null; break;
 		}
 	}
-
 
 	fclose($pipes[1]);
 	fclose($pipes[2]);
