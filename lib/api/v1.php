@@ -176,7 +176,7 @@ function listMod($modid)
 		from 
 			`release` 
 			join asset on (asset.assetid = `release`.assetid)
-			join ModReleaseCompatibleGameVersions cgv on cgv.releaseId = `release`.releaseid
+			left join ModReleaseCompatibleGameVersions cgv on cgv.releaseId = `release`.releaseid
 		where modid=?
 		group by `release`.releaseid
 		order by release.created desc
@@ -211,7 +211,7 @@ function listMod($modid)
 		from 
 			`file` 
 		where assetid = ? and fileid not in (?, ?)
-	", array($modid, $row['cardlogofileid'] ?? 0, $row['embedlogofileid'] ?? 0)); /* sql cant compare against null */
+	", array($row['assetid'], $row['cardlogofileid'] ?? 0, $row['embedlogofileid'] ?? 0)); /* sql cant compare against null */
 
 	$screenshots = array();
 	foreach ($srows as $screenshot) {
