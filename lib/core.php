@@ -144,6 +144,20 @@ function formatGrammaticallyCorrectEnumeration($array)
 	}
 }
 
+/** Strips html tags, trailing and leading whitespace and consecutive whitespace, as well as converting html entries to their utf8 counterparts.
+ * This is intended to create a searchable, plain-text version of a html string.
+ * @remark This is a rather expensive function!
+ * @param string $string
+ * @return string
+ */
+function textContent($string)
+{
+	//TODO(Rennorb): @cleanup: using utf-8 here is suboptimal, as it will mangle actual utf8 in the database.
+	// The issue is that we literally cannot store actual utf8 in the database, because the current version of mysql does not support proper utfmb4 (lol).
+	// I will be working on resolving this, but it should work for "normal words" in the meantime.
+	return preg_replace('/\s+/u', ' ', trim(html_entity_decode(strip_tags($string), ENT_SUBSTITUTE | ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+}
+
 
 function isNumber($val)
 {
