@@ -94,7 +94,7 @@ function validateModSearchInputs(&$outParams)
 	}
 
 	if(!empty($_REQUEST['mv'])) {
-		$majorversion = compileMajorVersion($_REQUEST['mv']);
+		$majorversion = compilePrimaryVersion($_REQUEST['mv']);
 		if($majorversion === false) {
 			return "Invalid majorversion: {$_REQUEST['mv']}.";
 		}

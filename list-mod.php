@@ -50,7 +50,7 @@ foreach($gameVersions as &$version) {
 	$version['version'] = intval($version['version']);
 	$version['name'] = formatSemanticVersion($version['version']);
 
-	$majorVersion = $version['version'] & 0xffff_ffff_0000_0000;
+	$majorVersion = $version['version'] & VERSION_MASK_PRIMARY;
 	foreach($majorGameVersions as $mv) {
 		if($mv['version'] === $majorVersion) {
 			continue 2;

@@ -260,7 +260,7 @@ $highestTargetVersion = $allGameVersions[0];
 if(!empty($_SERVER['HTTP_REFERER'])) {
 	parse_str(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_QUERY), $refererQuerryArgs);
 
-	$mv = !empty($refererQuerryArgs['mv']) ? compileMajorVersion($refererQuerryArgs['mv']) : false;
+	$mv = !empty($refererQuerryArgs['mv']) ? compilePrimaryVersion($refererQuerryArgs['mv']) : false;
 	if(isset($refererQuerryArgs['gv']) && is_array($refererQuerryArgs['gv'])) {
 		$gvs = array_filter(array_map('compileSemanticVersion', $refererQuerryArgs['gv']));
 	}
@@ -270,7 +270,7 @@ if(!empty($_SERVER['HTTP_REFERER'])) {
 
 	foreach($allGameVersions as $gameversion) {
 		if(
-		   ($mv && (($gameversion & (VERSION_MASK_MAJOR | VERSION_MASK_MINOR)) === $mv))
+		   ($mv && (($gameversion & VERSION_MASK_PRIMARY) === $mv))
 		|| ($gvs && in_array($gameversion, $gvs, true))
 		) {
 			$highestTargetVersion = $gameversion;
@@ -342,6 +342,7 @@ $view->assign("recommendedReleaseStable", $recommendedReleaseStable, null, true)
 $view->assign("recommendedReleaseUnstable", $recommendedReleaseUnstable, null, true);
 $view->assign("fallbackRelease", $fallbackRelease, null, true);
 $view->assign("recommendationIsInfluencedBySearch", $recommendationIsInfluencedBySearch, null, true);
+$view->assign("highestTargetVersion", $highestTargetVersion, null, true);
 
 $view->assign("asset", $asset);
 
@@ -483,4 +484,34 @@ function processOwnershipTransfer($asset, $user)
 			forceRedirect($url);
 			exit();
 	}
+}
+
+/**
+ * @param array $release
+ * @param int $referenceVersion The version originally searched for.
+ * @return string
+ */
+function formatVersionWarning($release, $referenceVersion)
+{
+	$ver = formatSemanticVersion($referenceVersion);
+	if((($release['maxCompatibleGameVersion'] ^ $referenceVersion) & VERSION_MASK_PRIMARY) === 0) {
+		return "<abbr title='While it is likely that this mod works with game version {$ver} it does not explicitly specify that it does.'>potentially outdated</abbr>";
+	}
+	else {
+		return "<abbr style='color:#b00;' title='This mod did not specify that is is compatible with gameversion {$ver}, nor with any patch of that major version in general.'><i class='ico alert'></i> outdated</abbr>";
+	}
+}
+
+/**
+ * @param string $text
+ * @param bool $recommendationIsInfluencedBySearch
+ * @param int $referenceVersion
+ * @return string
+ */
+function formatRecommendationAdjustedHint($text, $recommendationIsInfluencedBySearch, $referenceVersion)
+{
+	if(!$recommendationIsInfluencedBySearch) return $text;
+
+	$ver = formatSemanticVersion($referenceVersion);
+	return "<abbr title='Based on coming here from a search for game version {$ver}.&#010;This is temporary and will reset on your next visit.'>{$text}*</abbr>";
 }

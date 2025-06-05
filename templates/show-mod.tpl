@@ -123,7 +123,7 @@
 					{if $recommendedReleaseStable || $recommendedReleaseUnstable}
 						{if $recommendedReleaseStable}
 							{if count($recommendedReleaseStable['compatibleGameVersions']) > 0}<strong>
-								{if $recommendationIsInfluencedBySearch}<abbr title="Based on coming here from a search for a specific game version.&#010;This is temporary and will reset on your next visit.">Recommended*</abbr>{else}Recommended{/if}
+								{formatRecommendationAdjustedHint('Recommended', $recommendationIsInfluencedBySearch, $highestTargetVersion)}
 								download (for Vintage Story {formatGrammaticallyCorrectEnumeration($recommendedReleaseStable['compatibleGameVersionsFolded'])}):</strong><br>
 							{else}<strong>Recommended download:</strong><br>
 							{/if}
@@ -133,7 +133,7 @@
 						{/if}
 						{if $recommendedReleaseStable && $recommendedReleaseUnstable}<br>{/if}
 						{if $recommendedReleaseUnstable}
-							{if count($recommendedReleaseUnstable['compatibleGameVersions']) > 0}<strong>For testers (for Vintage Story {formatGrammaticallyCorrectEnumeration($recommendedReleaseUnstable['compatibleGameVersionsFolded'])}):</strong><br>
+							{if count($recommendedReleaseUnstable['compatibleGameVersions']) > 0}<strong>For testers (for Vintage Story {formatGrammaticallyCorrectEnumeration($recommendedReleaseUnstable['compatibleGameVersionsFolded'])}, {formatVersionWarning($recommendedReleaseUnstable, $highestTargetVersion)}):</strong><br>
 							{else}<strong>For testers:</strong><br>
 							{/if}
 
@@ -141,7 +141,9 @@
 							{if !empty($recommendedReleaseUnstable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
 						{/if}
 					{elseif $fallbackRelease}
-						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>Latest release (for <span style="color:#b00;"><i class="ico alert"></i> outdated</span> Vintage Story {formatGrammaticallyCorrectEnumeration($fallbackRelease['compatibleGameVersionsFolded'])}):</strong><br>
+						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>
+							{formatRecommendationAdjustedHint('Latest', $recommendationIsInfluencedBySearch, $highestTargetVersion)}
+							release (for Vintage Story {formatGrammaticallyCorrectEnumeration($fallbackRelease['compatibleGameVersionsFolded'])}, {formatVersionWarning($fallbackRelease, $highestTargetVersion)}):</strong><br>
 						{else}<strong>Latest release:</strong><br>
 						{/if}
 
