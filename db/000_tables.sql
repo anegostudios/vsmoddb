@@ -233,6 +233,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`mod` (
   `wikiurl` VARCHAR(255) NULL,
   `donateurl` VARCHAR(255) NULL,
   `summary` VARCHAR(100) NULL,
+  `descriptionsearchable` TEXT NULL, -- No fulltext index for now, we didnt have one before. Might want to look into that at some point
   `downloads` INT NOT NULL DEFAULT 0,
   `follows` INT NULL DEFAULT 0,
   `trendingpoints` INT NOT NULL DEFAULT 0,

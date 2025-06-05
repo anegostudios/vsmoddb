@@ -161,7 +161,7 @@ function queryModSearch($searchParams)
 		switch($name) {
 			case 'text':
 				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
-				$whereClauses .= '(a.name LIKE ? OR a.text LIKE ? OR m.summary LIKE ?)';
+				$whereClauses .= '(a.name LIKE ? OR m.descriptionsearchable LIKE ? OR m.summary LIKE ?)';
 				$v = '%'.escapeStringForLikeQuery($value).'%'; $sqlParams[] = $v; $sqlParams[] = $v; $sqlParams[] = $v;
 				break;
 

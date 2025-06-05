@@ -192,6 +192,8 @@ class ModEditor extends AssetEditor
 			$con->Execute("update `mod` set lastreleased = `mod`.created where assetid = ?", array($this->assetid));
 		}
 
+		$con->execute('update `mod` set descriptionsearchable = ? where assetid = ?', [textContent($_POST['text']), $this->assetid]);
+
 		if(canEditAsset($this->asset, $user, false)) $this->updateTeamMembers($modid);
 		if($this->asset['createdbyuserid'] == $user['userid']) $this->updateNewOwner($modid);
 
