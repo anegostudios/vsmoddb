@@ -13,7 +13,7 @@ input:active,
 
 /* global element setup */
 :root {
-	--color-content-bg: hsla(42 100% 98% / 0.98);
+	--color-content-bg: hsl(42 100% 98%);
 	--color-text: #333;
 	--color-text-inv: white;
 	--c-accent: 30 19%;
@@ -32,6 +32,10 @@ input:active,
 	--color-link-active: #608CBE;
 	--c-mod-bg: 0 0% 100%;
 	--color-mod-bg: hsl(var(--c-mod-bg));
+
+	--color-flair-author: #535c88;
+	--color-flair-moderator: #2a6b6f;
+	--color-flair-admin: #0e7239;
 }
 
 html {
@@ -556,16 +560,12 @@ body.opaque-desc .mod .moddesc {
 
 
 
-.mod-draft {
+.mod-draft, .mod-locked {
 	position: relative;
 }
 
-
-.mod-draft .tab_container, .mod-draft .tabs li {
-	border-style: dashed;
-}
-
-.mod-draft .tabs {
+.mod-draft .tabs,
+.mod-locked .tabs {
 	border-bottom-style: dashed;
 }
 
@@ -576,22 +576,11 @@ body.opaque-desc .mod .moddesc {
 
 .showmod-draftnotice {
 	position: absolute;
-	right: 0px;
-	top: 0px;
-	padding: 5px 15px;
-	font-size: 13px;
+	right: 0;
+	top: 0;
+	padding: .25em 1.5em;
 	text-align: right;
 }
-
-.showmod-draftnotice .title {
-	text-shadow: 2px 2px 2px #000000;
-	font-size: 25px;
-	color: white;
-	font-weight: bold;
-}
-
-
-
 
 
 
@@ -654,7 +643,7 @@ body.opaque-desc .mod .moddesc {
 
 
 .text-warning { color: #D1C13B; }
-.text-error   { color: #B94A48; }
+.text-error   { color: #9b0906; }
 .text-success { color: #468847; }
 .text-info    { color: #3A87AD; }
 
@@ -966,6 +955,26 @@ label.toggle>input[type="checkbox"]:checked {
 	background-color: var(--color-input-g);
 }
 
+
+.button.moderator,
+button.moderator {
+	padding-top: 1.25em;
+	padding-bottom: .5em;
+	position: relative;
+}
+.button.moderator::before,
+button.moderator::before {
+	content: 'Moderator Action';
+	white-space: pre;
+	background-color: var(--color-flair-moderator);
+	color: var(--color-text-inv);
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	border-radius: 0 0 .25em .25em;
+	padding: 0 .25em;
+}
 
 /* uniform styling of editboxes */
 
@@ -1639,26 +1648,26 @@ div.betanotice {
 	unicode-bidi: isolate;
 	line-height: 1rem;
 
-	background: #f5f5f5;
-	color: #555;
+	background: var(--color-content-bg);
+	color: var(--color-text);
 }
 
 .flair-moderator::before {
 	content: 'Moderator';
-	background: #2a6b6f;
-	color: white;
+	background: var(--color-flair-moderator);
+	color: var(--color-text-inv);
 }
 
 .flair-admin::before {
 	content: 'Administrator';
-	background: #0e7239;
-	color: white;
+	background: var(--color-flair-admin);
+	color: var(--color-text-inv);
 }
 
 .flair-author::before {
 	content: 'Author';
-	background: #535c88;
-	color: white;
+	background: var(--color-flair-author);
+	color: var(--color-text-inv);
 }
 
 body.banned .overlay-when-banned {

@@ -87,6 +87,28 @@ class ModEditor extends AssetEditor
 			'comments'    => 123456
 		]);
 		$view->assign('mod', $previewData);
+
+		if($this->asset['statusid'] == STATUS_LOCKED) {
+			$lockInfo = $con->getRow("
+				select r.reason, n.notificationid
+				from moderationrecord r
+				left join notification n on n.type = 'modunlockrequest' and n.recordid = ? and n.created >= r.created
+				where r.kind = ".MODACTION_KIND_LOCK.' and r.until >= NOW() and r.recordid = ?
+				order by r.until desc, r.actionid desc
+			', [$modId, $modId]);
+			$lockReason = htmlspecialchars($lockInfo['reason']);
+			$nextStepHint = $lockInfo['notificationid']
+				? (!canModerate(null, $user) ? 'You have submitted for review and will receive a notification once the review has concluded.' : 'The author has submitted the current state for review.')
+				: 'Address these issues and submit for a review to get your mod published again.';
+			addMessage(MSG_CLASS_ERROR.' permanent', "
+				<h3 style='text-align: center;'>This mod has been locked by a moderator.</h3>
+				<p>
+					<h4 style='margin-bottom: 0.25em;'>Reason:</h4>
+					<blockquote>{$lockReason}</blockquote>
+				</p>
+				<p>$nextStepHint</p>
+			");
+		}
 	}
 
 	function delete()
@@ -97,9 +119,11 @@ class ModEditor extends AssetEditor
 		parent::delete();
 	}
 
+	const RESERVED_URL_PREFIXES = ['api', 'home', 'terms', 'accountsettings', 'login', 'logout', 'edit-uploadfile', 'edit-deletefile', 'download', 'notifications', 'updateversiontags', 'notification', 'list', 'show', 'edit', 'moderate', 'cmd']; // :ReservedUrlPrefixes
+
 	function saveFromBrowser()
 	{
-		global $con, $user, $view, $typewhitelist;
+		global $con, $user;
 
 		$_POST['summary'] = substr(strip_tags($_POST['summary']), 0, 100);
 
@@ -110,7 +134,7 @@ class ModEditor extends AssetEditor
 				return 'error';
 			}
 
-			if (in_array($_POST['urlalias'], $typewhitelist)) {
+			if (in_array($_POST['urlalias'], static::RESERVED_URL_PREFIXES)) {
 				addMessage(MSG_CLASS_ERROR, 'Not saved. This url alias is reserved word. Please choose another.');
 				return 'error';
 			}
@@ -183,9 +207,9 @@ class ModEditor extends AssetEditor
 		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
 		$hasfiles = $con->getOne("select releaseid from `release` where modid=?", array($modid));
 		$statusreverted = false;
-		if ($_POST['statusid'] != 1 && !$hasfiles) {
+		if (!$hasfiles && $_POST['statusid'] != STATUS_DRAFT && $this->asset['statusid'] != STATUS_LOCKED) {
 			$statusreverted = true;
-			$_POST['statusid'] = 1;
+			$_POST['statusid'] = STATUS_DRAFT;
 		}
 
 		if ($this->isnew) {

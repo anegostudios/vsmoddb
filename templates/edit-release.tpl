@@ -133,7 +133,7 @@
 		$('form[name=commentformtemplate]').areYouSure();
 	});
 </script>
-<script type="text/javascript" src="/web/js/edit-asset.js?version=36" async></script>
+<script type="text/javascript" src="/web/js/edit-asset.js?version=37" async></script>
 
 {/capture}
 

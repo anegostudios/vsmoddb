@@ -73,4 +73,43 @@ switch($urlparts[1]) {
 				header('Allow: GET, PUT');
 				fail(HTTP_WRONG_METHOD);
 		}
+
+	case 'lock':
+		if($_SERVER['REQUEST_METHOD'] != 'POST') {
+			header('Allow: GET, PUT');
+			fail(HTTP_WRONG_METHOD);
+		}
+
+		validateUserNotBanned();
+		validateActionTokenAPI();
+		if(!canModerate(null, $user)) fail(HTTP_FORBIDDEN);
+
+		$reason = $_POST['reason'] ?? '';
+		$reason = htmlspecialchars(trim($reason));
+		if(!$reason) fail(HTTP_BAD_REQUEST, ['error' => 'Reason must not be empty.']);
+
+		$modData = $con->getRow('
+			select m.assetid, a.createdbyuserid
+			from `mod` m
+			join asset a on a.assetid = m.assetid
+			where m.modid = ?
+		', [$modId]);
+		if(!$modData) fail(HTTP_NOT_FOUND);
+
+		$con->startTrans();
+		// @security: assetid comes from the db and is an int, therefore sql inert. 
+		$con->execute('update asset set statusid = '.STATUS_LOCKED.' where assetid = '.$modData['assetid']);
+		logAssetChanges(['Locked Mod for reason: '.$reason], $modData['assetid']);
+
+		logModeratorAction($modData['createdbyuserid'], $user['userid'], MODACTION_KIND_LOCK, $modId, SQL_DATE_FOREVER, $reason);
+
+		// Just in case we have not "read" a corresponding review-request notification for the mod we are (re-)locking, mark it as read.
+		// If we don't do this we we might not get new unlock requests. :BlockedUnlockRequest
+		$con->execute("update notification set `read` = 1 where type = 'modunlockrequest' and userid = ? and recordid = ?", [$user['userid'], $modId]);
+
+		$con->execute("insert into notification (userid, type, recordid) values (?, 'modlocked', ?)", [$modData['createdbyuserid'], $modId]);
+
+		$ok = $con->completeTrans();
+		if($ok) good();
+		else fail(HTTP_INTERNAL_ERROR, ['error' => 'Internal database error.']);
 }

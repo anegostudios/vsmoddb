@@ -5,7 +5,7 @@
 
 <div style="float: right;">
 	{if canModerate($shownuser, $user)}
-		<a class="button large shine" href="/moderate/user/{$usertoken}"><div class="flair-moderator"></div>Moderate User</a>&nbsp;
+		<a class="button large shine moderator" href="/moderate/user/{$usertoken}">Moderate User</a>&nbsp;
 	{/if}
 	{if canEditProfile($shownuser, $user)}
 		<a class="button large shine" href="/edit/profile/{$usertoken}">Edit</a>

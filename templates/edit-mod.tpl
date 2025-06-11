@@ -16,6 +16,12 @@
 		{/if}
 	</h2>
 
+	{if canModerate(null, $user)}
+	<div style="float: right;">
+		<button class="button large shine moderator" style="height:unset;" onclick="lockModDlg(this)">Lock Mod...</button>
+	</div>
+	{/if}
+
 	<form method="post" name="deleteform">
 		<input type="hidden" name="at" value="{$user['actiontoken']}">
 		<input type="hidden" name="delete" value="1">
@@ -30,7 +36,7 @@
 
 		<div class="editbox short">
 			<label><abbr title="Only mods with Status 'Published' are publicly visible">Status</abbr></label>
-			<select name="statusid">
+			<select name="statusid"{if $asset['statusid'] == STATUS_LOCKED && !canModerate(null, $user)} disabled="true"{/if}>
 				{foreach from=$stati item=status}
 					<option value="{$status['statusid']}"{if $asset['statusid']==$status['statusid']} selected="selected"{/if}>{$status['name']}</option>
 				{/foreach}
@@ -224,7 +230,7 @@
 
 <p style="clear:both"><br/></p>
 
-<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
+<a class="button large submit shine" href="javascript:submitForm(0)">{if $asset['statusid'] != STATUS_LOCKED || canModerate(null, $user)}Save{else}Request Review{/if}</a>
 
 {if $asset['assetid'] && canDeleteAsset($asset, $user)}
 	<span style="float:right;">
@@ -234,6 +240,26 @@
 
 {capture name="footerjs"}
 	<script type="text/javascript">
+		const targetModId = {$asset['modid'] ?? 0};
+		function lockModDlg(btnEl) {
+			const message = prompt("Locking a mod will disable automatic downloads for the duration.\nPlease provide a reason for locking this mod.\nThis reason will be displayed to the mod author and logged. The reason message should contain information on how the author can get their mod to be unlocked again.");
+
+			if(!message) return;
+
+			btnEl.disabled = true;
+
+			$.post('/api/v2/mods/'+targetModId+'/lock', { 'reason': message, 'at': actiontoken })
+			.fail(jqXHR => {
+				btnEl.disabled = false;
+				const d = JSON.parse(jqXHR.responseText);
+				addMessage(MSG_CLASS_ERROR, 'Failed to lock mod' + (d.reason ? (': '+d.reason) : '.'), true)
+			})
+			.done(() => {
+				addMessage(MSG_CLASS_OK, 'Mod Locked.');
+				window.location.reload();
+			});
+		}
+		
 		const $cardLogoSelect = $('select[name="cardlogofileid"]');
 		const $embedLogoSelect = $('select[name="embedlogofileid"]');
 		const cardPreviewBoxEl = document.getElementById('preview-box-card');
@@ -336,7 +362,7 @@
 		}
 	</style>
 
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=36" async></script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=37" async></script>
 {/capture}
 
 {include file="footer"}

@@ -41,12 +41,12 @@ if (!empty($user)) {
 	if($user['isbanned']) {
 		$until = formatDateWhichMightBeForever(parseSqlDateTime($user['banneduntil']), 'M jS Y, H:i:s', 'further notice');
 		$messages[] = [
-			'class' => 'bg-error text-error permanent',
+			'class' => MSG_CLASS_ERROR.' permanent',
 			'html'  => "
 				<h3 style='text-align: center;'>You are currently banned until {$until}.</h3>
 				<p>
 					<h4 style='margin-bottom: 0.25em;'>Reason:</h4>
-					{$user['bannedreason']}
+					<blockquote>{$user['bannedreason']}</blockquote>
 				</p>
 			"
 		];
@@ -73,6 +73,11 @@ function addMessage($class, $html, $escapeMessage = false)
 
 const ASSETTYPE_MOD = 1;
 const ASSETTYPE_RELEASE = 2;
+
+const STATUS_DRAFT = 1;
+const STATUS_RELEASED = 2;
+const STATUS_3 = 3;
+const STATUS_LOCKED = 4;
 
 /**
  * @param array $asset
@@ -113,9 +118,16 @@ function canEditAsset($asset, $user, $includeTeam = true)
 	return isset($user['userid']) && ($user['userid'] == $asset['createdbyuserid'] || $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator" || $canEditAsTeamMember);
 }
 
+/**
+ * @param array{createdbyuserid:int, 'statusid':int} $asset
+ * @param array{userid:int, rolecode:string}         $user    the permission source
+ */
 function canDeleteAsset($asset, $user)
 {
-	return isset($user['userid']) && ($user['userid'] == $asset['createdbyuserid'] || $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator");
+	return isset($user['userid']) && (
+		   ($user['userid'] == $asset['createdbyuserid'] && $asset['statusid'] != STATUS_LOCKED)
+		|| $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator"
+	);
 }
 
 function canEditProfile($shownuser, $user)
@@ -194,10 +206,8 @@ function loadNotifications($loadAll)
 			case "newcomment": case "mentioncomment":
 				$cmt = $con->getRow("
 					select 
-						asset.assetid,
 						asset.name as modname,
-						user.name as username,
-						`mod`.urlalias as modalias
+						user.name as username
 					from
 						comment 
 						join asset on (comment.assetid = asset.assetid)
@@ -212,6 +222,21 @@ function loadNotifications($loadAll)
 				else {
 					$notification['text'] = "{$cmt['username']} mentioned you in a comment on {$cmt['modname']}";
 				}
+				break;
+
+			case "modlocked":
+				$modName = $con->getOne("select name from `mod` m join asset a on a.assetid = m.assetid where m.modid = ?", [$notification['recordid']]);
+				$notification['text'] = "Your mod '{$modName}' got locked by a moderator";
+				break;
+
+			case 'modunlockrequest':
+				$modName = $con->getOne("select name from `mod` m join asset a on a.assetid = m.assetid where m.modid = ?", [$notification['recordid']]);
+				$notification['text'] = "A review-request was issued for a mod locked by you ('{$modName}')";
+				break;
+
+			case 'modunlocked':
+				$modName = $con->getOne("select name from `mod` m join asset a on a.assetid = m.assetid where m.modid = ?", [$notification['recordid']]);
+				$notification['text'] = "Your mod '{$modName}' got unlocked by a moderator";
 				break;
 		}
 		$notification['link'] = "/notification/{$notification['notificationid']}";
