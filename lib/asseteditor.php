@@ -271,7 +271,7 @@ class AssetEditor extends AssetController
 
 				if ($datatype == "url") {
 					if (!isUrl($val)) {
-						addMessage(MSG_CLASS_ERROR, "Not saved. {$column['title']} is not valid. Please use only allowed characters and prefix with http(s)://"); // @security: Column titles are manualyl defined, no external input.
+						addMessage(MSG_CLASS_ERROR, "Not saved. {$column['title']} is not valid. Please use only allowed characters and prefix with http(s)://"); // @security: Column titles are manually defined, no external input.
 						return 'error';
 					}
 				}
@@ -299,8 +299,34 @@ class AssetEditor extends AssetController
 		$tagchanges = $this->updateTags($this->assetid);
 		$changes = array_merge($changes, $tagchanges);
 
-		if ($_POST["statusid"] == 3 && $oldstatusid != 3) {
+		if ($oldstatusid != STATUS_3 && $_POST["statusid"] == STATUS_3) {
 			$assetdata["readydate"] = date("Y-m-d H:i:s");
+		}
+		else if($oldstatusid == STATUS_LOCKED) {
+			$modId = intval($this->asset['modid']);
+			if($_POST["statusid"] != STATUS_LOCKED) {
+				if(!canModerate(null, $user)) {
+					addMessage(MSG_CLASS_ERROR, "Only moderators may change the state of a locked mod.");
+					$_POST['statusid'] = STATUS_LOCKED;
+					return 'error';
+				}
+
+				$createdById = intval($this->asset['createdbyuserid']);
+				// @security: $modId and $createdById are known to be integers and therefore sql inert.
+				$con->execute("insert into notification (type, recordid, userid) values ('modunlocked', $modId, $createdById)");
+			}
+			else {
+				$moderatorUserId = $con->getOne('
+					select moderatorid
+					from moderationrecord
+					where kind = '.MODACTION_KIND_LOCK." and until >= NOW() and recordid = $modId
+				");
+				// @security: $modId and $moderatorUserId are known to be integers and therefore sql inert.
+				$requestExists = $con->getOne("select 1 from notification where type = 'modunlockrequest' and `read` = 0 and recordid = $modId and userid = $moderatorUserId");
+				if(!$requestExists) { // prevent spam :BlockedUnlockRequest
+					$con->execute("insert into notification (type, recordid, userid) values ('modunlockrequest', $modId, $moderatorUserId)");
+				}
+			}
 		}
 
 		$assetdata['numsaved'] = $_POST['numsaved'] + 1;
@@ -340,7 +366,8 @@ class AssetEditor extends AssetController
 	{
 		global $con, $view, $user;
 
-		$stati = $con->getAll("select * from status");
+		$sqlFilterLockedStatus = $this->asset['statusid'] == STATUS_LOCKED ? '' : 'where statusid != 3';
+		$stati = $con->getAll("select * from status $sqlFilterLockedStatus");
 		$view->assign("stati", $stati);
 
 		$view->assign("user", $user);

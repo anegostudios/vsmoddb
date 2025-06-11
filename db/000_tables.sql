@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`moderationrecord` (
   `created` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
   `targetuserid` INT NOT NULL,
   `kind` INT NOT NULL,
+  `recordid` INT NOT NULL COMMENT 'The id of the corresponding record in the kind-specific table',
   `until` DATETIME NULL,
   `moderatorid` INT NOT NULL,
   `reason` TEXT NULL,
@@ -312,7 +313,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`notification` (
   `notificationid` INT NOT NULL AUTO_INCREMENT,
   `read` TINYINT NOT NULL DEFAULT 0,
   `userid` VARCHAR(255) NULL,
-  `type` ENUM('newcomment', 'mentioncomment', 'newrelease', 'teaminvite', 'modownershiptransfer') NULL,
+  `type` ENUM('newcomment', 'mentioncomment', 'newrelease', 'teaminvite', 'modownershiptransfer', 'modlocked', 'modunlockrequest', 'modunlocked') NULL,
   `recordid` INT NULL,
   `created` DATETIME NOT NULL DEFAULT NOW(),
   PRIMARY KEY (`notificationid`),
@@ -385,8 +386,9 @@ SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `moddb`;
-INSERT INTO `moddb`.`status` (`statusid`, `code`, `name`, `created`, `sortorder`, `lastmodified`) VALUES (1, 'draft', 'Draft', NULL, 1, NULL);
-INSERT INTO `moddb`.`status` (`statusid`, `code`, `name`, `created`, `sortorder`, `lastmodified`) VALUES (2, 'published', 'Published', NULL, 2, NULL);
+INSERT INTO `moddb`.`status` (`statusid`, `code`, `name`, `created`, `sortorder`) VALUES (1, 'draft', 'Draft', NOW(), 1);
+INSERT INTO `moddb`.`status` (`statusid`, `code`, `name`, `created`, `sortorder`) VALUES (2, 'published', 'Published', NOW(), 2);
+INSERT INTO `moddb`.`status` (`statusid`, `code`, `name`, `created`, `sortorder`) VALUES (4, 'locked', 'Locked', NOW(), 4);
 
 COMMIT;
 

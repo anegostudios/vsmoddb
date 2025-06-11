@@ -38,7 +38,7 @@ if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 	}
 	else {
 		$con->execute("update user set banneduntil = ? where userid = ?", array($until, $targetuser['userid']));
-		logModeratorAction($targetuser['userid'], $user['userid'], MODACTION_KIND_BAN, $until, $fpost['modreason']);
+		logModeratorAction($targetuser['userid'], $user['userid'], MODACTION_KIND_BAN, $targetuser['userid'], $until, $fpost['modreason']);
 
 		forceRedirectAfterPOST();
 		exit();
@@ -53,7 +53,7 @@ else if(isset($_POST['submit']) && $_POST['submit'] == 'redeem') {
 	else {
 		$con->execute("update user set banneduntil = now() where userid = ?", array($targetuser['userid']));
 		$con->execute("update moderationrecord set until = now() where kind = ".MODACTION_KIND_BAN." and until > now()");
-		logModeratorAction($targetuser['userid'], $user['userid'], MODACTION_KIND_REDEEM, SQL_DATE_FOREVER, $reason);
+		logModeratorAction($targetuser['userid'], $user['userid'], MODACTION_KIND_REDEEM, $targetuser['userid'], SQL_DATE_FOREVER, $reason);
 
 		forceRedirectAfterPOST();
 		exit();

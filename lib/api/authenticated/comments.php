@@ -15,7 +15,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 		validateUserNotBanned();
 		validateContentType('text/html');
 
-		$comment = $con->getRow("select assetid, userid, text from comment where commentid = ? and !deleted", [$commentId]);
+		$comment = $con->getRow("select assetid, commentid, userid, text from comment where commentid = ? and !deleted", [$commentId]);
 		if(!$comment)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown commentid.']);
 
 		$wasModAction = $user['userid'] != $comment['userid'];
@@ -28,7 +28,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 			$changelog = "Modified someone elses comment (".$comment["text"].") => (".$text.")";
 
 			//TODO(Rennorb): Diff the strings and add the diff to the log.
-			$lastModAction = logModeratorAction($comment['userid'], $user['userid'], MODACTION_KIND_EDIT, SQL_DATE_FOREVER, null);
+			$lastModAction = logModeratorAction($comment['userid'], $user['userid'], MODACTION_KIND_EDIT, $comment['commentid'], SQL_DATE_FOREVER, null);
 
 			$con->execute('update comment set text = ?, lastmodaction = ? where commentid = ?', [$commentHtml, $lastModAction, $commentId]);
 		}
@@ -47,7 +47,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 		validateUserNotBanned();
 
 		$comment = $con->getRow('
-			select comment.assetid, comment.userid, asset.createdbyuserid as modcreatedby
+			select comment.assetid, comment.commentid, comment.userid, asset.createdbyuserid as modcreatedby
 			from comment
 			join asset on asset.assetid = comment.assetid
 			where commentid = ? and !deleted
@@ -60,7 +60,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 		if($wasModAction && !canModerate(null, $user) && $comment['modcreatedby'] != $user['userid'])  fail(HTTP_FORBIDDEN);
 
 		if($wasModAction) {
-			$lastModAction = logModeratorAction($comment['userid'], $user['userid'], MODACTION_KIND_DELETE, SQL_DATE_FOREVER, null);
+			$lastModAction = logModeratorAction($comment['userid'], $user['userid'], MODACTION_KIND_DELETE, $comment['commentid'], SQL_DATE_FOREVER, null);
 	
 			$con->Execute('update comment set deleted = 1, lastmodaction = ? where commentid = ?', [$lastModAction, $commentId]);
 			$con->Execute('update `mod` set comments = comments - 1 where assetid = ?', [$comment["assetid"]]);

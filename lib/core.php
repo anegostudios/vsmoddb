@@ -315,10 +315,14 @@ function verifyPasswordHash($password, $hash)
 	return password_verify($password, $hash);
 }
 
-// NOTE(Rennorb): Mod logos older than this date are considdered "legacy" and have to be formatted differently.
+// NOTE(Rennorb): Mod logos older than this date are considered "legacy" and have to be formatted differently.
 // :LegacyModLogos
 const SQL_MOD_CARD_TRANSITION_DATE = "2025-03-10 15:50:00";
 
+/**
+ * @param string[] $changes
+ * @param int $assetid
+ */
 function logAssetChanges($changes, $assetid)
 {
 	global $con, $user;
@@ -351,6 +355,7 @@ const MODACTION_KIND_BAN    = 1;
 const MODACTION_KIND_DELETE = 2;
 const MODACTION_KIND_EDIT   = 3;
 const MODACTION_KIND_REDEEM = 4;
+const MODACTION_KIND_LOCK   = 5;
 
 
 /**
@@ -364,6 +369,7 @@ function stringifyModactionKind($kind)
 		case MODACTION_KIND_DELETE: return "Delete";
 		case MODACTION_KIND_EDIT  : return "Edit";
 		case MODACTION_KIND_REDEEM: return "Redeem";
+		case MODACTION_KIND_LOCK  : return "Lock Mod";
 		default: return strval($kind);
 	}
 }
@@ -373,18 +379,19 @@ const SQL_DATE_FORMAT = "Y-m-d H:i:s";
 
 
 /**
- * @param int            $targetuserid
- * @param int            $moderatoruserid
+ * @param int            $targetuserId
+ * @param int            $moderatoruserId
  * @param MODACTION_KIND $kind
+ * @param int            $recordId The id of the related record in the type-specific table.
  * @param string         $until
  * @param string|null    $reason
  * @return int generated modaction id
  */
-function logModeratorAction($targetuserid, $moderatoruserid, $kind, $until, $reason)
+function logModeratorAction($targetuserId, $moderatoruserId, $kind, $recordId, $until, $reason)
 {
 	global $con;
-	$con->Execute("insert into moderationrecord (targetuserid, moderatorid, kind, until, reason) values (?, ?, ?, ?, ?)", array($targetuserid, $moderatoruserid, $kind, $until, $reason));
-	return intval($con->getOne("select LAST_INSERT_ID()"));
+	$con->Execute('insert into moderationrecord (targetuserid, moderatorid, kind, recordid, until, reason) values (?,?,?,?,?,?)', [$targetuserId, $moderatoruserId, $kind, $recordId, $until, $reason]);
+	return $con->Insert_ID();
 }
 
 

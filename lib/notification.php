@@ -35,6 +35,14 @@ switch($notification['type']) {
 		]);
 		exit();
 
+	case "modlocked": case "modunlockrequest":
+		$con->execute("update notification set `read` = 1 where notificationid = ?", array($notification['notificationid']));
+
+		$mod = $con->getRow("select assetid, urlalias from `mod` where modid = ?", array($notification['recordid']));
+
+		forceRedirect(formatModPath($mod));
+		exit();
+
 	case "teaminvite": case "modownershiptransfer":
 		$mod = $con->getRow("select assetid, urlalias from `mod` where modid = ?", array((intval($notification['recordid']) & ((1 << 30) - 1)))); // :InviteEditBit
 

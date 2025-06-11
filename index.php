@@ -26,7 +26,7 @@ if(empty($urlpath))  $urlpath = 'home';
 // Just discard them completely, they are not used in any actual application.
 $urlparts = array_filter(explode('/', $urlpath), fn($s) => !startsWith($s, '.'));
 
-if($urlparts[0] === 'api') {
+if($urlparts[0] === 'api') { // :ReservedUrlPrefixes
 	array_shift($urlparts);
 	if(count($urlparts) > 0 && $urlparts[0] === 'v2') {
 		array_shift($urlparts);
@@ -42,7 +42,7 @@ if($urlparts[0] === 'api') {
 $view->assign('headerHighlight', null, null, true);
 
 
-switch($urlparts[0]) {
+switch($urlparts[0]) { // :ReservedUrlPrefixes
 	case 'home':
 	case 'terms':
 	case 'accountsettings':

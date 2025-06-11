@@ -251,7 +251,10 @@ function submitForm(returntolist) {
 	if (returntolist) {
 		$('input[name="saveandback"]').val(1);
 	}
-	document['form1'].submit();
+	const f1 = document['form1'];
+	const statusSelect = f1.querySelector('select[name="statusid"]'); // @hack might be locked and disabled. If it is it wont be submitted, so we just briefly unlock it. 
+	if(statusSelect) statusSelect.removeAttribute('disabled')
+	f1.submit();
 }
 
 function submitDelete() {

@@ -44,8 +44,15 @@
 	</h2>
 
 	{if $asset['statuscode']=='draft'}
-		<div class="showmod-draftnotice"><span class="title">Draft</span><br>Set to published to be listed. A draft mod is
-			still visible to everyone via direct link</div>
+		<div class="showmod-draftnotice">
+			<h2 style="margin-bottom: 0;">Draft</h2>
+			<small>Set to published to be listed. A draft mod is still visible to everyone via direct link</small>
+		</div>
+	{elseif $asset['statuscode']=='locked'}
+		<div class="showmod-draftnotice" style="color:#e00">
+			<h2 style="margin-bottom: 0;">Locked&nbsp;<i class="ico alert"></i></h2>
+			<small>This mod has been locked by a moderator. The author may edit their mod to address existing issues.</small>
+		</div>
 	{/if}
 
 	<ul class="tabs no-mark">

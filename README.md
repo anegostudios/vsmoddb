@@ -117,23 +117,32 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 	- Args:
 		- Path arg `{modid}`
 		- Request body: Desired comment html.
-	- `400`: Invalid action token or malformed request
+	- `400`: Invalid action token or malformed request.
 	- `404`: Target mod does not exist.
 	- `403`: Active user is currently restricted.
 	- `200`: Comment got created. Returns the processed html of the newly created comment as the response body, and the link to the comment in the Location header.
+
+### /api/v2/mods/{modid}/lock `auth` `at`
+- `post`:
+	- Args:
+		- Path arg `{modid}`
+	- `400`: Invalid action token or malformed request.
+	- `404`: Target mod does not exist.
+	- `403`: The authenticated user is not allowed to lock mods, or is currently restricted.
+	- `200`: Mod was successfully locked.
 
 ### /api/v2/comments/{commentid} `auth` `at`
 - `post`:
 	- Args:
 		- Path arg `{commentid}`
 		- Request body: Desired comment html.
-	- `400`: Invalid action token or malformed request
+	- `400`: Invalid action token or malformed request.
 	- `404`: Target comment does not exist.
 	- `403`: Active user is currently restricted or does not have permissions to edit the comment.
 	- `200`: Comment got updated. Returns the processed comment html as a object `{html: string}`.
 
 - `delete`: Path arg `{commentid}`
-	- `400`: Invalid action token or malformed request
+	- `400`: Invalid action token or malformed request.
 	- `404`: Target comment does not exist.
 	- `403`: Active user is currently restricted or does not have permissions to delete the comment.
 	- `200`: Comment got deleted.
