@@ -18,9 +18,13 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `modpeek_result` DROP COLUMN `created`; -- this is always identical to the file created column
     ALTER TABLE `modpeek_result` CHANGE COLUMN `detectedmodidstr` `modIdentifier` VARCHAR(255) NULL;
     ALTER TABLE `modpeek_result` CHANGE COLUMN `detectedmodversion` `modVersion` BIGINT UNSIGNED NOT NULL;
-    ALTER TABLE `modpeek_result` ADD COLUMN `type` ENUM('Theme', 'Content', 'Code') NULL,
+    ALTER TABLE `modpeek_result` ADD COLUMN `type` ENUM('Theme', 'Content', 'Code') NULL;
+    ALTER TABLE `modpeek_result` ADD COLUMN `side` ENUM('Universal', 'Server', 'Client') NULL;
+    ALTER TABLE `modpeek_result` ADD COLUMN `requiredOnServer` BOOLEAN;
+    ALTER TABLE `modpeek_result` ADD COLUMN `requiredOnClient` BOOLEAN;
     ALTER TABLE `modpeek_result` ADD COLUMN `networkVersion` BIGINT UNSIGNED NOT NULL;
     ALTER TABLE `modpeek_result` ADD COLUMN `description` TEXT NULL;
+    ALTER TABLE `modpeek_result` ADD COLUMN `iconPath` VARCHAR(255) NULL;
     ALTER TABLE `modpeek_result` ADD COLUMN `website` VARCHAR(255) NULL;
     ALTER TABLE `modpeek_result` ADD COLUMN `rawAuthors` TEXT NULL;
     ALTER TABLE `modpeek_result` ADD COLUMN `rawContributors` TEXT NULL;
@@ -29,11 +33,11 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     -- We somehow managed to get stale modpeek entries in the tables, so we delete them.
     CREATE TEMPORARY TABLE BadModPeekIds AS (
         SELECT mpr.fileId
-        FROM `ModPeekResult` mpr 
+        FROM `modpeek_result` mpr 
         LEFT OUTER JOIN file ON file.fileid = mpr.fileId
         WHERE file.fileid IS NULL
     );
-    DELETE FROM `ModPeekResult` WHERE fileId in (SELECT * FROM BadModPeekIds);
+    DELETE FROM `modpeek_result` WHERE fileId in (SELECT * FROM BadModPeekIds);
     ALTER TABLE `modpeek_result` ADD CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `file` (`fileid`) ON UPDATE CASCADE ON DELETE CASCADE;
 
     ALTER TABLE `modpeek_result` RENAME TO `ModPeekResult`;

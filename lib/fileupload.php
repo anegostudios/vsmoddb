@@ -131,8 +131,8 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 
 	if ($assettype['code'] == 'release') {
 		$ok = modpeek($localpath, $modInfo);
-		$con->Execute('insert into ModPeekResult (fileId, errors, modIdentifier, modVersion, type, networkVersion, description, website, rawAuthors, rawContributors, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-			[$fileid, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawDependencies']]
+		$con->Execute('insert into ModPeekResult (fileId, errors, modIdentifier, modVersion, type, side, requiredOnClient, requiredOnServer, networkVersion, description, website, iconPath, rawAuthors, rawContributors, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+			[$fileid, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['side'], $modInfo['requiredOnClient'], $modInfo['requiredOnServer'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['iconPath'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawDependencies']]
 		);
 
 		// array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:int}
@@ -142,7 +142,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 			$data['modversion'] = $modInfo['version'];
 		}
 		else {
-			$data['modparse'] = 'ok';
+			$data['modparse'] = 'error';
 			$data['parsemsg'] = $modInfo['errors'];
 		}
 	}

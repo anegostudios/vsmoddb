@@ -98,17 +98,21 @@ ENGINE = InnoDB;
 
 
 CREATE TABLE IF NOT EXISTS `moddb`.`ModPeekResult` (
-  `fileId`          INT             NOT NULL,
-  `errors`          TEXT                NULL,
-  `modIdentifier`   VARCHAR(255)        NULL,
-  `modVersion`      BIGINT UNSIGNED NOT NULL,
-  `type`            ENUM('Theme', 'Content', 'Code') NULL,
-  `networkVersion`  BIGINT UNSIGNED NOT NULL,
-  `description`     TEXT                NULL,
-  `website`         VARCHAR(255)        NULL,
-  `rawAuthors`      TEXT                NULL,
-  `rawContributors` TEXT                NULL,
-  `rawDependencies` TEXT                NULL,
+  `fileId`           INT             NOT NULL,
+  `errors`           TEXT                NULL,
+  `modIdentifier`    VARCHAR(255)        NULL,
+  `modVersion`       BIGINT UNSIGNED NOT NULL,
+  `type`             ENUM('Theme', 'Content', 'Code') NULL,
+  `side`             ENUM('Universal', 'Server', 'Client') NULL,
+  `requiredOnServer` BOOLEAN,
+  `requiredOnClient` BOOLEAN,
+  `networkVersion`   BIGINT UNSIGNED NOT NULL,
+  `description`      TEXT                NULL,
+  `iconPath`         VARCHAR(255)        NULL,
+  `website`          VARCHAR(255)        NULL,
+  `rawAuthors`       TEXT                NULL,
+  `rawContributors`  TEXT                NULL,
+  `rawDependencies`  TEXT                NULL,
   PRIMARY KEY (`fileId`),
   CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `file`(`fileid`) ON UPDATE CASCADE ON DELETE CASCADE)
 ENGINE = InnoDB;
