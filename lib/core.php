@@ -795,7 +795,8 @@ else {
  */
 function formatDownloadTrackingUrl($file)
 {
-	return "/download/{$file['fileid']}/{$file['filename']}";
+	$escapedName = urlencode($file['filename']);
+	return "/download/{$file['fileid']}/{$escapedName}";
 }
 
 /**

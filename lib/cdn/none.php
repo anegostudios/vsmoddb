@@ -110,7 +110,9 @@ function formatCdnUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
  * @return string
  */
 function formatCdnDownloadUrl($file) {
-	return "/cdndl/{$file['cdnpath']}";
+	list($path, $name) = explode('/', $file['cdnpath'], 2);
+	$name = urlencode($name);
+	return "/cdndl/{$path}/{$name}";
 }
 
 
