@@ -31,6 +31,12 @@
 				"format": "url",
 				"description": "Location of the website or project site of this mod."
 			},
+			"iconPath": {
+				"type": "string",
+				"format": "uri-reference",
+				"pattern": "^([^/:\\.]|\\.[^\\.])[^:]+$",
+				"description": "Relative path to the mod's icon. The game will also try to load './modicon.png' for folder and zip mods if this property is not set."
+			},
 			"textureSize": {
 				"type": "integer",
 				"minimum": 1
