@@ -7,41 +7,35 @@
 
 /**
  * @param string $filepath
- * @param array{'id':string|null, 'name':string|null, 'version':int, 'type':'Theme'|'Content'|'Code'|null, 'networkVersion':int, 'description':string|null, 'rawAuthors':string|null, 'rawContributors':string|null, 'website':string|null, 'rawDependencies':string|null, 'errors':string|null} &$modInfo
+ * @param array{'id':string|null, 'name':string|null, 'version':int, 'type':'Theme'|'Content'|'Code'|null, 'side':'Universal'|'Client'|'Server'|null, 'requiredOnClient':bool, 'requiredOnServer':bool, 'networkVersion':int, 'description':string|null, 'rawAuthors':string|null, 'rawContributors':string|null, 'website':string|null, 'iconPath':string|null, 'rawDependencies':string|null, 'errors':string|null} &$modInfo
  * @return bool false on error
  */
 function modpeek($filepath, &$modInfo)
 {
 	global $config;
 
-	$args = [];
-	if(startsWith(PHP_OS, 'WIN')) {
-		$args[] = $config['basepath'] . 'util\\modpeek.exe';
-	}
-	else {
-		$args[] = 'mono';
-		$args[] = $config['basepath'] . 'util/modpeek.exe';
-	}
-	$args[] = '-p';
-	$args[] = $filepath;
-
+	$args = ['dotnet', $config['basepath'] . 'util/modpeek.dll', '-p', $filepath];
 	$modpeek = proc_open($args, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, sys_get_temp_dir());
 
 	$info  = stream_get_contents($pipes[1]);
 	$errors = stream_get_contents($pipes[2]);
 
 	$modInfo = [
-		'id'              => null,
-		'name'            => null,
-		'version'         => 0,
-		'type'            => null,
-		'networkVersion'  => 0,
-		'description'     => null,
-		'website'         => null,
-		'rawAuthors'      => null,
-		'rawContributors' => null,
-		'rawDependencies' => null,
-		'errors'          => trim($errors) ?: null
+		'id'               => null,
+		'name'             => null,
+		'version'          => 0,
+		'type'             => null,
+		'side'             => null,
+		'requiredOnServer' => false,
+		'requiredOnClient' => false,
+		'networkVersion'   => 0,
+		'description'      => null,
+		'website'          => null,
+		'iconPath'         => null,
+		'rawAuthors'       => null,
+		'rawContributors'  => null,
+		'rawDependencies'  => null,
+		'errors'           => trim($errors) ?: null
 	];
 
 	//NOTE(Rennorb): Validation happens in modpeek, the only thing we need to be aware of is that a description or name may contain arbitrary characters.
@@ -51,7 +45,12 @@ function modpeek($filepath, &$modInfo)
 			case 'Id':          $modInfo['id']          = $rawValue ?: null; break;
 			case 'Name':        $modInfo['name']        = $rawValue ?: null; break;
 			case 'Website':     $modInfo['website']     = $rawValue ?: null; break;
+			case 'IconPath':    $modInfo['iconPath']    = $rawValue ?: null; break;
 			case 'Type':        $modInfo['type']        = $rawValue ?: null; break;
+			case 'Side':        $modInfo['side']        = $rawValue ?: null; break;
+
+			case 'RequiredOnClient':  $modInfo['requiredOnClient']  = boolval($rawValue); break;
+			case 'RequiredOnServer':  $modInfo['requiredOnServer']  = boolval($rawValue); break;
 
 			case 'Description': $modInfo['description'] = str_replace('\n', "\n", $rawValue) ?: null; break;
 
