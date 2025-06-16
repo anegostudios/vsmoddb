@@ -1,0 +1,80 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"properties": {
+			"$schema": { "type": "string" },
+			"name": { "type": "string" },
+			"modId": {
+				"type": "string",
+				"pattern": "^[a-z0-9]+$"
+			},
+			"type": { "enum": [ "Theme", "Content", "Code" ] },
+			"side": { "enum": [ "Server", "Client", "Universal" ] },
+			"requiredOnClient": { "type": "boolean" },
+			"requiredOnServer": { "type": "boolean" },
+			"version": {
+				"type": "string",
+				"pattern": "^\\d+\\.\\d+\\.\\d+(-(pre|rc|dev)\\.\\d+)?$",
+				"description": "Version of this mod (used for dependency resolution)."
+			},
+			"networkVersion": {
+				"type": "string",
+				"pattern": "^\\d+\\.\\d+\\.\\d+(-(pre|rc|dev)\\.\\d+)?$",
+				"description": "Change this number when a user that has an older version of your mod should not be allowed to connected to server with a newer version.\nDefault value is the value of the version property."
+			},
+			"description": {
+				"type": "string",
+				"description": "A short description of what this mod does."
+			},
+			"website": {
+				"type": "string",
+				"format": "url",
+				"description": "Location of the website or project site of this mod."
+			},
+			"iconPath": {
+				"type": "string",
+				"format": "uri-reference",
+				"pattern": "^([^/:\\.]|\\.[^\\.])[^:]+$",
+				"description": "Relative path to the mod's icon. The game will also try to load './modicon.png' for folder and zip mods if this property is not set."
+			},
+			"textureSize": {
+				"type": "integer",
+				"minimum": 1
+			},
+			"authors": {
+				"type": "array",
+				"items": { "type": "string" },
+				"description": "Names of people working on this mod. Must be formatted as an array, even if there is only one author."
+			},
+			"contributors": {
+				"type": "array",
+				"items": { "type": "string" },
+				"description": "Names of people contributing to this mod that are not the primary authors."
+			},
+			"dependencies": {
+				"type": "object",
+				"patternProperties": {
+					"^[a-z]+$": {
+						"type": "string",
+						"oneOf": [
+							{ "pattern": "^\\d+\\.\\d+\\.\\d+(-(pre|rc|dev)\\.\\d+)?$" },
+							{ "const": "*" }
+						]
+					}
+				},
+				"description": "List of mods (and versions) this mod depends on.\\n\\nThe game uses SemVer to compare, so for example \"1.15.0\" > \"1.15.0-rc.3\" > \"1.15.0-rc.2\" > \"1.15.0-pre.1\". You can set the value to an empty string or an asterisk (\"game\": \"*\") to allow compatibility with all versions.\\n\\nAlthough the game follows the general logic of SemVer, it does not fully implement it. So for <prerelease> you can only use rc > pre > dev and <metadata> is not supported."
+			},
+			"custom": {
+				"type": "object",
+				"description": "This is a place to put any additional custom information you might want to store as part of the modinfo.json.\nThis property is exempt from validation and parsing by the game and official tooling."
+			} 
+	},
+	"patternProperties": {
+		"^modid$": { "$ref": "#/properties/modId" }
+	},
+	"oneOf": [
+		{ "required": [ "modId", "name", "version" ] },
+		{ "required": [ "modid", "name", "version" ] }
+	],
+	"additionalProperties": false
+}
