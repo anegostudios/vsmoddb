@@ -183,7 +183,7 @@ function sanitizeHtml($text)
 
 	$text = preg_replace("#<iframe( src=\"//www.youtube.com/embed/[a-zA-Z0-9]{1,20}\" width=\"[0-9]+\" height=\"[0-9]+\" allowfullscreen=\"allowfullscreen\")></iframe>#i", "<span class=\"__embed{$key}\">\\1</span>", $text);
 	
-	$text = htmLawed($text, array('tidy' => 0, 'safe' => 1, 'elements' => '* -script -object -applet -canvas -iframe -video -audio -embed'));
+	$text = htmLawed($text, array('tidy' => 0, 'safe' => 1, 'elements' => '* -script -object -applet -canvas -iframe -video -audio -embed -form'));
 
 	$text = preg_replace("#<span class=\"__embed{$key}\">(.*)</span>#i", "<iframe \\1></iframe>", $text);
 
