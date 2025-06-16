@@ -4,7 +4,7 @@
 	"properties": {
 			"$schema": { "type": "string" },
 			"name": { "type": "string" },
-			"modid": {
+			"modId": {
 				"type": "string",
 				"pattern": "^[a-z0-9]+$"
 			},
@@ -69,10 +69,12 @@
 				"description": "This is a place to put any additional custom information you might want to store as part of the modinfo.json.\nThis property is exempt from validation and parsing by the game and official tooling."
 			} 
 	},
-	"required": [
-			"name",
-			"modid",
-			"version"
+	"patternProperties": {
+		"^modid$": { "$ref": "#/properties/modId" }
+	},
+	"oneOf": [
+		{ "required": [ "modId", "name", "version" ] },
+		{ "required": [ "modid", "name", "version" ] }
 	],
 	"additionalProperties": false
 }
