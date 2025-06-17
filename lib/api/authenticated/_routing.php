@@ -34,4 +34,9 @@ switch($urlparts[0]) {
 		array_shift($urlparts);
 		include(__DIR__ . '/mods.php');
 		break;
+
+	case 'game-versions':
+		array_shift($urlparts);
+		include(__DIR__ . '/game-versions.php');
+		break;
 }

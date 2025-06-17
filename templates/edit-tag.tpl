@@ -28,29 +28,19 @@
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="saveandback" value="0">
 		
-		<div class="editbox flex-fill">
+		<div class="editbox">
 			<label>Name</label>
 			<input type="text" name="name" class="required" value="{$row['name']}"/>
 		</div>
-		
-		<div class="editbox flex-fill">
-			<label>Description</label>
-			<textarea name="text">{$row['text']}</textarea>
-		</div>
-		
+
 		<div class="editbox">
 			<label>Color</label>
 			<input type="text" class="color" name="code" class="required" value="{$row['color']}"/>
 		</div>
-		
+
 		<div class="editbox flex-fill">
-			<label>For Asset Types</label>
-			<select name="assettypeid" class="required">
-				<option value="">-</option>
-				{foreach from=$assettypes item=assettype}
-					<option value="{$assettype['assettypeid']}" {if $assettype['assettypeid']==$row['assettypeid']}selected="selected"{/if}>{$assettype['name']}</option>
-				{/foreach}
-			</select>
+			<label>Description</label>
+			<textarea name="text" style="width: 100%; height: auto;">{$row['text']}</textarea>
 		</div>
 	</form>
 </div>

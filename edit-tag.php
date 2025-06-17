@@ -56,10 +56,6 @@ if ($tagid) {
 	$row = array("tagid" => 0, "name" => "", "text" => "", "color" => "", "assettypeid" => ""); //, "tagtypeid" => ""
 }
 
-$view->assign("assettypes", $con->getAll("select * from assettype order by name"));
-$view->assign("tagtypes", $con->getAll("select * from tagtype order by name"));
-
-
 $view->assign("row", $row);
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_ADMIN_TOOLS, null, true);
 $view->display("edit-tag");

@@ -182,6 +182,26 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 	- `400`: Argument is malformed.
 	- `200`: Successfully unfollowed if mod was followed.
 
+### /api/v2/game-versions
+- `get`: (currently also `auth` TODO(Rennorb) @bug)
+	- `200`: Returns string array of available game-versions in descending order.
+- `post`: `auth` `at`
+	- Args:
+		- `new` specifies the new version to add. Must parse as our semver derivate.
+	- `400`: Argument is malformed.
+	- `403`: Active user is currently restricted or does not have permissions to add a new game-version.
+	- `409`: The version to be added already exists.
+	- `201`: Successfully added the new game-version.
+
+### /api/v2/game-versions/{version}
+- `delete`: `auth` `at`
+	- Args:
+		- Path arg `{version}` specifies the game-version to delete. Must parse as our semver derivate.
+	- `400`: Argument is malformed or missing.
+	- `403`: Active user is currently restricted or does not have permissions to delete the game-version.
+	- `404`: The specified version does not exist.
+	- `200`: Successfully deleted the specified game-version.
+
 # Development setup
 ## VS Code - Remote Containers (untested for a while now)
 You can use the provided vscode devcontainer to get up a running without installing everything on your own.

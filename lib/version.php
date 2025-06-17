@@ -15,7 +15,7 @@
  *   15 with version 0x0fff is reserved - non pre-release versions use the max value here because they should sort after pre-releases.
  * 
  * @param string $versionStr
- * @return int
+ * @return int|false
  */
 function compileSemanticVersion($versionStr)
 {
@@ -41,7 +41,7 @@ function compileSemanticVersion($versionStr)
  *  The result also uses pre-release kind 0 to allow for masked comparisons against this 'major version',
  *  e.g. compilePrimaryVersion('1.2') == (compileSemanticVersion('1.2.3-pre.1') & (VERSION_MASK_MAJOR | VERSION_MASK_MINOR)).
  * @param string $versionStr
- * @return int
+ * @return int|false
  */
 function compilePrimaryVersion($versionStr)
 {
