@@ -97,17 +97,25 @@ class ModEditor extends AssetEditor
 				order by r.until desc, r.actionid desc
 			', [$modId, $modId]);
 			$lockReason = htmlspecialchars($lockInfo['reason']);
-			$nextStepHint = $lockInfo['notificationid']
-				? (!canModerate(null, $user) ? 'You have submitted for review and will receive a notification once the review has concluded.' : 'The author has submitted the current state for review.')
-				: 'Address these issues and submit for a review to get your mod published again.';
+			if($lockInfo['notificationid']) {
+				$nextStepHint = !canModerate(null, $user) 
+					? 'You have submitted for review and will receive a notification once the review has concluded.'
+					: 'The author has submitted the current state for review.';
+				$callToAction = '';
+			}
+			else {
+				$nextStepHint = '';
+				$callToAction = '<p>Address these issues and submit for a review to get your mod published again.</p>';
+			}
 			addMessage(MSG_CLASS_ERROR.' permanent', "
 				<h3 style='text-align: center;'>This mod has been locked by a moderator.</h3>
 				<p>
 					<h4 style='margin-bottom: 0.25em;'>Reason:</h4>
 					<blockquote>{$lockReason}</blockquote>
 				</p>
-				<p>$nextStepHint</p>
+				$callToAction
 			");
+			if($nextStepHint) addMessage(MSG_CLASS_OK.' permanent', $nextStepHint);
 		}
 	}
 
