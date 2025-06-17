@@ -368,7 +368,7 @@ class AssetEditor extends AssetController
 	{
 		global $con, $view, $user;
 
-		$sqlFilterLockedStatus = $this->asset['statusid'] == STATUS_LOCKED ? '' : 'where statusid != 3';
+		$sqlFilterLockedStatus = $this->asset['statusid'] == STATUS_LOCKED ? '' : ('where statusid != '.STATUS_LOCKED);
 		$stati = $con->getAll("select * from status $sqlFilterLockedStatus");
 		$view->assign("stati", $stati);
 

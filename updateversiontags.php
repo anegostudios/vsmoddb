@@ -18,7 +18,7 @@ if($malformedAvailableVersions) {
 
 // Merge existing values with the new/current ones and recalculate the sort index.
 //NOTE(Rennorb): The sort index is an ascending n+1 index that is used to find consecutive sequences of versions.
-// We just use the index in the array after sorting the values for this.
+// We just use the index in the array after sorting the values for this. :VersionSortIndex
 $storedVersions = array_map('intval', $con->getCol('SELECT `version` FROM GameVersions'));
 $allVersions = array_unique(array_merge($storedVersions, $availableVersions));
 sort($allVersions); // sort ascending so the keys are in the correct order
