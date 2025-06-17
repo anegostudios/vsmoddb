@@ -297,7 +297,7 @@ small {
 }
 .submenu>nav {
 	position: absolute;
-	z-index: 999;
+	z-index: 9999;
 	background-color: hsla(var(--c-accent) 33% / 0.9);
 	color: var(--color-text-inv);
 	left: 0;
@@ -1269,11 +1269,6 @@ a.add:before {
 	float: right;
 }
 
-
-
-.cp-app, .cp-app div {
-	z-index: 99;
-}
 
 
 .tags {
