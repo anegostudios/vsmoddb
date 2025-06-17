@@ -35,7 +35,7 @@ switch($notification['type']) {
 		]);
 		exit();
 
-	case "modlocked": case "modunlockrequest":
+	case "modlocked": case "modunlockrequest": case "modunlocked":
 		$con->execute("update notification set `read` = 1 where notificationid = ?", array($notification['notificationid']));
 
 		$mod = $con->getRow("select assetid, urlalias from `mod` where modid = ?", array($notification['recordid']));

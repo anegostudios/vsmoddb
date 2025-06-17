@@ -314,6 +314,8 @@ class AssetEditor extends AssetController
 				$createdById = intval($this->asset['createdbyuserid']);
 				// @security: $modId and $createdById are known to be integers and therefore sql inert.
 				$con->execute("insert into notification (type, recordid, userid) values ('modunlocked', $modId, $createdById)");
+				// Read the unlock request just in case we didn't before and only publsihed the mod again.
+				$con->execute("update notification set `read` = 1 where type = 'modunlockrequest' and userid = ? and recordid = ?", [$user['userid'], $modId]);
 			}
 			else {
 				$moderatorUserId = $con->getOne('
