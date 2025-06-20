@@ -109,9 +109,9 @@
 				{if !empty($teammembers)}
 					<span class="text-weak">Authors:</span>
 
-					<a class="mention username" href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>{foreach from=$teammembers item=teammember}, <a class="mention username" href="/show/user/{$teammember['usertoken']}">{$teammember['name']}</a>{/foreach}
+					<a class="username" href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>{foreach from=$teammembers item=teammember}, <a class="username" href="/show/user/{$teammember['usertoken']}">{$teammember['name']}</a>{/foreach}
 				{else}
-					<span class="text-weak">Author:</span> <a href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>
+					<span class="text-weak">Author:</span> <a class="username" href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>
 				{/if}
 
 				<br>

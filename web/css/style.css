@@ -1534,15 +1534,18 @@ div.betanotice {
 	display: block;
 }
 
-.username:before {
-	content: "@";
-}
-
-.username {
-	background-color: rgba(159, 207, 52, 0.5);
+.mention {
 	border-radius: 4px;
 	padding: 2px 3px;
 	text-decoration: none;
+}
+
+.mention.username:before {
+	content: "@";
+}
+
+.mention.username {
+	background-color: rgba(159, 207, 52, 0.5);
 }
 
 
