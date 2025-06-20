@@ -564,11 +564,6 @@ body.opaque-desc .mod .moddesc {
 	position: relative;
 }
 
-.mod-draft .tabs,
-.mod-locked .tabs {
-	border-bottom-style: dashed;
-}
-
 .edit-asset.mods {
 	position: relative;
 }
@@ -651,6 +646,7 @@ body.opaque-desc .mod .moddesc {
 
 /******** Tabs *******/
 
+/* The idea is to have a bunch of labels that set radio inputs next to tab-content elements that will get un-hidden when selected. No js needed. */
 
 ul.tabs {
 	width: 100%;
@@ -664,13 +660,14 @@ ul.tabs {
 ul.tabs>li, ul.tabs>li>* {
 	height: 2em;
 	line-height: 2em;
+	user-select: none;
 }
 
 ul.tabs>li {
 	border: 1px solid var(--color-border);
 	border-bottom: none;
 	box-sizing: content-box;
-	background: hsla(0, 0%, 0%, 0.2);
+	background-color: var(--color-input-btn);
 	flex-grow: 1;
 }
 
@@ -681,7 +678,7 @@ ul.tabs>li {
 }
 
 ul.tabs>li:not(.active):hover {
-	background: #ccc;
+	background-color: hsl(var(--c-input-btn) 95%);
 }
 
 ul.tabs>li>* {
@@ -701,18 +698,29 @@ ul.tabs>li>* img {
 	vertical-align: sub;
 }
 
+.mod-draft .tabs,
+.mod-locked .tabs {
+	border-bottom-style: dashed;
+}
+
 .tab-trigger {
 	display: none;
 }
 
 .tab-content {
-	padding: 10px 0px;
+	padding: 1em 0;
 	display: none;
 }
 
-.tab-trigger:checked + .tab-content{
+.tab-trigger:checked + .tab-content {
 	display: unset;
 }
+
+/* hardcoded so we can put the further out and highlight the buttons aswell */
+.tab-trigger#tab-description:checked ~ .tab-container>.tab-content.description { display: unset; }
+.tab-trigger#tab-description:checked ~ .tabs>li:first-child { background-color: hsl(var(--c-input-btn) 90%); }
+.tab-trigger#tab-files:checked ~ .tab-container>.tab-content.files { display: unset; }
+.tab-trigger#tab-files:checked ~ .tabs>li:nth-child(2) { background-color: hsl(var(--c-input-btn) 90%); }
 
 td {
 	position: relative;

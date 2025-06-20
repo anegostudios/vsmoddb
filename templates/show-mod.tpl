@@ -55,6 +55,9 @@
 		</div>
 	{/if}
 
+	<input class="tab-trigger" id="tab-description" type="radio" name="tab" autocomplete="off">
+	<input class="tab-trigger" id="tab-files" type="radio" name="tab" autocomplete="off">
+
 	<ul class="tabs no-mark">
 		<li><label for="tab-description" onclick="location.hash = 'tab-description'">Description</label></li>
 		<li><label for="tab-files" onclick="location.hash = 'tab-files'">Files</label></li>
@@ -76,8 +79,7 @@
 	</ul>
 
 	<div class="tab-container">
-		<input class="tab-trigger" id="tab-description" type="radio" name="tab" autocomplete="off">
-		<div class="tab-content">
+		<div class="tab-content description">
 			<script>if(location.hash !== '#tab-files') document.getElementById('tab-description').checked = true;</script>
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
@@ -165,8 +167,7 @@
 			<div style="clear:both;"></div>
 		</div>
 
-		<input class="tab-trigger" id="tab-files" type="radio" name="tab" autocomplete="off">
-		<div class="tab-content">
+		<div class="tab-content files">
 			<script>if(location.hash === '#tab-files') document.getElementById('tab-files').checked = true;</script>
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
@@ -240,7 +241,6 @@
 
 			<div style="clear:both;"></div>
 		</div>
-
 	</div>
 
 	<div style="clear:both;"></div>
