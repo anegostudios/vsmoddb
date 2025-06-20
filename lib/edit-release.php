@@ -199,14 +199,14 @@ function updateGameVersionsCached($modId)
 	$con->execute("INSERT INTO ModCompatibleGameVersionsCached (modId, gameVersion)
 		SELECT DISTINCT {$modId}, cgv.gameVersion
 		FROM `release` r
-		JOIN ModReleaseCompatibleGameVersions cgv
+		JOIN ModReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseid
 		where r.modid = {$modId}
 	");
 
 	$con->execute("INSERT INTO ModCompatibleMajorGameVersionsCached (modId, majorGameVersion)
 		SELECT DISTINCT {$modId}, cgv.gameVersion & 0xffffffff00000000
 		FROM `release` r
-		JOIN ModReleaseCompatibleGameVersions cgv
+		JOIN ModReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseid
 		where r.modid = {$modId}
 	");
 

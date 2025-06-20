@@ -1,0 +1,18 @@
+USE moddb;
+
+START TRANSACTION;
+
+TRUNCATE ModCompatibleGameVersionsCached;
+TRUNCATE ModCompatibleMajorGameVersionsCached;
+
+INSERT INTO ModCompatibleGameVersionsCached (modId, gameVersion)
+	SELECT DISTINCT r.modid, cgv.gameVersion
+	FROM `release` r
+	JOIN ModReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseid;
+
+INSERT INTO ModCompatibleMajorGameVersionsCached (modId, majorGameVersion)
+	SELECT DISTINCT r.modid, cgv.gameVersion & 0xffffffff00000000
+	FROM `release` r
+	JOIN ModReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseid;
+
+COMMIT;
