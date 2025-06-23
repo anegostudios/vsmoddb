@@ -135,7 +135,9 @@ CREATE TABLE IF NOT EXISTS `moddb`.`comment` (
   `lastmodaction` INT NULL,
   `deleted` BOOL NOT NULL DEFAULT 0,
   PRIMARY KEY (`commentid`),
-  FOREIGN KEY (`lastmodaction`) REFERENCES `moderationrecord`(`actionid`) ON UPDATE CASCADE ON DELETE RESTRICT)
+  FOREIGN KEY (`lastmodaction`) REFERENCES `moderationrecord`(`actionid`) ON UPDATE CASCADE ON DELETE RESTRICT,
+  INDEX `created`(`created`) -- for the main page query that shows the latest 20 comments
+)
 ENGINE = InnoDB;
 
 
