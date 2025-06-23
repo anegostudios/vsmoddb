@@ -256,6 +256,7 @@ unset($release);
 $allGameVersions = array_map('intval', $con->getCol('SELECT version FROM GameVersions ORDER BY version DESC'));
 
 $highestTargetVersion = $allGameVersions[0];
+$recommendationIsInfluencedBySearch = false;
 
 if(!empty($_SERVER['HTTP_REFERER'])) {
 	parse_str(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_QUERY), $refererQuerryArgs);
@@ -268,18 +269,19 @@ if(!empty($_SERVER['HTTP_REFERER'])) {
 		$gvs = false;
 	}
 
-	foreach($allGameVersions as $gameversion) {
-		if(
-		   ($mv && (($gameversion & VERSION_MASK_PRIMARY) === $mv))
-		|| ($gvs && in_array($gameversion, $gvs, true))
-		) {
-			$highestTargetVersion = $gameversion;
-			break;
+	if($mv || $gvs) {
+		foreach($allGameVersions as $gameversion) {
+			if(
+			   ($mv && (($gameversion & VERSION_MASK_PRIMARY) === $mv))
+			|| ($gvs && in_array($gameversion, $gvs, true))
+			) {
+				$highestTargetVersion = $gameversion;
+				$recommendationIsInfluencedBySearch = true;
+				break;
+			}
 		}
 	}
 }
-
-$recommendationIsInfluencedBySearch = $highestTargetVersion !== $allGameVersions[0];
 
 
 $tagetRecommendedGameVersionStable = null;
@@ -299,6 +301,10 @@ $tagetRecommendedGameVersionUnstable = null;
 		else {
 			if(!$tagetRecommendedGameVersionStable) {
 				$tagetRecommendedGameVersionStable = $gameversion;
+				//NOTE(Rennorb): If there was no explicit search we might still have a newer, unstable game version.
+				// We cap the "highest" target version to the highest Stable version in that case, so we dont get 'outdated' warnings 
+				// when in reality we are only a pre-release ahead with the game versions.
+				if(!$recommendationIsInfluencedBySearch) $highestTargetVersion = $gameversion;
 			}
 			break;
 		}
@@ -316,17 +322,16 @@ $releasesByMaxGameVersion = $releases;
 usort($releasesByMaxGameVersion, fn($a, $b) => $b['maxCompatibleGameVersion'] - $a['maxCompatibleGameVersion']);
 
 foreach($releasesByMaxGameVersion as $release) {
-	if(isPreReleaseVersion($release['modversion'])) {
+	$compatibleWithUnstableGame = in_array($tagetRecommendedGameVersionUnstable, $release['compatibleGameVersions'], true);
+	if(isPreReleaseVersion($release['modversion']) || $compatibleWithUnstableGame) {
 		if(!$recommendedReleaseUnstable) {
-			if(
-				   in_array($tagetRecommendedGameVersionUnstable, $release['compatibleGameVersions']) // First try and get a release for a pre-release version of the game.
-				|| in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'])  // If we cannot find such a release, look for a newer, unstable release of the mod for the current stable version of the game.
-			) {
+			// If this is not compatible with the unstable game version, look for a newer, unstable release of the mod for the current stable version of the game.
+			if($compatibleWithUnstableGame || in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'], true)) {
 				$recommendedReleaseUnstable = $release;
 			}
 		}
 	}
-	else if(in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'])) {
+	else if(in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'], true)) {
 		$recommendedReleaseStable = $release;
 		break; // If there is a newer unstable version we already found it.
 	}
@@ -491,15 +496,19 @@ function processOwnershipTransfer($asset, $user)
  * @param int $referenceVersion The version originally searched for.
  * @return string
  */
-function formatVersionWarning($release, $referenceVersion)
+function formatVersionsAndWarning($release, $referenceVersion)
 {
+	$text = formatGrammaticallyCorrectEnumeration($release['compatibleGameVersionsFolded']);
+	if($release['maxCompatibleGameVersion'] >= $referenceVersion) return $text;
+
 	$ver = formatSemanticVersion($referenceVersion);
 	if((($release['maxCompatibleGameVersion'] ^ $referenceVersion) & VERSION_MASK_PRIMARY) === 0) {
-		return "<abbr title='While it is likely that this mod works with game version {$ver} it does not explicitly specify that it does.'>potentially outdated</abbr>";
+		$text .= ", <abbr title='While it is likely that this mod works with game version {$ver} it does not explicitly specify that it does.'>potentially outdated</abbr>";
 	}
 	else {
-		return "<abbr style='color:#b00;' title='This mod did not specify that is is compatible with gameversion {$ver}, nor with any patch of that major version in general.'><i class='ico alert'></i> outdated</abbr>";
+		$text .= ", <abbr style='color:#b00;' title='This mod did not specify that is is compatible with gameversion {$ver}, nor with any patch of that major version in general.'><i class='ico alert'></i> outdated</abbr>";
 	}
+	return $text;
 }
 
 /**

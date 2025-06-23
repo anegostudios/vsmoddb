@@ -129,35 +129,34 @@
 					<span class="count">{$asset["follows"]}</span>
 				</a>
 				<p>
-					{if $recommendedReleaseStable || $recommendedReleaseUnstable}
-						{if $recommendedReleaseStable}
-							{if count($recommendedReleaseStable['compatibleGameVersions']) > 0}<strong>
-								{formatRecommendationAdjustedHint('Recommended', $recommendationIsInfluencedBySearch, $highestTargetVersion)}
-								download (for Vintage Story {formatGrammaticallyCorrectEnumeration($recommendedReleaseStable['compatibleGameVersionsFolded'])}):</strong><br>
-							{else}<strong>Recommended download:</strong><br>
-							{/if}
-
-							<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseStable['file'])}">{$recommendedReleaseStable['file']['filename']}</a>
-							{if !empty($recommendedReleaseStable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseStable}{/if}
+					{if $recommendedReleaseStable}
+						{if count($recommendedReleaseStable['compatibleGameVersions']) > 0}<strong>
+							{formatRecommendationAdjustedHint('Recommended', $recommendationIsInfluencedBySearch, $highestTargetVersion)}
+							download (for Vintage Story {formatGrammaticallyCorrectEnumeration($recommendedReleaseStable['compatibleGameVersionsFolded'])}):</strong><br>
+						{else}<strong>Recommended download:</strong><br>
 						{/if}
-						{if $recommendedReleaseStable && $recommendedReleaseUnstable}<br>{/if}
-						{if $recommendedReleaseUnstable}
-							{if count($recommendedReleaseUnstable['compatibleGameVersions']) > 0}<strong>For testers (for Vintage Story {formatGrammaticallyCorrectEnumeration($recommendedReleaseUnstable['compatibleGameVersionsFolded'])}, {formatVersionWarning($recommendedReleaseUnstable, $highestTargetVersion)}):</strong><br>
-							{else}<strong>For testers:</strong><br>
-							{/if}
 
-							<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseUnstable['file'])}">{$recommendedReleaseUnstable['file']['filename']}</a>
-							{if !empty($recommendedReleaseUnstable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
-						{/if}
+						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseStable['file'])}">{$recommendedReleaseStable['file']['filename']}</a>
+						{if !empty($recommendedReleaseStable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseStable}{/if}
+						{if $recommendedReleaseUnstable}<br>{/if}
 					{elseif $fallbackRelease}
 						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>
 							{formatRecommendationAdjustedHint('Latest', $recommendationIsInfluencedBySearch, $highestTargetVersion)}
-							release (for Vintage Story {formatGrammaticallyCorrectEnumeration($fallbackRelease['compatibleGameVersionsFolded'])}, {formatVersionWarning($fallbackRelease, $highestTargetVersion)}):</strong><br>
+							release (for Vintage Story {formatVersionsAndWarning($fallbackRelease, $highestTargetVersion)}):</strong><br>
 						{else}<strong>Latest release:</strong><br>
 						{/if}
 
 						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($fallbackRelease['file'])}">{$fallbackRelease['file']['filename']}</a>
 						{if !empty($fallbackRelease['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$fallbackRelease}{/if}
+						{if $recommendedReleaseUnstable}<br>{/if}
+					{/if}
+					{if $recommendedReleaseUnstable}
+						{if count($recommendedReleaseUnstable['compatibleGameVersions']) > 0}<strong>For testers (for Vintage Story {formatVersionsAndWarning($recommendedReleaseUnstable, $highestTargetVersion)}):</strong><br>
+						{else}<strong>For testers:</strong><br>
+						{/if}
+
+						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseUnstable['file'])}">{$recommendedReleaseUnstable['file']['filename']}</a>
+						{if !empty($recommendedReleaseUnstable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
 					{/if}
 				</p>
 			</div>
