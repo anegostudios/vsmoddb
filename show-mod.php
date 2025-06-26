@@ -322,21 +322,22 @@ $releasesByMaxGameVersion = $releases;
 usort($releasesByMaxGameVersion, fn($a, $b) => $b['maxCompatibleGameVersion'] - $a['maxCompatibleGameVersion']);
 
 foreach($releasesByMaxGameVersion as $release) {
-	$compatibleWithUnstableGame = in_array($tagetRecommendedGameVersionUnstable, $release['compatibleGameVersions'], true);
-	if(isPreReleaseVersion($release['modversion']) || $compatibleWithUnstableGame) {
-		if(!$recommendedReleaseUnstable) {
-			// If this is not compatible with the unstable game version, look for a newer, unstable release of the mod for the current stable version of the game.
-			if($compatibleWithUnstableGame || in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'], true)) {
-				$recommendedReleaseUnstable = $release;
-			}
-		}
-	}
-	else if(in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'], true)) {
+	if(in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'], true)) {
 		$recommendedReleaseStable = $release;
 		break; // If there is a newer unstable version we already found it.
-	}
-	else if(!$fallbackRelease) {
-		$fallbackRelease = $release;
+	} else {
+		$compatibleWithUnstableGame = in_array($tagetRecommendedGameVersionUnstable, $release['compatibleGameVersions'], true);
+		if(isPreReleaseVersion($release['modversion']) || $compatibleWithUnstableGame) {
+			if(!$recommendedReleaseUnstable) {
+				// If this is not compatible with the unstable game version, look for a newer, unstable release of the mod for the current stable version of the game.
+				if($compatibleWithUnstableGame || in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'], true)) {
+					$recommendedReleaseUnstable = $release;
+				}
+			}
+		}
+		else if(!$fallbackRelease) {
+			$fallbackRelease = $release;
+		}
 	}
 }
 
