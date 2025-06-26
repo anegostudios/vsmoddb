@@ -15,7 +15,7 @@ var tinymceSettings = {
 	relative_urls:false,
 	remove_script_host:false,
 	tinycomments_mode: 'embedded',
-	content_css: "/web/css/editor_content.css?ver=4",
+	content_css: "/web/css/editor_content.css?ver=5",
 	setup: function (editor) {
 		editor.on('change', function(e) { 
 			tinyMCE.triggerSave(); 
@@ -26,7 +26,7 @@ var tinymceSettings = {
 			tinyMCE.triggerSave(); 
 			var $form = $("#" + e.target.id).parents("form");
 			$form.trigger('checkform.areYouSure');
-			});
+		});
 	},
 	mentions: {
 		source: function(query, process, delimiter) {
@@ -58,10 +58,62 @@ var tinymceSettingsCmt = {
 	relative_urls:false,
 	remove_script_host:false,
 	tinycomments_mode: 'embedded',
-	content_css: "/web/css/editor_content.css?ver=4",
-	setup: tinymceSettings.setup,
+	content_css: tinymceSettings.content_css,
+	setup: function(editor) {
+		tinymceSettings.setup(editor);
+		editor.on('SetContent', function(e) {
+			if(e.initial) return;
+
+			if(e.paste && wrapNextPaste) {
+				wrapNextPaste = false;
+				//TODO(Rennorb) @correctness: This won't always select the correct one, but its good enough for now.
+				const spoilers  = editor.dom.select('.spoiler');
+				editor.selection.setNode(spoilers[spoilers.length - 1])
+				editor.selection.collapse(false);
+				editor.focus();
+			}
+		})
+	},
+	paste_preprocess: function(editor, args) {
+		const text = args.content;
+		if(text && couldBeCrashReport(text)) {
+			if(confirm('Whoa there, looks like you pasted a crash report.\nShould we wrap that for you, so its easier to read for the Modder?\n\nPressing "cancel" (or the equivalent in your language) will paste the text as-is.')) {
+				wrapNextPaste = true;
+			}
+		}
+	},
+	paste_postprocess: function(editor, args) {
+		if(wrapNextPaste) {
+			const spoiler = wrapAsSpoilerForTMCE(args.node.childNodes, 'Crash Report');
+			args.node.replaceChildren(spoiler);
+		}
+	},
 	mentions: tinymceSettings.mentions,
 };
+
+let wrapNextPaste = false;
+
+function couldBeCrashReport(text) {
+	return text.includes('System.Exception') || text.includes('at Vintagestory.') || text.includes('Event Log') || text.includes('Critical error');
+}
+
+function wrapAsSpoilerForTMCE(nodes, headerText) {
+	const toggleEl = document.createElement('div');
+	toggleEl.classList.add('spoiler-toggle');
+	toggleEl.setAttribute('contenteditable', 'true')
+	toggleEl.innerText = headerText;
+
+	const textEl = document.createElement('code');
+	textEl.classList.add('spoiler-text');
+	textEl.setAttribute('contenteditable', 'true')
+	textEl.append(...nodes)
+
+	const wrapEl = document.createElement('div');
+	wrapEl.classList.add('spoiler', 'crash-report');
+	wrapEl.setAttribute('contenteditable', 'false')
+	wrapEl.append(toggleEl, textEl);
+	return wrapEl;
+}
 
 
 function createEditor($elem, settings) {
@@ -94,12 +146,8 @@ function setEditorContents($elem, html) {
 }
 
 function attachSpoilerToggle($sel) {
-	$sel.each(function(_, e) {
-		if(!e.classList.contains('expanded')) $(e).next().hide();
-	})
-	.click(function(){
+	$sel.click(function(){
 		$(this).toggleClass("expanded");
-		$(this).next().toggle();
 	});
 }
 

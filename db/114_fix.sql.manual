@@ -1,0 +1,23 @@
+USE moddb;
+
+START TRANSACTION;
+
+UPDATE `comment`
+SET text = REGEXP_REPLACE(text, '(spoiler-text".*?) style="display: block;"', '\\1')
+WHERE text REGEXP 'spoiler-text".*? style="display: block;"';
+
+UPDATE asset
+SET text = REGEXP_REPLACE(text, '(spoiler-text".*?) style="display: block;"', '\\1')
+WHERE text REGEXP 'spoiler-text".*? style="display: block;"';
+
+
+UPDATE `comment`
+SET text = REGEXP_REPLACE(text, 'class="spoiler-toggle expanded"', 'class="spoiler-toggle"')
+WHERE text LIKE '%class="spoiler-toggle expanded"%';
+
+UPDATE asset
+SET text = REGEXP_REPLACE(text, 'class="spoiler-toggle expanded"', 'class="spoiler-toggle"')
+WHERE text LIKE '%class="spoiler-toggle expanded"%';
+
+
+COMMIT;

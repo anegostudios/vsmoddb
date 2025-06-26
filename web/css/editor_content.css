@@ -5,6 +5,10 @@
 	box-sizing: border-box;
 }
 
+code:focus-visible {
+	outline: none;
+}
+
 /* generic elements */
 
 body {
@@ -67,6 +71,10 @@ small {
 	font-size: .8em;
 }
 
+code {
+	white-space: pre;
+}
+
 /* generic classes */
 .whitetext { color: var(--color-text-inv); }
 
@@ -84,6 +92,14 @@ small {
 
 .flex-fill {
 	flex-basis: 100%;
+}
+
+/**/
+
+.spoiler.crash-report code {
+	display: block;
+	padding: .25em;
+	overflow-x: auto;
 }
 
 /* special editor stuff */

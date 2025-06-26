@@ -11,6 +11,10 @@ input:active,
 	outline: none; /*UA reset*/
 }
 
+code:focus-visible {
+	outline: none;
+}
+
 /* global element setup */
 :root {
 	--color-content-bg: hsl(42 100% 98%);
@@ -121,6 +125,10 @@ ul.no-mark>li, ol.no-mark>li {
 small {
 	display: inline-block;
 	font-size: .8em;
+}
+
+code {
+	white-space: pre;
 }
 
 /* generic classes */
@@ -982,6 +990,19 @@ button.moderator::before {
 	transform: translateX(-50%);
 	border-radius: 0 0 .25em .25em;
 	padding: 0 .25em;
+}
+
+/* spoiler toggles TODO(Rennorb): @cleanup */
+
+.spoiler-toggle:not(.expanded) + .spoiler-text {
+	display: none;
+}
+
+
+.spoiler.crash-report code {
+	display: block;
+	padding: .25em;
+	overflow-x: auto;
 }
 
 /* uniform styling of editboxes */
