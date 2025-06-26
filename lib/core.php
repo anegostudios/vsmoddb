@@ -178,9 +178,11 @@ function sanitizeHtml($text)
 {
 	global $config;
 	include_once($config["basepath"] . "lib/3rdparty/htmLawed.php");
-	
-	$key = urlencode(genToken());
 
+	// Extremely rudimentary check to not ingest expanded spoilers after editing a comment, but good enough for that case.
+	$text = str_replace('class="spoiler-toggle expanded"', 'class="spoiler-toggle"', $text);
+
+	$key = urlencode(genToken());
 	$text = preg_replace("#<iframe( src=\"//www.youtube.com/embed/[a-zA-Z0-9]{1,20}\" width=\"[0-9]+\" height=\"[0-9]+\" allowfullscreen=\"allowfullscreen\")></iframe>#i", "<span class=\"__embed{$key}\">\\1</span>", $text);
 	
 	$text = htmLawed($text, array('tidy' => 0, 'safe' => 1, 'elements' => '* -script -object -applet -canvas -iframe -video -audio -embed -form'));
