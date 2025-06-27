@@ -65,7 +65,7 @@ var tinymceSettingsCmt = {
 			if(e.initial) return;
 
 			if(e.paste && wrapNextPaste) {
-				wrapNextPaste = false;
+				wrapNextPaste = 0;
 				//TODO(Rennorb) @correctness: This won't always select the correct one, but its good enough for now.
 				const spoilers  = editor.dom.select('.spoiler');
 				editor.selection.setNode(spoilers[spoilers.length - 1])
@@ -76,40 +76,51 @@ var tinymceSettingsCmt = {
 	},
 	paste_preprocess: function(editor, args) {
 		const text = args.content;
-		if(text && couldBeCrashReport(text)) {
+		if(!text) return;
+
+		if(couldBeCrashReport(text)) {
 			if(confirm('Whoa there, looks like you pasted a crash report.\nShould we wrap that for you, so its easier to read for the Modder?\n\nPressing "cancel" (or the equivalent in your language) will paste the text as-is.')) {
-				wrapNextPaste = true;
+				wrapNextPaste = 2;
+			}
+		}
+		else if(text.length >= 1000) {
+			if(confirm('Whoa there, looks like you pasted a lot of text at once.\nShould we wrap that for you, so its easier to read for the Modder?\n\nPressing "cancel" (or the equivalent in your language) will paste the text as-is.')) {
+				wrapNextPaste = 1;
 			}
 		}
 	},
 	paste_postprocess: function(editor, args) {
 		if(wrapNextPaste) {
-			const spoiler = wrapAsSpoilerForTMCE(args.node.childNodes, 'Crash Report');
+			const spoiler = wrapAsSpoilerForTMCE(args.node.childNodes, wrapNextPaste === 2);
 			args.node.replaceChildren(spoiler);
 		}
 	},
 	mentions: tinymceSettings.mentions,
 };
 
-let wrapNextPaste = false;
+// 0 = dont wrap
+// 1 = wrap without markup
+// 2 = wrap as crash report
+let wrapNextPaste = 0;
 
 function couldBeCrashReport(text) {
 	return text.includes('System.Exception') || text.includes('at Vintagestory.') || text.includes('Event Log') || text.includes('Critical error');
 }
 
-function wrapAsSpoilerForTMCE(nodes, headerText) {
+function wrapAsSpoilerForTMCE(nodes, isCrashReport) {
 	const toggleEl = document.createElement('div');
 	toggleEl.classList.add('spoiler-toggle');
 	toggleEl.setAttribute('contenteditable', 'true')
-	toggleEl.innerText = headerText;
+	toggleEl.innerText = isCrashReport ? 'Crash Report' : 'Spoiler';
 
-	const textEl = document.createElement('code');
+	const textEl = document.createElement(isCrashReport ? 'code' : 'div');
 	textEl.classList.add('spoiler-text');
 	textEl.setAttribute('contenteditable', 'true')
 	textEl.append(...nodes)
 
 	const wrapEl = document.createElement('div');
-	wrapEl.classList.add('spoiler', 'crash-report');
+	wrapEl.classList.add('spoiler');
+	if(isCrashReport) wrapEl.classList.add('crash-report');
 	wrapEl.setAttribute('contenteditable', 'false')
 	wrapEl.append(toggleEl, textEl);
 	return wrapEl;
