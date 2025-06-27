@@ -28,6 +28,9 @@ var tinymceSettings = {
 			$form.trigger('checkform.areYouSure');
 		});
 	},
+	paste_postprocess: function(editor, args) {
+		maybePromptForRelativeLinkRemoval(args.node);
+	},
 	mentions: {
 		source: function(query, process, delimiter) {
 			if(!query) return;
@@ -94,9 +97,40 @@ var tinymceSettingsCmt = {
 			const spoiler = wrapAsSpoilerForTMCE(args.node.childNodes, wrapNextPaste === 2);
 			args.node.replaceChildren(spoiler);
 		}
+		
+		maybePromptForRelativeLinkRemoval(args.node);
 	},
 	mentions: tinymceSettings.mentions,
 };
+
+function maybePromptForRelativeLinkRemoval(node) {
+	const relativeUrlAnchors = node.querySelectorAll('a[href^="./"], a[href^="../"], a[href^="/"][href*="/issues/"]');
+	if(relativeUrlAnchors) {
+		let firstHref = relativeUrlAnchors[0].getAttribute('href'); // cant use .href, that resolves the url
+		let firstActualDestination;
+		try { firstActualDestination = (new URL(firstHref, document.baseURI)).href; }
+		catch { firstActualDestination = '<link was malformed>' }
+
+		if(confirm(`Looks like there are relative links in that html you've just pasted in here - we found ${relativeUrlAnchors.length} such link${relativeUrlAnchors.length === 1 ? '' : 's'}.
+Unless you also copied it from here, those probably wont link to the page you want.
+
+Here is the first one and where it would link to:
+	${relativeUrlAnchors[0].textContent}
+	links to '${firstHref}',
+	which actually resolves to '${firstActualDestination}'
+
+Since we cannot determine where this was copied from, we cannot automatically fix the links for you - we can however at least remove them from the text.
+Should we do that?
+
+Pressing "cancel" (or the equivalent in your language) will paste the text as-is.`)) {
+			for(const el of relativeUrlAnchors) {
+				const span = document.createElement('span');
+				span.append(...el.childNodes);
+				el.parentElement.replaceChild(span, el);
+			}
+		}
+	}
+}
 
 // 0 = dont wrap
 // 1 = wrap without markup
