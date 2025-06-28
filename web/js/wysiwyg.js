@@ -105,7 +105,7 @@ var tinymceSettingsCmt = {
 
 function maybePromptForRelativeLinkRemoval(node) {
 	const relativeUrlAnchors = node.querySelectorAll('a[href^="./"], a[href^="../"], a[href^="/"][href*="/issues/"]');
-	if(relativeUrlAnchors) {
+	if(relativeUrlAnchors.length) {
 		let firstHref = relativeUrlAnchors[0].getAttribute('href'); // cant use .href, that resolves the url
 		let firstActualDestination;
 		try { firstActualDestination = (new URL(firstHref, document.baseURI)).href; }
