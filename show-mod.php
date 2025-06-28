@@ -318,8 +318,14 @@ $fallbackRelease = null;
 // Sort releases by max supproted game version to find the reccomendation.
 //NOTE(Rennorb): This is not the default sorting from the db, because we want the releaes in mod version order (if we can) for the files tab.
 // Could considder swapping this around for @perf.
+//NOTE(Rennorb): usort is not a "stable sort", meaning if two elements compare equal their final ordering is not defined.
+// We do however need to keep the ordering of the releases if maxversions are the same.
 $releasesByMaxGameVersion = $releases;
-usort($releasesByMaxGameVersion, fn($a, $b) => $b['maxCompatibleGameVersion'] - $a['maxCompatibleGameVersion']);
+usort($releasesByMaxGameVersion, fn($a, $b) => (
+	(($b['maxCompatibleGameVersion'] - $a['maxCompatibleGameVersion']) << 1) // Make room for the second property comparison. This difference should never be so large as to get cutt of by shifting it by one. 
+	| ($b['modversion'] > $a['modversion'] ? 1 : 0) // If two releases have the same maxversion, use their version to determine the order
+));
+
 
 foreach($releasesByMaxGameVersion as $release) {
 	if(in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'], true)) {
