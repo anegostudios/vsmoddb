@@ -1,0 +1,80 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"properties": {
+		"$schema": { "type": "string" },
+		"playstyles": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"code": { "type": "string" },
+					"playListCode": { "type": "string" },
+					"langCode": { "type": "string" },
+					"listOrder": { "type": "number" },
+					"mods": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"worldType": { "type": "string" },
+					"worldConfig": {
+						"type": "object",
+						"additionalProperties": { "type": "string" }
+					}
+				},
+				"required": [ "code" ],
+				"additionalProperties": false
+			}
+		},
+		"worldConfigAttributes": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"code": { "type": "string" },
+					"dataType": { "enum": ["Bool", "IntInput", "DoubleInput", "IntRange", "String", "DropDown", "DoubleRange", "StringRange"] },
+					"category": { "type": "string" },
+					"min": { "type": "number" },
+					"max": { "type": "number" },
+					"step": { "type": "number" },
+					"alarm": {
+						"type": "number",
+						"description": "Defaults to int.MaxValue."
+					},
+					"multiplier": { "type": "number" },
+					"displayUnit": { "type": "number" },
+					"onCustomizeScreen": {
+						"type": "boolean",
+						"description": "Defaults to true."
+					},
+					"default": { "type": "string" },
+					"values": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"names": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"skipValues": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"onlyDuringWorldCreate": { "type": "boolean" }
+				},
+				"required": [ "code", "dataType" ],
+				"additionalProperties": false
+			}
+		}
+	},
+	"required": [ "playstyles", "worldConfigAttributes" ],
+	"additionalProperties": false
+}

@@ -119,6 +119,26 @@ function contains($string, $part)
 	return mb_strstr($string, $part) !== false;
 }
 
+/** Splits a string at a separator, but at most once.
+ * If the separator is not found the left string contains thw whole input, and the right string is empty.
+ * @param string $string
+ * @param string $separator
+ * @param string &$out_left
+ * @param string &$out_right
+ */
+function splitOnce($string, $separator, &$out_left, &$out_right)
+{
+	$seppos = strpos($string, $separator);
+	if($seppos === false) {
+		$out_left  = $string;
+		$out_right = '';
+	}
+	else {
+		$out_left  = substr($string, 0, $seppos);
+		$out_right = substr($string, $seppos + strlen($separator));
+	}
+}
+
 /** Formats the elements of the array into a string in the shape of '1, 2, 3 and 4'.
  * @param array $array 
  * @return string
@@ -717,36 +737,6 @@ function sendPostData($path, $data, $remoteurl = null)
 	return $result;
 }
 
-
-/**
- * @param string $filepath
- * @return array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:int}
- */
-function getModInfo($filepath)
-{
-	$modpeek = substr(PHP_OS, 0, 3) === 'WIN' ? 'util\\modpeek.exe' : 'mono util/modpeek.exe';
-	//NOTE(Rennorb): Unfortunately we cannot use exec, because that trims its output and therefore allows versions with whitespace at the end.
-	// That happens for both, the last line returned by exec, and the output param.
-	$idver = trim(shell_exec($modpeek.' -i -f '.escapeshellarg($filepath)), "\r\n");
-
-	if (empty($idver)) {
-		return ["modparse" => "error", "parsemsg" => "Unable to find mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb"];
-	}
-
-	$parts = explode(":", $idver);
-	if (count($parts) != 2) {
-		return ["modparse" => "error", "parsemsg" => "Unable to determine mod id and version, which must be present in any mod (.cs, .dll, or .zip). If you are certain you added it, please contact Rennorb"];
-	}
-
-	//TODO(Rennorb) @cleanup: Move this check out of here once modpeek upgrades are implemented.
-	// Since errors cause the data to not be saved, this can cause misleading error messages when roundtripping.
-	$version = compileSemanticVersion($parts[1]);
-	if($version === false) {
-		return ["modparse" => "error", "parsemsg" => "Mod version was malformed and could not be parsed as a semantic version (n.n.n[-{dev|pre|rc}.n])."];
-	}
-
-	return ["modparse" => "ok", "modid" => $parts[0], "modversion" => $version];
-}
 
 function getUserHash($userid, $joindate)
 {

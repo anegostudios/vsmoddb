@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`file` (
   `cdnpath` VARCHAR(255) NULL,
   `type` ENUM('portrait', 'asset', 'shape', 'texture', 'sound') NULL,
   `hasthumbnail` BOOL NOT NULL DEFAULT 0, -- could maybe be merged with type
-  `created` DATETIME NULL,
+  `created` DATETIME NOT NULL DEFAULT NOW(),
   `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `imagesize` POINT NULL, -- :ImageSizeMigration
   PRIMARY KEY (`fileid`),
@@ -96,16 +96,34 @@ CREATE TABLE IF NOT EXISTS `moddb`.`file` (
   INDEX `cdnpathidx` (`cdnpath`)) -- used for fast download pingback
 ENGINE = InnoDB;
 
--- -----------------------------------------------------
--- Table `moddb`.`modpeek_result`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`modpeek_result` (
-  `fileid` INT NOT NULL,
-  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `detectedmodidstr` VARCHAR(255),
-  `detectedmodversion` BIGINT UNSIGNED NOT NULL,
-  PRIMARY KEY (`fileid`))
+
+CREATE TABLE IF NOT EXISTS `moddb`.`ModPeekResult` (
+  `fileId`           INT             NOT NULL,
+  `errors`           TEXT                NULL,
+  `modIdentifier`    VARCHAR(255)        NULL,
+  `modVersion`       BIGINT UNSIGNED NOT NULL,
+  `type`             ENUM('Theme', 'Content', 'Code') NULL,
+  `side`             ENUM('Universal', 'Server', 'Client') NULL,
+  `requiredOnServer` BOOLEAN,
+  `requiredOnClient` BOOLEAN,
+  `networkVersion`   BIGINT UNSIGNED NOT NULL,
+  `description`      TEXT                NULL,
+  `iconPath`         VARCHAR(255)        NULL,
+  `website`          VARCHAR(255)        NULL,
+  `rawAuthors`       TEXT                NULL,
+  `rawContributors`  TEXT                NULL,
+  `rawDependencies`  TEXT                NULL,
+  PRIMARY KEY (`fileId`),
+  CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `file`(`fileid`) ON UPDATE CASCADE ON DELETE CASCADE)
 ENGINE = InnoDB;
+
+-- Idea for dependencies
+-- CREATE TABLE IF NOT EXISTS `moddb`.`ReleaseFileDependencies` (
+--   `fileId`               INT             NOT NULL,
+--   `dependencyIdentifier` VARCHAR(255)        NULL,
+--   `dependencyMinVersion` BIGINT UNSIGNED NOT NULL,
+--   CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `file`(`fileid`) ON UPDATE CASCADE ON DELETE CASCADE)
+-- ENGINE = InnoDB;
 
 -- -----------------------------------------------------
 -- Table `moddb`.`status`
