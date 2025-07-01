@@ -7,6 +7,7 @@ include($config['basepath'] . 'lib/edit-release.php');
 
 $existingRelease = null;
 $targetMod = null;
+$pushedErrorForCurrentFile = false; // This is here so we can push the errors even if the file is not submitted, but dont duplicate the error message in case it is.
 
 // /edit/release/?assetid=32 (edit existing release)
 if(!empty($_REQUEST['assetid'])) {
@@ -68,11 +69,16 @@ if(!empty($_POST['save'])) {
 	else {
 		// hovering files
 		$currentFiles = $con->getAll('
-			SELECT file.assetid, file.fileid, mpr.modIdentifier AS modIdentifier, mpr.modVersion AS modVersion
+			SELECT file.assetid, file.fileid, mpr.modIdentifier AS modIdentifier, mpr.modVersion AS modVersion, mpr.errors
 			FROM file
 			LEFT JOIN ModPeekResult mpr ON mpr.fileId = file.fileid
 			WHERE assetid IS NULL AND assettypeid = 2 AND userid = ?
 		', [$user['userid']]);
+
+		if(!empty($currentFiles[0]['errors'])) {
+			addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$currentFiles[0]['errors'], true);
+			$pushedErrorForCurrentFile = true;
+		}
 	}
 	/** @var array{'assetid':int, 'fileid':int, 'modIdentifier':string|null, 'modVersion':string|null}[] $currentFiles */
 
@@ -91,6 +97,7 @@ if(!empty($_POST['save'])) {
 			else if($targetMod['type'] === 'mod') {
 				if($processedFile['modparse'] === 'error') {
 					addMessage(MSG_CLASS_ERROR, 'Failed to parse modinfo: '.$processedFile['parsemsg'], true);
+					$pushedErrorForCurrentFile = true;
 				}
 				else {
 					$currentFiles[] = [
@@ -127,34 +134,29 @@ if(!empty($_POST['save'])) {
 			$newData['modidstr']   = $currentFiles[0]['modIdentifier'];
 			$newData['modversion'] = $currentFiles[0]['modVersion'];
 
-			if (!preg_match('/^[0-9a-zA-Z]+$/', $newData['modidstr'])) {
-				addMessage(MSG_CLASS_ERROR, "Detected modid '{$newData['modidstr']}' is not valid.", true); // @cleanup once modpeek is better
+			if (in_array($newData['modidstr'], ["game", "creative", "survival"])) { // Reserve special mod ids
+				addMessage(MSG_CLASS_ERROR, "This modid ('{$newData['modidstr']}') is reserved.");
 			}
 			else {
-				if (in_array($newData['modidstr'], ["game", "creative", "survival"])) { // Reserve special mod ids
-					addMessage(MSG_CLASS_ERROR, "This modid ('{$newData['modidstr']}') is reserved.");
-				}
-				else {
-					$sqlIgnoreExistingRelease = $existingRelease ? "r.releaseid != {$existingRelease['releaseid']} AND" : ''; // @security $existingRelease['releaseid'] comes from the database and is numeric, therefore sql inert.
-					$inUseBy = $con->getRow("
-						SELECT a.*, r.modid, r.modversion, m.assetid as modassetid, m.urlalias
-						FROM `release` r
-						JOIN asset a ON a.assetid = r.assetid
-						JOIN `mod` m ON m.modid = r.modid
-						WHERE $sqlIgnoreExistingRelease r.modidstr = ? AND (r.modid != ? || r.modversion = ?)
-						LIMIT 1
-					", [$newData['modidstr'], $targetMod['modid'], $newData['modversion']]);
+				$sqlIgnoreExistingRelease = $existingRelease ? "r.releaseid != {$existingRelease['releaseid']} AND" : ''; // @security $existingRelease['releaseid'] comes from the database and is numeric, therefore sql inert.
+				$inUseBy = $con->getRow("
+					SELECT a.*, r.modid, r.modversion, m.assetid as modassetid, m.urlalias
+					FROM `release` r
+					JOIN asset a ON a.assetid = r.assetid
+					JOIN `mod` m ON m.modid = r.modid
+					WHERE $sqlIgnoreExistingRelease r.modidstr = ? AND (r.modid != ? || r.modversion = ?)
+					LIMIT 1
+				", [$newData['modidstr'], $targetMod['modid'], $newData['modversion']]);
 
-					if ($inUseBy) {
-						if($inUseBy['modid'] == $targetMod['modid'] && $inUseBy['modversion'] == $newData['modversion']) {
-							$rv = formatSemanticVersion(intval($newData['modversion']));
-							addMessage(MSG_CLASS_ERROR, "This version ($rv) of the mod has already been released (<a href='/edit/release/?assetid={$inUseBy['assetid']}'>link</a>).");
-						}
-						else {
-							$mid = htmlspecialchars($newData['modidstr']);
-							$mpath = formatModPath(['urlalias' => $inUseBy['urlalias'], 'assetid' => $inUseBy['modassetid']]);
-							addMessage(MSG_CLASS_ERROR, "This modid ('$mid') is already in use by another mod (<a href='$mpath'>link</a>).");
-						}
+				if ($inUseBy) {
+					if($inUseBy['modid'] == $targetMod['modid'] && $inUseBy['modversion'] == $newData['modversion']) {
+						$rv = formatSemanticVersion(intval($newData['modversion']));
+						addMessage(MSG_CLASS_ERROR, "This version ($rv) of the mod has already been released (<a href='/edit/release/?assetid={$inUseBy['assetid']}'>link</a>).");
+					}
+					else {
+						$mid = htmlspecialchars($newData['modidstr']);
+						$mpath = formatModPath(['urlalias' => $inUseBy['urlalias'], 'assetid' => $inUseBy['modassetid']]);
+						addMessage(MSG_CLASS_ERROR, "This modid ('$mid') is already in use by another mod (<a href='$mpath'>link</a>).");
 					}
 				}
 			}
@@ -237,11 +239,15 @@ if($existingRelease) {
 else {
 	// hovering files
 	$files = $con->getAll("
-		SELECT *, file.fileid, CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) AS imagesize, mpr.modIdentifier, mpr.modVersion
+		SELECT *, file.fileid, CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) AS imagesize, mpr.modIdentifier, mpr.modVersion, mpr.errors
 		FROM file
 		LEFT JOIN ModPeekResult mpr ON mpr.fileId = file.fileid
 		WHERE assetid IS NULL AND assettypeid = 2 AND userid = ?
 	", [$user['userid']]);
+
+	if(!$pushedErrorForCurrentFile && !empty($files[0]['errors'])) {
+		addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$files[0]['errors'], true);
+	}
 }
 
 foreach($files as &$file) {

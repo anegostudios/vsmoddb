@@ -65,9 +65,10 @@ function modpeek($filepath, &$modInfo)
 
 	fclose($pipes[1]);
 	fclose($pipes[2]);
+	$status = proc_get_status($modpeek);
 	proc_close($modpeek);
 
-	return !$errors;
+	return $status['exitcode'] == 0 && !$errors;
 }
 
 /** Deserializes 'rawAuthors', 'rawContributors' and 'rawDependencies' into array fields 'authors', 'contributors' and 'dependencies'.
