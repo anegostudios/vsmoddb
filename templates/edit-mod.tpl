@@ -56,7 +56,7 @@
 			<label>Tags</label>
 			<select name="tagids[]" multiple>
 				{foreach from=$tags item=tag}
-					<option value="{$tag['tagid']}" title="{$tag['text']}"{if !empty($asset['tags'][$tag['tagid']])} selected="selected"{/if}>{$tag['name']}</option>
+					<option value="{$tag['tagId']}" title="{$tag['text']}"{if !empty($asset['tags'][$tag['tagId']])} selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
 			</select>
 		</div>
@@ -92,9 +92,9 @@
 				<label>Team Members</label>
 				<select name="teammemberids[]" multiple data-placeholder="Search Users"
 					data-url="/api/authors?name=\{name}" data-ownerid="{$asset['createdbyuserid']}">
-					{if !empty($teammembers)}
-						{foreach from=$teammembers item=teammember}
-							<option selected class="maybe-accepted{if !$teammember['pending']} accepted{/if}" value="{$teammember['userid']}" title="{$teammember['name']}">{$teammember['name']}</option>
+					{if !empty($teamMembers)}
+						{foreach from=$teamMembers item=teamMember}
+							<option selected class="maybe-accepted{if !$teamMember['pending']} accepted{/if}" value="{$teamMember['userid']}" title="{$teamMember['name']}">{$teamMember['name']}</option>
 						{/foreach}
 					{/if}
 				</select>
@@ -103,8 +103,8 @@
 			<div id="teameditors-box" class="editbox wide pending-markers">
 				<label>Team Members with edit permissions</label>
 				<select name="teammembereditids[]" multiple data-placeholder="Search Members">
-					{foreach from=$teammembers item=teammember}
-						<option {if $teammember['canedit']}selected{/if} class="maybe-accepted{if !$teammember['pending']} accepted{/if}" value="{$teammember['userid']}" title="{$teammember['name']}">{$teammember['name']}</option>
+					{foreach from=$teamMembers item=teamMember}
+						<option {if $teamMember['canEdit']}selected{/if} class="maybe-accepted{if !$teamMember['pending']} accepted{/if}" value="{$teamMember['userid']}" title="{$teamMember['name']}">{$teamMember['name']}</option>
 					{/foreach}
 				</select>
 			</div>
@@ -209,15 +209,15 @@
 						<label>Select new owner</label>
 						<small>Ownership can only be transferred by the current owner of this resource.</small>
 						<br>
-						<small>Ownership can only be transferred to an existing teammember.</small>
+						<small>Ownership can only be transferred to an existing team member.</small>
 						<br>
 						<small>A notification will be sent to the specified user, inviting them to accept ownership.</small>
 						<br>
 
 						<select name="newownerid">
 							<option value="" selected="selected">--- Select new owner ---</option>
-							{foreach from=$teammembers item=teammember}
-								{if !$teammember['pending']}<option value="{$teammember['userid']}" title="{$teammember['name']}">{$teammember['name']}</option>{/if}
+							{foreach from=$teamMembers item=teamMember}
+								{if !$teamMember['pending']}<option value="{$teamMember['userid']}" title="{$teamMember['name']}">{$teamMember['name']}</option>{/if}
 							{/foreach}
 						</select>
 					</div>

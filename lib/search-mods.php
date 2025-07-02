@@ -226,12 +226,12 @@ function queryModSearch($searchParams)
 			l.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
 			c.name AS `from`,
 			s.code AS statuscode,
-			f.userid AS following
+			f.userId AS following
 		FROM `mod` m
 		JOIN asset a ON a.assetid = m.assetid
 		LEFT JOIN user c ON c.userid = a.createdbyuserid
 		LEFT JOIN status s ON s.statusid = a.statusid
-		LEFT JOIN follow f ON f.modid = m.modid and f.userid = $currentUserId
+		LEFT JOIN UserFollowedMods f ON f.modId = m.modid and f.userId = $currentUserId
 		LEFT JOIN file l ON l.fileid = m.cardlogofileid
 		$joinClauses
 		$whereClauses

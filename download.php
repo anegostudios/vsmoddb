@@ -3,29 +3,32 @@
 // expects to be called as  download/132465[/somefile.png]
 // but the game client downloads it using ?fileid=1231 so we need to remain backwards compatible
 
-$fileid = intval($_GET["fileid"] ?? $urlparts[1] ?? 0);
-if($fileid === 0) showErrorPage(HTTP_BAD_REQUEST, 'Missing fileid.');
+$fileId = intval($_GET['fileid'] ?? $urlparts[1] ?? 0);
+if($fileId === 0) showErrorPage(HTTP_BAD_REQUEST, 'Missing fileid.');
 
-$file = $con->getRow("select * from file where fileid=?", array($fileid));
+$file = $con->getRow('SELECT * FROM `file` WHERE fileid = ?', [$fileId]);
 if (!$file) showErrorPage(HTTP_NOT_FOUND, 'File not found.');
 
 // do download tracking
-$date = $con->getOne("select date from downloadip where fileid=? and ipaddress=?", array($fileid, $_SERVER['REMOTE_ADDR']));
-$docount = false;
-if (!$date) {
-	$docount = true;
-	$con->Execute("insert into downloadip values (?, ?, now())", array($_SERVER['REMOTE_ADDR'], $fileid));
-} else if (strtotime($date) + 24*3600 < time()) {
-	$docount = true;
-	$con->Execute("update downloadip set date=now() where fileid=? and ipaddress=?", array($fileid, $_SERVER['REMOTE_ADDR']));
+$identifier = [$fileId, $_SERVER['REMOTE_ADDR']];
+
+$lastDownload = $con->getOne('SELECT lastDownload FROM FileDownloadTracking WHERE fileId = ? AND ipAddress = ?', $identifier);
+
+$countAsSeparateDownload = false;
+if (!$lastDownload) {
+	$countAsSeparateDownload = true;
+	$con->execute('INSERT INTO FileDownloadTracking (fileId, ipAddress) VALUES (?, ?)', $identifier);
+} else if (strtotime($lastDownload) - time() > 24*3600) {
+	$countAsSeparateDownload = true;
+	//TODO(Rennorb) @correctness: This does not produce the correct result for trending points.
+	$con->execute('UPDATE FileDownloadTracking SET lastDownload = NOW() WHERE fileId = ? and ipAddress = ?', $identifier);
 }
 
-if ($docount) {
-	$con->Execute("update file set downloads=downloads+1 where fileid=?", array($fileid));
-	$con->Execute("update `mod` set downloads=downloads+1 where modid=(select `release`.modid from `release` where `release`.assetid=?)", array($file['assetid']));
+if ($countAsSeparateDownload) {
+	$con->execute('UPDATE `file` SET downloads = downloads + 1 WHERE fileId = ?', [$fileId]);
+	$con->execute('UPDATE `mod`  SET downloads = downloads + 1 WHERE modid = (SELECT r.modid FROM `release` r WHERE r.assetid = ?)', [$file['assetid']]);
 }
 
 
 // redirect to actual download
-http_response_code(302);
-header('Location: '. formatCdnDownloadUrl($file));
+header('Location: '. formatCdnDownloadUrl($file), true, HTTP_FOUND);

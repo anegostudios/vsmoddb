@@ -210,23 +210,24 @@ function bunny_pullLogsAndUpdateDownloadNumbers($date)
 		$remoteip = $parts[3];
 
 
-		$file = $con->getRow("select * from file where cdnpath=?", array($cdnpath));
-		if (!$file) exit("file not found");
+		$file = $con->getRow('SELECT * FROM `file` WHERE cdnpath = ?', [$cdnpath]);
+		if (!$file) exit('file not found');
 		$fileid = $file['fileid'];
 
-		$olddate = $con->getOne("select date from downloadip where fileid=? and ipaddress=?", array($fileid, $remoteip));
-		$docount = false;
-		if (!$olddate) {
-			$docount = true;
-			$con->Execute("insert into downloadip values (?, ?, ?)", array($remoteip, $fileid, $date));
-		} else if (strtotime($olddate) + 24*3600 < $time) {
-			$docount = true;
-			$con->Execute("update downloadip set date=? where fileid=? and ipaddress=?", array($date, $fileid, $remoteip));
+		$lastDownload = $con->getOne('SELECT lastDownload FROM FileDownloadTracking WHERE fileId = ? and ipAddress = ?', [$fileid, $remoteip]);
+
+		$countAsSeparateDownload = false;
+		if (!$lastDownload) {
+			$countAsSeparateDownload = true;
+			$con->Execute('INSERT INTO FileDownloadTracking (lastUpdate, fileId, ipAddress) VALUES (?, ?, ?)', [$date, $fileid, $remoteip]);
+		} else if (strtotime($lastDownload) - $time > 24*3600) {
+			$countAsSeparateDownload = true;
+			$con->Execute('UPDATE FileDownloadTracking SET lastDownload = ? WHERE fileId = ? and ipAddress = ?', [$date, $fileid, $remoteip]);
 		}
 
-		if ($docount) {
-			$con->Execute("update file set downloads=downloads+1 where fileid=?", array($fileid));
-			$con->Execute("update `mod` set downloads=downloads+1 where modid=(select `release`.modid from `release` where `release`.assetid=?)", array($file['assetid']));
+		if ($countAsSeparateDownload) {
+			$con->Execute('UPDATE `file` SET downloads = downloads + 1 WHERE fileid = ?', [$fileid]);
+			$con->Execute('UPDATE `mod`  SET downloads = downloads + 1 WHERE modid = (SELECT r.modid FROM `release` r WHERE r.assetid = ?)', [$file['assetid']]);
 		}
 	}
 }

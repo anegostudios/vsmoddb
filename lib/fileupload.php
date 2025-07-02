@@ -50,7 +50,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 		}
 		
 		if (!canEditAsset($asset, $user)) {
-			return array("status" => "error", "errormessage" => 'No privilege to upload files to this asset. You may need to login again'); 
+			return array("status" => "error", "errormessage" => 'Missing permissions to upload files to this asset. You may need to login again'); 
 		}
 	}
 	
@@ -62,7 +62,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	$exts = explode("|", $assettype["allowedfiletypes"]);
 	
 	if (!in_array($ext, $exts)) {
-		return array("status" => "error", "errormessage" => 'Not allowed file type! Allowed is ' . implode(", ", $exts));
+		return array("status" => "error", "errormessage" => 'File type not allowed! Allowed are ' . implode(", ", $exts));
 	}
 	
 	if ($parentassetid) {

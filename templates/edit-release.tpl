@@ -87,7 +87,7 @@
 						<tr>
 							<td>{str_replace("\r\n", "<br>", $entry['text'])}</td>
 							<td>{$entry['username']}</td>
-							<td>{fancyDate($entry['lastmodified'])}</td>
+							<td>{fancyDate($entry['lastModified'])}</td>
 						</tr>
 					{/foreach}
 					</tbody>

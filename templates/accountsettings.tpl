@@ -52,9 +52,9 @@
 	</thead>
 	<tbody>
 		{foreach from=$followedMods item=followedMod}
-			<tr data-modid="{$followedMod['modid']}" data-flags="{$followedMod['flags']}">
+			<tr data-modid="{$followedMod['modId']}" data-flags="{$followedMod['flags']}">
 				<td><a href="{formatModPath($followedMod)}" target="_blank">{$followedMod['name']}</a></td>
-				<td><label class="toggle" for="ch-0-{$followedMod['modid']}"><input id="ch-0-{$followedMod['modid']}" data-bit="0" type="checkbox"{if $followedMod['flags'] & FOLLOW_FLAG_CREATE_NOTIFICATIONS} checked="true"{/if} autocomplete="off" /></label></td>
+				<td><label class="toggle" for="ch-0-{$followedMod['modId']}"><input id="ch-0-{$followedMod['modId']}" data-bit="0" type="checkbox"{if $followedMod['flags'] & FOLLOW_FLAG_CREATE_NOTIFICATIONS} checked="true"{/if} autocomplete="off" /></label></td>
 			</tr>
 		{/foreach}
 	</tbody>

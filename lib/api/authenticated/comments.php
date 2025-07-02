@@ -15,7 +15,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 		validateUserNotBanned();
 		validateContentType('text/html');
 
-		$comment = $con->getRow("select assetid, commentid, userid, text from comment where commentid = ? and !deleted", [$commentId]);
+		$comment = $con->getRow("SELECT assetid, commentid, userid, text FROM comment WHERE commentid = ? AND !deleted", [$commentId]);
 		if(!$comment)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown commentid.']);
 
 		$wasModAction = $user['userid'] != $comment['userid'];
@@ -30,12 +30,12 @@ switch($_SERVER['REQUEST_METHOD']) {
 			//TODO(Rennorb): Diff the strings and add the diff to the log.
 			$lastModAction = logModeratorAction($comment['userid'], $user['userid'], MODACTION_KIND_EDIT, $comment['commentid'], SQL_DATE_FOREVER, null);
 
-			$con->execute('update comment set text = ?, lastmodaction = ? where commentid = ?', [$commentHtml, $lastModAction, $commentId]);
+			$con->execute('UPDATE comment SET text = ?, lastmodaction = ? WHERE commentid = ?', [$commentHtml, $lastModAction, $commentId]);
 		}
 		else {
 			$changelog = "Modified their comment.";
 
-			$con->execute('update comment set text = ? where commentid = ?', [$commentHtml, $commentId]);
+			$con->execute('UPDATE comment SET text = ? WHERE commentid = ?', [$commentHtml, $commentId]);
 		}
 
 		logAssetChanges([$changelog], $comment['assetid']);
@@ -47,10 +47,10 @@ switch($_SERVER['REQUEST_METHOD']) {
 		validateUserNotBanned();
 
 		$comment = $con->getRow('
-			select comment.assetid, comment.commentid, comment.userid, asset.createdbyuserid as modcreatedby
-			from comment
-			join asset on asset.assetid = comment.assetid
-			where commentid = ? and !deleted
+			SELECT comment.assetid, comment.commentid, comment.userid, asset.createdbyuserid AS modcreatedby
+			FROM comment
+			JOIN asset ON asset.assetid = comment.assetid
+			WHERE commentid = ? AND !deleted
 		', [$commentId]);
 		if(!$comment)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown commentid.']);
 
@@ -62,14 +62,14 @@ switch($_SERVER['REQUEST_METHOD']) {
 		if($wasModAction) {
 			$lastModAction = logModeratorAction($comment['userid'], $user['userid'], MODACTION_KIND_DELETE, $comment['commentid'], SQL_DATE_FOREVER, null);
 	
-			$con->Execute('update comment set deleted = 1, lastmodaction = ? where commentid = ?', [$lastModAction, $commentId]);
-			$con->Execute('update `mod` set comments = comments - 1 where assetid = ?', [$comment["assetid"]]);
+			$con->Execute('UPDATE comment SET deleted = 1, lastmodaction = ? WHERE commentid = ?', [$lastModAction, $commentId]);
+			$con->Execute('UPDATE `mod` SET comments = comments - 1 WHERE assetid = ?', [$comment["assetid"]]);
 		
 			$changelog = "Deleted comment #$commentId of user #{$user['userid']}";
 		}
 		else {
-			$con->Execute('update comment set deleted = 1 where commentid = ?', [$commentId]);
-			$con->Execute('update `mod` set comments = comments - 1 where assetid = ?', [$comment["assetid"]]);
+			$con->Execute('UPDATE comment SET deleted = 1 WHERE commentid = ?', [$commentId]);
+			$con->Execute('UPDATE `mod` SET comments = comments - 1 WHERE assetid = ?', [$comment["assetid"]]);
 	
 			$changelog = "User #{$user['userid']} deleted own comment #$commentId";
 		}
@@ -77,7 +77,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 	
 		// Mark notifications for this comment as read so they get hidden for the notified user.
 		//NOTE(Rennorb): We could also delete them completely, but i opted to just "read" them. Arbitrary decision.
-		$con->Execute("update notification set `read` = 1 where `type` in ('mentioncomment', 'newcomment') and recordid = ?", [$commentId]);
+		$con->Execute("UPDATE Notifications SET `read` = 1 WHERE kind IN ('mentioncomment', 'newcomment') AND recordId = ?", [$commentId]);
 
 		good();
 

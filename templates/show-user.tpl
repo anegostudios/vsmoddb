@@ -33,7 +33,7 @@
 		<thead><th>Text</th><th>Assetid</th><th>Date</th></thead>
 		<tbody>
 		{foreach from=$changelog item=centry}
-			<tr><td>{$centry["text"]}</td><td>{$centry["assetid"]}</td><td>{fancyDate($centry["created"])}</td></tr>
+			<tr><td>{$centry["text"]}</td><td>{$centry["assetId"]}</td><td>{fancyDate($centry["created"])}</td></tr>
 		{/foreach}
 		</tbody>
 	</table>

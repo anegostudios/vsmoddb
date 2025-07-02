@@ -15,10 +15,10 @@ if (!empty($_GET["saved"])) {
 }
 
 
-$view->assign("rows", $con->getAll("select tag.*, assettype.name as assettypename from tag left join assettype on (tag.assettypeid = assettype.assettypeid) order by tag.assettypeid, tag.tagtypeid, tag.name"));
+$view->assign('rows', $con->getAll("SELECT *, LPAD(HEX(color), 8, '0') AS color FROM Tags ORDER BY kind, name"));
 
 
-$gameVersionStrings = $con->getCol('select version from GameVersions order by version desc');
+$gameVersionStrings = $con->getCol('SELECT version FROM GameVersions ORDER BY version DESC');
 $gameVersionStrings = array_map('formatSemanticVersion', $gameVersionStrings);
 $view->assign('gameVersionStrings', $gameVersionStrings, null, true);
 

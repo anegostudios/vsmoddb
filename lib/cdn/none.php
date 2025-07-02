@@ -45,12 +45,7 @@ function uploadToCdn($localpath, $cdnpath) {
 function deleteFromCdn($cdnpath) {
 	global $config;
 
-	$e = ErrorHandler::$errorreporting;
-	ErrorHandler::$errorreporting &= ~E_WARNING; // suppress warnings from non-existent deletions
-
-	$ok = unlink($config['basepath']."files/$cdnpath");
-	
-	ErrorHandler::$errorreporting = $e;
+	$ok = @unlink($config['basepath']."files/$cdnpath");
 	
 	return ['error' => $ok ? false : 'Unknown error during file removal.'];
 }

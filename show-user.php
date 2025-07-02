@@ -28,9 +28,9 @@ $authormods = $con->getAll("
 		join `mod` on asset.assetid = `mod`.assetid
 		left join status on asset.statusid = status.statusid
 		left join file as logofile on mod.cardlogofileid = logofile.fileid
-		left join teammember on `mod`.modid = teammember.modid
+		left join ModTeamMembers t on t.modId = `mod`.modid
 	where
-		(asset.createdbyuserid = ? or teammember.userid = ?) $sqlWhereExt
+		(asset.createdbyuserid = ? or t.userId = ?) $sqlWhereExt
 	group by asset.assetid
 	order by asset.created desc
 ", array($shownuser['userid'], $shownuser['userid']));
@@ -49,7 +49,7 @@ foreach ($authormods as &$row) {
 
 	foreach ($tagdata as $tagrow) {
 		$parts = explode(",", $tagrow);
-		$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagid' => $parts[2]);
+		$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagId' => $parts[2]);
 	}
 
 	$row['tags'] = $tags;
@@ -57,7 +57,7 @@ foreach ($authormods as &$row) {
 unset($row);
 
 if (canModerate($shownuser, $user)) {
-	$changelog = $con->getAll("select * from changelog where userid=? order by created desc limit 100", array($shownuser["userid"]));
+	$changelog = $con->getAll('SELECT text, assetId, created FROM Changelogs WHERE userId = ? ORDER BY created DESC LIMIT 100', [$shownuser["userid"]]);
 	$view->assign("changelog", $changelog);
 }
 

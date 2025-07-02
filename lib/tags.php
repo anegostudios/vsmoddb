@@ -1,25 +1,11 @@
 <?php
 
 $tagsortby = array(
-	2 => "version",
 	1 => "name"
 );
 
-function sortTags($assettypeid, $tags) {
-	global $tagsortby;
-	
-	$sortby = "name";	
-	if (array_key_exists($assettypeid, $tagsortby)) {
-		$sortby = $tagsortby[$assettypeid];
-	}
-	
-	if ($sortby == "version") {
-		usort($tags, "cmpVersionTag");
-	}
-	if ($sortby == "name") {
-		usort($tags, "cmpTagName");
-	}
-	
+function sortTags($_, $tags) {
+	usort($tags, "cmpTagName");
 	return $tags;
 }
 

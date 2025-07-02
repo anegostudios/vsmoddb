@@ -49,9 +49,9 @@ $view->assign('totalModCount', $con->getOne('SELECT COUNT(*) from `mod`'), null,
 
 
 // insert db record
-function insert($tablename, $recordid = null, $con = null)
+function insert($tablename)
 {
-	if (!$con) $con = $GLOBALS['con'];
+	global $con;
 
 	$con->Execute("insert into `{$tablename}` (created) values (now())");
 
@@ -59,9 +59,9 @@ function insert($tablename, $recordid = null, $con = null)
 }
 
 // update db record
-function update($tablename, $recordid, $data, $con = null)
+function update($tablename, $recordid, $data)
 {
-	if (!$con) $con = $GLOBALS['con'];
+	global $con;
 
 	$columnnames = array();
 	$values = array();
@@ -343,32 +343,32 @@ const SQL_MOD_CARD_TRANSITION_DATE = "2025-03-10 15:50:00";
 
 /**
  * @param string[] $changes
- * @param int $assetid
+ * @param int $assetId
  */
-function logAssetChanges($changes, $assetid)
+function logAssetChanges($changes, $assetId)
 {
+	if (empty($changes)) return;
 	global $con, $user;
 
-	if (!empty($changes)) {
-		$change = $con->getRow('
-			SELECT *
-			FROM changelog
-			WHERE userid = ? AND assetid = ? AND lastmodified >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
-			ORDER BY created DESC
-			LIMIT 1
-		', [$user['userid'], $assetid]);
-		if ($change) {
-			$changesdb = explode("\r\n", $change["text"]);
-			$changelogid = $change["changelogid"];
+	$changes = implode("\r\n", $changes);
 
-			$changes = array_merge($changes, $changesdb);
-		}
+	$activeChangeId = $con->getOne(<<<SQL
+		SELECT changelogId
+		FROM Changelogs
+		WHERE userId = ? AND assetId = ? AND lastModified >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+		ORDER BY created DESC
+		LIMIT 1
+	SQL, [$user['userid'], $assetId]);
 
-		if (!$change) {
-			$changelogid = insert("changelog");
-		}
-
-		update("changelog", $changelogid, array("assetid" => $assetid, "userid" => $user["userid"], "text" => implode("\r\n", $changes)));
+	if ($activeChangeId) {
+		$con->execute("UPDATE Changelogs SET text = CONCAT(?, '\n\r', text) WHERE changelogId = ?",
+			[$changes, $activeChangeId]
+		);
+	}
+	else {
+		$con->execute('INSERT INTO Changelogs (assetId, userId, text) VALUES (?, ?, ?)',
+			[$assetId, $user["userid"], $changes]
+		);
 	}
 }
 
@@ -401,18 +401,18 @@ const SQL_DATE_FORMAT = "Y-m-d H:i:s";
 
 
 /**
- * @param int            $targetuserId
- * @param int            $moderatoruserId
+ * @param int            $targetUserId
+ * @param int            $moderatorUserId
  * @param MODACTION_KIND $kind
- * @param int            $recordId The id of the related record in the type-specific table.
+ * @param int            $recordId The id of the related record in the kind-specific table.
  * @param string         $until
  * @param string|null    $reason
  * @return int generated modaction id
  */
-function logModeratorAction($targetuserId, $moderatoruserId, $kind, $recordId, $until, $reason)
+function logModeratorAction($targetUserId, $moderatorUserId, $kind, $recordId, $until, $reason)
 {
 	global $con;
-	$con->Execute('insert into moderationrecord (targetuserid, moderatorid, kind, recordid, until, reason) values (?,?,?,?,?,?)', [$targetuserId, $moderatoruserId, $kind, $recordId, $until, $reason]);
+	$con->Execute('insert into moderationrecord (targetuserid, moderatorid, kind, recordid, until, reason) values (?,?,?,?,?,?)', [$targetUserId, $moderatorUserId, $kind, $recordId, $until, $reason]);
 	return $con->Insert_ID();
 }
 
@@ -819,6 +819,7 @@ function maybeFormatDownloadTrackingUrlDependingOnFileExt($file)
 }
 
 const HTTP_CREATED             = 201;
+const HTTP_FOUND               = 302;
 const HTTP_BAD_REQUEST         = 400;
 const HTTP_UNAUTHORIZED        = 401;
 const HTTP_FORBIDDEN           = 403;
@@ -892,3 +893,6 @@ const HEADER_HIGHLIGHT_SUBMIT_MOD    = 3;
 const HEADER_HIGHLIGHT_NOTIFICATIONS = 4;
 const HEADER_HIGHLIGHT_ADMIN_TOOLS   = 5;
 const HEADER_HIGHLIGHT_CURRENT_USER  = 6;
+
+
+const TAG_KIND_PREDEFINED = 2;

@@ -23,14 +23,14 @@ $action = $urlparts[0];
 
 switch ($action) {
 	case "tags":
-		$rows = $con->getAll("select tagid, name, text, color from tag where assettypeid=1");
+		$rows = $con->getAll("select tagId, name, text, color from Tags");
 		$rows = sortTags(1, $rows);
 		$tags = array();
 		foreach ($rows as $row) {
 			$tags[] = array(
-				"tagid" => intval($row["tagid"]),
+				"tagid" => intval($row["tagId"]),
 				"name" => $row['name'],
-				"color" => $row["color"]
+				"color" => '#'.str_pad($row["color"], 8, '0', STR_PAD_LEFT),
 			);
 		}
 		good(array("statuscode" => 200, "tags" => $tags));
@@ -105,8 +105,7 @@ switch ($action) {
 
 	case "changelogs":
 		$error = 'This information was previously available, but is no longer distributed. Version 2 of the api might provide this information at some point in the future.';
-		header('Cache-Control: no-cache, no-store');
-		header('Clear-Site-Data: "cache"');
+		header('Cache-Control: max-age=604800, immutable');
 		exit(json_encode(array(
 			"statuscode" => "410",
 			"changelogs" => [

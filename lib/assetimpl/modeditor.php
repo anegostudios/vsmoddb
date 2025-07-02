@@ -51,32 +51,32 @@ class ModEditor extends AssetEditor
 		}
 
 		if ($this->assetid && canEditAsset($this->asset, $user, false)) {
-			$modId = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
+			$modId = $con->getOne('SELECT modid FROM `mod` WHERE assetid = ?', [$this->assetid]);
 
-			$teammembers = $con->getAll("
-					select u.*, t.canedit, 0 as `pending`
-					from user u
-					join teammember t on u.userid = t.userid
-					where t.modid = ? and u.userid != ?
-				union
-					select u.*, (n.recordid & 1 << 30) as `canedit`, 1 as `pending`
-					from notification n
-					join user u on u.userid = n.userid
-					where n.type = 'teaminvite' and n.`read` = 0 and (n.recordid & ((1 << 30) - 1)) = ? -- :InviteEditBit
-			", array($modId, $user['userid'], $modId));
+			$teamMembers = $con->getAll(<<<SQL
+					SELECT u.*, t.canEdit, 0 AS `pending`
+					FROM user u
+					JOIN ModTeamMembers t ON u.userid = t.userId
+					WHERE t.modId = ? AND u.userid != ?
+				UNION
+					SELECT u.*, (n.recordId & 1 << 30) AS `canEdit`, 1 AS `pending`
+					FROM Notifications n
+					JOIN user u ON u.userid = n.userId
+					WHERE n.kind = 'teaminvite' AND !n.`read` AND (n.recordId & ((1 << 30) - 1)) = ? -- :InviteEditBit
+			SQL, [$modId, $user['userid'], $modId]);
 
-			$view->assign("teammembers", $teammembers);
+			$view->assign("teamMembers", $teamMembers);
 
 			$this->handleRevokeNewOwnership($modId);
 		}
 
-		$logoData = $this->assetid ? $con->getRow('
-			select file_db.cdnpath as path_db, file_external.cdnpath as path_external
-			from `mod` 
-			left join file as file_db on file_db.fileid = `mod`.cardlogofileid
-			left join file as file_external on file_external.fileid = `mod`.embedlogofileid
-			where `mod`.assetid = ?
-		', [$this->assetid]) : null; // @perf
+		$logoData = $this->assetid ? $con->getRow(<<<SQL
+			SELECT file_db.cdnpath AS path_db, file_external.cdnpath AS path_external
+			FROM `mod` m
+			LEFT JOIN file AS file_db ON file_db.fileid = m.cardlogofileid
+			LEFT JOIN file AS file_external ON file_external.fileid = m.embedlogofileid
+			WHERE m.assetid = ?
+		SQL, [$this->assetid]) : null; // @perf
 		$previewData = array_merge($this->asset, [
 			'statuscode'  => 'draft',
 			'legacylogo'  => false,
@@ -90,14 +90,14 @@ class ModEditor extends AssetEditor
 
 		if($this->asset['statusid'] == STATUS_LOCKED) {
 			$lockInfo = $con->getRow("
-				select r.reason, n.notificationid
-				from moderationrecord r
-				left join notification n on n.type = 'modunlockrequest' and n.recordid = ? and n.created >= r.created
-				where r.kind = ".MODACTION_KIND_LOCK.' and r.until >= NOW() and r.recordid = ?
-				order by r.until desc, r.actionid desc
-			', [$modId, $modId]);
+				SELECT r.reason, n.notificationId
+				FROM moderationrecord r
+				LEFT JOIN Notifications n ON n.kind = 'modunlockrequest' AND n.recordId = ? AND n.created >= r.created
+				WHERE r.kind = ".MODACTION_KIND_LOCK." AND r.until >= NOW() AND r.recordid = ?
+				ORDER BY r.until DESC, r.actionid DESC
+			", [$modId, $modId]);
 			$lockReason = htmlspecialchars($lockInfo['reason']);
-			if($lockInfo['notificationid']) {
+			if($lockInfo['notificationId']) {
 				$nextStepHint = !canModerate(null, $user) 
 					? 'You have submitted for review and will receive a notification once the review has concluded.'
 					: 'The author has submitted the current state for review.';
@@ -107,14 +107,14 @@ class ModEditor extends AssetEditor
 				$nextStepHint = '';
 				$callToAction = '<p>Address these issues and submit for a review to get your mod published again.</p>';
 			}
-			addMessage(MSG_CLASS_ERROR.' permanent', "
+			addMessage(MSG_CLASS_ERROR.' permanent', <<<HTML
 				<h3 style='text-align: center;'>This mod has been locked by a moderator.</h3>
 				<p>
 					<h4 style='margin-bottom: 0.25em;'>Reason:</h4>
 					<blockquote>{$lockReason}</blockquote>
 				</p>
 				$callToAction
-			");
+			HTML);
 			if($nextStepHint) addMessage(MSG_CLASS_OK.' permanent', $nextStepHint);
 		}
 	}
@@ -227,7 +227,11 @@ class ModEditor extends AssetEditor
 		$con->execute('update `mod` set descriptionsearchable = ? where assetid = ?', [textContent($_POST['text']), $this->assetid]);
 
 		if(canEditAsset($this->asset, $user, false)) $this->updateTeamMembers($modid);
-		if($this->asset['createdbyuserid'] == $user['userid']) $this->updateNewOwner($modid);
+		if($this->asset['createdbyuserid'] == $user['userid']) {
+			if(!$this->updateNewOwner($modid)) {
+				return "error";
+			}
+		}
 
 		if ($statusreverted) {
 			static::unsetOkMessages();
@@ -269,7 +273,7 @@ class ModEditor extends AssetEditor
 			if($file['imagesize'] === null) {
 				$localpath = tempnam(sys_get_temp_dir(), '');
 				$originalfile = @file_get_contents(formatCdnUrl($file));
-				if (file_put_contents($localpath, $originalfile) === false) {
+				if ($originalfile === false || file_put_contents($localpath, $originalfile) === false) {
 					unlink($localpath);
 					continue;
 				}
@@ -368,10 +372,10 @@ class ModEditor extends AssetEditor
 			return ['status' => 'error', 'errormessage' => 'CDN Error: '.$uploadResult['error']];
 		}
 
-		$con->execute("
-			insert into file (created, assetid, assettypeid, userid, filename, cdnpath, hasthumbnail, imagesize)
-			values (now(), ?, ?, ?, ?, ?, 1, POINT(480, 320))
-		", [$file['assetid'], $file['assettypeid'], $file['userid'], $filename, $cdnPath]);
+		$con->execute(<<<SQL
+			INSERT INTO `file` (assetid, assettypeid, userid, filename, cdnpath, hasthumbnail, imagesize)
+			VALUES (?, ?, ?, ?, ?, 1, POINT(480, 320))
+		SQL, [$file['assetid'], $file['assettypeid'], $file['userid'], $filename, $cdnPath]);
 
 		return ['status' => 'ok', 'fileid' => $con->Insert_ID()];
 	}
@@ -383,11 +387,12 @@ class ModEditor extends AssetEditor
 		if (!$this->assetid || $this->asset['createdbyuserid'] != $user['userid'])  return;
 
 		// Check if ownership transfer invitation has been sent to a user
-		$newOwner = $con->getRow("select u.userid, u.name, n.notificationid
-			from notification as n
-			join user u on u.userid = n.userid
-			where type = 'modownershiptransfer' and recordid = ? and `read` = 0
-		", array($modId));
+		$newOwner = $con->getRow(<<<SQL
+			SELECT u.userid, u.name, n.notificationId
+			FROM Notifications AS n
+			JOIN user u ON u.userid = n.userId
+			WHERE n.kind = 'modownershiptransfer' AND n.recordId = ? AND !n.`read`
+		SQL, array($modId));
 			
 		if (empty($newOwner)) return;
 		$view->assign("ownershipTransferUser", $newOwner['name']);
@@ -395,7 +400,7 @@ class ModEditor extends AssetEditor
 		if (empty($_GET['revokenewownership'])) return;
 
 		// Mark notification to new owner as read without doing anything else. Effectively ignores the offer.
-		$con->Execute("update notification set `read` = 1 WHERE notificationid = ?", [$newOwner['notificationid']]);
+		$con->Execute('UPDATE Notifications SET `read` = 1 WHERE notificationId = ?', [$newOwner['notificationId']]);
 
 		logAssetChanges(['Ownership migration aborted'], $this->assetid);
 
@@ -414,8 +419,8 @@ class ModEditor extends AssetEditor
 		$newEditorMemberIds = filter_input(INPUT_POST, 'teammembereditids', FILTER_VALIDATE_INT, FILTER_FORCE_ARRAY) ?? [];
 		$newEditorMemberIds = array_flip($newEditorMemberIds);
 
-		$oldMembers = $con->getAll("select userid, canedit, teammemberid from teammember where modid = ?", array($modId));
-		$oldMembers = array_combine(array_column($oldMembers, 'userid'), $oldMembers);
+		$oldMembers = $con->getAll("select userId, canEdit, teamMemberId from ModTeamMembers where modId = ?", array($modId));
+		$oldMembers = array_combine(array_column($oldMembers, 'userId'), $oldMembers);
 
 		$changes = array();
 
@@ -427,22 +432,22 @@ class ModEditor extends AssetEditor
 			$mergedId = $modId | $editBit;
 
 			if (!array_key_exists($newMemberId, $oldMembers)) {
-				$invitation = $con->getRow("select notificationid, recordid from notification where type = 'teaminvite' and `read` = 0 and userid = ? and (recordid & ((1 << 30) - 1)) = ?", array($newMemberId, $modId));
+				$invitation = $con->getRow("SELECT notificationId, recordId FROM Notifications WHERE kind = 'teaminvite' AND !`read` AND userid = ? AND (recordId & ((1 << 30) - 1)) = ?", [$newMemberId, $modId]);
 				if(empty($invitation)) {
-					$con->execute("insert into notification (type, userid, recordid) VALUES ('teaminvite', ?, ?)", array($newMemberId, $mergedId));
+					$con->execute("INSERT INTO Notifications (kind, userid, recordId) VALUES ('teaminvite', ?, ?)", [$newMemberId, $mergedId]);
 
 					$changes[] = "User #{$user['userid']} invited user #{$newMemberId} to join the team".($editBit ? ' with edit permissions' : '').'.';
 				}
-				else if ($invitation['recordid'] != $mergedId) {
-					$con->execute("update notification set recordid = ? where notificationid = ?", array($mergedId, $invitation['notificationid']));
+				else if ($invitation['recordId'] != $mergedId) {
+					$con->execute('UPDATE Notifications SET recordId = ? WHERE notificationId = ?', [$mergedId, $invitation['notificationId']]);
 
 					$changes[] = $editBit
 						? "User #{$user['userid']} promoted invitation to user #{$newMemberId} to editor."
 						: "User #{$user['userid']} demoted invitation to user #{$newMemberId} to normal member.";
 				}
 			}
-			else if (boolval($oldMembers[$newMemberId]['canedit']) !== boolval($editBit)) {
-				$con->execute("update teammember set canedit = ? where teammemberid = ?", array($editBit ? 1 : 0, $oldMembers[$newMemberId]['teammemberid']));
+			else if (boolval($oldMembers[$newMemberId]['canEdit']) !== boolval($editBit)) {
+				$con->execute('UPDATE ModTeamMembers SET canEdit = ? WHERE teamMemberId = ?', [$editBit ? 1 : 0, $oldMembers[$newMemberId]['teamMemberId']]);
 
 				$changes[] = $editBit
 					? "User #{$user['userid']} promoted teammember user #{$newMemberId} to editor."
@@ -453,36 +458,40 @@ class ModEditor extends AssetEditor
 		}
 
 		foreach ($oldMembers as $member) {
-			$con->Execute("delete from teammember where teammemberid = ?", array($member['teammemberid']));
+			$con->Execute('DELETE FROM ModTeamMembers WHERE teamMemberId = ?', [$member['teamMemberId']]);
 			$changes[] = "User #{$user['userid']} removed teammember user #{$member['userid']}.";
 		}
 
 		logAssetChanges($changes, $this->assetid);
 	}
 
+	/**
+	 * @param int $modId
+	 * @return bool
+	 */
 	function updateNewOwner($modId)
 	{
-		global $con, $view, $user;
+		global $con, $user;
 
 		$newOwnerId = filter_input(INPUT_POST, 'newownerid', FILTER_VALIDATE_INT);
-		if($newOwnerId === false) return;
+		if($newOwnerId === false) return true;
 
-		$currentNewOwnerId = $con->getOne("select userid from notification where type = 'modownershiptransfer' and `read` = 0 and recordid = ?", array($modId));
+		$currentNewOwnerId = $con->getOne("SELECT userId FROM Notifications WHERE kind = 'modownershiptransfer' AND !`read` AND recordId = ?", [$modId]);
 		if ($currentNewOwnerId) {
 			addMessage(MSG_CLASS_ERROR, 'An invitation to transfer ownership has already been sent to '.($currentNewOwnerId == $newOwnerId ? 'this user.' : 'a different user.'));
-			return;
+			return false;
 		}
 
-		$isTeamMember = $con->getOne("select 1 from teammember where modid = ? and userid = ?", array($modId, $newOwnerId));
-		if ($isTeamMember) {
+		$isTeamMember = $con->getOne('SELECT 1 FROM ModTeamMembers WHERE modId = ? AND userId = ?', [$modId, $newOwnerId]);
+		if (!$isTeamMember) {
 			addMessage(MSG_CLASS_ERROR, 'The user selected for ownership transfer is not a team member.');
-			return;
+			return false;
 		}
 
-		$con->Execute("insert into notification (type, userid, recordid) VALUES ('modownershiptransfer', ?, ?)", array($newOwnerId, $modId));
+		$con->Execute("INSERT INTO Notifications (kind, userid, recordId) VALUES ('modownershiptransfer', ?, ?)", [$newOwnerId, $modId]);
 
 		logAssetChanges(["User #{$user['userid']} initiated a ownership transfer to user #{$newOwnerId}"], $this->assetid);
 
-		return;
+		return true;
 	}
 }

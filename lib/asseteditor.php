@@ -117,36 +117,29 @@ class AssetEditor extends AssetController
 
 		$view->assign("files", $this->files);
 
-		$comments = $con->getAll("
-			select 
-				comment.*,
-				user.name as username,
-				ifnull(user.banneduntil >= now(), 0) as `isbanned`
-			from 
-				comment 
-				join user on (comment.userid = user.userid)
-			where assetid=? and comment.deleted = 0
-			order by comment.created desc
-		", array($this->assetid));
+		$comments = $con->getAll(<<<SQL
+			SELECT comment.*, user.name AS username, IFNULL(user.banneduntil >= NOW(), 0) AS `isbanned`
+			FROM comment 
+			JOIN user ON user.userid = comment.userid
+			WHERE assetid = ? AND comment.deleted = 0
+			ORDER BY comment.created DESC
+		SQL, [$this->assetid]);
 
 		$view->assign("comments", $comments, null, true);
 
 
-		$changelogs = $con->getAll("
-			select
-				changelog.*,
-				user.name as username
-			from
-				changelog
-				join user on (changelog.userid = user.userid)
-			where changelog.assetid = ?
-			order by created desc
-			limit 20
-		", array($this->assetid));
+		$changelogs = $con->getAll(<<<SQL
+			SELECT ch.text, ch.lastModified, user.name AS username
+			FROM Changelogs ch
+			JOIN user ON user.userid = ch.userId
+			WHERE ch.assetId = ?
+			ORDER BY ch.created DESC
+			LIMIT 20
+		SQL, [$this->assetid]);
 
 		$view->assign("changelogs", $changelogs);
 
-		$assettypes = $con->getAll("select * from assettype");
+		$assettypes = $con->getAll('SELECT * FROM assettype');
 		$view->assign("assettypes", $assettypes);
 	}
 
@@ -313,20 +306,20 @@ class AssetEditor extends AssetController
 
 				$createdById = intval($this->asset['createdbyuserid']);
 				// @security: $modId and $createdById are known to be integers and therefore sql inert.
-				$con->execute("insert into notification (type, recordid, userid) values ('modunlocked', $modId, $createdById)");
+				$con->execute("INSERT INTO Notifications (kind, recordId, userId) values ('modunlocked', $modId, $createdById)");
 				// Read the unlock request just in case we didn't before and only publsihed the mod again.
-				$con->execute("update notification set `read` = 1 where type = 'modunlockrequest' and userid = ? and recordid = ?", [$user['userid'], $modId]);
+				$con->execute("UPDATE Notifications SET `read` = 1 WHERE kind = 'modunlockrequest' AND userId = ? AND recordId = ?", [$user['userid'], $modId]);
 			}
 			else {
 				$moderatorUserId = $con->getOne('
-					select moderatorid
-					from moderationrecord
-					where kind = '.MODACTION_KIND_LOCK." and until >= NOW() and recordid = $modId
+					SELECT moderatorid
+					FROM moderationrecord
+					WHERE kind = '.MODACTION_KIND_LOCK." and until >= NOW() and recordid = $modId
 				");
 				// @security: $modId and $moderatorUserId are known to be integers and therefore sql inert.
-				$requestExists = $con->getOne("select 1 from notification where type = 'modunlockrequest' and `read` = 0 and recordid = $modId and userid = $moderatorUserId");
+				$requestExists = $con->getOne("SELECT 1 FROM Notifications WHERE kind = 'modunlockrequest' AND !`read` AND recordId = $modId AND userId = $moderatorUserId");
 				if(!$requestExists) { // prevent spam :BlockedUnlockRequest
-					$con->execute("insert into notification (type, recordid, userid) values ('modunlockrequest', $modId, $moderatorUserId)");
+					$con->execute("INSERT INTO Notifications (kind, recordId, userid) VALUES ('modunlockrequest', $modId, $moderatorUserId)");
 				}
 			}
 		}
@@ -374,54 +367,53 @@ class AssetEditor extends AssetController
 
 		$view->assign("user", $user);
 
-		$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
-
-		$tags = $con->getAll("select * from tag where assettypeid=?", array($assettypeid));
-		$tags = sortTags($assettypeid, $tags);
-
+		$tags = $this->tablename === 'mod' ? $con->getAll("SELECT * FROM Tags ORDER BY name") : [];
 		$view->assign("tags", $tags);
+
 		$view->assign("asset", $this->asset);
 
 		$this->displayTemplate($this->editTemplateFile);
 	}
 
-	function updateTags($assetid)
+	/**
+	 * @param int $assetId
+	 * @return string[] changelog
+	 */
+	function updateTags($assetId)
 	{
 		global $con;
 
-		$rows = $con->getCol("select tagid from assettag where assetid=?", array($assetid));
-		$tagids = array_combine($rows, array_fill(0, count($rows), 1));
+		$tagIds = array_flip($con->getCol("SELECT tagid FROM assettag WHERE assetid = ?", [$assetId]));
 
-		$changes = array();
-
-		$tagdata = array();
+		$changes = [];
+		$tagData = [];
 
 		if (!empty($_POST["tagids"])) {
 
-			foreach ($_POST["tagids"] as $tagid) {
-				$tag = $con->getRow("select * from tag where tagid=?", array($tagid));
+			foreach ($_POST["tagids"] as $tagId) {
+				$tag = $con->getRow('SELECT * FROM Tags WHERE tagId = ?', [$tagId]);
 
-				$assettagid = $con->getOne("select assettagid from assettag where assetid=? and tagid=?", array($assetid, $tagid));
-				if (!$assettagid) {
-					$assettagid = insert("assettag");
-					update("assettag", $assettagid, array("assetid" => $assetid, "tagid" => $tagid));
+				$assetTagId = $con->getOne("SELECT assettagid from assettag where assetid = ? and tagid = ?", [$assetId, $tagId]);
+				if (!$assetTagId) {
+					$assetTagId = insert("assettag");
+					$con->execute('UPDATE assettag SET assetid = ?, tagid = ? WHERE assettagid = ?', [$assetId, $tagId, $assetTagId]);
 					$changes[] = "Added tag '{$tag['name']}'";
 				}
 
-				unset($tagids[$tagid]);
+				unset($tagIds[$tagId]);
 
-				$tagdata[] = $tag["name"] . "," . $tag["color"] . "," . $tag["tagid"];
+				$tagData[] = $tag["name"] . ",#" . str_pad(dechex($tag["color"]), 8, '0') . "," . $tag["tagId"];
 			}
 		}
 
-		foreach ($tagids as $tagid => $one) {
-			$con->Execute("delete from assettag where assetid=? and tagid=?", array($assetid, $tagid));
+		foreach ($tagIds as $tagId => $_) {
+			$con->Execute('DELETE FROM assettag WHERE assetid = ? AND tagid = ?', [$assetId, $tagId]);
 
-			$tagname = $con->getOne("select name from tag where tagid=?", array($tagid));
+			$tagname = $con->getOne('SELECT name FROM Tags WHERE tagId = ?', [$tagId]);
 			$changes[] = "Deleted tag '{$tagname}'";
 		}
 
-		update("asset", $assetid, array("tagscached" => implode("\r\n", $tagdata)));
+		$con->execute('UPDATE asset SET tagscached = ? WHERE assetid = ?', [implode("\r\n", $tagData), $assetId]);
 
 		return $changes;
 	}

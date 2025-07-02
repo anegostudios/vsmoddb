@@ -44,10 +44,10 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	$con->execute('UPDATE `mod` set lastreleased = NOW() WHERE modid = ?', [$mod['modid']]);
 
 	$con->Execute("
-		INSERT INTO notification (userid, type, recordid)
-		SELECT userid, 'newrelease', ?
-		FROM follow
-		WHERE modid = ? AND flags & ".FOLLOW_FLAG_CREATE_NOTIFICATIONS."
+		INSERT INTO Notifications (userId, kind, recordId)
+		SELECT userId, 'newrelease', ?
+		FROM UserFollowedMods
+		WHERE modId = ? AND flags & ".FOLLOW_FLAG_CREATE_NOTIFICATIONS."
 	", [$mod['modid'], $mod['modid']]);
 
 	return $con->completeTrans() ? $assetId : 0;

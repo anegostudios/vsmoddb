@@ -268,14 +268,14 @@ foreach($allGameVersions as &$gameVersion) {
 unset($gameVersion);
 
 
-$assetChangelog = $existingRelease ? $con->getAll('
-	SELECT changelog.*, user.name as username
-	FROM changelog
-	JOIN user ON changelog.userid = user.userid
-	WHERE changelog.assetid = ?
-	ORDER BY created DESC
+$assetChangelog = $existingRelease ? $con->getAll(<<<SQL
+	SELECT ch.text, ch.lastModified, user.name AS username
+	FROM Changelogs ch
+	JOIN user ON ch.userid = user.userid
+	WHERE ch.assetid = ?
+	ORDER BY ch.created DESC
 	LIMIT 20
-', [$existingRelease['assetid']]) : [];
+SQL, [$existingRelease['assetid']]) : [];
 
 
 

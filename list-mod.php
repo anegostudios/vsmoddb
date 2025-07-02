@@ -60,7 +60,7 @@ foreach($gameVersions as &$version) {
 }
 unset($version);
 
-$tags = $con->getAll('SELECT tagid, `name`, `text` FROM tag WHERE assettypeid = 1 ORDER BY `name`');
+$tags = $con->getAll('SELECT tagId, `name`, `text` FROM Tags ORDER BY `name`');
 
 
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_MODS, null, true);

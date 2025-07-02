@@ -103,15 +103,15 @@
 			<div class="infobox{if empty($asset['trailervideourl']) && empty($files)} nomedia{/if}">
 				<span class="text-weak">Tags:</span>
 				{foreach from=$tags item=tag}
-					<a href="/list/mod/?tagids[]={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}"
+					<a href="/list/mod/?tagids[]={$tag['tagId']}" class="tag" style="background-color:{$tag['color']}"
 						title="{$tag['text']}">#{$tag['name']}</a>
 				{/foreach}
 				<br>
 
-				{if !empty($teammembers)}
+				{if !empty($teamMembers)}
 					<span class="text-weak">Authors:</span>
 
-					<a class="username" href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>{foreach from=$teammembers item=teammember}, <a class="username" href="/show/user/{$teammember['usertoken']}">{$teammember['name']}</a>{/foreach}
+					<a class="username" href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>{foreach from=$teamMembers item=teamMember}, <a class="username" href="/show/user/{$teamMember['usertoken']}">{$teamMember['name']}</a>{/foreach}
 				{else}
 					<span class="text-weak">Author:</span> <a class="username" href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>
 				{/if}
@@ -123,7 +123,7 @@
 				<span class="text-weak">Last modified:</span> {fancyDate($asset['lastreleased'])}<br>
 				<span class="text-weak">Downloads:</span> {intval($asset['downloads'])}<br>
 				<a href="{if !empty($user)}#follow{else}/login{/if}"
-					class="interactbox {if $isfollowing}on{else}off{/if}">
+					class="interactbox {if $isFollowing}on{else}off{/if}">
 					<span class="off"><i class="bx bx-star"></i>Follow</span>
 					<span class="on"><i class="bx bxs-star"></i>Unfollow</span>
 					<span class="count">{$asset["follows"]}</span>

@@ -34,7 +34,7 @@
 			<label>Tags</label>
 			<select name="tagids[]" multiple>
 				{foreach from=$tags item=tag}
-					<option value="{$tag['tagid']}" {if !empty($asset['tags'][$tag['tagid']])}selected="selected"{/if}>{$tag['name']}</option>
+					<option value="{$tag['tagId']}" {if !empty($asset['tags'][$tag['tagId']])}selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
 			</select>
 		</div>
@@ -92,7 +92,7 @@
 						<tr>
 							<td>{str_replace("\r\n", "<br>", $entry['text'])}</td>
 							<td>{$entry['username']}</td>
-							<td>{fancyDate($entry['lastmodified'])}</td>
+							<td>{fancyDate($entry['lastModified'])}</td>
 						</tr>
 					{/foreach}
 				{else}

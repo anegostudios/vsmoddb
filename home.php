@@ -13,9 +13,9 @@ if (!empty($user)) {
 			join `mod` on asset.assetid = `mod`.assetid
 			left join status on asset.statusid = status.statusid
 			left join file as logofile on `mod`.cardlogofileid = logofile.fileid
-			left join teammember on `mod`.modid = teammember.modid
+			left join ModTeamMembers on `mod`.modid = ModTeamMembers.modId
 		where
-			(asset.createdbyuserid = ? or teammember.userid = ?)
+			(asset.createdbyuserid = ? or ModTeamMembers.userId = ?)
 		group by asset.assetid
 		order by asset.created desc
 	", array($user['userid'], $user['userid']));
@@ -33,7 +33,7 @@ if (!empty($user)) {
 			
 			foreach($tagdata as $tagrow) {
 				$parts = explode(",", $tagrow);
-				$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagid' => $parts[2]);
+				$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagId' => $parts[2]);
 			}
 			
 			$row['tags'] = $tags;
@@ -62,7 +62,7 @@ if (!empty($user)) {
 			join `mod` on asset.assetid = `mod`.assetid
 			join user on (asset.createdbyuserid = user.userid)
 			join status on (asset.statusid = status.statusid)
-			join follow on (`mod`.modid = follow.modid and follow.userid=?)
+			join UserFollowedMods f on (`mod`.modid = f.modId and f.userId = ?)
 			left join file as logofile on `mod`.cardlogofileid = logofile.fileid
 			left join (select * from `release`) rd on (rd.modid = `mod`.modid)
 		where
