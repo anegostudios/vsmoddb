@@ -151,6 +151,36 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `tag` RENAME TO `Tags`;
 END IF;
 
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+ TABLE_NAME='assettag') ) THEN
+    ALTER TABLE `assettag` DROP COLUMN `assettagid`;
+
+    UPDATE `assettag` t LEFT JOIN `mod` m ON m.assetid = t.assetid SET t.assetid = m.modid;
+    DELETE FROM `assettag` WHERE `assetid` IS NULL;
+    ALTER TABLE `assettag` CHANGE COLUMN `assetid` `modId` INT NOT NULL;
+
+    DELETE FROM `assettag` WHERE `tagid` IS NULL;
+    ALTER TABLE `assettag` CHANGE COLUMN `tagid` `tagId` INT NOT NULL;
+
+    UPDATE `assettag` SET created = '0000-00-00' WHERE created IS NULL;
+    ALTER TABLE `assettag` MODIFY COLUMN `created` DATETIME NOT NULL DEFAULT NOW();
+
+    UPDATE `assettag` SET lastmodified = created WHERE lastmodified IS NULL;
+    ALTER TABLE `assettag` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+    ALTER TABLE `assettag` ADD PRIMARY KEY (`modId`, `tagId`);
+    ALTER TABLE `assettag` ADD INDEX `modId` (`modId`);
+    ALTER TABLE `assettag` ADD INDEX `tagId` (`tagId`);
+
+    -- DELETE t FROM `assettag` t LEFT JOIN `mod` m ON m.modid = t.modId WHERE m.modid IS NULL;
+    ALTER TABLE `assettag` ADD CONSTRAINT `FK_Changelogs_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE;
+    DELETE t FROM `assettag` t LEFT JOIN `Tags` T ON T.tagId = t.tagId WHERE T.tagId IS NULL;
+    ALTER TABLE `assettag` ADD CONSTRAINT `FK_Changelogs_tagId` FOREIGN KEY (`tagId`) REFERENCES `Tags`(`tagId`) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    ALTER TABLE `assettag` RENAME TO `ModTags`;
+END IF;
+
 
 END $$
 

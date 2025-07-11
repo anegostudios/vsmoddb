@@ -286,7 +286,7 @@ function listMods()
 
 	if (!empty($_GET["tagids"])) {
 		foreach ($_GET["tagids"] as $tagid) {
-			$wheresql[] = "exists (select assettag.tagid from assettag where assettag.assetid=asset.assetid and assettag.tagid=?)";
+			$wheresql[] = "exists (select 1 from ModTags where ModTags.modId = `mod`.modid and ModTags.tagId = ?)";
 			$wherevalues[] = $tagid;
 		}
 	}
@@ -297,8 +297,8 @@ function listMods()
 	}
 
 	if (!empty($_GET["gameversion"])) {
-		$wheresql[] = "exists (select assettag.tagid from assettag where assettag.assetid in (select assetid from `release` where `mod`.modid =`release`.modid) and assettag.tagid=?)";
-		$wherevalues[] = intval($_GET["gameversion"]);
+		$wheresql[] = "exists (select 1 from ModCompatibleMajorGameVersionsCached cmv where cmv.modId = `mod`.modid and cmv.majorGameVersion = ?)";
+		$wherevalues[] = intval($_GET["gameversion"]) & VERSION_MASK_PRIMARY;
 	}
 
 
@@ -312,7 +312,7 @@ function listMods()
 
 	if ($gvs) {
 		$gamevers = array_map("intval", $gvs);
-		$wheresql[] = "exists (select 1 from modversioncached where `mod`.modid =`modversioncached`.modid and modversioncached.tagid in (" . implode(",", $gamevers) . "))";
+		$wheresql[] = "exists (select 1 from ModCompatibleGameVersionsCached cgv where cgv.modId = `mod`.modid and cgv.gameVersion in (" . implode(",", $gamevers) . "))";
 	}
 
 

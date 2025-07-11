@@ -194,9 +194,9 @@ class AssetEditor extends AssetController
 
 		if (empty($this->asset)) return;
 
-		$rows = $con->getCol("select tagid from assettag where assetid=?", array($this->assetid));
-		$tags = array_combine($rows, array_fill(0, count($rows), 1));
-		$this->asset["tags"] = $tags;
+		if ($this->tablename === 'mod') {
+			$this->asset['tags'] = array_flip($con->getCol('SELECT tagId FROM ModTags WHERE modId = ?', array($this->asset['modid'])));
+		}
 	}
 
 	/**
@@ -289,9 +289,6 @@ class AssetEditor extends AssetController
 		}
 
 
-		$tagchanges = $this->updateTags($this->assetid);
-		$changes = array_merge($changes, $tagchanges);
-
 		if ($oldstatusid != STATUS_3 && $_POST["statusid"] == STATUS_3) {
 			$assetdata["readydate"] = date("Y-m-d H:i:s");
 		}
@@ -373,48 +370,5 @@ class AssetEditor extends AssetController
 		$view->assign("asset", $this->asset);
 
 		$this->displayTemplate($this->editTemplateFile);
-	}
-
-	/**
-	 * @param int $assetId
-	 * @return string[] changelog
-	 */
-	function updateTags($assetId)
-	{
-		global $con;
-
-		$tagIds = array_flip($con->getCol("SELECT tagid FROM assettag WHERE assetid = ?", [$assetId]));
-
-		$changes = [];
-		$tagData = [];
-
-		if (!empty($_POST["tagids"])) {
-
-			foreach ($_POST["tagids"] as $tagId) {
-				$tag = $con->getRow('SELECT * FROM Tags WHERE tagId = ?', [$tagId]);
-
-				$assetTagId = $con->getOne("SELECT assettagid from assettag where assetid = ? and tagid = ?", [$assetId, $tagId]);
-				if (!$assetTagId) {
-					$assetTagId = insert("assettag");
-					$con->execute('UPDATE assettag SET assetid = ?, tagid = ? WHERE assettagid = ?', [$assetId, $tagId, $assetTagId]);
-					$changes[] = "Added tag '{$tag['name']}'";
-				}
-
-				unset($tagIds[$tagId]);
-
-				$tagData[] = $tag["name"] . ",#" . str_pad(dechex($tag["color"]), 8, '0') . "," . $tag["tagId"];
-			}
-		}
-
-		foreach ($tagIds as $tagId => $_) {
-			$con->Execute('DELETE FROM assettag WHERE assetid = ? AND tagid = ?', [$assetId, $tagId]);
-
-			$tagname = $con->getOne('SELECT name FROM Tags WHERE tagId = ?', [$tagId]);
-			$changes[] = "Deleted tag '{$tagname}'";
-		}
-
-		$con->execute('UPDATE asset SET tagscached = ? WHERE assetid = ?', [implode("\r\n", $tagData), $assetId]);
-
-		return $changes;
 	}
 }

@@ -230,16 +230,14 @@ CREATE TABLE IF NOT EXISTS `Tags` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `moddb`.`assettag`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`assettag` (
-  `assettagid` INT NOT NULL AUTO_INCREMENT,
-  `assetid` INT NULL,
-  `tagid` INT NULL,
-  `created` DATETIME NULL,
-  `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`assettagid`)
+CREATE TABLE IF NOT EXISTS `ModTags` (
+  `modId`        INT       NOT NULL,
+  `tagId`        INT       NOT NULL,
+  `created`      DATETIME  NOT NULL DEFAULT NOW(),
+  `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`modId`, `tagId`),
+  CONSTRAINT `FK_Changelogs_modId` FOREIGN KEY (`modID`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_ModTags_tagId` FOREIGN KEY (`tagId`) REFERENCES `Tags`(`tagId`) ON UPDATE CASCADE ON DELETE CASCADE,
 )
 ENGINE = InnoDB;
 

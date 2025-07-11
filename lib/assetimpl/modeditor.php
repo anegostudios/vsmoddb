@@ -212,6 +212,7 @@ class ModEditor extends AssetEditor
 			return 'error';
 		}
 
+
 		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
 		$hasfiles = $con->getOne("select releaseid from `release` where modid=?", array($modid));
 		$statusreverted = false;
@@ -219,6 +220,9 @@ class ModEditor extends AssetEditor
 			$statusreverted = true;
 			$_POST['statusid'] = STATUS_DRAFT;
 		}
+
+		$tagchanges = $this->updateTags($modid);
+		logAssetChanges($tagchanges, $this->assetid);
 
 		if ($this->isnew) {
 			$con->Execute("update `mod` set lastreleased = `mod`.created where assetid = ?", array($this->assetid));
@@ -474,7 +478,7 @@ class ModEditor extends AssetEditor
 		global $con, $user;
 
 		$newOwnerId = filter_input(INPUT_POST, 'newownerid', FILTER_VALIDATE_INT);
-		if($newOwnerId === false) return true;
+		if(!$newOwnerId) return true;
 
 		$currentNewOwnerId = $con->getOne("SELECT userId FROM Notifications WHERE kind = 'modownershiptransfer' AND !`read` AND recordId = ?", [$modId]);
 		if ($currentNewOwnerId) {
@@ -493,5 +497,61 @@ class ModEditor extends AssetEditor
 		logAssetChanges(["User #{$user['userid']} initiated a ownership transfer to user #{$newOwnerId}"], $this->assetid);
 
 		return true;
+	}
+
+	/**
+	 * @param int $modId
+	 * @return string[] changelog
+	 */
+	function updateTags($modId)
+	{
+		global $con;
+
+		$oldTags = $con->getAssoc('SELECT t.tagId, t.name, t.color FROM ModTags mt JOIN Tags t ON t.tagId = mt.tagId WHERE mt.modId = ?', [$modId]);
+
+		$changes = [];
+		$tagData = [];
+
+		if (!empty($_POST['tagids'])) {
+			$addedNamesFolded = '';
+
+			foreach ($_POST['tagids'] as $tagId) {
+				$tag = $oldTags[$tagId] ?? null;
+
+				if($tag === null) {
+					$con->execute('INSERT INTO ModTags (modId, tagId) VALUES (?, ?)', [$modId, $tagId]);
+
+					$tag = $con->getRow('SELECT name, color FROM Tags WHERE tagId = ?', [$tagId]);
+
+					if ($addedNamesFolded) $addedNamesFolded .= "', '";
+					$addedNamesFolded .= $tag['name'];
+				}
+				else {
+					unset($oldTags[$tagId]);
+				}
+
+				$tagData[] = $tag['name'] . ',#' . str_pad(dechex($tag['color']), 8, '0') . ',' . $tagId;
+			}
+
+			if ($addedNamesFolded) {
+				$s = contains($addedNamesFolded, ',') ? 's' : '';
+				$changes[] = "Added tag{$s} '$addedNamesFolded'.";
+			}
+		}
+
+		if (!empty($oldTags)) {
+			$removedTagIdsFolded = implode(',', array_keys($oldTags));
+			// @security: $oldTags and its keys are obtained form the database, are numeric and therefore sql inert.
+			$con->Execute("DELETE FROM ModTags WHERE modId = ? AND tagId IN ($removedTagIdsFolded)", [$modId]);
+
+			$removedTagNamesFolded = implode("', '", array_map(fn ($t) => $t['name'], $oldTags));
+			$s = count($oldTags) !== 1 ? 's' : '';
+			$changes[] = "Deleted tag{$s} '$removedTagNamesFolded'.";
+		}
+
+		// TODO(Rennorb) @cleanup: tagscached really isn't needed.
+		$con->execute('UPDATE asset SET tagscached = ? WHERE assetid = (SELECT assetid FROM `mod` WHERE modid = ?)', [implode("\r\n", $tagData), $modId]);
+
+		return $changes;
 	}
 }

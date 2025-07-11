@@ -166,7 +166,7 @@ function queryModSearch($searchParams)
 				break;
 
 			case 'tags':
-				$joinClauses .= 'JOIN assettag t ON t.assetid = a.assetid AND t.tagid IN ('.implode(',', $value).')'; // @security: value must be filtered
+				$joinClauses .= 'JOIN ModTags t ON t.modId = m.modid AND t.tagId IN ('.implode(',', $value).')'; // @security: value must be filtered
 				break;
 
 			case 'gameversions':

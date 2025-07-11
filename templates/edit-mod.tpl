@@ -56,7 +56,7 @@
 			<label>Tags</label>
 			<select name="tagids[]" multiple>
 				{foreach from=$tags item=tag}
-					<option value="{$tag['tagId']}" title="{$tag['text']}"{if !empty($asset['tags'][$tag['tagId']])} selected="selected"{/if}>{$tag['name']}</option>
+					<option value="{$tag['tagId']}" title="{$tag['text']}"{if isset($asset['tags'][$tag['tagId']])} selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
 			</select>
 		</div>

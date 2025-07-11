@@ -77,19 +77,6 @@ class AssetList extends AssetController {
 
 			$this->searchvalues["text"] = $_GET["text"];
 		}
-		
-		if(!empty($_GET["tagids"])) {
-			$wheresql = "";
-			foreach($_GET["tagids"] as $tagId) {
-				if (!empty($wheresql)) $wheresql .= " or ";
-				$wheresql .= "exists (select assettag.tagid from assettag where assettag.assetid=asset.assetid and assettag.tagid = ?)";
-				$this->wherevalues[] = $tagId;
-			}
-			
-			$this->wheresql[] .= "(" . $wheresql . ")";
-			
-			$this->searchvalues["tagids"] = array_combine($_GET["tagids"], array_fill(0, count($_GET["tagids"]), 1));
-		}
 	}
 	
 	
