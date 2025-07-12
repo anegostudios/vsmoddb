@@ -2,74 +2,74 @@
 
 if (!empty($user)) {
 	$ownmods = $con->getAll("
-		select 
-			asset.*, 
+		SELECT
+			asset.*,
 			`mod`.*,
-			logofile.cdnpath as logocdnpath,
-			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
-			status.code as statuscode
-		from 
-			asset 
-			join `mod` on asset.assetid = `mod`.assetid
-			left join status on asset.statusid = status.statusid
-			left join file as logofile on `mod`.cardlogofileid = logofile.fileid
-			left join ModTeamMembers on `mod`.modid = ModTeamMembers.modId
-		where
-			(asset.createdbyuserid = ? or ModTeamMembers.userId = ?)
-		group by asset.assetid
-		order by asset.created desc
+			logofile.cdnpath AS logocdnpath,
+			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+			status.code AS statuscode
+		FROM
+			asset
+			JOIN `mod` ON asset.assetid = `mod`.assetid
+			LEFT JOIN status ON asset.statusid = status.statusid
+			LEFT JOIN file AS logofile ON `mod`.cardlogofileid = logofile.fileid
+			LEFT JOIN ModTeamMembers ON `mod`.modid = ModTeamMembers.modId
+		WHERE
+			(asset.createdbyuserid = ? OR ModTeamMembers.userId = ?)
+		GROUP BY asset.assetid
+		ORDER BY asset.created DESC
 	", array($user['userid'], $user['userid']));
-	
+
 	foreach($ownmods as &$row) {
 		unset($row['text']);
 		$row["tags"] = array();
 		$row['from'] = $user['name'];
 		$row['modpath'] = formatModPath($row);
-		
+
 		$tagscached = trim($row["tagscached"]);
 		if (!empty($tagscached)) {
 			$tagdata = explode("\r\n", $tagscached);
 			$tags=array();
-			
+
 			foreach($tagdata as $tagrow) {
 				$parts = explode(",", $tagrow);
 				$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagId' => $parts[2]);
 			}
-			
+
 			$row['tags'] = $tags;
 		}
 	}
 	unset($row);
-	
+
 	$view->assign("mods", $ownmods);
 }
 
 if (!empty($user)) {
 
 	$followedmods = $con->getAll("
-		select 
+		SELECT
 			asset.*,
 			`mod`.*,
-			logofile.cdnpath as logocdnpath,
-			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
-			user.name as `from`,
-			status.code as statuscode,
-			status.name as statusname,
-			rd.created as releasedate,
-			rd.modversion as releaseversion
-		from
+			logofile.cdnpath AS logocdnpath,
+			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+			user.name AS `from`,
+			status.code AS statuscode,
+			status.name AS statusname,
+			rd.created AS releasedate,
+			rd.modversion AS releaseversion
+		FROM
 			asset
-			join `mod` on asset.assetid = `mod`.assetid
-			join user on (asset.createdbyuserid = user.userid)
-			join status on (asset.statusid = status.statusid)
-			join UserFollowedMods f on (`mod`.modid = f.modId and f.userId = ?)
-			left join file as logofile on `mod`.cardlogofileid = logofile.fileid
-			left join (select * from `release`) rd on (rd.modid = `mod`.modid)
-		where
+			JOIN `mod` ON asset.assetid = `mod`.assetid
+			JOIN user ON (asset.createdbyuserid = user.userid)
+			JOIN status ON (asset.statusid = status.statusid)
+			JOIN UserFollowedMods f ON (`mod`.modid = f.modId AND f.userId = ?)
+			LEFT JOIN file AS logofile ON `mod`.cardlogofileid = logofile.fileid
+			LEFT JOIN (select * from `release`) rd ON (rd.modid = `mod`.modid)
+		WHERE
 			asset.statusid=2
-			and rd.created is null or rd.created = (select max(created) from `release` where `release`.modid = mod.modid)
-		order by
-			releasedate desc
+			AND rd.created IS NULL OR rd.created = (select max(created) from `release` where `release`.modid = mod.modid)
+		ORDER BY
+			releasedate DESC
 	", array($user['userid']));
 
 	foreach($followedmods as &$row) {
@@ -83,59 +83,55 @@ if (!empty($user)) {
 }
 
 
-$latestentries = $con->getAll("
-	select 
+$latestMods = $con->getAll(<<<SQL
+	SELECT
 		asset.*,
 		`mod`.*,
-		logofile.cdnpath as logocdnpath,
-		logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
-		user.name as `from`,
-		status.code as statuscode,
-		status.name as statusname
-	from 
+		logofile.cdnpath AS logocdnpath,
+		logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+		user.name AS `from`,
+		status.code AS statuscode,
+		status.name AS statusname
+	FROM
 		asset
-		join `mod` on asset.assetid = `mod`.assetid
-		join user on (asset.createdbyuserid = user.userid)
-		join status on (asset.statusid = status.statusid)
-		left join file as logofile on mod.cardlogofileid = logofile.fileid
-	where
-		asset.statusid=2
-		and `mod`.created > date_sub(now(), interval 30 day)
-	order by
-		asset.created desc
-	limit 10
-");
+		join `mod` ON asset.assetid = `mod`.assetid
+		join user ON (asset.createdbyuserid = user.userid)
+		join status ON (asset.statusid = status.statusid)
+		left join file AS logofile ON mod.cardlogofileid = logofile.fileid
+	WHERE
+		asset.statusid = 2
+		AND `mod`.created > DATE_SUB(NOW(), INTERVAL 30 DAY)
+	ORDER BY
+		asset.created DESC
+	LIMIT 10
+SQL);
 
-foreach($latestentries as &$row) {
+foreach($latestMods as &$row) {
 	$row['modpath'] = formatModPath($row);
 }
 unset($row);
 
-$view->assign("latestentries", $latestentries);
+$view->assign('latestMods', $latestMods);
 
-$latestcomments = $con->getAll("
-	select 
-		comment.*,
-		asset.name as assetname,
-		assettype.name as assettypename,
-		assettype.code as assettypecode,
-		user.name as username,
-		ifnull(user.banneduntil >= now(), 0) as `isbanned`
-	from 
-		comment
-		join user on (comment.userid = user.userid)
-		join asset on (comment.assetid = asset.assetid)
-		join assettype on (asset.assettypeid = assettype.assettypeid)
-	where 
-		asset.statusid=2
-		and comment.deleted = 0
-		and comment.created > date_sub(now(), interval 14 day)
-	order by
-		comment.created desc
-	limit 20
-");
+$lastestComments = $con->getAll(<<<SQL
+	SELECT
+		c.assetId, a.name AS assetName,
+		c.commentId, c.text, c.created,
+		u.name AS username, IFNULL(u.banneduntil >= NOW(), 0) AS isBanned
+	FROM
+		Comments c
+		join user u ON u.userid = c.userId
+		join asset a ON a.assetid = c.assetId
+	WHERE
+		a.statusid = 2
+		AND !c.deleted
+		AND c.created > DATE_SUB(NOW(), INTERVAL 14 DAY)
+	ORDER BY
+		c.created DESC
+	LIMIT 20
+SQL);
 
-$view->assign("latestcomments", $latestcomments, null, true);
+$view->assign('lastestComments', $lastestComments, null, true);
 
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_HOME, null, true);
 $view->display("home.tpl");

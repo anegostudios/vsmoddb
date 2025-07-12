@@ -117,17 +117,6 @@ class AssetEditor extends AssetController
 
 		$view->assign("files", $this->files);
 
-		$comments = $con->getAll(<<<SQL
-			SELECT comment.*, user.name AS username, IFNULL(user.banneduntil >= NOW(), 0) AS `isbanned`
-			FROM comment 
-			JOIN user ON user.userid = comment.userid
-			WHERE assetid = ? AND comment.deleted = 0
-			ORDER BY comment.created DESC
-		SQL, [$this->assetid]);
-
-		$view->assign("comments", $comments, null, true);
-
-
 		$changelogs = $con->getAll(<<<SQL
 			SELECT ch.text, ch.lastModified, user.name AS username
 			FROM Changelogs ch

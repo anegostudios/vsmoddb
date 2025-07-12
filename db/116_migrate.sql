@@ -182,6 +182,42 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 END IF;
 
 
+
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+ TABLE_NAME='comment') ) THEN
+    ALTER TABLE `comment` CHANGE COLUMN `commentid` `commentId` INT NOT NULL AUTO_INCREMENT;
+
+    DELETE FROM `comment` WHERE `assetid` IS NULL;
+    ALTER TABLE `comment` CHANGE COLUMN `assetid` `assetId` INT NOT NULL;
+
+    DELETE FROM `comment` WHERE `userid` IS NULL;
+    ALTER TABLE `comment` CHANGE COLUMN `userid` `userId` INT NOT NULL;
+
+    DELETE FROM `comment` WHERE `text` IS NULL;
+    ALTER TABLE `comment` MODIFY COLUMN `text` TEXT;
+
+    ALTER TABLE `comment` CHANGE COLUMN `modifieddate` `contentLastModified` DATETIME NULL;
+
+    ALTER TABLE `comment` CHANGE COLUMN `lastmodaction` `lastModaction` INT NULL;
+
+    UPDATE `comment` SET created = '0000-00-00' WHERE created IS NULL;
+    ALTER TABLE `comment` MODIFY COLUMN `created` DATETIME NOT NULL DEFAULT NOW() AFTER `deleted`;
+
+    UPDATE `comment` SET lastmodified = created WHERE lastmodified IS NULL;
+    ALTER TABLE `comment` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created`;
+
+
+    DELETE c FROM `comment` c LEFT JOIN `user` u ON u.userid = c.userId WHERE u.userid IS NULL;
+    ALTER TABLE `comment` ADD CONSTRAINT `FK_Comments_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE;
+
+    ALTER TABLE `comment` ADD CONSTRAINT `FK_Comments_lastModaction` FOREIGN KEY (`lastModaction`) REFERENCES `moderationrecord`(`actionid`) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+    ALTER TABLE `comment` RENAME TO `Comments`;
+END IF;
+
+
+
 END $$
 
 CALL upgrade_database__moderation() $$

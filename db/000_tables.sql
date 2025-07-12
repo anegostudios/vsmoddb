@@ -143,22 +143,22 @@ CREATE TABLE IF NOT EXISTS `moddb`.`status` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `moddb`.`comment`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`comment` (
-  `commentid` INT NOT NULL AUTO_INCREMENT,
-  `assetid` INT NULL,
-  `userid` INT NULL,
-  `text` TEXT NULL,
-  `created` DATETIME NULL,
-  `modifieddate` DATETIME NULL,
-  `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `lastmodaction` INT NULL,
-  `deleted` BOOL NOT NULL DEFAULT 0,
-  PRIMARY KEY (`commentid`),
-  FOREIGN KEY (`lastmodaction`) REFERENCES `moderationrecord`(`actionid`) ON UPDATE CASCADE ON DELETE RESTRICT,
-  INDEX `created`(`created`) -- for the main page query that shows the latest 20 comments
+CREATE TABLE IF NOT EXISTS `Comments` (
+  `commentId`           INT       NOT NULL AUTO_INCREMENT,
+  `assetId`             INT       NOT NULL,
+  `userId`              INT       NOT NULL,
+  `text`                TEXT      NOT NULL,
+  `contentLastModified` DATETIME      NULL,
+  `lastModaction`       INT           NULL,
+  `deleted`             BOOL      NOT NULL DEFAULT 0,
+  `created`             DATETIME  NOT NULL DEFAULT NOW(),
+  `lastModified`        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`commentId`),
+  INDEX `assetid`(`assetId`),
+  INDEX `created`(`created`), -- for the main page query that shows the latest 20 comments
+  -- CONSTRAINT `FK_Comments_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE, -- TODO(Rennorb) @cleanup: For moderation reasons we allow comment asset references these to be dangling for now.
+  CONSTRAINT `FK_Comments_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_Comments_lastModaction` FOREIGN KEY (`lastModaction`) REFERENCES `moderationrecord`(`actionid`) ON UPDATE CASCADE ON DELETE RESTRICT
 )
 ENGINE = InnoDB;
 

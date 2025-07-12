@@ -1,30 +1,30 @@
 <?php
 
-$usertoken = $urlparts[2] ?? null;
-if(empty($usertoken)) showErrorPage(HTTP_BAD_REQUEST, 'Missing suertoken.');
+$userToken = $urlparts[2] ?? null;
+if(empty($userToken)) showErrorPage(HTTP_BAD_REQUEST, 'Missing usertoken.');
 
-$targetuser = getUserByHash($usertoken, $con);
-if(empty($targetuser)) showErrorPage(HTTP_NOT_FOUND, 'User not found.');
+$targetUser = getUserByHash($userToken, $con);
+if(empty($targetUser)) showErrorPage(HTTP_NOT_FOUND, 'User not found.');
 
-if(!canModerate($targetuser, $user)) showErrorPage(HTTP_FORBIDDEN);
+if(!canModerate($targetUser, $user)) showErrorPage(HTTP_FORBIDDEN);
 
 if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
-	$fpost = filter_input_array(INPUT_POST, array(
+	$postData = filter_input_array(INPUT_POST, [
 		'modreason' => FILTER_SANITIZE_SPECIAL_CHARS,
-		'forever' => FILTER_VALIDATE_BOOLEAN,
-		'until' => FILTER_UNSAFE_RAW,
-	));
+		'forever'   => FILTER_VALIDATE_BOOLEAN,
+		'until'     => FILTER_UNSAFE_RAW,
+	]);
 
 	$errorReasons = '';
-	if(empty($fpost['modreason'])) {
+	if(empty($postData['modreason'])) {
 		$errorReasons = 'reason';
 	}
 	
-	if($fpost['forever']) {
+	if($postData['forever']) {
 		$until = SQL_DATE_FOREVER;
 	}
 	//NOTE(Rennorb): i would prefer doing this on the client, so we can take timezone into account. 
-	else if($until = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $fpost['until'])) {
+	else if($until = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $postData['until'])) {
 		$until = $until->format(SQL_DATE_FORMAT);
 	}
 	else {
@@ -37,8 +37,8 @@ if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 		addMessage(MSG_CLASS_ERROR, "Missing $errorReasons for ban."); // @security no external input in $errorReasons
 	}
 	else {
-		$con->execute("update user set banneduntil = ? where userid = ?", array($until, $targetuser['userid']));
-		logModeratorAction($targetuser['userid'], $user['userid'], MODACTION_KIND_BAN, $targetuser['userid'], $until, $fpost['modreason']);
+		$con->execute('UPDATE user SET banneduntil = ? WHERE userid = ?', [$until, $targetUser['userid']]);
+		logModeratorAction($targetUser['userid'], $user['userid'], MODACTION_KIND_BAN, $targetUser['userid'], $until, $postData['modreason']);
 
 		forceRedirectAfterPOST();
 		exit();
@@ -51,39 +51,38 @@ else if(isset($_POST['submit']) && $_POST['submit'] == 'redeem') {
 		addMessage(MSG_CLASS_ERROR, 'Missing reason for redemption.');
 	}
 	else {
-		$con->execute("update user set banneduntil = now() where userid = ?", array($targetuser['userid']));
-		$con->execute("update moderationrecord set until = now() where kind = ".MODACTION_KIND_BAN." and until > now()");
-		logModeratorAction($targetuser['userid'], $user['userid'], MODACTION_KIND_REDEEM, $targetuser['userid'], SQL_DATE_FOREVER, $reason);
+		$con->execute('UPDATE user SET banneduntil = NOW() WHERE userid = ?', [$targetUser['userid']]);
+		$con->execute('UPDATE moderationrecord SET until = NOW() WHERE kind = '.MODACTION_KIND_BAN.' AND until > NOW()');
+		logModeratorAction($targetUser['userid'], $user['userid'], MODACTION_KIND_REDEEM, $targetUser['userid'], SQL_DATE_FOREVER, $reason);
 
 		forceRedirectAfterPOST();
 		exit();
 	}
 }
 
-$shownuser = $con->getRow("select * from user where userid = ?", array($targetuser['userid']));
+$shownUser = $con->getRow('SELECT * FROM user WHERE userid = ?', [$targetUser['userid']]);
 
-$moderationrecord = $con->getAll("
-	select rec.created, rec.kind, rec.until, moderator.name as moderatorname, rec.reason, comment.commentid, asset.assetid
+$records = $con->getAll(<<<SQL
+	select rec.created, rec.kind, rec.until, moderator.name as moderatorName, rec.reason, c.commentId, c.assetId
 	from moderationrecord as rec
 	join user as moderator on moderator.userid = rec.moderatorid
-	left join comment on comment.lastmodaction = rec.actionid
-	left join asset on asset.assetid = comment.assetid
+	left join Comments c on c.lastModaction = rec.actionid
 	where rec.targetuserid = ?
 	order by rec.created desc
-", array($targetuser['userid']));
+SQL, array($targetUser['userid']));
 
-foreach($moderationrecord as &$row) {
+foreach($records as &$row) {
 	$row['until'] = parseSqlDateTime($row['until']);
 }
 unset($row);
 
-$sourcecommentid = $_GET['source-comment'] ?? null;
-$banreasonautocomplete = $sourcecommentid == null ? '' 
-	: 'Offensive comment: '.strip_tags($con->getOne("select text from comment where commentid = ?", array($sourcecommentid)));
+$sourceCommentId = $_GET['source-comment'] ?? null;
+$banReasonSuggestion = $sourceCommentId == null ? '' 
+	: 'Offensive comment: '.strip_tags($con->getOne('SELECT text FROM Comments WHERE commentId = ?', [$sourceCommentId]));
 
-$view->assign('pagetitle', "Moderate {$shownuser['name']}");
+$view->assign('pagetitle', "Moderate {$shownUser['name']}");
 
-$view->assign("shownuser", $shownuser);
-$view->assign("moderationrecord", $moderationrecord);
-$view->assign("banreasonautocomplete", $banreasonautocomplete);
-$view->display("moderate-user");
+$view->assign('shownUser', $shownUser);
+$view->assign('records', $records);
+$view->assign('banReasonSuggestion', $banReasonSuggestion);
+$view->display('moderate-user');

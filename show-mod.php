@@ -86,33 +86,34 @@ unset($file);
 
 $view->assign("files", $files);
 
-$deletedFilter = canModerate(null, $user) ? '' : 'AND comment.deleted = 0';
+$deletedFilter = canModerate(null, $user) ? '' : 'AND !c.deleted';
 $comments = $con->getAll(<<<SQL
 	SELECT 
-		comment.*,
+		c.*,
+		mr.kind as lastModaction,
 		u.name AS username,
-		u.roleid AS roleid,
 		substring(sha2(concat(u.userid, u.created), 512), 1, 20) AS usertoken,
-		IFNULL(u.banneduntil >= NOW(), 0) AS `isbanned`,
-		r.code AS rolecode,
-		r.name AS rolename
+		IFNULL(u.banneduntil >= NOW(), 0) AS `isBanned`,
+		r.code AS roleCode
 	FROM 
-		comment 
-		JOIN user u ON u.userid = comment.userid
+		Comments c 
+		JOIN user u ON u.userid = c.userId
 		LEFT JOIN Roles r ON r.roleId = u.roleid
-	WHERE assetid = ? $deletedFilter
-	ORDER BY comment.created DESC
+		LEFT JOIN moderationrecord mr ON mr.actionid = c.lastModaction
+	WHERE c.assetId = ? $deletedFilter
+	ORDER BY c.created DESC
 SQL, [$assetid]);
 
-foreach ($comments as $idx => $comment) {
-	if ($asset['createduserid'] == $comment["userid"]) {
-		$comments[$idx]["flaircode"] = "author";
+foreach ($comments as &$comment) {
+	if ($asset['createduserid'] == $comment['userId']) {
+		$comment['flairCode'] = 'author';
 	}
 
-	if ($comment["rolecode"] != 'player' && $comment["rolecode"] != 'player_nc') {
-		$comments[$idx]["flaircode"] = $comment["rolecode"];
+	if ($comment['roleCode'] != 'player' && $comment['roleCode'] != 'player_nc') {
+		$comment['flairCode'] = $comment['roleCode'];
 	}
 }
+unset($comment);
 
 $view->assign("comments", $comments, null, true);
 

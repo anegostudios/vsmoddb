@@ -77,27 +77,29 @@ switch ($action) {
 		break;
 
 	case "comments":
-		$wheresql = '';
-		$limit = 'limit 100';
+		$whereSql = '';
+		$limitSql = 'limit 100';
 
 		if (intval($urlparts[1] ?? 0) > 0) {
-			$wheresql = 'AND assetid='.intval($urlparts[1]);
-			$limit = '';
+			$whereSql = 'AND assetId='.intval($urlparts[1]);
+			$limitSql = '';
 		}
 
-		$rows = $con->getAll("
-			select commentid, assetid, userid, text, created, lastmodified 
-			from comment where !deleted $wheresql 
-			order by lastmodified DESC $limit");
+		$rows = $con->getAll(<<<SQL
+			select commentId, assetId, userId, text, created, lastModified
+			from Comment
+			where !deleted $whereSql
+			order by lastModified DESC $limitSql
+		SQL);
 		$comments = array();
 		foreach ($rows as $row) {
 			$comments[] = array(
-				"commentid" => intval($row["commentid"]),
-				"assetid" => intval($row["assetid"]),
-				"userid" => intval($row["userid"]),
+				"commentid" => intval($row["commentId"]),
+				"assetid" => intval($row["assetId"]),
+				"userid" => intval($row["userId"]),
 				"text" => $row['text'],
 				"created" => $row['created'],
-				"lastmodified" => $row['lastmodified']
+				"lastmodified" => $row['lastModified']
 			);
 		}
 		good(array("statuscode" => 200, "comments" => $comments));

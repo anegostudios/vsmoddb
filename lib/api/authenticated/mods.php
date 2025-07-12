@@ -33,7 +33,7 @@ switch($urlparts[1]) {
 				$commentHtml = trim(sanitizeHtml(file_get_contents('php://input')));
 				if(!$commentHtml)  fail(HTTP_BAD_REQUEST, ['reason' => 'Comment must not be empty.']);
 
-				$con->execute('INSERT INTO comment (assetid, userid, text, created) VALUES (?, ?, ?, NOW())', [$assetId, $user['userid'], $commentHtml]);
+				$con->execute('INSERT INTO Comments (assetId, userId, text) VALUES (?, ?, ?)', [$assetId, $user['userid'], $commentHtml]);
 				$commentId = $con->insert_ID();
 				$con->execute('UPDATE `mod` SET comments = comments + 1 WHERE assetid = ?', [$assetId]);
 

@@ -125,8 +125,8 @@ COMMIT;
 START TRANSACTION;
 USE `moddb`;
 
-INSERT INTO  `moddb`.`comment` (assetid, userid, text, created) VALUES (1, 2, 'normal comment', NOW());
-INSERT INTO  `moddb`.`comment` (assetid, userid, text, created) VALUES (1, 2, 'ok comment', NOW());
-INSERT INTO  `moddb`.`comment` (assetid, userid, text, created, lastmodaction, deleted) VALUES (1, 2, 'bad comment', NOW(), 1, 1);
+INSERT INTO  `Comments` (assetId, userId, text) VALUES (1, 2, 'normal comment');
+INSERT INTO  `Comments` (assetId, userId, text) VALUES (1, 2, 'ok comment');
+INSERT INTO  `Comments` (assetId, userId, text, lastModaction, deleted) VALUES (1, 2, 'bad comment', 1, 1);
 
 COMMIT;

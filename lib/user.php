@@ -196,10 +196,10 @@ function loadNotifications($loadAll)
 			case 'newcomment': case 'mentioncomment':
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modname, u.name AS username
-					FROM comment c
-					JOIN asset a ON a.assetid = c.assetid
-					JOIN user u ON u.userid = c.userid
-					WHERE commentid = ?
+					FROM Comments c
+					JOIN asset a ON a.assetid = c.assetId
+					JOIN user u ON u.userid = c.userId
+					WHERE c.commentId = ?
 				SQL, [$notification['recordId']]);
 
 				if ($notification['kind'] === 'newcomment') {

@@ -27,9 +27,9 @@ Cheers,<br>
 	{/if}
 {/if}
 
-{if !empty($latestentries)}
+{if !empty($latestMods)}
 	<h3>Latest 10 Mods</h3>
-	{foreach from=$latestentries item=mod}{include file="list-mod-entry"}{/foreach}
+	{foreach from=$latestMods item=mod}{include file="list-mod-entry"}{/foreach}
 {/if}
 </div>
 
@@ -46,13 +46,13 @@ Cheers,<br>
 		</tr>
 	</thead>
 	<tbody>
-	{if count($latestcomments)}
-		{foreach from=$latestcomments item=entry}
+	{if count($lastestComments)}
+		{foreach from=$lastestComments item=comment}
 			<tr>
-				<td><a href="/show/mod/{$entry['assetid']}">{$entry['assetname']}</a></td>
-				<td class="textCol"><div onclick="location.href='/show/mod/{$entry['assetid']}#cmt-{$entry['commentid']}'">{$entry['text']}</div></td>
-				<td><a href="/show/mod/{$entry['assetid']}#comments">{$entry['username']}</a>{if $entry['isbanned']} <span style="color:red;white-space:nowrap;">[currently restricted]</span>{/if}</td>
-				<td><a href="/show/mod/{$entry['assetid']}#comments">{fancyDate($entry['created'])}</a></td>
+				<td><a href="/show/mod/{$comment['assetId']}">{$comment['assetName']}</a></td>
+				<td class="textCol"><div onclick="location.href='/show/mod/{$comment['assetId']}#cmt-{$comment['commentId']}'">{$comment['text']}</div></td>
+				<td><a href="/show/mod/{$comment['assetId']}#comments">{$comment['username']}</a>{if $comment['isBanned']} <span style="color:red;white-space:nowrap;">[currently restricted]</span>{/if}</td>
+				<td><a href="/show/mod/{$comment['assetId']}#comments">{fancyDate($comment['created'])}</a></td>
 			</tr>
 		{/foreach}
 	{else}

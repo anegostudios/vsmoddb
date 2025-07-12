@@ -53,8 +53,8 @@ switch($notification['kind']) {
 		$mod = $con->getRow(<<<SQL
 			SELECT m.assetid, m.urlalias
 			FROM `mod` m
-			JOIN comment ON comment.assetid = m.assetid
-			WHERE commentid = ?
+			JOIN Comments c ON c.assetId = m.assetid
+			WHERE c.commentId = ?
 		SQL, [$notification['recordId']]);
 
 		$con->execute('UPDATE Notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]); // TODO @setting
