@@ -1,54 +1,52 @@
 <?php
 
-$usertoken = $urlparts[2] ?? null;
-$shownuser = null;
+$userHash = $urlparts[2] ?? null;
+$shownUser = null;
 
-if (strlen($usertoken) > 20) {
+if (strlen($userHash) > 20) {
+	showErrorPage(HTTP_BAD_REQUEST);
+	exit();
+}
+
+if (empty($userHash) || empty($shownUser = getUserByHash($userHash, $con))) {
 	showErrorPage(HTTP_NOT_FOUND);
 	exit();
 }
 
-if (empty($usertoken) || empty($shownuser = getUserByHash($usertoken, $con))) {
-	showErrorPage(HTTP_NOT_FOUND);
-	exit();
-}
-
-$view->assign("usertoken", $usertoken);
-
-$sqlWhereExt = (isset($user) && $shownuser['userid'] == $user['userid']) || canModerate($shownuser, $user) ? '' : ' and asset.statusid = 2'; // show drafts if owner or mod
-$authormods = $con->getAll("
-	select 
-		asset.*, 
+$sqlWhereExt = (isset($user) && $shownUser['userId'] == $user['userId']) || canModerate($shownUser, $user) ? '' : ' and asset.statusid = 2'; // show drafts if owner or mod
+$userMods = $con->getAll("
+	SELECT
+		asset.*,
 		`mod`.*,
-		logofile.cdnpath as logocdnpath,
-		logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
-		status.code as statuscode
-	from 
-		asset 
-		join `mod` on asset.assetid = `mod`.assetid
-		left join status on asset.statusid = status.statusid
-		left join file as logofile on mod.cardlogofileid = logofile.fileid
-		left join ModTeamMembers t on t.modId = `mod`.modid
-	where
-		(asset.createdbyuserid = ? or t.userId = ?) $sqlWhereExt
-	group by asset.assetid
-	order by asset.created desc
-", array($shownuser['userid'], $shownuser['userid']));
+		logofile.cdnpath AS logocdnpath,
+		logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+		status.code AS statuscode
+	FROM
+		asset
+		JOIN `mod` ON asset.assetid = `mod`.assetid
+		LEFT JOIN status ON asset.statusid = status.statusid
+		LEFT JOIN file AS logofile ON mod.cardlogofileid = logofile.fileid
+		LEFT JOIN ModTeamMembers t ON t.modId = `mod`.modid
+	WHERE
+		(asset.createdbyuserid = ? OR t.userId = ?) $sqlWhereExt
+	GROUP BY asset.assetid
+	ORDER BY asset.created DESC
+", array($shownUser['userId'], $shownUser['userId']));
 
-foreach ($authormods as &$row) {
+foreach ($userMods as &$row) {
 	unset($row['text']);
-	$row["tags"] = array();
-	$row['from'] = $shownuser['name'];
+	$row['tags'] = [];
+	$row['from'] = $shownUser['name'];
 	$row['modpath'] = formatModPath($row);
 
-	$tagscached = trim($row["tagscached"]);
-	if (empty($tagscached)) continue;
+	$tagsCached = trim($row['tagscached']);
+	if (empty($tagsCached)) continue;
 
-	$tagdata = explode("\r\n", $tagscached);
+	$tagData = explode("\r\n", $tagsCached);
 	$tags = array();
 
-	foreach ($tagdata as $tagrow) {
-		$parts = explode(",", $tagrow);
+	foreach ($tagData as $tagRow) {
+		$parts = explode(',', $tagRow);
 		$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagId' => $parts[2]);
 	}
 
@@ -56,14 +54,14 @@ foreach ($authormods as &$row) {
 }
 unset($row);
 
-if (canModerate($shownuser, $user)) {
-	$changelog = $con->getAll('SELECT text, assetId, created FROM Changelogs WHERE userId = ? ORDER BY created DESC LIMIT 100', [$shownuser["userid"]]);
-	$view->assign("changelog", $changelog);
+if (canModerate($shownUser, $user)) {
+	$changelog = $con->getAll('SELECT text, assetId, created FROM Changelogs WHERE userId = ? ORDER BY created DESC LIMIT 100', [$shownUser['userId']]);
+	$view->assign('changelog', $changelog);
 }
 
-if($shownuser['userid'] == $user['userid']) $view->assign('headerHighlight', HEADER_HIGHLIGHT_CURRENT_USER, null, true);
+if($shownUser['userId'] == $user['userId']) $view->assign('headerHighlight', HEADER_HIGHLIGHT_CURRENT_USER, null, true);
 
-$view->assign("mods", $authormods);
-$view->assign("user", $user);
-$view->assign("shownuser", $shownuser);
-$view->display("show-user");
+$view->assign('mods', $userMods);
+$view->assign('user', $user);
+$view->assign('shownUser', $shownUser, null, true);
+$view->display('show-user');

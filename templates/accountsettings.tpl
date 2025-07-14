@@ -2,7 +2,7 @@
 <h3>Account Settings</h3>
 
 <form method="post" autocomplete="off" class="flex-list">
-	<input type="hidden" name="at" value="{$user['actiontoken']}">
+	<input type="hidden" name="at" value="{$user['actionToken']}">
 
 	<div class="editbox">
 		<label>Name (<a class="external" href="https://account.vintagestory.at/profile">edit</a>)</label>

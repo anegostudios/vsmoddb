@@ -45,7 +45,7 @@ class ModEditor extends AssetEditor
 
 		if (!$this->assetid) {
 			$this->asset['type'] = 'mod';
-			$this->asset['createdbyuserid'] = $user['userid'];
+			$this->asset['createdbyuserid'] = $user['userId'];
 
 			$view->assign('headerHighlight', HEADER_HIGHLIGHT_SUBMIT_MOD, null, true);
 		}
@@ -54,18 +54,18 @@ class ModEditor extends AssetEditor
 			$modId = $con->getOne('SELECT modid FROM `mod` WHERE assetid = ?', [$this->assetid]);
 
 			$teamMembers = $con->getAll(<<<SQL
-					SELECT u.*, t.canEdit, 0 AS `pending`
-					FROM user u
-					JOIN ModTeamMembers t ON u.userid = t.userId
-					WHERE t.modId = ? AND u.userid != ?
+					SELECT u.*, t.canEdit, 0 AS pending
+					FROM ModTeamMembers t
+					JOIN Users u ON u.userId = t.userId
+					WHERE t.modId = ? AND u.userId != ?
 				UNION
-					SELECT u.*, (n.recordId & 1 << 30) AS `canEdit`, 1 AS `pending`
+					SELECT u.*, (n.recordId & 1 << 30) AS canEdit, 1 AS pending
 					FROM Notifications n
-					JOIN user u ON u.userid = n.userId
+					JOIN Users u ON u.userid = n.userId
 					WHERE n.kind = 'teaminvite' AND !n.`read` AND (n.recordId & ((1 << 30) - 1)) = ? -- :InviteEditBit
-			SQL, [$modId, $user['userid'], $modId]);
+			SQL, [$modId, $user['userId'], $modId]);
 
-			$view->assign("teamMembers", $teamMembers);
+			$view->assign('teamMembers', $teamMembers);
 
 			$this->handleRevokeNewOwnership($modId);
 		}
@@ -231,7 +231,7 @@ class ModEditor extends AssetEditor
 		$con->execute('update `mod` set descriptionsearchable = ? where assetid = ?', [textContent($_POST['text']), $this->assetid]);
 
 		if(canEditAsset($this->asset, $user, false)) $this->updateTeamMembers($modid);
-		if($this->asset['createdbyuserid'] == $user['userid']) {
+		if($this->asset['createdbyuserid'] == $user['userId']) {
 			if(!$this->updateNewOwner($modid)) {
 				return "error";
 			}
@@ -388,13 +388,13 @@ class ModEditor extends AssetEditor
 	{
 		global $view, $user, $con;
 
-		if (!$this->assetid || $this->asset['createdbyuserid'] != $user['userid'])  return;
+		if (!$this->assetid || $this->asset['createdbyuserid'] != $user['userId'])  return;
 
 		// Check if ownership transfer invitation has been sent to a user
 		$newOwner = $con->getRow(<<<SQL
-			SELECT u.userid, u.name, n.notificationId
+			SELECT u.userId, u.name, n.notificationId
 			FROM Notifications AS n
-			JOIN user u ON u.userid = n.userId
+			JOIN Users u ON u.userId = n.userId
 			WHERE n.kind = 'modownershiptransfer' AND n.recordId = ? AND !n.`read`
 		SQL, array($modId));
 			
@@ -423,7 +423,7 @@ class ModEditor extends AssetEditor
 		$newEditorMemberIds = filter_input(INPUT_POST, 'teammembereditids', FILTER_VALIDATE_INT, FILTER_FORCE_ARRAY) ?? [];
 		$newEditorMemberIds = array_flip($newEditorMemberIds);
 
-		$oldMembers = $con->getAll("select userId, canEdit, teamMemberId from ModTeamMembers where modId = ?", array($modId));
+		$oldMembers = $con->getAll('SELECT userId, canEdit, teamMemberId FROM ModTeamMembers WHERE modId = ?', [$modId]);
 		$oldMembers = array_combine(array_column($oldMembers, 'userId'), $oldMembers);
 
 		$changes = array();
@@ -440,22 +440,22 @@ class ModEditor extends AssetEditor
 				if(empty($invitation)) {
 					$con->execute("INSERT INTO Notifications (kind, userid, recordId) VALUES ('teaminvite', ?, ?)", [$newMemberId, $mergedId]);
 
-					$changes[] = "User #{$user['userid']} invited user #{$newMemberId} to join the team".($editBit ? ' with edit permissions' : '').'.';
+					$changes[] = "User #{$user['userId']} invited user #{$newMemberId} to join the team".($editBit ? ' with edit permissions' : '').'.';
 				}
 				else if ($invitation['recordId'] != $mergedId) {
 					$con->execute('UPDATE Notifications SET recordId = ? WHERE notificationId = ?', [$mergedId, $invitation['notificationId']]);
 
 					$changes[] = $editBit
-						? "User #{$user['userid']} promoted invitation to user #{$newMemberId} to editor."
-						: "User #{$user['userid']} demoted invitation to user #{$newMemberId} to normal member.";
+						? "User #{$user['userId']} promoted invitation to user #{$newMemberId} to editor."
+						: "User #{$user['userId']} demoted invitation to user #{$newMemberId} to normal member.";
 				}
 			}
 			else if (boolval($oldMembers[$newMemberId]['canEdit']) !== boolval($editBit)) {
 				$con->execute('UPDATE ModTeamMembers SET canEdit = ? WHERE teamMemberId = ?', [$editBit ? 1 : 0, $oldMembers[$newMemberId]['teamMemberId']]);
 
 				$changes[] = $editBit
-					? "User #{$user['userid']} promoted teammember user #{$newMemberId} to editor."
-					: "User #{$user['userid']} demoted teammember user #{$newMemberId} to normal member.";
+					? "User #{$user['userId']} promoted teammember user #{$newMemberId} to editor."
+					: "User #{$user['userId']} demoted teammember user #{$newMemberId} to normal member.";
 			}
 
 			unset($oldMembers[$newMemberId]);
@@ -463,7 +463,7 @@ class ModEditor extends AssetEditor
 
 		foreach ($oldMembers as $member) {
 			$con->Execute('DELETE FROM ModTeamMembers WHERE teamMemberId = ?', [$member['teamMemberId']]);
-			$changes[] = "User #{$user['userid']} removed teammember user #{$member['userid']}.";
+			$changes[] = "User #{$user['userId']} removed teammember user #{$member['userId']}.";
 		}
 
 		logAssetChanges($changes, $this->assetid);
@@ -494,7 +494,7 @@ class ModEditor extends AssetEditor
 
 		$con->Execute("INSERT INTO Notifications (kind, userid, recordId) VALUES ('modownershiptransfer', ?, ?)", [$newOwnerId, $modId]);
 
-		logAssetChanges(["User #{$user['userid']} initiated a ownership transfer to user #{$newOwnerId}"], $this->assetid);
+		logAssetChanges(["User #{$user['userId']} initiated a ownership transfer to user #{$newOwnerId}"], $this->assetid);
 
 		return true;
 	}

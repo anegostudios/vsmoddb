@@ -1,25 +1,25 @@
 
 {include file="header"}
 
-<h2><span>About {$shownuser['name']}</span>{if $shownuser['isbanned']}&nbsp;<span style="color: red;">[currently restricted]</span>{/if}</h2>
+<h2><span>About {htmlspecialchars($shownUser['name'])}</span>{if $shownUser['isBanned']}&nbsp;<span style="color: red;">[currently restricted]</span>{/if}</h2>
 
 <div style="float: right;">
-	{if canModerate($shownuser, $user)}
-		<a class="button large shine moderator" href="/moderate/user/{$usertoken}">Moderate User</a>&nbsp;
+	{if canModerate($shownUser, $user)}
+		<a class="button large shine moderator" href="/moderate/user/{$shownUser['hash']}">Moderate User</a>&nbsp;
 	{/if}
-	{if canEditProfile($shownuser, $user)}
-		<a class="button large shine" href="/edit/profile/{$usertoken}">Edit</a>
+	{if canEditProfile($shownUser, $user)}
+		<a class="button large shine" href="/edit/profile/{$shownUser['hash']}">Edit</a>
 	{/if}
 </div>
 
-{if !empty($shownuserraw['bio'])}
-	{$shownuserraw['bio']}
+{if !empty($shownUser['bio'])}
+	{$shownUser['bio']}
 {else}
 	<pre><i style="font-size:80%">User has not added a bio about themselves yet.</i></pre>
 {/if}
 
 {if !empty($mods)}
-	<h3>Mods {$shownuser['name']} contributed to</h3>
+	<h3>Mods {$shownUser['name']} contributed to</h3>
 
 	<div class="mods">
 		{foreach from=$mods item=mod}{include file="list-mod-entry"}{/foreach}
@@ -27,7 +27,7 @@
 	</div>
 {/if}
 
-{if canModerate($shownuser, $user)}
+{if canModerate($shownUser, $user)}
 	<p><br><strong>User activity history (newest 100)</strong></p>
 	<table class="stdtable">
 		<thead><th>Text</th><th>Assetid</th><th>Date</th></thead>

@@ -3,7 +3,7 @@
 //NOTE(Rennorb): Assume the user object exists.
 
 if(empty($urlparts)) {
-	$ids = $con->getCol('SELECT notificationId FROM Notifications WHERE !`read` AND userId = ?', [$user['userid']]);
+	$ids = $con->getCol('SELECT notificationId FROM Notifications WHERE !`read` AND userId = ?', [$user['userId']]);
 	good($ids);
 }
 
@@ -20,7 +20,7 @@ switch($urlparts[0]) {
 		$foldedIds = implode(',', $ids);
 
 		// @security: Ids ($foldedIds) are knows / filtered to be integers, and therefore sql inert.
-		$idsWithoutPermission = $con->getCol("SELECT notificationId FROM Notifications WHERE notificationId IN ($foldedIds) AND userId != ?", [$user['userid']]);
+		$idsWithoutPermission = $con->getCol("SELECT notificationId FROM Notifications WHERE notificationId IN ($foldedIds) AND userId != ?", [$user['userId']]);
 		if(!empty($idsWithoutPermission)) fail(403, ['reason' => 'Invalid ids provided.', 'invalid_ids' => $idsWithoutPermission]);
 
 		$con->execute("UPDATE Notifications SET `read` = 1 WHERE notificationId in ($foldedIds)");
@@ -47,7 +47,7 @@ switch($urlparts[0]) {
 							(modId, userId, flags) VALUES (?, ?, ?)
 						ON DUPLICATE KEY
 							UPDATE flags = ?
-					SQL, [$modid, $user['userid'], $newFlags, $newFlags]);
+					SQL, [$modid, $user['userId'], $newFlags, $newFlags]);
 					if($con->affected_rows() == 1) {
 						//NOTE(Rennorb): MariaDB / MySQL returns two rows affected on update.
 						// For this reason we are able to differentiate between update and new insert without extra queries.
@@ -60,7 +60,7 @@ switch($urlparts[0]) {
 				switch($urlparts[3]) {
 					case 'unfollow':
 						validateMethod('POST');
-						$con->execute('DELETE FROM UserFollowedMods WHERE modId = ? AND userId = ?', [$modid, $user['userid']]);
+						$con->execute('DELETE FROM UserFollowedMods WHERE modId = ? AND userId = ?', [$modid, $user['userId']]);
 						if($con->affected_rows()) {
 							$con->execute('UPDATE `mod` SET follows = follows - 1 WHERE modid = ?', [$modid]);
 						}

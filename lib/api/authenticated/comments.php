@@ -18,7 +18,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 		$comment = $con->getRow('SELECT assetId, userId, text FROM Comments WHERE commentId = ? AND !deleted', [$commentId]);
 		if(!$comment)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown commentid.']);
 
-		$wasModAction = $user['userid'] != $comment['userId'];
+		$wasModAction = $user['userId'] != $comment['userId'];
 		if($wasModAction && !canModerate(null, $user))  fail(HTTP_FORBIDDEN);
 
 		$commentHtml = trim(sanitizeHtml(file_get_contents('php://input')));
@@ -28,7 +28,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 			$changelog = "Modified someone elses comment ({$comment['text']}) => ($commentHtml)";
 
 			//TODO(Rennorb): Diff the strings and add the diff to the log.
-			$lastModAction = logModeratorAction($comment['userId'], $user['userid'], MODACTION_KIND_EDIT, $commentId, SQL_DATE_FOREVER, null);
+			$lastModAction = logModeratorAction($comment['userId'], $user['userId'], MODACTION_KIND_EDIT, $commentId, SQL_DATE_FOREVER, null);
 
 			$con->execute('UPDATE Comments SET text = ?, lastModaction = ?, contentLastModified = NOW() WHERE commentId = ?', [$commentHtml, $lastModAction, $commentId]);
 		}
@@ -54,24 +54,24 @@ switch($_SERVER['REQUEST_METHOD']) {
 		SQL, [$commentId]);
 		if(!$comment)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown commentid.']);
 
-		$wasModAction = $user['userid'] != $comment['userId'];
+		$wasModAction = $user['userId'] != $comment['userId'];
 		//NOTE(Rennorb): Mod authors can also "moderate" their comments by deleting them.
 		//TODO(Rennorb): Fine grained team member permissions to inherit this capability to certain team members.
-		if($wasModAction && !canModerate(null, $user) && $comment['modCreatedBy'] != $user['userid'])  fail(HTTP_FORBIDDEN);
+		if($wasModAction && !canModerate(null, $user) && $comment['modCreatedBy'] != $user['userId'])  fail(HTTP_FORBIDDEN);
 
 		if($wasModAction) {
-			$lastModAction = logModeratorAction($comment['userId'], $user['userid'], MODACTION_KIND_DELETE, $commentId, SQL_DATE_FOREVER, null);
+			$lastModAction = logModeratorAction($comment['userId'], $user['userId'], MODACTION_KIND_DELETE, $commentId, SQL_DATE_FOREVER, null);
 	
 			$con->Execute('UPDATE Comments SET deleted = 1, lastModaction = ? WHERE commentId = ?', [$lastModAction, $commentId]);
 			$con->Execute('UPDATE `mod` SET comments = comments - 1 WHERE assetid = ?', [$comment["assetId"]]);
 		
-			$changelog = "Deleted comment #$commentId of user #{$user['userid']}";
+			$changelog = "Deleted comment #$commentId of user #{$user['userId']}";
 		}
 		else {
 			$con->Execute('UPDATE Comments SET deleted = 1 WHERE commentId = ?', [$commentId]);
 			$con->Execute('UPDATE `mod` SET comments = comments - 1 WHERE assetid = ?', [$comment["assetId"]]);
 	
-			$changelog = "User #{$user['userid']} deleted own comment #$commentId";
+			$changelog = "User #{$user['userId']} deleted own comment #$commentId";
 		}
 		logAssetChanges([$changelog], $comment['assetId']);
 	

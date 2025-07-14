@@ -27,28 +27,26 @@ CREATE TABLE IF NOT EXISTS `moddb`.`asset` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `moddb`.`user`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`user` (
-  `userid` INT NOT NULL AUTO_INCREMENT,
-  `roleid` INT NULL DEFAULT 3,
-  `uid` VARCHAR(255) NULL,
-  `name` VARCHAR(255) NULL,
-  `password` VARCHAR(255) NULL,
-  `email` VARCHAR(255) NULL,
-  `actiontoken` VARCHAR(255) NULL,
-  `sessiontoken` VARCHAR(255) NULL,
-  `sessiontokenvaliduntil` DATETIME NULL,
-  `timezone` VARCHAR(255) NULL,
-  `created` DATETIME NULL,
-  `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `lastonline` DATETIME NULL,
-  `banneduntil` DATETIME NULL,
-  `bio` TEXT NULL,
-  PRIMARY KEY (`userid`),
+CREATE TABLE IF NOT EXISTS `Users` (
+  `userId`            INT          NOT NULL AUTO_INCREMENT,
+  `hash`              BINARY(10)   NOT NULL,
+  `roleId`            INT          NOT NULL DEFAULT 3,
+  `uid`               BINARY(18)   NOT NULL,
+  `name`              VARCHAR(255) NOT NULL,
+  `email`             VARCHAR(255) NOT NULL,
+  `actionToken`       BINARY(8)    NOT NULL,
+  `sessionToken`      BINARY(32)   NOT NULL,
+  `sessionValidUntil` DATETIME     NOT NULL,
+  `timezone`          VARCHAR(255) NOT NULL,
+  `lastOnline`        DATETIME     NOT NULL,
+  `bannedUntil`       DATETIME         NULL,
+  `bio`               TEXT             NULL,
+  `created`           DATETIME     NOT NULL DEFAULT NOW(),
+  `lastModified`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`userId`),
   UNIQUE INDEX `email_UNIQUE` (`email`),
-  INDEX `uid` (`uid`)
+  INDEX `uid` (`uid`),
+  INDEX `sessionToken` (`sessionToken`)
 )
 ENGINE = InnoDB;
 
@@ -68,8 +66,8 @@ CREATE TABLE IF NOT EXISTS `moddb`.`moderationrecord` (
   PRIMARY KEY (`actionid`),
   KEY id_until (`targetuserid`, `kind`, `until`),
 	INDEX `moderatorid_index` (`moderatorid`),
-  FOREIGN KEY (`targetuserid`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE RESTRICT,
-  FOREIGN KEY (`moderatorid`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE RESTRICT
+  FOREIGN KEY (`targetuserid`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
+  FOREIGN KEY (`moderatorid`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT
 )
 ENGINE = InnoDB;
 
@@ -157,7 +155,7 @@ CREATE TABLE IF NOT EXISTS `Comments` (
   INDEX `assetid`(`assetId`),
   INDEX `created`(`created`), -- for the main page query that shows the latest 20 comments
   -- CONSTRAINT `FK_Comments_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE, -- TODO(Rennorb) @cleanup: For moderation reasons we allow comment asset references these to be dangling for now.
-  CONSTRAINT `FK_Comments_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_Comments_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT `FK_Comments_lastModaction` FOREIGN KEY (`lastModaction`) REFERENCES `moderationrecord`(`actionid`) ON UPDATE CASCADE ON DELETE RESTRICT
 )
 ENGINE = InnoDB;
@@ -213,7 +211,7 @@ CREATE TABLE IF NOT EXISTS `Changelogs` (
   PRIMARY KEY (`changelogId`),
   INDEX `assetId` (`assetId`),
   INDEX `userId` (`userId`),
-  CONSTRAINT `FK_Changelogs_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `FK_Changelogs_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
@@ -311,7 +309,7 @@ CREATE TABLE IF NOT EXISTS `Notifications` (
   `created`        DATETIME NOT NULL DEFAULT NOW(),
   PRIMARY KEY (`notificationId`),
   INDEX `userid` (`userId`),
-  CONSTRAINT `FK_Notifications_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `FK_Notifications_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
@@ -357,7 +355,7 @@ CREATE TABLE IF NOT EXISTS `UserFollowedMods` (
   UNIQUE INDEX `modiduserid` (`modId`, `userId`),
   INDEX `userid` (`userId`),
   CONSTRAINT `FK_UserFolowedMods_modId`  FOREIGN KEY (`modId`)  REFERENCES `mod`(`modid`)   ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT `FK_UserFolowedMods_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `FK_UserFolowedMods_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
@@ -372,7 +370,7 @@ CREATE TABLE IF NOT EXISTS `ModTeamMembers` (
   INDEX `userid` (`userId`),
   INDEX `modid` (`modId`),
   CONSTRAINT `FK_ModTeamMembers_modId`  FOREIGN KEY (`modId`)  REFERENCES `mod`(`modid`)   ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT `FK_ModTeamMembers_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `FK_ModTeamMembers_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
 SET SQL_MODE=@OLD_SQL_MODE;

@@ -15,17 +15,17 @@ COMMIT;
 
 
 -- -----------------------------------------------------
--- Data for table `moddb`.`user`
+-- Data for table `moddb`.`Users`
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `moddb`;
-INSERT INTO `moddb`.`user` (roleid, uid, name, password, email, actiontoken, sessiontoken, sessiontokenvaliduntil, timezone, created, lastmodified, lastonline) VALUES (3, NULL, 'Example User', NULL, 'example.user@example.com', NULL, NULL, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL);
-INSERT INTO `moddb`.`user` (userid, name, created, banneduntil, email) VALUES (2, 'Evil User', NOW(), '9999-12-31', '2+void@localhost');
-INSERT INTO `moddb`.`user` (userid, roleid, name, created, email) VALUES (3, 2, 'Moderator User', NOW(), '3+void@localhost');
-INSERT INTO `moddb`.`user` (userid, roleid, name, created, email) VALUES (4, 3, 'User 4', NOW(), '4+void@localhost');
-INSERT INTO `moddb`.`user` (userid, roleid, name, created, email) VALUES (5, 3, 'User 5', NOW(), '5+void@localhost');
-INSERT INTO `moddb`.`user` (userid, roleid, name, created, email) VALUES (6, 3, 'User 6', NOW(), '6+void@localhost');
-INSERT INTO `moddb`.`user` (userid, roleid, name, created, email) VALUES (7, 3, 'User 7 __ %_%', NOW(), '7+void@localhost');
+INSERT INTO `Users` (userId, hash, roleId, uid, name, email, actionToken, sessionToken, sessionValidUntil, timezone, lastOnline)              VALUES (1, UNHEX(SUBSTRING(SHA2(CONCAT(1, NOW()), 512), 1, 20)), 3, '1', 'Example User'  , '1+void@localhost', '1', '1', DATE_ADD(NOW(), INTERVAL 14 DAY), '(GMT) London', NOW());
+INSERT INTO `Users` (userId, hash, roleId, uid, name, email, actionToken, sessionToken, sessionValidUntil, timezone, lastOnline, bannedUntil) VALUES (2, UNHEX(SUBSTRING(SHA2(CONCAT(2, NOW()), 512), 1, 20)), 3, '2', 'Evil User'     , '2+void@localhost', '2', '2', DATE_ADD(NOW(), INTERVAL 14 DAY), '(GMT) London', NOW(), '9999-12-31');
+INSERT INTO `Users` (userId, hash, roleId, uid, name, email, actionToken, sessionToken, sessionValidUntil, timezone, lastOnline)              VALUES (3, UNHEX(SUBSTRING(SHA2(CONCAT(3, NOW()), 512), 1, 20)), 2, '3', 'Moderator User', '3+void@localhost', '3', '3', DATE_ADD(NOW(), INTERVAL 14 DAY), '(GMT) London', NOW());
+INSERT INTO `Users` (userId, hash, roleId, uid, name, email, actionToken, sessionToken, sessionValidUntil, timezone, lastOnline)              VALUES (4, UNHEX(SUBSTRING(SHA2(CONCAT(4, NOW()), 512), 1, 20)), 3, '4', 'User 4'        , '4+void@localhost', '4', '4', DATE_ADD(NOW(), INTERVAL 14 DAY), '(GMT) London', NOW());
+INSERT INTO `Users` (userId, hash, roleId, uid, name, email, actionToken, sessionToken, sessionValidUntil, timezone, lastOnline)              VALUES (5, UNHEX(SUBSTRING(SHA2(CONCAT(5, NOW()), 512), 1, 20)), 3, '5', 'User 5'        , '5+void@localhost', '5', '5', DATE_ADD(NOW(), INTERVAL 14 DAY), '(GMT) London', NOW());
+INSERT INTO `Users` (userId, hash, roleId, uid, name, email, actionToken, sessionToken, sessionValidUntil, timezone, lastOnline)              VALUES (6, UNHEX(SUBSTRING(SHA2(CONCAT(6, NOW()), 512), 1, 20)), 3, '6', 'User 6'        , '6+void@localhost', '6', '6', DATE_ADD(NOW(), INTERVAL 14 DAY), '(GMT) London', NOW());
+INSERT INTO `Users` (userId, hash, roleId, uid, name, email, actionToken, sessionToken, sessionValidUntil, timezone, lastOnline)              VALUES (7, UNHEX(SUBSTRING(SHA2(CONCAT(7, NOW()), 512), 1, 20)), 3, '7', 'User 7 __ %_%' , '7+void@localhost', '7', '7', DATE_ADD(NOW(), INTERVAL 14 DAY), '(GMT) London', NOW());
 
 COMMIT;
 

@@ -1,67 +1,55 @@
 <?php
 
-$assetid = $urlparts[2] ?? 0;
+$assetId = $urlparts[2] ?? 0;
 
-if (!$assetid) {
+if (!$assetId) {
 	showErrorPage(HTTP_NOT_FOUND);
 }
 
 $asset = $con->getRow("
-	SELECT 
-		asset.*, 
+	SELECT
+		asset.*,
 		`mod`.*,
-		logofile.cdnpath AS logourl,
-		logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
-		createduser.userid AS createduserid,
-		createduser.created AS createduserjoindate,
-		createduser.name AS createdusername,
-		editeduser.userid AS editeduserid,
-		editeduser.name AS editedusername,
-		status.code AS statuscode
+		logoFile.cdnpath AS logoUrl,
+		logoFile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
+		HEX(creator.hash) AS creatorHash,
+		creator.name AS creatorName,
+		status.code AS statusCode
 	FROM 
-		asset 
-		JOIN `mod` ON asset.assetid = `mod`.assetid
-		LEFT JOIN user AS createduser ON asset.createdbyuserid = createduser.userid
-		LEFT JOIN user AS editeduser ON asset.editedbyuserid = editeduser.userid
-		LEFT JOIN status ON asset.statusid = status.statusid
-		LEFT JOIN file AS logofile ON mod.embedlogofileid = logofile.fileid
+		asset
+		JOIN `mod` ON `mod`.assetid = asset.assetid
+		LEFT JOIN Users creator ON creator.userId = asset.createdbyuserid
+		LEFT JOIN status ON status.statusid = asset.statusid
+		LEFT JOIN file AS logoFile ON logoFile.fileid = mod.embedlogofileid
 	WHERE
 		asset.assetid = ?
-", [$assetid]);
+", [$assetId]);
 
 if (!$asset) showErrorPage(HTTP_NOT_FOUND);
 
 $teamMembers = $con->getAll(<<<SQL
-	SELECT
-		user.userid,
-		user.name,
-		substring(sha2(concat(user.userid, user.created), 512), 1, 20) AS usertoken
-	FROM 
-		ModTeamMembers t
-		JOIN user ON t.userId = user.userid 
-	WHERE 
-		t.modId = ?
+	SELECT u.userId, u.name, HEX(u.hash) AS userHash
+	FROM ModTeamMembers t
+	JOIN Users u ON u.userId = t.userId
+	WHERE t.modId = ?
 SQL, [$asset['modid']]);
-$view->assign("teamMembers", $teamMembers);
-
-$createdusertoken = getUserHash($asset['createduserid'], $asset['createduserjoindate']);
-$view->assign("createdusertoken", $createdusertoken);
+$view->assign('teamMembers', $teamMembers);
 
 $files = $con->getAll("SELECT * FROM `file` WHERE assetid = ? AND fileid NOT IN (?, ?)", 
-	[$assetid, $asset['cardlogofileid'] ?? 0, $asset['embedlogofileid'] ?? 0]);  /* sql cant compare against null */
+	[$assetId, $asset['cardlogofileid'] ?? 0, $asset['embedlogofileid'] ?? 0]);  /* sql cant compare against null */
 
 //NOTE(Rennorb): There was a time where we rescaled images for logos. We no longer do that, but in ~140 cases there are still two images for the logo: the actual logo image, and the original one that was uploaded.
 // Since we don't show the logo in the slideshow anymore, we also need to remove that second file that got uploaded, without removing it from the database so it stays downloadable for the mod author until they replace it.
 // Here is a sql query to get a list of such mods:
 /*
-	select modid, urlalias, user.name from `mod`
+	select modid, urlalias, Users.name from `mod`
 	join file f on f.fileid = `mod`.cardlogofileid
 	join file f2 on f2.cdnpath = concat(substr(f.cdnpath, 1, length(f.cdnpath) - 12), substr(f.cdnpath, -4))
 	join asset on `mod`.assetid = asset.assetid
-	join user on user.userid = asset.createdbyuserid;
+	join Users on Users.userId = asset.createdbyuserid;
 */
-if($asset['legacylogo']) {
-	splitOffExtension($asset['logourl'], $base, $ext);
+if($asset['hasLegacyLogo']) {
+	splitOffExtension($asset['logoUrl'], $base, $ext);
 	if(endsWith($base, '_480_320')) {
 		$legacyLogoPath = substr($base, 0, strlen($base) - 8).'.'.$ext;
 		foreach ($files as $k => $file) {
@@ -73,8 +61,8 @@ if($asset['legacylogo']) {
 	}
 }
 
-if(!empty($asset['logourl'])) {
-	$asset['logourl'] = formatCdnUrlFromCdnPath($asset['logourl']);
+if(!empty($asset['logoUrl'])) {
+	$asset['logoUrl'] = formatCdnUrlFromCdnPath($asset['logoUrl']);
 }
 
 foreach ($files as &$file) {
@@ -92,20 +80,20 @@ $comments = $con->getAll(<<<SQL
 		c.*,
 		mr.kind as lastModaction,
 		u.name AS username,
-		substring(sha2(concat(u.userid, u.created), 512), 1, 20) AS usertoken,
-		IFNULL(u.banneduntil >= NOW(), 0) AS `isBanned`,
+		HEX(u.hash) AS userHash,
+		IFNULL(u.banneduntil >= NOW(), 0) AS isBanned,
 		r.code AS roleCode
 	FROM 
 		Comments c 
-		JOIN user u ON u.userid = c.userId
+		JOIN Users u ON u.userId = c.userId
 		LEFT JOIN Roles r ON r.roleId = u.roleid
 		LEFT JOIN moderationrecord mr ON mr.actionid = c.lastModaction
 	WHERE c.assetId = ? $deletedFilter
 	ORDER BY c.created DESC
-SQL, [$assetid]);
+SQL, [$assetId]);
 
 foreach ($comments as &$comment) {
-	if ($asset['createduserid'] == $comment['userId']) {
+	if ($asset['createdbyuserid'] == $comment['userId']) {
 		$comment['flairCode'] = 'author';
 	}
 
@@ -362,7 +350,7 @@ $oneClickInstallWorks = !preg_match('/macintosh|mac os x|mac_powerpc|iphone|ipod
 $view->assign("shouldShowOneClickInstall", $oneClickInstallWorks && $asset['type'] === 'mod', null, false);
 $view->assign("shouldListCompatibleGameVersion", $asset['type'] === 'mod', null, false);
 $view->assign("changelogColspan", 5 + ($asset['type'] === 'mod' ? ($oneClickInstallWorks ? 2 : 1) : 0), null, false);
-$view->assign("isFollowing", empty($user) ? 0 : $con->getOne('SELECT modid FROM UserFollowedMods WHERE modId = ? AND userId = ?', [$asset['modid'], $user['userid']]));
+$view->assign("isFollowing", empty($user) ? 0 : $con->getOne('SELECT modid FROM UserFollowedMods WHERE modId = ? AND userId = ?', [$asset['modid'], $user['userId']]));
 
 if (!empty($user)) {
 	processTeamInvitation($asset, $user);
@@ -413,7 +401,7 @@ function processTeamInvitation($asset, $user)
 {
 	global $con, $view;
 
-	$invite = $con->getRow("SELECT notificationId, recordId FROM Notifications WHERE kind = 'teaminvite' AND !`read` AND userId = ? AND (recordId & ((1 << 30) - 1)) = ?", [$user['userid'], $asset['modid']]); // :InviteEditBit
+	$invite = $con->getRow("SELECT notificationId, recordId FROM Notifications WHERE kind = 'teaminvite' AND !`read` AND userId = ? AND (recordId & ((1 << 30) - 1)) = ?", [$user['userId'], $asset['modid']]); // :InviteEditBit
 	$pending = !empty($invite);
 	$view->assign("teaminvite", $pending);
 	if(!$pending) return;
@@ -424,7 +412,7 @@ function processTeamInvitation($asset, $user)
 	switch ($_GET['acceptteaminvite']) {
 		case 1:
 			$canEdit = (intval($invite['recordId']) & (1 << 30)) ? 1 : 0; // :InviteEditBit
-			$con->Execute('INSERT INTO ModTeamMembers (modId, userId, canEdit) values (?, ?, ?)', [$asset['modid'], $user['userid'], $canEdit]);
+			$con->Execute('INSERT INTO ModTeamMembers (modId, userId, canEdit) values (?, ?, ?)', [$asset['modid'], $user['userId'], $canEdit]);
 
 			$con->Execute('UPDATE Notifications SET `read` = 1 WHERE notificationId = ?', [$invite['notificationId']]);
 
@@ -452,7 +440,7 @@ function processOwnershipTransfer($asset, $user)
 {
 	global $con, $view;
 
-	$pendingInvitationId = $con->getOne("SELECT notificationId FROM Notifications WHERE kind = 'modownershiptransfer' AND !`read` AND userId = ? AND recordId = ?", [$user['userid'], $asset['modid']]);
+	$pendingInvitationId = $con->getOne("SELECT notificationId FROM Notifications WHERE kind = 'modownershiptransfer' AND !`read` AND userId = ? AND recordId = ?", [$user['userId'], $asset['modid']]);
 	$view->assign("transferownership", $pendingInvitationId);
 	if(!$pendingInvitationId) return;
 
@@ -468,14 +456,14 @@ function processOwnershipTransfer($asset, $user)
 				UPDATE ModTeamMembers
 				SET userId = ?, canEdit = 1, created = ?
 				WHERE modId = ? AND userId = ?
-			SQL, [$oldOwnerData['createdbyuserid'], $oldOwnerData['created'], $asset['modid'], $user['userid']]);
-			$con->execute('UPDATE asset SET createdbyuserid = ? WHERE assetid = ?', [$user['userid'], $asset['assetid']]);
+			SQL, [$oldOwnerData['createdbyuserid'], $oldOwnerData['created'], $asset['modid'], $user['userId']]);
+			$con->execute('UPDATE asset SET createdbyuserid = ? WHERE assetid = ?', [$user['userId'], $asset['assetid']]);
 			$con->execute(<<<SQL
 				UPDATE asset a
 				JOIN `mod` m ON m.modid = ?
 				JOIN `release` r ON r.modid = m.modid AND r.assetid = a.assetid
 				set a.createdbyuserid = ?
-			SQL, [$asset['modid'], $user['userid']]);
+			SQL, [$asset['modid'], $user['userId']]);
 
 			$con->execute('UPDATE Notifications SET `read` = 1 WHERE notificationId = ?', [$pendingInvitationId]);
 			$ok = $con->completeTrans();

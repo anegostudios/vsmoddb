@@ -358,7 +358,7 @@ function logAssetChanges($changes, $assetId)
 		WHERE userId = ? AND assetId = ? AND lastModified >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
 		ORDER BY created DESC
 		LIMIT 1
-	SQL, [$user['userid'], $assetId]);
+	SQL, [$user['userId'], $assetId]);
 
 	if ($activeChangeId) {
 		$con->execute("UPDATE Changelogs SET text = CONCAT(?, '\n\r', text) WHERE changelogId = ?",
@@ -367,7 +367,7 @@ function logAssetChanges($changes, $assetId)
 	}
 	else {
 		$con->execute('INSERT INTO Changelogs (assetId, userId, text) VALUES (?, ?, ?)',
-			[$assetId, $user["userid"], $changes]
+			[$assetId, $user["userId"], $changes]
 		);
 	}
 }
@@ -735,21 +735,6 @@ function sendPostData($path, $data, $remoteurl = null)
 	$result = file_get_contents($remoteurl, false, $context);
 
 	return $result;
-}
-
-
-function getUserHash($userid, $joindate)
-{
-	return substr(hash("sha512", $userid . $joindate), 0, 20);
-}
-
-function getUserByHash($hashcode, $con)
-{
-	return $con->getRow("
-		select *, ifnull(user.banneduntil >= NOW(), 0) as `isbanned`
-		from user
-		where substring(sha2(concat(user.userid, user.created), 512), 1, 20) = ?
-	", array($hashcode));
 }
 
 /**

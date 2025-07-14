@@ -11,7 +11,7 @@ if (empty($user)) {
 }
 
 if ($urlparts[1] == 'clearall') {
-	$con->Execute('UPDATE Notifications SET `read` = 1 WHERE userId = ?', [$user['userid']]);
+	$con->Execute('UPDATE Notifications SET `read` = 1 WHERE userId = ?', [$user['userId']]);
 	goBackOrRootFallback();
 	exit();
 }

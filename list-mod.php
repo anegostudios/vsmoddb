@@ -32,7 +32,7 @@ $selectedParams = [
 	'side'    => $filters['side'] ?? '',
 	'text'    => htmlSpecialChars($filters['text'] ?? ''),
 	'creator' => !empty($filters['a.createdbyuserid'])
-		? [$filters['a.createdbyuserid'], $con->getOne('SELECT `name` FROM user WHERE userid = ?', [$filters['a.createdbyuserid']])]
+		? [$filters['a.createdbyuserid'], $con->getOne('SELECT `name` FROM Users WHERE userId = ?', [$filters['a.createdbyuserid']])]
 		: [0, ''],
 	'majorversion' => $filters['majorversion'] ?? '',
 	'gameversions' => !empty($filters['gameversions']) ? array_flip($filters['gameversions']) : [],

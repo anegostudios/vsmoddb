@@ -39,7 +39,7 @@
 	{if isset($head)}{$head}{/if}
 </head>
 
-<body{if !empty($user) && $user['isbanned']} class="banned"{/if}>
+<body{if !empty($user) && $user['isBanned']} class="banned"{/if}>
 	<script>try\{if(+window.localStorage.getItem('opaque-desc'))document.body.classList.add('opaque-desc')}catch\{}</script>
 	<a name="top"></a>
 	
@@ -77,7 +77,7 @@
 					</nav>
 				</span>
 				
-				{if ($user['rolecode'] == 'admin')}
+				{if ($user['roleCode'] == 'admin')}
 					<span class="icon-only submenu{if $headerHighlight === HEADER_HIGHLIGHT_ADMIN_TOOLS} active{/if}">
 						<span><i class="bx bxs-cog"></i></span>
 						<nav>
@@ -89,11 +89,11 @@
 				{/if}
 
 				<span class="submenu{if $headerHighlight === HEADER_HIGHLIGHT_CURRENT_USER} active{/if}" tabindex="0">
-					<span>{$user["name"]}</span>
+					<span>{$user['name']}</span>
 					<nav>
 						<a href="/show/user/{$user['hash']}">Profile</a>
 						<a href="/accountsettings">Settings</a>
-						<a href="/logout?at={$user['actiontoken']}">Logout</a>
+						<a href="/logout?at={$user['actionToken']}">Logout</a>
 					</nav>
 				</span>
 			{else}

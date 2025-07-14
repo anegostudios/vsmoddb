@@ -1,7 +1,7 @@
 <?php
 
 if (!empty($user)) {
-	$ownmods = $con->getAll("
+	$ownMods = $con->getAll("
 		SELECT
 			asset.*,
 			`mod`.*,
@@ -18,85 +18,79 @@ if (!empty($user)) {
 			(asset.createdbyuserid = ? OR ModTeamMembers.userId = ?)
 		GROUP BY asset.assetid
 		ORDER BY asset.created DESC
-	", array($user['userid'], $user['userid']));
+	", [$user['userId'], $user['userId']]);
 
-	foreach($ownmods as &$row) {
-		unset($row['text']);
-		$row["tags"] = array();
-		$row['from'] = $user['name'];
-		$row['modpath'] = formatModPath($row);
+	foreach($ownMods as &$mod) {
+		unset($mod['text']);
+		$mod['tags'] = [];
+		$mod['from'] = $user['name'];
+		$mod['modpath'] = formatModPath($mod);
 
-		$tagscached = trim($row["tagscached"]);
-		if (!empty($tagscached)) {
-			$tagdata = explode("\r\n", $tagscached);
-			$tags=array();
+		$tagsCached = trim($mod["tagscached"]);
+		if (!empty($tagsCached)) {
+			$tagData = explode("\r\n", $tagsCached);
+			$tags = [];
 
-			foreach($tagdata as $tagrow) {
+			foreach($tagData as $tagrow) {
 				$parts = explode(",", $tagrow);
-				$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagId' => $parts[2]);
+				$tags[] = ['name' => $parts[0], 'color' => $parts[1], 'tagId' => $parts[2]];
 			}
 
-			$row['tags'] = $tags;
+			$mod['tags'] = $tags;
 		}
 	}
-	unset($row);
+	unset($mod);
 
-	$view->assign("mods", $ownmods);
-}
+	$view->assign('mods', $ownMods);
 
-if (!empty($user)) {
 
-	$followedmods = $con->getAll("
+
+	$followedMods = $con->getAll("
 		SELECT
 			asset.*,
 			`mod`.*,
 			logofile.cdnpath AS logocdnpath,
 			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
-			user.name AS `from`,
-			status.code AS statuscode,
-			status.name AS statusname,
+			u.name AS `from`,
 			rd.created AS releasedate,
 			rd.modversion AS releaseversion
 		FROM
 			asset
-			JOIN `mod` ON asset.assetid = `mod`.assetid
-			JOIN user ON (asset.createdbyuserid = user.userid)
-			JOIN status ON (asset.statusid = status.statusid)
-			JOIN UserFollowedMods f ON (`mod`.modid = f.modId AND f.userId = ?)
-			LEFT JOIN file AS logofile ON `mod`.cardlogofileid = logofile.fileid
+			JOIN `mod` ON `mod`.assetid = asset.assetid
+			JOIN Users u ON u.userId = asset.createdbyuserid
+			JOIN UserFollowedMods f ON f.modId = `mod`.modid AND f.userId = ?
+			LEFT JOIN file AS logofile ON logofile.fileid = `mod`.cardlogofileid
 			LEFT JOIN (select * from `release`) rd ON (rd.modid = `mod`.modid)
 		WHERE
-			asset.statusid=2
+			asset.statusid = 2
 			AND rd.created IS NULL OR rd.created = (select max(created) from `release` where `release`.modid = mod.modid)
 		ORDER BY
 			releasedate DESC
-	", array($user['userid']));
+	", [$user['userId']]);
 
-	foreach($followedmods as &$row) {
-		$row['modpath'] = formatModPath($row);
+	foreach($followedMods as &$mod) {
+		$mod['statuscode'] = 'published';
+		$mod['modpath'] = formatModPath($mod);
 	}
-	unset($row);
+	unset($mod);
 
-	$view->assign("followedmods", $followedmods);
+	$view->assign('followedmods', $followedMods);
 } else {
-	$view->assign("followedmods", array());
+	$view->assign('followedmods', []);
 }
 
 
-$latestMods = $con->getAll(<<<SQL
+$latestMods = $con->getAll("
 	SELECT
 		asset.*,
 		`mod`.*,
 		logofile.cdnpath AS logocdnpath,
 		logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
-		user.name AS `from`,
-		status.code AS statuscode,
-		status.name AS statusname
+		u.name AS `from`
 	FROM
 		asset
 		join `mod` ON asset.assetid = `mod`.assetid
-		join user ON (asset.createdbyuserid = user.userid)
-		join status ON (asset.statusid = status.statusid)
+		join Users u ON u.userId = asset.createdbyuserid
 		left join file AS logofile ON mod.cardlogofileid = logofile.fileid
 	WHERE
 		asset.statusid = 2
@@ -104,12 +98,13 @@ $latestMods = $con->getAll(<<<SQL
 	ORDER BY
 		asset.created DESC
 	LIMIT 10
-SQL);
+");
 
-foreach($latestMods as &$row) {
-	$row['modpath'] = formatModPath($row);
+foreach($latestMods as &$mod) {
+	$mod['statuscode'] = 'published';
+	$mod['modpath'] = formatModPath($mod);
 }
-unset($row);
+unset($mod);
 
 $view->assign('latestMods', $latestMods);
 
@@ -120,7 +115,7 @@ $lastestComments = $con->getAll(<<<SQL
 		u.name AS username, IFNULL(u.banneduntil >= NOW(), 0) AS isBanned
 	FROM
 		Comments c
-		join user u ON u.userid = c.userId
+		join Users u ON u.userId = c.userId
 		join asset a ON a.assetid = c.assetId
 	WHERE
 		a.statusid = 2

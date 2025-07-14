@@ -4,9 +4,9 @@ if (empty($user)) {
 	exit();
 }
 
-if (!$user['roleid']) showErrorPage(HTTP_FORBIDDEN);
+if (!$user['roleId']) showErrorPage(HTTP_FORBIDDEN);
 
-if ($user['isbanned']) showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
+if ($user['isBanned']) showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
 
 if (!empty($_POST["upload"]) && @$_FILES["file"]) {
 	$file = $_FILES["file"];

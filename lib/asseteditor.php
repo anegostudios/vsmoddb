@@ -26,7 +26,7 @@ class AssetEditor extends AssetController
 
 	public function load()
 	{
-		global $con, $user, $view, $config, $maxFileUploadSizeMB;
+		global $con, $user, $view, $maxFileUploadSizeMB;
 
 		$this->assetid = empty($_REQUEST["assetid"]) ? 0 : $_REQUEST["assetid"];
 		$this->recordid = null;
@@ -104,7 +104,7 @@ class AssetEditor extends AssetController
 		} else {
 			$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename)); // @perf
 
-			$this->files = $con->getAll("select *, concat(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
+			$this->files = $con->getAll("select *, concat(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userId']));
 		}
 
 		foreach ($this->files as &$file) {
@@ -118,9 +118,9 @@ class AssetEditor extends AssetController
 		$view->assign("files", $this->files);
 
 		$changelogs = $con->getAll(<<<SQL
-			SELECT ch.text, ch.lastModified, user.name AS username
+			SELECT ch.text, ch.lastModified, u.name AS username
 			FROM Changelogs ch
-			JOIN user ON user.userid = ch.userId
+			JOIN Users u ON u.userId = ch.userId
 			WHERE ch.assetId = ?
 			ORDER BY ch.created DESC
 			LIMIT 20
@@ -167,15 +167,15 @@ class AssetEditor extends AssetController
 			select 
 				asset.*, 
 				`{$tablename}`.*,
-				createduser.userid as createduserid,
-				createduser.name as createdusername,
-				editeduser.userid as editeduserid,
-				editeduser.name as editedusername
+				creator.userId as createduserid,
+				creator.name as createdusername,
+				editor.userId as editeduserid,
+				editor.name as editedusername
 			from 
 				asset 
 				join `{$tablename}` on asset.assetid=`{$tablename}`.assetid
-				left join user as createduser on asset.createdbyuserid = createduser.userid
-				left join user as editeduser on asset.editedbyuserid = editeduser.userid
+				left join Users as creator on creator.userId = asset.createdbyuserid
+				left join Users as editor on editor.userId = asset.editedbyuserid
 				left join status on asset.statusid = status.statusid
 			where
 				asset.assetid = ?
@@ -193,7 +193,7 @@ class AssetEditor extends AssetController
 	 */
 	function saveFromBrowser()
 	{
-		global $con, $user, $view;
+		global $con, $user;
 
 		$this->isnew = false;
 		$assetdb = array();
@@ -212,10 +212,10 @@ class AssetEditor extends AssetController
 
 			$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
 
-			update("asset", $this->assetid, array("createdbyuserid" => $user["userid"], "assettypeid" => $assettypeid));
+			update("asset", $this->assetid, array("createdbyuserid" => $user["userId"], "assettypeid" => $assettypeid));
 			update($this->tablename, $this->recordid, array("assetid" => $this->assetid));
 
-			$filesIds = $con->getCol("select * from file where assetid is null and userid=? and assettypeid=?", array($user['userid'], $assettypeid));
+			$filesIds = $con->getCol("select * from file where assetid is null and userid=? and assettypeid=?", array($user['userId'], $assettypeid));
 
 			if (!empty($filesIds)) {
 				// @security: We just grabbed the ids two lines above from the database, direct interpolation is fine.
@@ -225,7 +225,7 @@ class AssetEditor extends AssetController
 			$this->asset = [
 				'assetid' => $this->assetid,
 				'assettypeid' => $assettypeid,
-				'createdbyuserid' => $user['userid'],
+				'createdbyuserid' => $user['userId'],
 			];
 
 			addMessage(MSG_CLASS_OK, $this->namesingular.' created.'); // @escurity: $this->namesingular is manually speciifed and contains no external input.
@@ -238,7 +238,7 @@ class AssetEditor extends AssetController
 			$status = 'saved';
 		}
 
-		$assetdata = array("editedbyuserid" => $user["userid"]);
+		$assetdata = array("editedbyuserid" => $user["userId"]);
 		$recorddata = array();
 
 		foreach ($this->columns as $column) {
@@ -294,7 +294,7 @@ class AssetEditor extends AssetController
 				// @security: $modId and $createdById are known to be integers and therefore sql inert.
 				$con->execute("INSERT INTO Notifications (kind, recordId, userId) values ('modunlocked', $modId, $createdById)");
 				// Read the unlock request just in case we didn't before and only publsihed the mod again.
-				$con->execute("UPDATE Notifications SET `read` = 1 WHERE kind = 'modunlockrequest' AND userId = ? AND recordId = ?", [$user['userid'], $modId]);
+				$con->execute("UPDATE Notifications SET `read` = 1 WHERE kind = 'modunlockrequest' AND userId = ? AND recordId = ?", [$user['userId'], $modId]);
 			}
 			else {
 				$moderatorUserId = $con->getOne('

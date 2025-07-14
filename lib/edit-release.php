@@ -14,10 +14,10 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 
 	$con->startTrans();
 
-	$con->execute('
+	$con->execute(<<<SQL
 		INSERT INTO asset (assettypeid, numsaved, statusid, created, text, createdbyuserid, editedbyuserid)
 		VALUES(2, 1, 2, NOW(), ?, ?, ?)
-	', [$newData['text'], $user['userid'], $user['userid']]);
+	SQL, [$newData['text'], $user['userId'], $user['userId']]);
 	$assetId = $con->insert_ID();
 	
 	$con->execute('INSERT INTO `release` (created, modid, assetid, modidstr, modversion) VALUES(NOW(), ?, ?, ?, ?)', [$mod['modid'], $assetId, $newData['modidstr'] ?? NULL, $newData['modversion']]);
@@ -85,7 +85,9 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 		$con->startTrans();
 
 		if(isset($actualChanges['text'])) {
-			$con->execute('UPDATE asset SET text = ? WHERE assetid = ?', [$actualChanges['text'], $existingRelease['assetid']]);
+			$con->execute('UPDATE asset SET text = ?, editedbyuserid = ? WHERE assetid = ?',
+				[$actualChanges['text'], $user['userId'], $existingRelease['assetid']]
+			);
 
 			$changesToLog[] = 'Updated description.';
 		}
@@ -120,7 +122,7 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 			$changesToLog[] = $change;
 		}
 
-		$con->execute('UPDATE asset SET numsaved = numsaved + 1, editedbyuserid = ? WHERE assetid = ?', [$user['userid'], $existingRelease['assetid']]);
+		$con->execute('UPDATE asset SET numsaved = numsaved + 1, editedbyuserid = ? WHERE assetid = ?', [$user['userId'], $existingRelease['assetid']]);
 
 		logAssetChanges($changesToLog, $existingRelease['assetid']);
 

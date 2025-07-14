@@ -1,6 +1,6 @@
 <?php
 
-if ($user['rolecode'] != 'admin') exit("noprivilege");
+if ($user['roleCode'] != 'admin') showErrorPage(HTTP_FORBIDDEN);
 
 $view->assign("columns", array(array("cssclassname" => "", "code" => "name", "title" => "Name"), array("cssclassname" => "", "code" => "color", "title" => "Color", "datatype" => "color")));
 $view->assign("entrycode", "tag");

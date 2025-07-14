@@ -3,12 +3,12 @@ if (empty($user)) {
 	header('Location: /login');
 	exit();
 }
-if ($user['rolecode'] != 'admin') showErrorPage(HTTP_FORBIDDEN);
+if ($user['roleCode'] != 'admin') showErrorPage(HTTP_FORBIDDEN);
 
-$tagId = $_REQUEST["tagid"] ?? 0;
+$tagId = $_REQUEST['tagid'] ?? 0;
 
-$save = !empty($_POST["save"]);
-$delete = !empty($_POST["delete"]);
+$save = !empty($_POST['save']);
+$delete = !empty($_POST['delete']);
 
 if ($save || $delete) {
 	validateActionToken();
@@ -24,7 +24,7 @@ if ($save) {
 	if (!$tagId) {
 		$isNew = true;
 
-		$con->execute('INSERT INTO Tags (name, text, color) VALUES (?, ?, ?)', [$name, $text, $color]);
+		$con->execute('INSERT INTO Tags (name, text, color, kind) VALUES (?, ?, ?, 2)', [$name, $text, $color]);
 
 		addMessage(MSG_CLASS_OK, 'Tag created.');
 

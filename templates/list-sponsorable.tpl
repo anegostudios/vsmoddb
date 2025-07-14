@@ -9,8 +9,8 @@
 			<tbody>
 				{foreach from=$dataByUser item=sponsorableUserData}
 					<tr>
-						<td><a href="/show/user/{$sponsorableUserData['userhash']}">{$sponsorableUserData['username']}</a></td>
-						<td>{implode(' ', array_keys($sponsorableUserData['confirmedurls']))}</td>
+						<td><a href="/show/user/{$sponsorableUserData['userHash']}">{$sponsorableUserData['username']}</a></td>
+						<td>{implode(' ', array_keys($sponsorableUserData['confirmedUrls']))}</td>
 					</tr>
 					<tr>
 						<td colspan="2">
@@ -19,8 +19,8 @@
 								<ul>
 									{foreach from=$sponsorableUserData['mods'] item=mod}
 									<li>
-										<a href="{$mod['path']}"><h4><img src="{$mod['logourl'] ?? '/web/img/mod-default.png'}"> <span>{$mod['name']}</span></h4></a>
-										<div class="matches">{$mod['matchhtml']}</div>
+										<a href="{$mod['path']}"><h4><img src="{$mod['logoUrl'] ?? '/web/img/mod-default.png'}"> <span>{$mod['name']}</span></h4></a>
+										<div class="matches">{$mod['matchHtml']}</div>
 									</li>
 									{/foreach}
 								</ul>

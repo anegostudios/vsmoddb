@@ -1,17 +1,17 @@
 <?php
 
-if ($user['rolecode'] != 'admin') exit("noprivilege");
+if ($user['roleCode'] != 'admin') exit("noprivilege");
 
 const EXTEND_MATCHES_BY = 20;
 
-$rawData = $con->getAll("
-	SELECT a.createdbyuserid, u.created, u.name as username, m.assetid, m.urlalias, a.name, f.cdnpath, m.donateurl, a.text
+$rawData = $con->getAll(<<<SQL
+	SELECT a.createdbyuserid, HEX(u.hash) AS `hash`, u.name as username, m.assetid, m.urlalias, a.name, f.cdnpath, m.donateurl, a.text
 	FROM `mod` m
 	     JOIN  asset a ON a.assetid = m.assetid
-	     JOIN  user  u ON u.userid = a.createdbyuserid
+	     JOIN  Users u ON u.userId = a.createdbyuserid
 	LEFT JOIN `file` f ON f.fileid = m.embedlogofileid
 	WHERE m.donateurl <> '' OR a.text LIKE '%co-fi%' OR a.text LIKE '%patreon%'
-");
+SQL);
 
 $dataByUser = [];
 foreach($rawData as $row) {
@@ -38,8 +38,8 @@ foreach($rawData as $row) {
 	$modData = [
 		'name'      => $row['name'],
 		'path'      => formatModPath($row),
-		'logourl'   => $row['cdnpath'] ? formatCdnUrl($row) : null,
-		'matchhtml' => $matchesHTML,
+		'logoUrl'   => $row['cdnpath'] ? formatCdnUrl($row) : null,
+		'matchHtml' => $matchesHTML,
 	];
 
 	if(array_key_exists($ownerId, $dataByUser)) {
@@ -48,9 +48,9 @@ foreach($rawData as $row) {
 	}
 	else {
 		$dataByUser[$ownerId] = [
-			'userhash'      => getUserHash($ownerId, $row['created']),
+			'userHash'      => $row['hash'],
 			'username'      => $row['username'],
-			'confirmedurls' => $row['donateurl'] ? [htmlspecialchars($row['donateurl']) => 1] : [],
+			'confirmedUrls' => $row['donateurl'] ? [htmlspecialchars($row['donateurl']) => 1] : [],
 			'mods'          => [$modData],
 		];
 	}

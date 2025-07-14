@@ -20,15 +20,15 @@
 					<div id="cmt-{$comment['commentId']}" class="editbox comment{if $comment['deleted']} deleted{/if}" data-timestamp="{strtotime($comment['created'])}">
 						<div class="title">
 							<a style="text-decoration:none;" href="#cmt-{$comment['commentId']}">&#128172;</a>
-							<a href="/show/user/{$comment['usertoken']}">{$comment['username']}</a>{if !empty($comment["flaircode"])} <small class="flair flair-{$comment['flaircode']}"></small>{/if}{if $comment['isBanned']}&nbsp;<span style="color:red;">[currently restricted]</span>{/if}, {fancyDate($comment['created'])} {if $comment['contentLastModified']}(modified {fancyDate($comment['contentLastModified'])}{if $comment['lastModaction'] == MODACTION_KIND_EDIT} by a moderator{/if}){/if}{if $comment['lastModaction'] == MODACTION_KIND_DELETE} (deleted by moderator){/if}
+							<a href="/show/user/{$comment['userHash']}">{$comment['username']}</a>{if !empty($comment["flaircode"])} <small class="flair flair-{$comment['flaircode']}"></small>{/if}{if $comment['isBanned']}&nbsp;<span style="color:red;">[currently restricted]</span>{/if}, {fancyDate($comment['created'])} {if $comment['contentLastModified']}(modified {fancyDate($comment['contentLastModified'])}{if $comment['lastModaction'] == MODACTION_KIND_EDIT} by a moderator{/if}){/if}{if $comment['lastModaction'] == MODACTION_KIND_DELETE} (deleted by moderator){/if}
 								{if !empty($user)}
-										{if $comment["userId"] == $user["userid"]}
+										{if $comment["userId"] == $user["userId"]}
 											{if !$comment['deleted']}
 												<span class="buttonlinks strikethrough-when-banned">(<a href="#editcomment" data-commentid="{$comment['commentId']}">edit comment</a> <a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a>)</span>
 											{/if}
-										{elseif canModerate($comment['userId'], $user) && !($comment["userId"] == $user["userid"])}
-												<span class="buttonlinks strikethrough-when-banned">({if !$comment['deleted']}<a href="#editcomment" data-commentid="{$comment['commentId']}">edit comment</a> <a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a> {/if}<a href="/moderate/user/{$comment['usertoken']}?source-comment={$comment['commentId']}">moderate user</a>)</span>
-										{elseif $asset['createduserid'] == $user['userid'] && !$comment['deleted']}
+										{elseif canModerate($comment['userId'], $user) && !($comment["userId"] == $user["userId"])}
+												<span class="buttonlinks strikethrough-when-banned">({if !$comment['deleted']}<a href="#editcomment" data-commentid="{$comment['commentId']}">edit comment</a> <a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a> {/if}<a href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}">moderate user</a>)</span>
+										{elseif $asset['creadedbyuserid'] == $user['userId'] && !$comment['deleted']}
 												<span class="buttonlinks strikethrough-when-banned">(<a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a>)</span>
 										{/if}
 								{/if}

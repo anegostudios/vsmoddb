@@ -217,6 +217,74 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 END IF;
 
 
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+ TABLE_NAME='user') ) THEN
+    ALTER TABLE `user` CHANGE COLUMN `userid` `userId` INT NOT NULL AUTO_INCREMENT;
+
+    ALTER TABLE `user` CHANGE COLUMN `roleid` `roleId` INT NOT NULL DEFAULT 3;
+
+    DELETE FROM `user` WHERE `uid` IS NULL;
+    ALTER TABLE `user` CHANGE COLUMN `uid` `_uid` VARCHAR(255) NULL;
+    ALTER TABLE `user` ADD COLUMN `uid` BINARY(18) NOT NULL DEFAULT 0 AFTER `_uid`;
+    UPDATE `user` SET `uid` = FROM_BASE64(`_uid`) WHERE `_uid` IS NOT NULL;
+    ALTER TABLE `user` MODIFY COLUMN `uid` BINARY(18) NOT NULL; -- remove default
+    ALTER TABLE `user` DROP COLUMN `_uid`;
+
+    ALTER TABLE `user` MODIFY COLUMN `name` VARCHAR(255) NOT NULL;
+
+    ALTER TABLE `user` DROP COLUMN `password`;
+
+    ALTER TABLE `user` MODIFY COLUMN `email` VARCHAR(255) NOT NULL;
+
+    -- NOTE(Rennorb): The actiontoken is base64 encoded, but then stripped of some of the characters.
+    -- In theory this inverse conversion cannot be performed, but in practice the tokens are not stored and it should therefore not cause issues, even if some of them get invalidated.
+    ALTER TABLE `user` CHANGE COLUMN `actiontoken` `_actiontoken` VARCHAR(255) NULL;
+    ALTER TABLE `user` ADD COLUMN `actionToken` BINARY(8) NOT NULL DEFAULT 0 AFTER `_actiontoken`;
+    UPDATE IGNORE `user` SET `actionToken` = IFNULL(
+        FROM_BASE64(RPAD(_actiontoken, FLOOR((LENGTH(_actiontoken) + 3) / 4) * 4, '=')),
+        SUBSTRING(UNHEX(MD5(RAND())), 1, 8)
+    );
+    ALTER TABLE `user` MODIFY COLUMN `actionToken` BINARY(8) NOT NULL; -- remove default
+    ALTER TABLE `user` DROP COLUMN `_actiontoken`;
+
+    ALTER TABLE `user` CHANGE COLUMN `sessiontoken` `_sessiontoken` VARCHAR(255) NULL;
+    ALTER TABLE `user` ADD COLUMN `sessionToken` BINARY(32) NOT NULL DEFAULT 0 AFTER `_sessiontoken`;
+    UPDATE `user` SET `sessionToken` = FROM_BASE64(`_sessiontoken`) WHERE `_sessiontoken` IS NOT NULL;
+    ALTER TABLE `user` MODIFY COLUMN `sessionToken` BINARY(32) NOT NULL; -- remove default
+    ALTER TABLE `user` DROP COLUMN `_sessiontoken`;
+
+    ALTER TABLE `user` CHANGE COLUMN `sessiontokenvaliduntil` `sessionValidUntil` DATETIME NULL; -- TODO
+
+    UPDATE `user` SET `timezone` = '(GMT) London' WHERE `timezone` IS NULL;
+    ALTER TABLE `user` MODIFY COLUMN `timezone` VARCHAR(255) NOT NULL;
+
+    ALTER TABLE `user` CHANGE COLUMN `lastonline` `lastOnline` DATETIME NULL; -- TODO
+
+    ALTER TABLE `user` CHANGE COLUMN `banneduntil` `bannedUntil` DATETIME NULL;
+
+
+
+    UPDATE `user` SET created = '0000-00-00' WHERE created IS NULL;
+    ALTER TABLE `user` MODIFY COLUMN `created` DATETIME NOT NULL DEFAULT NOW() AFTER `bio`;
+
+    UPDATE `user` SET lastmodified = created WHERE lastmodified IS NULL;
+    ALTER TABLE `user` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created`;
+
+
+    ALTER TABLE `user` ADD COLUMN `hash` BINARY(10) NULL AFTER `userId`;
+    UPDATE `user` SET `hash` = UNHEX(SUBSTRING(SHA2(CONCAT(userId, created), 512), 1, 20));
+    ALTER TABLE `user` MODIFY COLUMN `hash` BINARY(10) NOT NULL; -- remove default
+
+
+
+    ALTER TABLE `user` ADD INDEX `sessionToken`(`sessionToken`);
+    ALTER TABLE `user` ADD INDEX `hash`(`hash`);
+
+
+    ALTER TABLE `user` RENAME TO `Users`;
+END IF;
+
+
 
 END $$
 

@@ -212,7 +212,7 @@ function queryModSearch($searchParams)
 		}
 	}
 
-	$currentUserId = $user['userid'] ?? 0;
+	$currentUserId = $user['userId'] ?? 0;
 
 	return $con->getAll("
 		SELECT DISTINCT
@@ -229,7 +229,7 @@ function queryModSearch($searchParams)
 			f.userId AS following
 		FROM `mod` m
 		JOIN asset a ON a.assetid = m.assetid
-		LEFT JOIN user c ON c.userid = a.createdbyuserid
+		LEFT JOIN Users c ON c.userId = a.createdbyuserid
 		LEFT JOIN status s ON s.statusid = a.statusid
 		LEFT JOIN UserFollowedMods f ON f.modId = m.modid and f.userId = $currentUserId
 		LEFT JOIN file l ON l.fileid = m.cardlogofileid

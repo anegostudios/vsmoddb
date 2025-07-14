@@ -3,10 +3,10 @@
 <meta content="{$asset['name']}" property="og:title" />
 <meta content="{strip_tags($assetraw['text'])}" property="og:description" />
 <meta name="twitter:card" content="summary_large_image">
-{if (empty($asset['logourl']))}
+{if (empty($asset['logoUrl']))}
 <meta content="/web/img/mod-default.png" property="og:image" />
 {else}
-<meta content="{$asset['logourl']}" property="og:image" />
+<meta content="{$asset['logoUrl']}" property="og:image" />
 {/if}
 <meta content="#91A357" data-react-helmet="true" name="theme-color" />
 {/capture}
@@ -33,7 +33,7 @@
 	</div>
 {/if}
 
-<div class="edit-asset mod-{$asset['statuscode']}">
+<div class="edit-asset mod-{$asset['statusCode']}">
 	<h2>
 		<span class="assettype">
 			<a href="/list/mod">Mods</a>
@@ -43,12 +43,12 @@
 		</span>
 	</h2>
 
-	{if $asset['statuscode']=='draft'}
+	{if $asset['statusCode']=='draft'}
 		<div class="showmod-draftnotice">
 			<h2 style="margin-bottom: 0;">Draft</h2>
 			<small>Set to published to be listed. A draft mod is still visible to everyone via direct link</small>
 		</div>
-	{elseif $asset['statuscode']=='locked'}
+	{elseif $asset['statusCode']=='locked'}
 		<div class="showmod-draftnotice" style="color:#e00">
 			<h2 style="margin-bottom: 0;">Locked&nbsp;<i class="ico alert"></i></h2>
 			<small>This mod has been locked by a moderator. The author may edit their mod to address existing issues.</small>
@@ -95,8 +95,8 @@
 				{foreach from=$files item=file}
 					<img src="{$file['url']}">
 				{/foreach}
-				{if empty($files) && empty($asset['trailervideourl']) && !empty($asset['logourl'])}
-				<img src="{$asset['logourl']}">
+				{if empty($files) && empty($asset['trailervideourl']) && !empty($asset['logoUrl'])}
+				<img src="{$asset['logoUrl']}">
 				{/if}
 			</div>
 
@@ -111,9 +111,9 @@
 				{if !empty($teamMembers)}
 					<span class="text-weak">Authors:</span>
 
-					<a class="username" href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>{foreach from=$teamMembers item=teamMember}, <a class="username" href="/show/user/{$teamMember['usertoken']}">{$teamMember['name']}</a>{/foreach}
+					<a class="username" href="/show/user/{$asset['creatorHash']}">{$asset['creatorName']}</a>{foreach from=$teamMembers item=teamMember}, <a class="username" href="/show/user/{$teamMember['userHash']}">{$teamMember['name']}</a>{/foreach}
 				{else}
-					<span class="text-weak">Author:</span> <a class="username" href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>
+					<span class="text-weak">Author:</span> <a class="username" href="/show/user/{$asset['creatorHash']}">{$asset['creatorName']}</a>
 				{/if}
 
 				<br>

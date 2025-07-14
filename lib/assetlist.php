@@ -37,7 +37,7 @@ class AssetList extends AssetController {
 			from 
 				asset 
 				join `{$this->tablename}` on asset.assetid = `{$this->tablename}`.assetid
-				left join user on asset.createdbyuserid = user.userid
+				left join Users user on asset.createdbyuserid = user.userid
 				left join status on asset.statusid = status.statusid
 			" . (count($this->wheresql) ? "where " . implode(" and ", $this->wheresql) : "") . "
 			order by {$this->orderby}

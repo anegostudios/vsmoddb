@@ -68,7 +68,7 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 	if ($parentassetid) {
 		$quantityfiles = $con->getOne("select count(*) from file where assetid=?", array($parentassetid));
 	} else {
-		$quantityfiles = $con->getOne("select count(*) from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userid']));
+		$quantityfiles = $con->getOne("select count(*) from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userId']));
 	}
 	
 	if ($quantityfiles + 1 > $assettype['maxfiles']) {
@@ -77,10 +77,10 @@ function processFileUpload($file, $assettypeid, $parentassetid) {
 
 
 	$localpath = $file["tmp_name"];
-	$cdnbasepath = generateCdnFileBasenameWithPath($user['userid'], $localpath, $filebasename);
+	$cdnbasepath = generateCdnFileBasenameWithPath($user['userId'], $localpath, $filebasename);
 	$cdnfilepath = "{$cdnbasepath}.{$ext}";
 
-	$data = array("filename" => $file['name'], "cdnpath" => $cdnfilepath, "assettypeid" => $assettypeid, "userid" => $user['userid']);
+	$data = array("filename" => $file['name'], "cdnpath" => $cdnfilepath, "assettypeid" => $assettypeid, "userid" => $user['userId']);
 	if($parentassetid) $data["assetid"] = $parentassetid;
 
 	list($width, $height, $type, $attr) = getimagesize($file["tmp_name"]);

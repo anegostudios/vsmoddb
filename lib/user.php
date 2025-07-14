@@ -1,30 +1,25 @@
 <?php
 
-$sessiontoken = $_COOKIE['vs_websessionkey'] ?? null;
+$sessionToken = $_COOKIE['vs_websessionkey'] ?? null;
 
 $user = null;
 $cnt = 0;
 
-// check `DEBUGUSER` first, $sessiontoken could be set by mods.vintagestory.at even if we're browsing stage.mods.vintagestory.at
+const USER_QUERY_SQL_BASE = '
+	SELECT u.*, HEX(`hash`) AS `hash`, HEX(u.actionToken) AS actionToken, r.code AS roleCode, IFNULL(u.bannedUntil >= NOW(), 0) AS isBanned, rec.reason AS banReason
+	FROM Users u
+	LEFT JOIN Roles r ON r.roleId = u.roleid
+	LEFT JOIN moderationrecord rec ON rec.kind = ' . MODACTION_KIND_BAN . ' AND rec.targetuserid = u.userId AND rec.until = u.bannedUntil AND rec.until >= NOW()
+';
+
+// check `DEBUGUSER` first, $sessionToken could be set by mods.vintagestory.at even if we're browsing stage.mods.vintagestory.at
 if (DEBUGUSER === 1) {
-	$userid = empty($_GET['showas']) ? 1 : (intval($_GET['showas']) ?: 1); // append ?showas=<id> to view the page as a different user
-	$user = $con->getRow('
-		SELECT user.*, r.code AS rolecode, ifnull(user.banneduntil >= now(), 0) AS `isbanned`, rec.reason AS bannedreason
-		FROM user 
-		LEFT JOIN Roles r ON r.roleId = user.roleid
-		LEFT JOIN moderationrecord rec ON (rec.kind = ' . MODACTION_KIND_BAN . ' AND rec.targetuserid = user.userid AND rec.until = user.banneduntil AND rec.until >= NOW())
-		WHERE user.userid = ?
-	', [$userid]);
+	$userId = intval($_GET['showas'] ?? 0) ?: 1; // append ?showas=<id> to view the page as a different user
+	$user = $con->getRow(USER_QUERY_SQL_BASE.'WHERE u.userId = ?', [$userId]);
 }
 
-if ($sessiontoken) {
-	$user = $con->getRow('
-		SELECT user.*, r.code AS rolecode, ifnull(user.banneduntil >= now(), 0) AS `isbanned`, rec.reason AS bannedreason
-		FROM user 
-		LEFT JOIN Roles r ON r.roleId = user.roleid
-		LEFT JOIN moderationrecord rec ON (rec.kind = ' . MODACTION_KIND_BAN . ' AND rec.targetuserid = user.userid AND rec.until = user.banneduntil AND rec.until >= NOW())
-		WHERE sessiontoken = ? AND sessiontokenvaliduntil > NOW()
-	', [$sessiontoken]);
+if ($sessionToken) {
+	$user = $con->getRow(USER_QUERY_SQL_BASE.'WHERE sessionToken = ? AND sessionValidUntil > NOW()', [$sessionToken]);
 }
 
 global $messages;
@@ -32,26 +27,39 @@ $messages = [];
 $view->assignRefUnfiltered('messages', $messages);
 
 if (!empty($user)) {
-	$user['hash'] = getUserHash($user['userid'], $user['created']);
 	loadNotifications(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) == '/notifications'); // @cleanup
 
-	$view->assign("user", $user);
+	$view->assign('user', $user);
 
-	if($user['isbanned']) {
-		$until = formatDateWhichMightBeForever(parseSqlDateTime($user['banneduntil']), 'M jS Y, H:i:s', 'further notice');
+	if($user['isBanned']) {
+		$until = formatDateWhichMightBeForever(parseSqlDateTime($user['bannedUntil']), 'M jS Y, H:i:s', 'further notice');
 		$messages[] = [
-			'class' => MSG_CLASS_ERROR.' permanent',
+			'class' => 'bg-error text-error permanent',
 			'html'  => <<<HTML
 				<h3 style='text-align: center;'>You are currently banned until {$until}.</h3>
 				<p>
 					<h4 style='margin-bottom: 0.25em;'>Reason:</h4>
-					<blockquote>{$user['bannedreason']}</blockquote>
+					<blockquote>{$user['banReason']}</blockquote>
 				</p>
 			HTML
 		];
 	}
 } else {
 	$view->assign("notificationcount", 0);
+}
+
+
+/** @param string $hash Hexadecimal user hash.
+ * @return array user data
+ */
+function getUserByHash($hash)
+{
+	global $con;
+	return $con->getRow(<<<SQL
+		SELECT u.*, HEX(`hash`) AS `hash`, IFNULL(u.bannedUntil >= NOW(), 0) AS isBanned
+		FROM Users u
+		WHERE `hash` = UNHEX(?)
+	SQL, [$hash]);
 }
 
 
@@ -97,7 +105,7 @@ function canEditAsset($asset, $user, $includeTeam = true)
 			FROM ModTeamMembers t 
 			JOIN `mod` ON `mod`.modid = t.modId
 			WHERE assetid = ? AND t.userId = ? AND t.canEdit = 1
-		SQL, array($asset['assetid'], $user['userid']));
+		SQL, array($asset['assetid'], $user['userId']));
 	}
 	else if ($includeTeam && $asset['assettypeid'] === ASSETTYPE_RELEASE) {
 		//NOTE(Rennorb): The second case checks if we are owner of the mod this release belongs to.
@@ -111,10 +119,10 @@ function canEditAsset($asset, $user, $includeTeam = true)
 				FROM `mod`
 				JOIN `release` ON `release`.modid = `mod`.modid AND `release`.assetid = ?
 				JOIN asset ON asset.assetid = `mod`.assetid AND asset.createdbyuserid = ?
-		SQL, array($asset['assetid'], $user['userid'], $asset['assetid'], $user['userid']));
+		SQL, array($asset['assetid'], $user['userId'], $asset['assetid'], $user['userId']));
 	}
 
-	return isset($user['userid']) && ($user['userid'] == $asset['createdbyuserid'] || $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator" || $canEditAsTeamMember);
+	return isset($user['userId']) && ($user['userId'] == $asset['createdbyuserid'] || $user['roleCode'] == 'admin' || $user['roleCode'] == 'moderator' || $canEditAsTeamMember);
 }
 
 /**
@@ -123,24 +131,24 @@ function canEditAsset($asset, $user, $includeTeam = true)
  */
 function canDeleteAsset($asset, $user)
 {
-	return isset($user['userid']) && (
-		   ($user['userid'] == $asset['createdbyuserid'] && $asset['statusid'] != STATUS_LOCKED)
-		|| $user['rolecode'] == 'admin' || $user['rolecode'] == "moderator"
+	return isset($user['userId']) && (
+		   ($user['userId'] == $asset['createdbyuserid'] && $asset['statusid'] != STATUS_LOCKED)
+		|| $user['roleCode'] == 'admin' || $user['roleCode'] == 'moderator'
 	);
 }
 
-function canEditProfile($shownuser, $user)
+function canEditProfile($shownUser, $user)
 {
-	return isset($user['userid']) && ($user['userid'] == $shownuser['userid'] || canModerate($shownuser, $user));
+	return isset($user['userId']) && ($user['userId'] == $shownUser['userId'] || canModerate($shownUser, $user));
 }
 
 /**
- * @param unused $shownuser  the moderation target (ignored for now, moderators are global for now)
+ * @param unused $shownUser  the moderation target (ignored for now, moderators are global for now)
  * @param array  $user       the permission source 
  */
-function canModerate($shownuser, $user)
+function canModerate($shownUser, $user)
 {
-	return $user['rolecode'] === 'admin' || $user['rolecode'] === 'moderator';
+	return $user['roleCode'] === 'admin' || $user['roleCode'] === 'moderator';
 }
 
 /** Load all notifications and assign relevant fields in the view.
@@ -150,10 +158,10 @@ function loadNotifications($loadAll)
 {
 	global $con, $view, $user;
 
-	$view->assign('notificationcount', $con->getOne('SELECT COUNT(*) FROM Notifications WHERE userId = ? AND !`read`', [$user['userid']]));
+	$view->assign('notificationcount', $con->getOne('SELECT COUNT(*) FROM Notifications WHERE userId = ? AND !`read`', [$user['userId']]));
 
 	$limit = $loadAll ? '' : 'LIMIT 10';
-	$notifications = $con->getAll("SELECT * FROM Notifications WHERE userId = ? AND !`read` ORDER BY created DESC $limit", [$user['userid']]);
+	$notifications = $con->getAll("SELECT * FROM Notifications WHERE userId = ? AND !`read` ORDER BY created DESC $limit", [$user['userId']]);
 
 	foreach ($notifications as &$notification) {
 		switch ($notification['kind']) {
@@ -162,8 +170,8 @@ function loadNotifications($loadAll)
 					SELECT a.name AS modname, u.name AS username
 					FROM `mod` m
 					JOIN asset a ON a.assetid = m.assetid
-					JOIN user u ON u.userid = a.createdbyuserid
-					WHERE modid = ?
+					JOIN Users u ON u.userId = a.createdbyuserid
+					WHERE m.modid = ?
 				SQL, [$notification['recordId']]);
 
 				$notification['text'] = "{$cmt['username']} uploaded a new version of {$cmt['modname']}";
@@ -174,7 +182,7 @@ function loadNotifications($loadAll)
 					SELECT a.name AS modname, u.name AS username
 					FROM `mod` m
 					JOIN asset a ON a.assetid = m.assetid
-					JOIN user u ON u.userid = a.createdbyuserid
+					JOIN Users u ON u.userId = a.createdbyuserid
 					WHERE m.modid = ? 
 				SQL, [intval($notification['recordId']) & ((1 << 30) - 1)]);  // :InviteEditBit
 
@@ -186,7 +194,7 @@ function loadNotifications($loadAll)
 					SELECT a.name AS modname, u.name AS username
 					FROM `mod` m
 					JOIN asset a ON a.assetid = m.assetid
-					JOIN user u ON u.userid = a.createdbyuserid
+					JOIN Users u ON u.userId = a.createdbyuserid
 					WHERE m.modid = ?
 				SQL, [$notification['recordId']]);
 
@@ -198,7 +206,7 @@ function loadNotifications($loadAll)
 					SELECT a.name AS modname, u.name AS username
 					FROM Comments c
 					JOIN asset a ON a.assetid = c.assetId
-					JOIN user u ON u.userid = c.userId
+					JOIN Users u ON u.userId = c.userId
 					WHERE c.commentId = ?
 				SQL, [$notification['recordId']]);
 
@@ -236,7 +244,7 @@ function loadNotifications($loadAll)
 function validateActionToken()
 {
 	global $user;
-	if (!isset($_REQUEST['at']) || $user['actiontoken'] != $_REQUEST['at']) {
-		showErrorPage(HTTP_BAD_REQUEST, 'Invalid action token. To prevent CSRF, you can only submit froms directly on the site. If you believe this is an error, please contact Rennorb <a class="external" href="https://discord.com/channels/302152934249070593/810541931469078568">on Discord</a>.', false, true);
+	if (!isset($_REQUEST['at']) || $user['actionToken'] != $_REQUEST['at']) {
+		showErrorPage(HTTP_BAD_REQUEST, 'Invalid action token. To prevent CSRF, you can only submit forms directly on the site. If you believe this is an error, please contact Rennorb <a class="external" href="https://discord.com/channels/302152934249070593/810541931469078568">on Discord</a>.', false, true);
 	}
 }

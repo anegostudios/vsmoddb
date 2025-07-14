@@ -1,6 +1,6 @@
 <?php
 if (empty($user))   showErrorPage(HTTP_UNAUTHORIZED);
-if ($user['isbanned'])  showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
+if ($user['isBanned'])  showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
 
 
 include($config['basepath'] . 'lib/edit-release.php');
@@ -11,32 +11,32 @@ $pushedErrorForCurrentFile = false; // This is here so we can push the errors ev
 
 // /edit/release/?assetid=32 (edit existing release)
 if(!empty($_REQUEST['assetid'])) {
-	$existingRelease = $con->getRow('
+	$existingRelease = $con->getRow(<<<SQL
 		SELECT a.*, r.*, createdBy.name as createdByUsername, lastEditedBy.name as lastEditedByUsername
 		FROM `release` r
 		JOIN asset a ON a.assetid = r.assetid
-		LEFT JOIN user createdBy ON createdBy.userid = a.createdbyuserid 
-		LEFT JOIN user lastEditedBy ON lastEditedBy.userid = a.editedbyuserid 
+		LEFT JOIN Users createdBy ON createdBy.userId = a.createdbyuserid 
+		LEFT JOIN Users lastEditedBy ON lastEditedBy.userId = a.editedbyuserid 
 		WHERE r.assetid = ?
-	', [$_REQUEST['assetid']]);
+	SQL, [$_REQUEST['assetid']]);
 
 	if($existingRelease) {
-		$targetMod = $con->getRow('
+		$targetMod = $con->getRow(<<<SQL
 			SELECT a.*, m.*
 			FROM `mod` m
 			JOIN asset a ON a.assetid = m.assetid
 			WHERE m.modid = ?
-		', [$existingRelease['modid']]);
+		SQL, [$existingRelease['modid']]);
 	}
 }
 // /edit/release/?modid=32  (add new release)
 else if(!empty($_REQUEST['modid'])) {
-	$targetMod = $con->getRow('
+	$targetMod = $con->getRow(<<<SQL
 		SELECT a.*, m.*
 		FROM `mod` m
 		JOIN asset a ON a.assetid = m.assetid
 		WHERE m.modid = ?
-	', [$_REQUEST['modid']]);
+	SQL, [$_REQUEST['modid']]);
 }
 
 //NOTE(Rennorb): Do as little work as possible before this permission check, but don't unnecessarily split queries.
@@ -73,7 +73,7 @@ if(!empty($_POST['save'])) {
 			FROM file
 			LEFT JOIN ModPeekResult mpr ON mpr.fileId = file.fileid
 			WHERE assetid IS NULL AND assettypeid = 2 AND userid = ?
-		', [$user['userid']]);
+		', [$user['userId']]);
 
 		if(!empty($currentFiles[0]['errors'])) {
 			addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$currentFiles[0]['errors'], true);
@@ -243,7 +243,7 @@ else {
 		FROM file
 		LEFT JOIN ModPeekResult mpr ON mpr.fileId = file.fileid
 		WHERE assetid IS NULL AND assettypeid = 2 AND userid = ?
-	", [$user['userid']]);
+	", [$user['userId']]);
 
 	if(!$pushedErrorForCurrentFile && !empty($files[0]['errors'])) {
 		addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$files[0]['errors'], true);
@@ -269,9 +269,9 @@ unset($gameVersion);
 
 
 $assetChangelog = $existingRelease ? $con->getAll(<<<SQL
-	SELECT ch.text, ch.lastModified, user.name AS username
+	SELECT ch.text, ch.lastModified, u.name AS username
 	FROM Changelogs ch
-	JOIN user ON ch.userid = user.userid
+	JOIN Users u ON u.userId = ch.userid
 	WHERE ch.assetid = ?
 	ORDER BY ch.created DESC
 	LIMIT 20

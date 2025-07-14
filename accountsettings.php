@@ -5,7 +5,7 @@ if (!empty($_POST['save'])) {
 	validateActionToken();
 
 	$newTimezone = array_keys($timezones)[intval($_POST['timezone'])];
-	$e = $con->execute('UPDATE `user` SET `timezone` = ? WHERE userid = ?', [$newTimezone, $user['userid']]);
+	$e = $con->execute('UPDATE Users SET timezone = ? WHERE userId = ?', [$newTimezone, $user['userId']]);
 
 	addMessage(MSG_CLASS_OK, 'New settings saved.');
 	forceRedirectAfterPOST();
@@ -18,7 +18,7 @@ $followedMods = $con->getAll('
 	JOIN `mod` ON `mod`.modid = f.modId
 	JOIN asset ON asset.assetid = `mod`.assetid
 	WHERE f.userId = ?
-', [$user['userid']]);
+', [$user['userId']]);
 
 
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_CURRENT_USER, null, true);

@@ -14,7 +14,7 @@ switch(count($urlparts)) {
 			case 'POST':
 				if(empty($_POST['new'])) fail(HTTP_BAD_REQUEST);
 
-				if($user['rolecode'] !== 'admin') fail(HTTP_FORBIDDEN);
+				if($user['roleCode'] !== 'admin') fail(HTTP_FORBIDDEN);
 				validateActionTokenAPI();
 				validateUserNotBanned();
 
@@ -52,7 +52,7 @@ switch(count($urlparts)) {
 	case 1:
 		switch($_SERVER['REQUEST_METHOD']) {
 			case 'DELETE':
-				if($user['rolecode'] !== 'admin') fail(HTTP_FORBIDDEN);
+				if($user['roleCode'] !== 'admin') fail(HTTP_FORBIDDEN);
 				validateActionTokenAPI();
 				validateUserNotBanned();
 

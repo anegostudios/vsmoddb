@@ -3,7 +3,7 @@ if (empty($user)) {
 	header("Location: /login");
 	exit();
 }
-if (!$user['roleid']) showErrorPage(HTTP_FORBIDDEN);
+if (!$user['roleId']) showErrorPage(HTTP_FORBIDDEN);
 
 validateActionToken();
 
@@ -30,7 +30,7 @@ if ($assetid) {
 	}
 
 } else {
-	if ($file['userid'] != $user['userid']  && $user['rolecode'] != 'admin') {
+	if ($file['userid'] != $user['userId']  && $user['roleCode'] != 'admin') {
 		exit(json_encode(array("status" => "error", "errormessage" => 'No privilege to delete files from this asset. You may need to login again')));
 	}
 }

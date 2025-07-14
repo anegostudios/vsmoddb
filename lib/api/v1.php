@@ -63,13 +63,13 @@ switch ($action) {
 
 	case "authors":
 		if (isset($_GET["name"])) {
-			$rows = $con->getAll("select userid, name from user where (banneduntil is null or banneduntil < now()) and name like ? limit 10", "%".escapeStringForLikeQuery(substr($_GET["name"], 0, 20))."%");
+			$rows = $con->getAll("select userId, name from Users where (banneduntil is null or banneduntil < now()) and name like ? limit 10", "%".escapeStringForLikeQuery(substr($_GET["name"], 0, 20))."%");
 		} else {		
-			$rows = $con->getAll("select userid, name from user");
+			$rows = $con->getAll("select userId, name from Users");
 		}
 		
 		$authors = array_map(fn($row) => [
-			"userid" => intval($row["userid"]),
+			"userid" => intval($row["userId"]),
 			"name"   => $row['name'],
 		], $rows);
 
@@ -159,7 +159,7 @@ function listMod($modid)
 		from 
 			`mod` 
 			join asset on (`mod`.assetid = asset.assetid)
-			join user on (`asset`.createdbyuserid = user.userid)
+			join Users user on (`asset`.createdbyuserid = user.userId)
 			left join file as logofile_external on (`mod`.embedlogofileid = logofile_external.fileid)
 			left join file as logofile_db on (`mod`.cardlogofileid = logofile_db.fileid)
 		where
@@ -294,7 +294,7 @@ function listMods()
 	}
 
 	if (!empty($_GET["author"])) {
-		$wheresql[] = "user.userid=?";
+		$wheresql[] = "user.userId=?";
 		$wherevalues[] = intval($_GET["author"]);
 	}
 
@@ -342,7 +342,7 @@ function listMods()
 		from 
 			`mod` 
 			join asset on (`mod`.assetid = asset.assetid)
-			join user on (`asset`.createdbyuserid = user.userid)
+			join Users user on (`asset`.createdbyuserid = user.userId)
 			left join `release` on `release`.modid = `mod`.modid
 			left join file as logofile_external on mod.embedlogofileid = logofile_external.fileid
 		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "

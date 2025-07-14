@@ -14,15 +14,15 @@ if ($assetid) {
 		select 
 			asset.*, 
 			`mod`.*,
-			createduser.userid as createduserid,
+			createduser.userId as createduserid,
 			createduser.name as createdusername,
-			editeduser.userid as editeduserid,
+			editeduser.userId as editeduserid,
 			editeduser.name as editedusername
 		from 
 			asset 
 			join `mod` on asset.assetid=`mod`.assetid
-			left join user as createduser on asset.createdbyuserid = createduser.userid
-			left join user as editeduser on asset.editedbyuserid = editeduser.userid
+			left join Uusers as createduser on asset.createdbyuserid = createduser.userId
+			left join Uusers as editeduser on asset.editedbyuserid = editeduser.userId
 			left join status on asset.statusid = status.statusid
 		where
 			asset.assetid = ?

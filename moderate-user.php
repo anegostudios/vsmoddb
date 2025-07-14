@@ -37,8 +37,8 @@ if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 		addMessage(MSG_CLASS_ERROR, "Missing $errorReasons for ban."); // @security no external input in $errorReasons
 	}
 	else {
-		$con->execute('UPDATE user SET banneduntil = ? WHERE userid = ?', [$until, $targetUser['userid']]);
-		logModeratorAction($targetUser['userid'], $user['userid'], MODACTION_KIND_BAN, $targetUser['userid'], $until, $postData['modreason']);
+		$con->execute('UPDATE Users SET bannedUntil = ? WHERE userId = ?', [$until, $targetUser['userId']]);
+		logModeratorAction($targetUser['userId'], $user['userId'], MODACTION_KIND_BAN, $targetUser['userId'], $until, $postData['modreason']);
 
 		forceRedirectAfterPOST();
 		exit();
@@ -51,25 +51,26 @@ else if(isset($_POST['submit']) && $_POST['submit'] == 'redeem') {
 		addMessage(MSG_CLASS_ERROR, 'Missing reason for redemption.');
 	}
 	else {
-		$con->execute('UPDATE user SET banneduntil = NOW() WHERE userid = ?', [$targetUser['userid']]);
+		//TODO(Rennorb) @feedback: Check if hte user even needs to be redeemed.
+		$con->execute('UPDATE Users SET bannedUntil = NOW() WHERE userId = ?', [$targetUser['userId']]);
 		$con->execute('UPDATE moderationrecord SET until = NOW() WHERE kind = '.MODACTION_KIND_BAN.' AND until > NOW()');
-		logModeratorAction($targetUser['userid'], $user['userid'], MODACTION_KIND_REDEEM, $targetUser['userid'], SQL_DATE_FOREVER, $reason);
+		logModeratorAction($targetUser['userId'], $user['userId'], MODACTION_KIND_REDEEM, $targetUser['userId'], SQL_DATE_FOREVER, $reason);
 
 		forceRedirectAfterPOST();
 		exit();
 	}
 }
 
-$shownUser = $con->getRow('SELECT * FROM user WHERE userid = ?', [$targetUser['userid']]);
+$shownUser = $con->getRow('SELECT * FROM Users WHERE userId = ?', [$targetUser['userId']]);
 
 $records = $con->getAll(<<<SQL
 	select rec.created, rec.kind, rec.until, moderator.name as moderatorName, rec.reason, c.commentId, c.assetId
 	from moderationrecord as rec
-	join user as moderator on moderator.userid = rec.moderatorid
+	join Users as moderator on moderator.userId = rec.moderatorid
 	left join Comments c on c.lastModaction = rec.actionid
 	where rec.targetuserid = ?
 	order by rec.created desc
-SQL, array($targetUser['userid']));
+SQL, array($targetUser['userId']));
 
 foreach($records as &$row) {
 	$row['until'] = parseSqlDateTime($row['until']);
