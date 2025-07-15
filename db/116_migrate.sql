@@ -334,7 +334,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 
     ALTER TABLE `release` CHANGE COLUMN `assetid` `assetId` INT NOT NULL;
 
-    DELETE a FROM `asset` a LEFT JOIN `release` r ON r.assetId = a.assetid WHERE r.modid IS NULL;
+    DELETE a FROM `asset` a JOIN `release` r ON r.assetId = a.assetid WHERE a.assettypeid = 2 AND r.modid IS NULL;
     DELETE FROM `release` WHERE modid IS NULL;
     DELETE r FROM `release` r LEFT JOIN `mod` m ON m.modid = r.modid WHERE m.assetid IS NULL;
     ALTER TABLE `release` CHANGE COLUMN `modid` `modId` INT NOT NULL;
