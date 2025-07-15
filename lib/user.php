@@ -103,12 +103,12 @@ function canEditAsset($asset, $user, $includeTeam = true)
 		$canEditAsTeamMember = $con->getOne(<<<SQL
 				SELECT 1 
 				FROM ModTeamMembers t 
-				JOIN `release` ON `release`.modid = t.modId
+				JOIN ModReleases r ON r.modId = t.modId
 				WHERE assetid = ? AND t.userId = ? AND t.canEdit = 1
 			union
 				SELECT 1
 				FROM `mod`
-				JOIN `release` ON `release`.modid = `mod`.modid AND `release`.assetid = ?
+				JOIN ModReleases r ON r.modId = `mod`.modid AND r.assetId = ?
 				JOIN asset ON asset.assetid = `mod`.assetid AND asset.createdbyuserid = ?
 		SQL, array($asset['assetid'], $user['userId'], $asset['assetid'], $user['userId']));
 	}

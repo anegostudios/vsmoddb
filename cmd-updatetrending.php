@@ -18,12 +18,12 @@ $ok = $con->execute(<<<SQL
 		GROUP BY c.assetId
 	) c1 ON c1.assetId = m.assetid
 	LEFT JOIN (
-		SELECT r.modid, COUNT(d.lastDownload) as downloads
+		SELECT r.modId, COUNT(d.lastDownload) as downloads
 		FROM FileDownloadTracking d
 		JOIN `file` f ON f.fileid = d.fileId
-		join `release` r on r.assetid = f.assetid
+		join ModReleases r on r.assetId = f.assetid
 		WHERE d.lastDownload > DATE_SUB(NOW(), INTERVAL 72 HOUR)
-		GROUP BY r.modid
+		GROUP BY r.modId
 	) f1 ON f1.modid = m.modid
 	SET m.trendingpoints = IFNULL(f1.downloads, 0) + 5 * IFNULL(c1.comments, 0)
 SQL);

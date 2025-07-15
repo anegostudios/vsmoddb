@@ -327,6 +327,44 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `moderationrecord` RENAME TO `ModerationRecords`;
 END IF;
 
+
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+ TABLE_NAME='release') ) THEN
+    ALTER TABLE `release` CHANGE COLUMN `releaseid` `releaseId` INT NOT NULL AUTO_INCREMENT;
+
+    ALTER TABLE `release` CHANGE COLUMN `assetid` `assetId` INT NOT NULL;
+
+    DELETE a FROM `asset` a LEFT JOIN `release` r ON r.assetId = a.assetid WHERE r.modid IS NULL;
+    DELETE FROM `release` WHERE modid IS NULL;
+    DELETE r FROM `release` r LEFT JOIN `mod` m ON m.modid = r.modid WHERE m.assetid IS NULL;
+    ALTER TABLE `release` CHANGE COLUMN `modid` `modId` INT NOT NULL;
+
+    ALTER TABLE `release` CHANGE COLUMN `modidstr` `identifier` VARCHAR(255) NULL;
+
+    ALTER TABLE `release` CHANGE COLUMN `modversion` `version` BIGINT UNSIGNED NOT NULL;
+
+    ALTER TABLE `release` DROP COLUMN `releasedate`;
+
+    ALTER TABLE `release` DROP COLUMN `inprogress`;
+
+    ALTER TABLE `release` CHANGE COLUMN `detailtext` `detailText` TEXT NULL;
+
+    ALTER TABLE `release` DROP COLUMN `releaseorder`;
+
+    UPDATE `release` SET created = '0000-00-00' WHERE created IS NULL;
+    ALTER TABLE `release` MODIFY COLUMN `created` DATETIME NOT NULL DEFAULT NOW();
+
+    UPDATE `release` SET lastmodified = created WHERE lastmodified IS NULL;
+    ALTER TABLE `release` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created`;
+
+    ALTER TABLE `release` ADD CONSTRAINT `FK_ModReleases_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetid`) ON UPDATE CASCADE ON DELETE CASCADE;
+
+    ALTER TABLE `release` ADD CONSTRAINT `FK_ModReleases_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    ALTER TABLE `release` RENAME TO `ModReleases`;
+END IF;
+
 END $$
 
 CALL upgrade_database__moderation() $$

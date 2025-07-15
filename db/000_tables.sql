@@ -168,27 +168,23 @@ CREATE TABLE IF NOT EXISTS `moddb`.`assettype` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `moddb`.`release`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`release` (
-  `releaseid` INT NOT NULL AUTO_INCREMENT,
-  `assetid` INT NULL,
-  `modid` INT NULL,
-  `modidstr` VARCHAR(255) NULL,
-  `modversion` BIGINT UNSIGNED NOT NULL,
-  `releasedate` VARCHAR(255) NULL,
-  `inprogress` TINYINT NULL,
-  `detailtext` TEXT NULL,
-  `releaseorder` INT NULL,
-  `created` DATETIME NULL,
-  `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`releaseid`),
-  -- This has to include modidstr, as one mod can contain releases for multiple modidstr's.
-  -- This also has to include the modid, as tool/other mods dont need to have a modidstr.
-  UNIQUE INDEX `identifier` (`modid`, `modidstr`, `modversion`),
-  UNIQUE INDEX `assetid` (`assetid`),
-  INDEX `modid` (`modid`)
+CREATE TABLE IF NOT EXISTS `ModReleases` (
+  `releaseId`    INT             NOT NULL AUTO_INCREMENT,
+  `assetId`      INT             NOT NULL,
+  `modId`        INT             NOT NULL,
+  `identifier`   VARCHAR(255)        NULL, -- TODO
+  `version`      BIGINT UNSIGNED NOT NULL,
+  `detailText`   TEXT                NULL,
+  `created`      DATETIME        NOT NULL DEFAULT NOW(),
+  `lastModified` TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`releaseId`),
+  -- This has to include identifier, as one mod can contain releases for multiple identifier's.
+  -- This also has to include the modid, as tool/other mods dont need to have a identifier.
+  UNIQUE INDEX `identifier` (`modId`, `identifier`, `version`),
+  UNIQUE INDEX `assetid` (`assetId`),
+  INDEX `modid` (`modId`),
+  CONSTRAINT `FK_ModReleases_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetid`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_ModReleases_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 

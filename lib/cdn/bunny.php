@@ -227,7 +227,7 @@ function bunny_pullLogsAndUpdateDownloadNumbers($date)
 
 		if ($countAsSeparateDownload) {
 			$con->Execute('UPDATE `file` SET downloads = downloads + 1 WHERE fileid = ?', [$fileid]);
-			$con->Execute('UPDATE `mod`  SET downloads = downloads + 1 WHERE modid = (SELECT r.modid FROM `release` r WHERE r.assetid = ?)', [$file['assetid']]);
+			$con->Execute('UPDATE `mod`  SET downloads = downloads + 1 WHERE modid = (SELECT r.modId FROM ModReleases r WHERE r.assetId = ?)', [$file['assetid']]);
 		}
 	}
 }

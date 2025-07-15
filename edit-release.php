@@ -13,11 +13,11 @@ $pushedErrorForCurrentFile = false; // This is here so we can push the errors ev
 if(!empty($_REQUEST['assetid'])) {
 	$existingRelease = $con->getRow(<<<SQL
 		SELECT a.*, r.*, createdBy.name as createdByUsername, lastEditedBy.name as lastEditedByUsername
-		FROM `release` r
-		JOIN asset a ON a.assetid = r.assetid
+		FROM ModReleases r
+		JOIN asset a ON a.assetid = r.assetId
 		LEFT JOIN Users createdBy ON createdBy.userId = a.createdbyuserid 
 		LEFT JOIN Users lastEditedBy ON lastEditedBy.userId = a.editedbyuserid 
-		WHERE r.assetid = ?
+		WHERE r.assetId = ?
 	SQL, [$_REQUEST['assetid']]);
 
 	if($existingRelease) {
@@ -26,7 +26,7 @@ if(!empty($_REQUEST['assetid'])) {
 			FROM `mod` m
 			JOIN asset a ON a.assetid = m.assetid
 			WHERE m.modid = ?
-		SQL, [$existingRelease['modid']]);
+		SQL, [$existingRelease['modId']]);
 	}
 }
 // /edit/release/?modid=32  (add new release)
@@ -59,21 +59,21 @@ if(!empty($_POST['save'])) {
 
 	//TODO(Rennorb) @cleanup @correctness: Attach files on save instead of on upload.
 	if($existingRelease) {
-		$currentFiles = $con->getAll('
+		$currentFiles = $con->getAll(<<<SQL
 			SELECT file.assetid, file.fileid, mpr.modIdentifier AS modIdentifier, mpr.modVersion AS modVersion
 			FROM file
 			LEFT JOIN ModPeekResult mpr ON mpr.fileId = file.fileid
 			WHERE assetid = ?
-		', [$existingRelease['assetid']]);
+		SQL, [$existingRelease['assetId']]);
 	}
 	else {
 		// hovering files
-		$currentFiles = $con->getAll('
+		$currentFiles = $con->getAll(<<<SQL
 			SELECT file.assetid, file.fileid, mpr.modIdentifier AS modIdentifier, mpr.modVersion AS modVersion, mpr.errors
 			FROM file
 			LEFT JOIN ModPeekResult mpr ON mpr.fileId = file.fileid
 			WHERE assetid IS NULL AND assettypeid = 2 AND userid = ?
-		', [$user['userId']]);
+		SQL, [$user['userId']]);
 
 		if(!empty($currentFiles[0]['errors'])) {
 			addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$currentFiles[0]['errors'], true);
@@ -88,7 +88,7 @@ if(!empty($_POST['save'])) {
 			addMessage(MSG_CLASS_ERROR, 'Only one file can be attached to a release.');
 		}
 		else {
-			$assetId = $existingRelease['assetid'] ?? 0;
+			$assetId = $existingRelease['assetId'] ?? 0;
 			$processedFile = processFileUpload($_FILES['newfile'], 2, $assetId);
 
 			if($processedFile['status'] === 'error') {
@@ -131,31 +131,31 @@ if(!empty($_POST['save'])) {
 	if($targetMod['type'] === 'mod') {
 		// Mods take modid and version from the attached file. We no longer allow manual entry.
 		if($currentFiles) {
-			$newData['modidstr']   = $currentFiles[0]['modIdentifier'];
-			$newData['modversion'] = $currentFiles[0]['modVersion'];
+			$newData['identifier'] = $currentFiles[0]['modIdentifier'];
+			$newData['version']    = $currentFiles[0]['modVersion'];
 
-			if (in_array($newData['modidstr'], ["game", "creative", "survival"])) { // Reserve special mod ids
-				addMessage(MSG_CLASS_ERROR, "This modid ('{$newData['modidstr']}') is reserved.");
+			if (in_array($newData['identifier'], ["game", "creative", "survival"])) { // Reserve special mod ids
+				addMessage(MSG_CLASS_ERROR, "This modid ('{$newData['identifier']}') is reserved.");
 			}
 			else {
-				$sqlIgnoreExistingRelease = $existingRelease ? "r.releaseid != {$existingRelease['releaseid']} AND" : ''; // @security $existingRelease['releaseid'] comes from the database and is numeric, therefore sql inert.
+				$sqlIgnoreExistingRelease = $existingRelease ? "r.releaseId != {$existingRelease['releaseId']} AND" : ''; // @security $existingRelease['releaseId'] comes from the database and is numeric, therefore sql inert.
 				$inUseBy = $con->getRow("
-					SELECT a.*, r.modid, r.modversion, m.assetid as modassetid, m.urlalias
-					FROM `release` r
-					JOIN asset a ON a.assetid = r.assetid
-					JOIN `mod` m ON m.modid = r.modid
-					WHERE $sqlIgnoreExistingRelease r.modidstr = ? AND (r.modid != ? || r.modversion = ?)
+					SELECT a.*, r.modId, r.version, m.assetId as modAssetId, m.urlalias
+					FROM ModReleases r
+					JOIN asset a ON a.assetid = r.assetId
+					JOIN `mod` m ON m.modid = r.modId
+					WHERE $sqlIgnoreExistingRelease r.identifier = ? AND (r.modId != ? || r.version = ?)
 					LIMIT 1
-				", [$newData['modidstr'], $targetMod['modid'], $newData['modversion']]);
+				", [$newData['identifier'], $targetMod['modid'], $newData['version']]);
 
 				if ($inUseBy) {
-					if($inUseBy['modid'] == $targetMod['modid'] && $inUseBy['modversion'] == $newData['modversion']) {
-						$rv = formatSemanticVersion(intval($newData['modversion']));
-						addMessage(MSG_CLASS_ERROR, "This version ($rv) of the mod has already been released (<a href='/edit/release/?assetid={$inUseBy['assetid']}'>link</a>).");
+					if($inUseBy['modId'] == $targetMod['modid'] && $inUseBy['version'] == $newData['version']) {
+						$rv = formatSemanticVersion(intval($newData['version']));
+						addMessage(MSG_CLASS_ERROR, "This version ($rv) of the mod has already been released (<a href='/edit/release/?assetid={$inUseBy['assetId']}'>link</a>).");
 					}
 					else {
-						$mid = htmlspecialchars($newData['modidstr']);
-						$mpath = formatModPath(['urlalias' => $inUseBy['urlalias'], 'assetid' => $inUseBy['modassetid']]);
+						$mid = htmlspecialchars($newData['identifier']);
+						$mpath = formatModPath(['urlalias' => $inUseBy['urlalias'], 'assetid' => $inUseBy['modAssetId']]);
 						addMessage(MSG_CLASS_ERROR, "This modid ('$mid') is already in use by another mod (<a href='$mpath'>link</a>).");
 					}
 				}
@@ -182,7 +182,7 @@ if(!empty($_POST['save'])) {
 				addMessage(MSG_CLASS_ERROR, 'Malformed version.<br/>Version numbers must follow semantic versioning, formatted as <code>n.n.n[-{rc|pre|dev}.n]</code><br/>Examples: <code>1.0.1</code> or <code>1.5.2-rc.1</code>');
 			}
 			else {
-				$newData['modversion'] = $version;
+				$newData['version'] = $version;
 			}
 		}
 	}
@@ -231,9 +231,9 @@ if($existingRelease) {
 		SELECT *, CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) AS imagesize
 		FROM file
 		WHERE assetid = ?
-	", [$existingRelease['assetid']]);
+	", [$existingRelease['assetId']]);
 
-	$compatibleGameVersions = $con->getCol('SELECT gameVersion FROM ModReleaseCompatibleGameVersions WHERE releaseId = ?', $existingRelease['releaseid']);
+	$compatibleGameVersions = $con->getCol('SELECT gameVersion FROM ModReleaseCompatibleGameVersions WHERE releaseId = ?', $existingRelease['releaseId']);
 	$existingRelease['compatibleGameVersions'] = array_flip(array_map('intval', $compatibleGameVersions));
 }
 else {
@@ -275,29 +275,29 @@ $assetChangelog = $existingRelease ? $con->getAll(<<<SQL
 	WHERE ch.assetid = ?
 	ORDER BY ch.created DESC
 	LIMIT 20
-SQL, [$existingRelease['assetid']]) : [];
+SQL, [$existingRelease['assetId']]) : [];
 
 
 
 if(!$existingRelease) {
 	$existingRelease = [
-		'assetid'    => 0,
+		'assetId'    => 0,
 		'text'       => $_POST['text'] ?? '',
 		'numsaved'   => 0,
 		'compatibleGameVersions' => empty($_POST['cgvs']) ? [] : array_flip(array_filter(array_map('compileSemanticVersion', $_POST['cgvs']))),
 	];
 
 	if($targetMod['type'] === 'mod') {
-		$existingRelease['modidstr']   = $files ? $files[0]['modIdentifier'] : '';
-		$existingRelease['modversion'] = $files ? formatSemanticVersion(intval($files[0]['modVersion'])) : '';
+		$existingRelease['identifier'] = $files ? $files[0]['modIdentifier'] : '';
+		$existingRelease['version']    = $files ? formatSemanticVersion(intval($files[0]['modVersion'])) : '';
 	}
 	else {
-		$existingRelease['modidstr']   = '';
-		$existingRelease['modversion'] = $_POST['modversion'] ?? '';
+		$existingRelease['identifier'] = '';
+		$existingRelease['version']    = $_POST['modversion'] ?? '';
 	}
 }
 else {
-	$existingRelease['modversion'] = formatSemanticVersion(intval($existingRelease['modversion']));
+	$existingRelease['version'] = formatSemanticVersion(intval($existingRelease['version']));
 }
 
 $view->assign('allGameVersions', $allGameVersions);

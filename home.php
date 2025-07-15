@@ -44,7 +44,7 @@ if (!empty($user)) {
 	$view->assign('mods', $ownMods);
 
 
-
+	//TODO(Rennorb) @cleanup
 	$followedMods = $con->getAll("
 		SELECT
 			a.*,
@@ -53,17 +53,17 @@ if (!empty($user)) {
 			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
 			u.name AS `from`,
 			rd.created AS releasedate,
-			rd.modversion AS releaseversion
+			rd.version AS releaseversion
 		FROM
 			asset a
 			JOIN `mod` m ON m.assetid = a.assetid
 			JOIN Users u ON u.userId = a.createdbyuserid
 			JOIN UserFollowedMods f ON f.modId = m.modid AND f.userId = ?
 			LEFT JOIN file AS logo ON logo.fileid = m.cardlogofileid
-			LEFT JOIN (select * from `release`) rd ON rd.modid = m.modid
+			LEFT JOIN ModReleases rd ON rd.modId = m.modid
 		WHERE
 			a.statusid = ".STATUS_RELEASED."
-			AND rd.created IS NULL OR rd.created = (select max(created) from `release` where `release`.modid = m.modid)
+			AND rd.created = (select max(created) from ModReleases r where r.modId = m.modid)
 		ORDER BY
 			releasedate DESC
 	", [$user['userId']]);

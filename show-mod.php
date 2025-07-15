@@ -125,24 +125,24 @@ $releases = $con->getAll(<<<SQL
 		a.text,
 		GROUP_CONCAT(cgv.gameVersion ORDER BY cgv.gameVersion ASC SEPARATOR ',') AS compatibleGameVersions,
 		GROUP_CONCAT(gv.sortIndex   ORDER BY cgv.gameVersion ASC SEPARATOR ',') AS compatibleGameVersionsIndices
-	FROM `release` r
-	JOIN asset a ON a.assetid = r.assetid
-	LEFT JOIN ModReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseid
+	FROM ModReleases r
+	JOIN asset a ON a.assetid = r.assetId
+	LEFT JOIN ModReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
 	LEFT JOIN GameVersions gv ON gv.version = cgv.gameVersion
 	WHERE modid = ?
-	GROUP BY r.releaseid
-	ORDER BY r.modversion DESC, MAX(cgv.gameVersion) DESC, r.created DESC
+	GROUP BY r.releaseId
+	ORDER BY r.version DESC, MAX(cgv.gameVersion) DESC, r.created DESC
 SQL, [$asset['modid']]);
 
 $releaseFiles = [];
 if(count($releases)) {
-	$foldedAssetIds = implode(',', array_map(fn($r) => $r['assetid'], $releases));
+	$foldedAssetIds = implode(',', array_map(fn($r) => $r['assetId'], $releases));
 	// @security: assetid's come from the database and are numeric, and are therefore sql inert.
 	$releaseFiles = $con->getAssoc("SELECT `file`.assetid, `file`.* FROM `file` WHERE assetid IN ($foldedAssetIds)");
 }
 
 foreach ($releases as &$release) {
-	$release['file'] = $releaseFiles[$release['assetid']];
+	$release['file'] = $releaseFiles[$release['assetId']];
 	
 	if($release['compatibleGameVersions']) {
 		$compatibleGameVersions        = array_map('intval', explode(',', $release['compatibleGameVersions'])); // sorted ascending
@@ -311,7 +311,7 @@ $fallbackRelease = null;
 $releasesByMaxGameVersion = $releases;
 usort($releasesByMaxGameVersion, fn($a, $b) => (
 	(($b['maxCompatibleGameVersion'] - $a['maxCompatibleGameVersion']) << 1) // Make room for the second property comparison. This difference should never be so large as to get cutt of by shifting it by one. 
-	| ($b['modversion'] > $a['modversion'] ? 1 : 0) // If two releases have the same maxversion, use their version to determine the order
+	| ($b['version'] > $a['version'] ? 1 : 0) // If two releases have the same maxversion, use their version to determine the order
 ));
 
 
@@ -321,7 +321,7 @@ foreach($releasesByMaxGameVersion as $release) {
 		break; // If there is a newer unstable version we already found it.
 	} else {
 		$compatibleWithUnstableGame = in_array($tagetRecommendedGameVersionUnstable, $release['compatibleGameVersions'], true);
-		if(isPreReleaseVersion($release['modversion']) || $compatibleWithUnstableGame) {
+		if(isPreReleaseVersion($release['version']) || $compatibleWithUnstableGame) {
 			if(!$recommendedReleaseUnstable) {
 				// If this is not compatible with the unstable game version, look for a newer, unstable release of the mod for the current stable version of the game.
 				if($compatibleWithUnstableGame || in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'], true)) {
@@ -461,7 +461,7 @@ function processOwnershipTransfer($asset, $user)
 			$con->execute(<<<SQL
 				UPDATE asset a
 				JOIN `mod` m ON m.modid = ?
-				JOIN `release` r ON r.modid = m.modid AND r.assetid = a.assetid
+				JOIN ModReleases r ON r.modId = m.modid AND r.assetId = a.assetid
 				set a.createdbyuserid = ?
 			SQL, [$asset['modid'], $user['userId']]);
 

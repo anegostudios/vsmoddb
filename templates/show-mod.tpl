@@ -137,7 +137,7 @@
 						{/if}
 
 						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseStable['file'])}">{$recommendedReleaseStable['file']['filename']}</a>
-						{if !empty($recommendedReleaseStable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseStable}{/if}
+						{if !empty($recommendedReleaseStable['identifier']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseStable}{/if}
 						{if $recommendedReleaseUnstable}<br>{/if}
 					{elseif $fallbackRelease}
 						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>
@@ -147,7 +147,7 @@
 						{/if}
 
 						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($fallbackRelease['file'])}">{$fallbackRelease['file']['filename']}</a>
-						{if !empty($fallbackRelease['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$fallbackRelease}{/if}
+						{if !empty($fallbackRelease['identifier']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$fallbackRelease}{/if}
 						{if $recommendedReleaseUnstable}<br>{/if}
 					{/if}
 					{if $recommendedReleaseUnstable}
@@ -156,7 +156,7 @@
 						{/if}
 
 						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseUnstable['file'])}">{$recommendedReleaseUnstable['file']['filename']}</a>
-						{if !empty($recommendedReleaseUnstable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
+						{if !empty($recommendedReleaseUnstable['identifier']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
 					{/if}
 				</p>
 			</div>
@@ -191,11 +191,11 @@
 				<tbody>
 				{if !empty($releases)}
 					{foreach from=$releases item=release}
-						<tr data-assetid="{$release['assetid']}" {if !isset($first)} class="latest"{/if}>
+						<tr data-assetid="{$release['assetId']}" {if !isset($first)} class="latest"{/if}>
 							<td>
 								{if isset($user) && canEditAsset($asset, $user)}
-									<a style="display:block;" href="/edit/release?assetid={$release['assetid']}">{formatSemanticVersion($release['modversion'])}</a>
-								{else}{formatSemanticVersion($release['modversion'])}{/if}
+									<a style="display:block;" href="/edit/release?assetid={$release['assetId']}">{formatSemanticVersion($release['version'])}</a>
+								{else}{formatSemanticVersion($release['version'])}{/if}
 							</td>
 							{if $shouldListCompatibleGameVersion}<td>
 								<div class="tags">
@@ -207,14 +207,14 @@
 							</td>{/if}
 							<td>{if !empty($release['file'])}{intval($release['file']['downloads'])}{/if}</td>
 							<td>{fancyDate($release['created'])}</td>
-							<td>{if $release["text"]}<label for="cl-trigger-{$release['assetid']}" class="button square cl-trigger">Show</label>{else}Empty{/if}</td>
+							<td>{if $release['text']}<label for="cl-trigger-{$release['assetId']}" class="button square cl-trigger">Show</label>{else}Empty{/if}</td>
 							<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{$release['file']['filename']}</a>{/if}</td>
-							{if $shouldShowOneClickInstall}<td>{if !empty($release['modidstr'])}{include file="button-one-click-install"}{/if}</td>{/if}
+							{if $shouldShowOneClickInstall}<td>{if !empty($release['identifier'])}{include file="button-one-click-install"}{/if}</td>{/if}
 						</tr>
-						{if $release["text"]}
+						{if $release['text']}
 						<tr><td class="collapsable cl-changelog" colspan="{$changelogColspan}">
-							<input type="checkbox" id="cl-trigger-{$release['assetid']}" autocomplete="off">
-							<div><div><div class="release-changelog">{$release["text"]}</div></div></div>
+							<input type="checkbox" id="cl-trigger-{$release['assetId']}" autocomplete="off">
+							<div><div><div class="release-changelog">{$release['text']}</div></div></div>
 						</td></tr>
 						{/if}
 						{assign var="first" value="1"}

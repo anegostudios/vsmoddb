@@ -123,7 +123,7 @@ class ModEditor extends AssetEditor
 	{
 		global $con;
 		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
-		$con->Execute("delete from `release` where modid=?", array($modid));
+		$con->Execute("delete from ModReleases where modId = ?", array($modid));
 		parent::delete();
 	}
 
@@ -214,7 +214,7 @@ class ModEditor extends AssetEditor
 
 
 		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
-		$hasfiles = $con->getOne("select releaseid from `release` where modid=?", array($modid));
+		$hasfiles = $con->getOne("select releaseId from ModReleases where modId = ?", array($modid));
 		$statusreverted = false;
 		if (!$hasfiles && $_POST['statusid'] != STATUS_DRAFT && $this->asset['statusid'] != STATUS_LOCKED) {
 			$statusreverted = true;
