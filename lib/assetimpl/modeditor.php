@@ -90,11 +90,11 @@ class ModEditor extends AssetEditor
 
 		if($this->asset['statusid'] == STATUS_LOCKED) {
 			$lockInfo = $con->getRow("
-				SELECT r.reason, n.notificationId
-				FROM moderationrecord r
-				LEFT JOIN Notifications n ON n.kind = 'modunlockrequest' AND n.recordId = ? AND n.created >= r.created
-				WHERE r.kind = ".MODACTION_KIND_LOCK." AND r.until >= NOW() AND r.recordid = ?
-				ORDER BY r.until DESC, r.actionid DESC
+				SELECT rec.reason, n.notificationId
+				FROM ModerationRecords rec
+				LEFT JOIN Notifications n ON n.kind = 'modunlockrequest' AND n.recordId = ? AND n.created >= rec.created
+				WHERE rec.kind = ".MODACTION_KIND_LOCK." AND rec.until >= NOW() AND rec.recordId = ?
+				ORDER BY rec.until DESC, rec.actionId DESC
 			", [$modId, $modId]);
 			$lockReason = htmlspecialchars($lockInfo['reason']);
 			if($lockInfo['notificationId']) {

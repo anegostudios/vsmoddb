@@ -87,7 +87,7 @@ $comments = $con->getAll(<<<SQL
 		Comments c 
 		JOIN Users u ON u.userId = c.userId
 		LEFT JOIN Roles r ON r.roleId = u.roleid
-		LEFT JOIN moderationrecord mr ON mr.actionid = c.lastModaction
+		LEFT JOIN ModerationRecords mr ON mr.actionId = c.lastModaction
 	WHERE c.assetId = ? $deletedFilter
 	ORDER BY c.created DESC
 SQL, [$assetId]);

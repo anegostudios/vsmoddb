@@ -53,7 +53,7 @@ else if(isset($_POST['submit']) && $_POST['submit'] == 'redeem') {
 	else {
 		//TODO(Rennorb) @feedback: Check if hte user even needs to be redeemed.
 		$con->execute('UPDATE Users SET bannedUntil = NOW() WHERE userId = ?', [$targetUser['userId']]);
-		$con->execute('UPDATE moderationrecord SET until = NOW() WHERE kind = '.MODACTION_KIND_BAN.' AND until > NOW()');
+		$con->execute('UPDATE ModerationRecords SET until = NOW() WHERE kind = '.MODACTION_KIND_BAN.' AND until > NOW()');
 		logModeratorAction($targetUser['userId'], $user['userId'], MODACTION_KIND_REDEEM, $targetUser['userId'], SQL_DATE_FOREVER, $reason);
 
 		forceRedirectAfterPOST();
@@ -65,10 +65,10 @@ $shownUser = $con->getRow('SELECT * FROM Users WHERE userId = ?', [$targetUser['
 
 $records = $con->getAll(<<<SQL
 	select rec.created, rec.kind, rec.until, moderator.name as moderatorName, rec.reason, c.commentId, c.assetId
-	from moderationrecord as rec
-	join Users as moderator on moderator.userId = rec.moderatorid
-	left join Comments c on c.lastModaction = rec.actionid
-	where rec.targetuserid = ?
+	from ModerationRecords as rec
+	join Users as moderator on moderator.userId = rec.moderatorId
+	left join Comments c on c.lastModaction = rec.actionId
+	where rec.targetUserId = ?
 	order by rec.created desc
 SQL, array($targetUser['userId']));
 
@@ -78,7 +78,7 @@ foreach($records as &$row) {
 unset($row);
 
 $sourceCommentId = $_GET['source-comment'] ?? null;
-$banReasonSuggestion = $sourceCommentId == null ? '' 
+$banReasonSuggestion = $sourceCommentId == null ? ''
 	: 'Offensive comment: '.strip_tags($con->getOne('SELECT text FROM Comments WHERE commentId = ?', [$sourceCommentId]));
 
 $view->assign('pagetitle', "Moderate {$shownUser['name']}");

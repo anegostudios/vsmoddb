@@ -299,6 +299,34 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `status` RENAME TO `Status`;
 END IF;
 
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+ TABLE_NAME='moderationrecord') ) THEN
+    ALTER TABLE `moderationrecord` CHANGE COLUMN `actionid` `actionId` INT NOT NULL AUTO_INCREMENT;
+
+    ALTER TABLE `moderationrecord` CHANGE COLUMN `targetuserid` `targetUserId` INT NOT NULL;
+
+    ALTER TABLE `moderationrecord` CHANGE COLUMN `recordid` `recordId` INT NOT NULL COMMENT 'The id of the corresponding record in the kind-specific table';
+
+    ALTER TABLE `moderationrecord` MODIFY COLUMN `until` DATETIME NOT NULL;
+
+    ALTER TABLE `moderationrecord` CHANGE COLUMN `moderatorid` `moderatorId` INT NOT NULL;
+
+    ALTER TABLE `moderationrecord` MODIFY COLUMN `created` DATETIME NOT NULL DEFAULT NOW() AFTER `reason`;
+
+
+    ALTER TABLE `moderationrecord` ADD INDEX `id_until` (`targetUserId`, `kind`, `until`);
+    ALTER TABLE `moderationrecord` ADD INDEX `recordId` (`recordId`);
+
+    ALTER TABLE `moderationrecord` ADD INDEX `targetUserId`(`targetUserId`);
+    ALTER TABLE `moderationrecord` ADD CONSTRAINT `FK_ModerationRecords_targetUserId` FOREIGN KEY (`targetUserId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+    ALTER TABLE `moderationrecord` ADD INDEX `moderatorid_index`(`moderatorId`);
+    ALTER TABLE `moderationrecord` ADD CONSTRAINT `FK_ModerationRecords_moderatorId` FOREIGN KEY (`moderatorId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+    ALTER TABLE `moderationrecord` RENAME TO `ModerationRecords`;
+END IF;
+
 END $$
 
 CALL upgrade_database__moderation() $$

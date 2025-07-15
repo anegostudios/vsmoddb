@@ -110,17 +110,17 @@ INSERT INTO `moddb`.`asset` (createdbyuserid, editedbyuserid, statusid, assettyp
 COMMIT;
 
 -- -----------------------------------------------------
--- Data for table `moddb`.`moderationrecord`
+-- Data for table `moddb`.`ModerationRecords`
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `moddb`;
-INSERT INTO  `moddb`.`moderationrecord` (targetuserid, kind, recordid, until, moderatorid, reason) VALUES (2, 2, 2, '9999-12-31', 3, '');
-INSERT INTO  `moddb`.`moderationrecord` (targetuserid, kind, recordid, until, moderatorid, reason) VALUES (2, 1, 3, '9999-12-31', 3, 'Comment: bad comment');
+INSERT INTO  `ModerationRecords` (targetUserId, kind, recordId, until, moderatorId, reason) VALUES (2, 2, 2, '9999-12-31', 3, '');
+INSERT INTO  `ModerationRecords` (targetUserId, kind, recordId, until, moderatorId, reason) VALUES (2, 1, 3, '9999-12-31', 3, 'Comment: bad comment');
 
 COMMIT;
 
 -- -----------------------------------------------------
--- Data for table `moddb`.`comment`
+-- Data for table `moddb`.`Comments`
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `moddb`;

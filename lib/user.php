@@ -9,7 +9,7 @@ const USER_QUERY_SQL_BASE = '
 	SELECT u.*, HEX(`hash`) AS `hash`, HEX(u.actionToken) AS actionToken, r.code AS roleCode, IFNULL(u.bannedUntil >= NOW(), 0) AS isBanned, rec.reason AS banReason
 	FROM Users u
 	LEFT JOIN Roles r ON r.roleId = u.roleid
-	LEFT JOIN moderationrecord rec ON rec.kind = ' . MODACTION_KIND_BAN . ' AND rec.targetuserid = u.userId AND rec.until = u.bannedUntil AND rec.until >= NOW()
+	LEFT JOIN ModerationRecords rec ON rec.kind = ' . MODACTION_KIND_BAN . ' AND rec.targetUserId = u.userId AND rec.until = u.bannedUntil AND rec.until >= NOW()
 ';
 
 // check `DEBUGUSER` first, $sessionToken could be set by mods.vintagestory.at even if we're browsing stage.mods.vintagestory.at

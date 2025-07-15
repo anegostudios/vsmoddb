@@ -412,7 +412,9 @@ const SQL_DATE_FORMAT = "Y-m-d H:i:s";
 function logModeratorAction($targetUserId, $moderatorUserId, $kind, $recordId, $until, $reason)
 {
 	global $con;
-	$con->Execute('insert into moderationrecord (targetuserid, moderatorid, kind, recordid, until, reason) values (?,?,?,?,?,?)', [$targetUserId, $moderatorUserId, $kind, $recordId, $until, $reason]);
+	$con->Execute('INSERT INTO ModerationRecords (targetUserId, moderatorId, kind, recordId, until, reason) VALUES (?,?,?,?,?,?)',
+		[$targetUserId, $moderatorUserId, $kind, $recordId, $until, $reason]
+	);
 	return $con->Insert_ID();
 }
 

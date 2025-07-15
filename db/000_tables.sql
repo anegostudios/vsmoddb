@@ -51,23 +51,21 @@ CREATE TABLE IF NOT EXISTS `Users` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `moddb`.`moderationrecord`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`moderationrecord` (
-  `actionid` INT NOT NULL AUTO_INCREMENT,
-  `created` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-  `targetuserid` INT NOT NULL,
-  `kind` INT NOT NULL,
-  `recordid` INT NOT NULL COMMENT 'The id of the corresponding record in the kind-specific table',
-  `until` DATETIME NULL,
-  `moderatorid` INT NOT NULL,
-  `reason` TEXT NULL,
-  PRIMARY KEY (`actionid`),
-  KEY id_until (`targetuserid`, `kind`, `until`),
-	INDEX `moderatorid_index` (`moderatorid`),
-  FOREIGN KEY (`targetuserid`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
-  FOREIGN KEY (`moderatorid`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT
+CREATE TABLE IF NOT EXISTS `ModerationRecords` (
+  `actionId`     INT      NOT NULL AUTO_INCREMENT,
+  `targetUserId` INT      NOT NULL,
+  `kind`         INT      NOT NULL,
+  `recordId`     INT      NOT NULL COMMENT 'The id of the corresponding record in the kind-specific table',
+  `until`        DATETIME NOT NULL,
+  `moderatorId`  INT      NOT NULL,
+  `reason`       TEXT         NULL,
+  `created`      DATETIME NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (`actionId`),
+  INDEX `id_until` (`targetUserId`, `kind`, `until`),
+  INDEX `recordId` (`recordId`),
+	INDEX `moderatorid_index` (`moderatorId`),
+  FOREIGN KEY (`targetUserId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
+  FOREIGN KEY (`moderatorId`)  REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT
 )
 ENGINE = InnoDB;
 
@@ -150,7 +148,7 @@ CREATE TABLE IF NOT EXISTS `Comments` (
   INDEX `created`(`created`), -- for the main page query that shows the latest 20 comments
   -- CONSTRAINT `FK_Comments_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE, -- TODO(Rennorb) @cleanup: For moderation reasons we allow comment asset references these to be dangling for now.
   CONSTRAINT `FK_Comments_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT `FK_Comments_lastModaction` FOREIGN KEY (`lastModaction`) REFERENCES `moderationrecord`(`actionid`) ON UPDATE CASCADE ON DELETE RESTRICT
+  CONSTRAINT `FK_Comments_lastModaction` FOREIGN KEY (`lastModaction`) REFERENCES `ModerationRecords`(`actionId`) ON UPDATE CASCADE ON DELETE RESTRICT
 )
 ENGINE = InnoDB;
 

@@ -297,9 +297,9 @@ class AssetEditor extends AssetController
 			}
 			else {
 				$moderatorUserId = $con->getOne('
-					SELECT moderatorid
-					FROM moderationrecord
-					WHERE kind = '.MODACTION_KIND_LOCK." and until >= NOW() and recordid = $modId
+					SELECT moderatorId
+					FROM ModerationRecords
+					WHERE kind = '.MODACTION_KIND_LOCK." and until >= NOW() and recordId = $modId
 				");
 				// @security: $modId and $moderatorUserId are known to be integers and therefore sql inert.
 				$requestExists = $con->getOne("SELECT 1 FROM Notifications WHERE kind = 'modunlockrequest' AND !`read` AND recordId = $modId AND userId = $moderatorUserId");
