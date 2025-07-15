@@ -4,14 +4,14 @@
 
 	{if $row['tagId']}
 		<h2>
-			<span class="assettype">
+			<span>
 				<a href="/list/tag">Tags</a>
 			</span> / 
 			<span>{$row["name"]}</span>
 		</h2>	
 	{else}
 		<h2>
-			<span class="assettype">
+			<span>
 				<a href="/list/tag">Tags</a>
 			</span> / 
 			<span>Add new Tag</span>

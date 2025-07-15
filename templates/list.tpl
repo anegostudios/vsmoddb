@@ -1,7 +1,7 @@
 {include file="header"}
 
 	<h2>
-		<span class="assettype">
+		<span>
 			<a href="/list/{$entrycode}">{intval(count($rows))} {$entryplural}</a>
 		</span>
 	</h2>	

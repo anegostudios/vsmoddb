@@ -35,7 +35,7 @@
 
 <div class="edit-asset mod-{$asset['statusCode']}">
 	<h2>
-		<span class="assettype">
+		<span>
 			<a href="/list/mod">Mods</a>
 		</span> /
 		<span>

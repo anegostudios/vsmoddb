@@ -34,14 +34,15 @@ while (($file = readdir($rd))) {
 $con = createADOConnection($config);
 $view = new View();
 
-// may later on be modified by asset specific overrides
-global $maxFileUploadSizeMB;
-$maxFileUploadSizeMB = round(file_upload_max_size() / (1024 * 1024), 1);
-$view->assign("fileuploadmaxsize", $maxFileUploadSizeMB);
+$ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;
+
+
+const KB = 1024;
+const MB = 1024 * KB;
+const GB = 1024 * MB;
+
 
 $view->assign("assetserver", $config['assetserver']);
-
-$ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;
 
 
 //NOTE(Rennorb): Technically we should only count the public mods, but in reality this probably doesn't matter for production and just counting all mods makes the query simpler.
@@ -893,3 +894,7 @@ const STATUS_DRAFT = 1;
 const STATUS_RELEASED = 2;
 const STATUS_3 = 3;
 const STATUS_LOCKED = 4;
+
+
+include($config["basepath"] . "lib/upload-limits.php");
+$view->assignRefUnfiltered('maxFileUploadSize', $maxFileUploadSize);

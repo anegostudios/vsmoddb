@@ -300,6 +300,8 @@ else {
 	$existingRelease['version'] = formatSemanticVersion(intval($existingRelease['version']));
 }
 
+$maxFileUploadSize = min($maxFileUploadSize, UPLOAD_LIMITS[ASSETTYPE_RELEASE]['individualSize']);
+
 $view->assign('allGameVersions', $allGameVersions);
 
 $view->assign('mod', $targetMod);

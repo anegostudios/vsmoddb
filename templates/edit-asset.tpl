@@ -3,7 +3,7 @@
 <div class="edit-asset edit-{$entrycode}">
 
 	<h2>
-		<span class="assettype">
+		<span>
 			<a href="/list/{$entrycode}">{$entryplural}</a>
 		</span> / 
 		<span>{$asset['assetid'] ? $asset['name'] : "Add new ".$entrysingular}</span>

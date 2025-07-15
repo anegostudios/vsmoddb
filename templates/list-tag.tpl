@@ -1,7 +1,7 @@
 {include file="header"}
 
 	<h2>
-		<span class="assettype">
+		<span>
 			<a href="/list/tag">{intval(count($rows))} Tags</a>
 		</span>
 	</h2>	

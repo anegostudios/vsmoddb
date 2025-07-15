@@ -3,7 +3,7 @@
 <div class="edit-asset edit-release">
 
 	<h2>
-		<span class="assettype">
+		<span>
 			<a href="/list/mod">Mods</a>
 		</span> / 
 		<span>

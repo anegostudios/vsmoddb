@@ -1,7 +1,7 @@
 {include file="header"}
 
 	<h2>
-		<span class="assettype">
+		<span>
 			<a href="/list/user">{intval(count($rows))} Users</a>
 		</span>
 	</h2>	

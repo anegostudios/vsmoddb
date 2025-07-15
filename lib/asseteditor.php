@@ -26,14 +26,10 @@ class AssetEditor extends AssetController
 
 	public function load()
 	{
-		global $con, $user, $view, $maxFileUploadSizeMB;
+		global $con, $user, $view;
 
 		$this->assetid = empty($_REQUEST["assetid"]) ? 0 : $_REQUEST["assetid"];
 		$this->recordid = null;
-
-		$maxAssetFileUploadSizeKB = $con->getOne("select maxfilesizekb from assettype where code = '{$this->tablename}'");
-		$maxFileUploadSizeMB = min($maxFileUploadSizeMB, round($maxAssetFileUploadSizeKB / 1024, 1));
-		$view->assign("fileuploadmaxsize", $maxFileUploadSizeMB);
 
 		if ($this->assetid) {
 			$this->recordid = $con->getOne("select {$this->tablename}id from `{$this->tablename}` where assetid=?", array($this->assetid));
@@ -101,10 +97,12 @@ class AssetEditor extends AssetController
 
 		if ($this->assetid) {
 			$this->files = $con->getAll("select *, concat(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where assetid=?", array($this->assetid));
-		} else {
-			$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename)); // @perf
-
-			$this->files = $con->getAll("select *, concat(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where assetid is null and assettypeid=? and userid=?", array($assettypeid, $user['userId']));
+		} else if($this->tablename == 'mod') {
+			$this->files = $con->getAll(<<<SQL
+				SELECT *, concat(ST_X(imagesize), 'x', ST_Y(imagesize)) AS imagesize
+				FROM file
+				WHERE assetid IS NULL AND assettypeid = ? AND userid = ?
+			SQL, [ASSETTYPE_MOD, $user['userId']]);
 		}
 
 		foreach ($this->files as &$file) {
@@ -127,9 +125,6 @@ class AssetEditor extends AssetController
 		SQL, [$this->assetid]);
 
 		$view->assign("changelogs", $changelogs);
-
-		$assettypes = $con->getAll('SELECT * FROM assettype');
-		$view->assign("assettypes", $assettypes);
 	}
 
 	function delete()
@@ -154,8 +149,8 @@ class AssetEditor extends AssetController
 		$tablename = $this->tablename;
 
 		if (!$this->assetid) {
-			$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
-			$this->asset = array("assetid" => 0, "assettypeid" => $assettypeid, "name" => "", "statusid" => 0, "text" => "", "numsaved" => 0);
+			assert($this->tablename == 'mod');
+			$this->asset = array("assetid" => 0, "assettypeid" => ASSETTYPE_MOD, "name" => "", "statusid" => 0, "text" => "", "numsaved" => 0);
 
 			foreach ($this->columns as $column) {
 				$this->asset[$column['code']] = null;
@@ -209,7 +204,8 @@ class AssetEditor extends AssetController
 			$this->recordid = insert($this->tablename);
 			$this->isnew = true;
 
-			$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
+			assert($this->tablename == 'mod');
+			$assettypeid = ASSETTYPE_MOD;
 
 			update("asset", $this->assetid, array("createdbyuserid" => $user["userId"], "assettypeid" => $assettypeid));
 			update($this->tablename, $this->recordid, array("assetid" => $this->assetid));

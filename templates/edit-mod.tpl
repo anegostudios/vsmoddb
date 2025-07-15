@@ -3,7 +3,7 @@
 <div class="edit-asset edit-mod">
 
 	<h2>
-		<span class="assettype">
+		<span>
 			<a href="/list/mod">Mods</a>
 		</span> /
 		{if $asset['assetid']}

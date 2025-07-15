@@ -15,7 +15,7 @@ if (!empty($_POST["upload"]) && @$_FILES["file"]) {
 		exit(json_encode(array("status" => "error", "errormessage" => 'Missing assettypeid')));
 	}
 	
-	$res = processFileUpload($file, $_REQUEST['assettypeid'], $_REQUEST["assetid"]);
+	$res = processFileUpload($file, intval($_REQUEST['assettypeid']), intval($_REQUEST["assetid"]));
 
 	if(isset($res['modversion'])) $res['modversion'] = formatSemanticVersion($res['modversion']);
 	

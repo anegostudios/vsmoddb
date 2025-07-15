@@ -365,6 +365,8 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `release` RENAME TO `ModReleases`;
 END IF;
 
+DROP TABLE IF EXISTS `assettype`;
+
 END $$
 
 CALL upgrade_database__moderation() $$

@@ -153,21 +153,6 @@ CREATE TABLE IF NOT EXISTS `Comments` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `moddb`.`assettype`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`assettype` (
-  `assettypeid` INT NOT NULL AUTO_INCREMENT,
-  `maxfiles` TINYINT NULL DEFAULT 10,
-  `maxfilesizekb` INT NULL DEFAULT 2000,
-  `allowedfiletypes` VARCHAR(255) NULL DEFAULT 'png|jpg|gif',
-  `code` VARCHAR(255) NULL,
-  `name` VARCHAR(255) NULL,
-  PRIMARY KEY (`assettypeid`)
-)
-ENGINE = InnoDB;
-
-
 CREATE TABLE IF NOT EXISTS `ModReleases` (
   `releaseId`    INT             NOT NULL AUTO_INCREMENT,
   `assetId`      INT             NOT NULL,
@@ -370,13 +355,6 @@ INSERT INTO `Status` (`statusId`, `code`, `name`) VALUES (1, 'draft', 'Draft');
 INSERT INTO `Status` (`statusId`, `code`, `name`) VALUES (2, 'published', 'Published');
 INSERT INTO `Status` (`statusId`, `code`, `name`) VALUES (4, 'locked', 'Locked');
 COMMIT;
-
-
-START TRANSACTION;
-INSERT INTO `assettype` (`assettypeid`, `maxfiles`, `maxfilesizekb`, `allowedfiletypes`, `code`, `name`) VALUES (1, 12, 2048, 'png|jpg|gif', 'mod', 'Mod');
-INSERT INTO `assettype` (`assettypeid`, `maxfiles`, `maxfilesizekb`, `allowedfiletypes`, `code`, `name`) VALUES (2, 1, 40960, 'dll|zip|cs', 'release', 'Release');
-COMMIT;
-
 
 START TRANSACTION;
 INSERT INTO `Roles` (`roleId`, `code`, `name`) VALUES (1, 'admin', 'Admin');
