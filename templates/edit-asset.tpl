@@ -25,7 +25,7 @@
 			<label>Status</label>
 			<select name="statusid">
 				{foreach from=$stati item=status}
-					<option value="{$status['statusid']}" {if $asset['statusid']==$status['statusid']}selected="selected"{/if}>{$status['name']}</option>
+					<option value="{$status['statusId']}" {if $asset['statusId']==$status['statusId']}selected="selected"{/if}>{$status['name']}</option>
 				{/foreach}
 			</select>
 		</div>

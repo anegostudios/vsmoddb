@@ -285,6 +285,19 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 END IF;
 
 
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+ TABLE_NAME='status') ) THEN
+    ALTER TABLE `status` CHANGE COLUMN `statusid` `statusId` INT NOT NULL AUTO_INCREMENT;
+
+    ALTER TABLE `status` MODIFY COLUMN `code` VARCHAR(255) NOT NULL;
+    ALTER TABLE `status` MODIFY COLUMN `name` VARCHAR(255) NOT NULL;
+
+    ALTER TABLE `status` DROP COLUMN `sortorder`;
+    ALTER TABLE `status` DROP COLUMN `created`;
+    ALTER TABLE `status` DROP COLUMN `lastmodified`;
+
+    ALTER TABLE `status` RENAME TO `Status`;
+END IF;
 
 END $$
 

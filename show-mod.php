@@ -8,21 +8,21 @@ if (!$assetId) {
 
 $asset = $con->getRow("
 	SELECT
-		asset.*,
-		`mod`.*,
-		logoFile.cdnpath AS logoUrl,
-		logoFile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
+		a.*,
+		m.*,
+		logo.cdnpath AS logoUrl,
+		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 		HEX(creator.hash) AS creatorHash,
 		creator.name AS creatorName,
-		status.code AS statusCode
+		s.code AS statusCode
 	FROM 
-		asset
-		JOIN `mod` ON `mod`.assetid = asset.assetid
-		LEFT JOIN Users creator ON creator.userId = asset.createdbyuserid
-		LEFT JOIN status ON status.statusid = asset.statusid
-		LEFT JOIN file AS logoFile ON logoFile.fileid = mod.embedlogofileid
+		asset a
+		JOIN `mod` m ON m.assetid = a.assetid
+		LEFT JOIN Users creator ON creator.userId = a.createdbyuserid
+		LEFT JOIN Status s ON s.statusId = a.statusid
+		LEFT JOIN file AS logo ON logo.fileid = m.embedlogofileid
 	WHERE
-		asset.assetid = ?
+		a.assetid = ?
 ", [$assetId]);
 
 if (!$asset) showErrorPage(HTTP_NOT_FOUND);

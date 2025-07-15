@@ -38,7 +38,7 @@
 			<label><abbr title="Only mods with Status 'Published' are publicly visible">Status</abbr></label>
 			<select name="statusid"{if $asset['statusid'] == STATUS_LOCKED && !canModerate(null, $user)} disabled="true"{/if}>
 				{foreach from=$stati item=status}
-					<option value="{$status['statusid']}"{if $asset['statusid']==$status['statusid']} selected="selected"{/if}>{$status['name']}</option>
+					<option value="{$status['statusId']}"{if $asset['statusid']==$status['statusId']} selected="selected"{/if}>{$status['name']}</option>
 				{/foreach}
 			</select>
 		</div>

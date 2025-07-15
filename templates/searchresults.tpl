@@ -10,7 +10,7 @@
 			<select name="statusid">
 				<option value="">-</option>
 				{foreach from=$stati item=status}
-					<option value="{$status['statusid']}" {if $searchvalues['statusid']==$status['statusid']}selected="selected"{/if}>{$status['name']}</option>
+					<option value="{$status['statusId']}" {if $searchvalues['statusid']==$status['statusId']}selected="selected"{/if}>{$status['name']}</option>
 				{/foreach}
 			</select>
 		</div>

@@ -16,21 +16,21 @@ if (empty($userHash) || empty($shownUser = getUserByHash($userHash, $con))) {
 $sqlWhereExt = (isset($user) && $shownUser['userId'] == $user['userId']) || canModerate($shownUser, $user) ? '' : ' and asset.statusid = 2'; // show drafts if owner or mod
 $userMods = $con->getAll("
 	SELECT
-		asset.*,
-		`mod`.*,
-		logofile.cdnpath AS logocdnpath,
-		logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
-		status.code AS statuscode
+		a.*,
+		m.*,
+		logo.cdnpath AS logocdnpath,
+		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+		s.code AS statusCode
 	FROM
-		asset
-		JOIN `mod` ON asset.assetid = `mod`.assetid
-		LEFT JOIN status ON asset.statusid = status.statusid
-		LEFT JOIN file AS logofile ON mod.cardlogofileid = logofile.fileid
-		LEFT JOIN ModTeamMembers t ON t.modId = `mod`.modid
+		asset a
+		JOIN `mod` m ON m.assetid = a.assetid
+		LEFT JOIN Status s ON s.statusId = a.statusid
+		LEFT JOIN file AS logo ON logo.fileid = m.cardlogofileid
+		LEFT JOIN ModTeamMembers t ON t.modId = m.modid
 	WHERE
-		(asset.createdbyuserid = ? OR t.userId = ?) $sqlWhereExt
-	GROUP BY asset.assetid
-	ORDER BY asset.created DESC
+		(a.createdbyuserid = ? OR t.userId = ?) $sqlWhereExt
+	GROUP BY a.assetid
+	ORDER BY a.created DESC
 ", array($shownUser['userId'], $shownUser['userId']));
 
 foreach ($userMods as &$row) {

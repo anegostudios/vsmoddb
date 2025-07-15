@@ -225,12 +225,12 @@ function queryModSearch($searchParams)
 			l.cdnpath AS logocdnpath,
 			l.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
 			c.name AS `from`,
-			s.code AS statuscode,
+			s.code AS statusCode,
 			f.userId AS following
 		FROM `mod` m
 		JOIN asset a ON a.assetid = m.assetid
 		LEFT JOIN Users c ON c.userId = a.createdbyuserid
-		LEFT JOIN status s ON s.statusid = a.statusid
+		LEFT JOIN Status s ON s.statusId = a.statusid
 		LEFT JOIN UserFollowedMods f ON f.modId = m.modid and f.userId = $currentUserId
 		LEFT JOIN file l ON l.fileid = m.cardlogofileid
 		$joinClauses

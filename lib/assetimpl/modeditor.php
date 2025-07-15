@@ -78,7 +78,7 @@ class ModEditor extends AssetEditor
 			WHERE m.assetid = ?
 		SQL, [$this->assetid]) : null; // @perf
 		$previewData = array_merge($this->asset, [
-			'statuscode'  => 'draft',
+			'statusCode'  => 'draft',
 			'legacylogo'  => false,
 			'logocdnpath' => $logoData['path_db'] ?? null, 
 			'logocdnpath_external' => $logoData['path_external'] ?? null, 

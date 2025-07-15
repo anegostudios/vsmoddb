@@ -21,9 +21,8 @@ if ($assetid) {
 		from 
 			asset 
 			join `mod` on asset.assetid=`mod`.assetid
-			left join Uusers as createduser on asset.createdbyuserid = createduser.userId
-			left join Uusers as editeduser on asset.editedbyuserid = editeduser.userId
-			left join status on asset.statusid = status.statusid
+			left join Users as createduser on asset.createdbyuserid = createduser.userId
+			left join Users as editeduser on asset.editedbyuserid = editeduser.userId
 		where
 			asset.assetid = ?
 	", array($assetid));

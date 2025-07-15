@@ -126,17 +126,11 @@ ENGINE = InnoDB;
 -- )
 -- ENGINE = InnoDB;
 
--- -----------------------------------------------------
--- Table `moddb`.`status`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`status` (
-  `statusid` INT NOT NULL AUTO_INCREMENT,
-  `code` VARCHAR(255) NULL,
-  `name` VARCHAR(255) NULL,
-  `created` DATETIME NULL DEFAULT NULL,
-  `sortorder` INT NULL,
-  `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`statusid`)
+CREATE TABLE IF NOT EXISTS `Status` (
+  `statusId` INT          NOT NULL AUTO_INCREMENT,
+  `code`     VARCHAR(255) NOT NULL,
+  `name`     VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`statusId`)
 )
 ENGINE = InnoDB;
 
@@ -378,9 +372,9 @@ SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 
 START TRANSACTION;
-INSERT INTO `status` (`statusid`, `code`, `name`, `created`, `sortorder`) VALUES (1, 'draft', 'Draft', NOW(), 1);
-INSERT INTO `status` (`statusid`, `code`, `name`, `created`, `sortorder`) VALUES (2, 'published', 'Published', NOW(), 2);
-INSERT INTO `status` (`statusid`, `code`, `name`, `created`, `sortorder`) VALUES (4, 'locked', 'Locked', NOW(), 4);
+INSERT INTO `Status` (`statusId`, `code`, `name`) VALUES (1, 'draft', 'Draft');
+INSERT INTO `Status` (`statusId`, `code`, `name`) VALUES (2, 'published', 'Published');
+INSERT INTO `Status` (`statusId`, `code`, `name`) VALUES (4, 'locked', 'Locked');
 COMMIT;
 
 

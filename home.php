@@ -3,21 +3,21 @@
 if (!empty($user)) {
 	$ownMods = $con->getAll("
 		SELECT
-			asset.*,
-			`mod`.*,
-			logofile.cdnpath AS logocdnpath,
-			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
-			status.code AS statuscode
+			a.*,
+			m.*,
+			logo.cdnpath AS logocdnpath,
+			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+			s.code AS statusCode
 		FROM
-			asset
-			JOIN `mod` ON asset.assetid = `mod`.assetid
-			LEFT JOIN status ON asset.statusid = status.statusid
-			LEFT JOIN file AS logofile ON `mod`.cardlogofileid = logofile.fileid
-			LEFT JOIN ModTeamMembers ON `mod`.modid = ModTeamMembers.modId
+			asset a
+			JOIN `mod` m ON m.assetid = a.assetid
+			LEFT JOIN Status s ON s.statusId = a.statusid
+			LEFT JOIN file AS logo ON logo.fileid = m.cardlogofileid
+			LEFT JOIN ModTeamMembers tm ON tm.modId = m.modid
 		WHERE
-			(asset.createdbyuserid = ? OR ModTeamMembers.userId = ?)
-		GROUP BY asset.assetid
-		ORDER BY asset.created DESC
+			(a.createdbyuserid = ? OR tm.userId = ?)
+		GROUP BY a.assetid
+		ORDER BY a.created DESC
 	", [$user['userId'], $user['userId']]);
 
 	foreach($ownMods as &$mod) {
@@ -47,29 +47,29 @@ if (!empty($user)) {
 
 	$followedMods = $con->getAll("
 		SELECT
-			asset.*,
-			`mod`.*,
-			logofile.cdnpath AS logocdnpath,
-			logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+			a.*,
+			m.*,
+			logo.cdnpath AS logocdnpath,
+			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
 			u.name AS `from`,
 			rd.created AS releasedate,
 			rd.modversion AS releaseversion
 		FROM
-			asset
-			JOIN `mod` ON `mod`.assetid = asset.assetid
-			JOIN Users u ON u.userId = asset.createdbyuserid
-			JOIN UserFollowedMods f ON f.modId = `mod`.modid AND f.userId = ?
-			LEFT JOIN file AS logofile ON logofile.fileid = `mod`.cardlogofileid
-			LEFT JOIN (select * from `release`) rd ON (rd.modid = `mod`.modid)
+			asset a
+			JOIN `mod` m ON m.assetid = a.assetid
+			JOIN Users u ON u.userId = a.createdbyuserid
+			JOIN UserFollowedMods f ON f.modId = m.modid AND f.userId = ?
+			LEFT JOIN file AS logo ON logo.fileid = m.cardlogofileid
+			LEFT JOIN (select * from `release`) rd ON rd.modid = m.modid
 		WHERE
-			asset.statusid = 2
-			AND rd.created IS NULL OR rd.created = (select max(created) from `release` where `release`.modid = mod.modid)
+			a.statusid = ".STATUS_RELEASED."
+			AND rd.created IS NULL OR rd.created = (select max(created) from `release` where `release`.modid = m.modid)
 		ORDER BY
 			releasedate DESC
 	", [$user['userId']]);
 
 	foreach($followedMods as &$mod) {
-		$mod['statuscode'] = 'published';
+		$mod['statusCode'] = 'published';
 		$mod['modpath'] = formatModPath($mod);
 	}
 	unset($mod);
@@ -82,33 +82,33 @@ if (!empty($user)) {
 
 $latestMods = $con->getAll("
 	SELECT
-		asset.*,
-		`mod`.*,
-		logofile.cdnpath AS logocdnpath,
-		logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+		a.*,
+		m.*,
+		logo.cdnpath AS logocdnpath,
+		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
 		u.name AS `from`
 	FROM
-		asset
-		join `mod` ON asset.assetid = `mod`.assetid
-		join Users u ON u.userId = asset.createdbyuserid
-		left join file AS logofile ON mod.cardlogofileid = logofile.fileid
+		asset a
+		join `mod` m ON m.assetid = a.assetid
+		join Users u ON u.userId = a.createdbyuserid
+		left join file AS logo ON logo.fileid = m.cardlogofileid
 	WHERE
-		asset.statusid = 2
-		AND `mod`.created > DATE_SUB(NOW(), INTERVAL 30 DAY)
+		a.statusid = ".STATUS_RELEASED."
+		AND m.created > DATE_SUB(NOW(), INTERVAL 30 DAY)
 	ORDER BY
-		asset.created DESC
+		a.created DESC
 	LIMIT 10
 ");
 
 foreach($latestMods as &$mod) {
-	$mod['statuscode'] = 'published';
+	$mod['statusCode'] = 'published';
 	$mod['modpath'] = formatModPath($mod);
 }
 unset($mod);
 
 $view->assign('latestMods', $latestMods);
 
-$lastestComments = $con->getAll(<<<SQL
+$lastestComments = $con->getAll('
 	SELECT
 		c.assetId, a.name AS assetName,
 		c.commentId, c.text, c.created,
@@ -118,13 +118,13 @@ $lastestComments = $con->getAll(<<<SQL
 		join Users u ON u.userId = c.userId
 		join asset a ON a.assetid = c.assetId
 	WHERE
-		a.statusid = 2
+		a.statusid = '.STATUS_RELEASED.'
 		AND !c.deleted
 		AND c.created > DATE_SUB(NOW(), INTERVAL 14 DAY)
 	ORDER BY
 		c.created DESC
 	LIMIT 20
-SQL);
+');
 
 $view->assign('lastestComments', $lastestComments, null, true);
 

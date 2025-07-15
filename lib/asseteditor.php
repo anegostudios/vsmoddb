@@ -176,7 +176,6 @@ class AssetEditor extends AssetController
 				join `{$tablename}` on asset.assetid=`{$tablename}`.assetid
 				left join Users as creator on creator.userId = asset.createdbyuserid
 				left join Users as editor on editor.userId = asset.editedbyuserid
-				left join status on asset.statusid = status.statusid
 			where
 				asset.assetid = ?
 		", array($this->assetid));
@@ -333,8 +332,8 @@ class AssetEditor extends AssetController
 		global $con;
 
 		if ($column["code"] == "statusid") {
-			$oldstatuscode = $con->getOne("select name from status where statusid=?", array($oldvalue));
-			$newstatuscode = $con->getOne("select name from status where statusid=?", array($newvalue));
+			$oldstatuscode = $con->getOne("select name from Status where statusId=?", array($oldvalue));
+			$newstatuscode = $con->getOne("select name from Status where statusId=?", array($newvalue));
 
 			return  "Modified Status ($oldstatuscode => $newstatuscode)";
 		}
@@ -347,8 +346,8 @@ class AssetEditor extends AssetController
 	{
 		global $con, $view, $user;
 
-		$sqlFilterLockedStatus = $this->asset['statusid'] == STATUS_LOCKED ? '' : ('where statusid != '.STATUS_LOCKED);
-		$stati = $con->getAll("select * from status $sqlFilterLockedStatus");
+		$sqlFilterLockedStatus = $this->asset['statusid'] == STATUS_LOCKED ? '' : ('where statusId != '.STATUS_LOCKED);
+		$stati = $con->getAll("select * from Status $sqlFilterLockedStatus");
 		$view->assign("stati", $stati);
 
 		$view->assign("user", $user);
