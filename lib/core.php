@@ -5,7 +5,7 @@ header('X-Frame-Options: DENY');
 global $config, $con, $view;
 
 include($config["basepath"] . "lib/ErrorHandler.php");
-ErrorHandler::setupErrorHandling();
+if(!defined("TESTING")) ErrorHandler::setupErrorHandling(); // TODO(Rennorb) @cleanup: Change this into "detaching" when testing instead of always checking for testing mode.
 
 
 include($config["basepath"] . "lib/timezones.php");

@@ -237,3 +237,18 @@ Result:
 Note: the mysql container is set up to automatically execute the provided [DB structure + sample data](db/tables.sql).
 
 Note: in staging environments you can append `?showas=<id>` to any url to load the page the user with that id. This can be used debugging and testing role related features. 
+
+
+# Testing
+I've recently started adding tests for some components of the ModDB. For now they are based on php unit and require quite specific arguments to run.
+
+## If you have php installed globally
+If you have a global php installation (with Phar handling) and of the correct version (7.4), you can use it to run the tests:  
+1. `cd tests`
+2. `php phpunit.phar --test-suffix=.php .`
+
+## Using the provided docker container
+If you don't have php installed you can still use hte container that already runs the local development version of ModDB:  
+1. `docker compose -f docker/docker-compose.yml exec php php tests/phpunit.phar --test-suffix=.php tests`
+
+Both of the methods should yield the same result.

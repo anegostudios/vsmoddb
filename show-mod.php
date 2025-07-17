@@ -1,5 +1,7 @@
 <?php
 
+include $config['basepath']. 'lib/recommend-release.php';
+
 $assetid = $urlparts[2] ?? 0;
 
 if (!$assetid) {
@@ -173,49 +175,6 @@ unset($release);
 
 
 /*
-	Determine the game versions of interest:
-		stable and
-		unstable (newer than current stable if any)
-
-	Match mod releases:
-		latest stable release that is for the stable version of the game -> recommend
-		latest unstable version that is either
-			for the unstable version of the game, or
-			for the stable version of the game, if the release is a newer unstable version than the stable release (only if there is no release for the unstable game version)
-		-> recommend for testers
-		If there are not releases for for either of these, select the latest release -> latest release for an outdated version of the game
-
-	Examples assuming current game version = 5, and a newer unstable version = 5p also exists,
-	RV = mod release version, GV = game version required by the corresponding mod release version:
-		GV  RV
-		5   2.5
-		5   3
-		5   4.1  -> Recommended
-		5p  4.2  -> For testers
-
-		5   2.5
-		5   3    -> Recommended
-		5   4.p1
-		5   4.p2 -> For testers
-
-		5   2.5
-		5   3    -> Recommended
-		5   4.p1
-		5p  4.p2 -> For testers
-
-		2   2.5
-		2   3
-		3   4.p1
-		3   4.p2 -> Latest outdated
-
-		Assuming we came here by searching for mods for GV 2:
-		2   2.5
-		2   3    -> Recommended*
-		3   4.p1
-		3   4.p2
-*/
-
-/*
 	NOTE(Rennorb): The mod list/search should pass information about the currently searched for game versions to this script, so we can recommend the correct release when user is searching with a specific gv in mind.
 	This could be accomplished in one of three ways:
 		Post parameter:
@@ -255,97 +214,21 @@ unset($release);
 
 $allGameVersions = array_map('intval', $con->getCol('SELECT version FROM GameVersions ORDER BY version DESC'));
 
-$highestTargetVersion = $allGameVersions[0];
-$recommendationIsInfluencedBySearch = false;
+$mv = null;
+$gvs = null;
 
 if(!empty($_SERVER['HTTP_REFERER'])) {
 	parse_str(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_QUERY), $refererQuerryArgs);
 
-	$mv = !empty($refererQuerryArgs['mv']) ? compilePrimaryVersion($refererQuerryArgs['mv']) : false;
+	if(!empty($refererQuerryArgs['mv'])) $mv = compilePrimaryVersion($refererQuerryArgs['mv']);
 	if(isset($refererQuerryArgs['gv']) && is_array($refererQuerryArgs['gv'])) {
 		$gvs = array_filter(array_map('compileSemanticVersion', $refererQuerryArgs['gv']));
 	}
-	else {
-		$gvs = false;
-	}
-
-	if($mv || $gvs) {
-		foreach($allGameVersions as $gameversion) {
-			if(
-			   ($mv && (($gameversion & VERSION_MASK_PRIMARY) === $mv))
-			|| ($gvs && in_array($gameversion, $gvs, true))
-			) {
-				$highestTargetVersion = $gameversion;
-				$recommendationIsInfluencedBySearch = true;
-				break;
-			}
-		}
-	}
 }
 
+$recommendationIsInfluencedBySearch = selectDesiredVersions($allGameVersions, $mv, $gvs, $highestTargetVersion, $tagetRecommendedGameVersionStable, $tagetRecommendedGameVersionUnstable);
 
-$tagetRecommendedGameVersionStable = null;
-$tagetRecommendedGameVersionUnstable = null;
-
-{
-	$highestTargetVersionReached = false;
-	foreach($allGameVersions as $gameversion) {
-		if(!$highestTargetVersionReached && $gameversion !== $highestTargetVersion) continue;
-		else $highestTargetVersionReached = true;
-
-		if(isPreReleaseVersion($gameversion)) {
-			if(!$tagetRecommendedGameVersionUnstable) {
-				$tagetRecommendedGameVersionUnstable = $gameversion;
-			}
-		}
-		else {
-			if(!$tagetRecommendedGameVersionStable) {
-				$tagetRecommendedGameVersionStable = $gameversion;
-				//NOTE(Rennorb): If there was no explicit search we might still have a newer, unstable game version.
-				// We cap the "highest" target version to the highest Stable version in that case, so we dont get 'outdated' warnings 
-				// when in reality we are only a pre-release ahead with the game versions.
-				if(!$recommendationIsInfluencedBySearch) $highestTargetVersion = $gameversion;
-			}
-			break;
-		}
-	}
-}
-
-$recommendedReleaseStable = null;
-$recommendedReleaseUnstable = null;
-$fallbackRelease = null;
-
-// Sort releases by max supproted game version to find the reccomendation.
-//NOTE(Rennorb): This is not the default sorting from the db, because we want the releaes in mod version order (if we can) for the files tab.
-// Could considder swapping this around for @perf.
-//NOTE(Rennorb): usort is not a "stable sort", meaning if two elements compare equal their final ordering is not defined.
-// We do however need to keep the ordering of the releases if maxversions are the same.
-$releasesByMaxGameVersion = $releases;
-usort($releasesByMaxGameVersion, fn($a, $b) => (
-	(($b['maxCompatibleGameVersion'] - $a['maxCompatibleGameVersion']) << 1) // Make room for the second property comparison. This difference should never be so large as to get cutt of by shifting it by one. 
-	| ($b['modversion'] > $a['modversion'] ? 1 : 0) // If two releases have the same maxversion, use their version to determine the order
-));
-
-
-foreach($releasesByMaxGameVersion as $release) {
-	if(in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'], true)) {
-		$recommendedReleaseStable = $release;
-		break; // If there is a newer unstable version we already found it.
-	} else {
-		$compatibleWithUnstableGame = in_array($tagetRecommendedGameVersionUnstable, $release['compatibleGameVersions'], true);
-		if(isPreReleaseVersion($release['modversion']) || $compatibleWithUnstableGame) {
-			if(!$recommendedReleaseUnstable) {
-				// If this is not compatible with the unstable game version, look for a newer, unstable release of the mod for the current stable version of the game.
-				if($compatibleWithUnstableGame || in_array($tagetRecommendedGameVersionStable, $release['compatibleGameVersions'], true)) {
-					$recommendedReleaseUnstable = $release;
-				}
-			}
-		}
-		else if(!$fallbackRelease) {
-			$fallbackRelease = $release;
-		}
-	}
-}
+recommendReleases($releases, $tagetRecommendedGameVersionStable, $tagetRecommendedGameVersionUnstable, $recommendedReleaseStable, $recommendedReleaseUnstable, $fallbackRelease);
 
 
 $view->assign("releases", $releases, null, true);
