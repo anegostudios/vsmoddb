@@ -147,29 +147,30 @@ function listMod($modid)
 		$modid = $con->getOne("select modId from ModReleases where identifier = ?", array($modid));
 	}
 
-	$row = $con->getRow("select 
+	$row = $con->getRow(<<<SQL
+		select 
 			asset.assetid, 
 			asset.name,
 			asset.text,
 			asset.tagscached,
 			user.name as author,
 			`mod`.*,
-			logofile_external.cdnpath as logocdnpath_external,
-			logofile_db.cdnpath as logocdnpath_db
+			logoFileExternal.cdnPath as logoCdnPathExternal,
+			logoFileDb.cdnPath as logoCdnPathDb
 		from 
 			`mod` 
 			join asset on (`mod`.assetid = asset.assetid)
 			join Users user on (`asset`.createdbyuserid = user.userId)
-			left join file as logofile_external on (`mod`.embedlogofileid = logofile_external.fileid)
-			left join file as logofile_db on (`mod`.cardlogofileid = logofile_db.fileid)
+			left join Files as logoFileExternal on (`mod`.embedlogofileid = logoFileExternal.fileId)
+			left join Files as logoFileDb on (`mod`.cardlogofileid = logoFileDb.fileId)
 		where
 			asset.statusid=2
-			and modid=?
-	", array($modid));
+			and modid = ?
+	SQL, array($modid));
 
 	if (empty($row)) fail("404");
 
-	$rrows = $con->getAll("
+	$rrows = $con->getAll(<<<SQL
 		select 
 			r.*,
 			asset.*,
@@ -181,17 +182,17 @@ function listMod($modid)
 		where modid = ?
 		group by r.releaseId
 		order by r.created desc
-	", array($row['modid']));
+	SQL, array($row['modid']));
 
 	$releases = array();
 	foreach ($rrows as $release) {
-		$file = $con->getRow("select * from file where assetid = ? limit 1", array($release['assetId']));
+		$file = $con->getRow("select * from Files where assetId = ? limit 1", array($release['assetId']));
 
 		$releases[] = array(
 			"releaseid"  => intval($release['releaseId']),
 			"mainfile"   => empty($file) ? "" : formatCdnDownloadUrl($file),
-			"filename"   => empty($file) ? 0 : $file["filename"],
-			"fileid"     => isset($file['fileid']) ? intval($file['fileid']) : null,
+			"filename"   => empty($file) ? 0 : $file["name"],
+			"fileid"     => isset($file['fileId']) ? intval($file['fileId']) : null,
 			"downloads"  => empty($file) ? 0 : intval($file["downloads"]),
 			"tags"       => array_map(fn($s) => formatSemanticVersion(intval($s)), explode(';', $release["compatibleGameVersions"])),
 			"modidstr"   => $release['identifier'],
@@ -201,32 +202,33 @@ function listMod($modid)
 		);
 	}
 
-	$srows = $con->getAll("
+	$screenshots = $con->getAll(<<<SQL
 		select 
-			fileid,
-			assetid,
-			filename,
-			hasthumbnail,
-			cdnpath,
-			created
+			f.fileId,
+			f.assetId,
+			f.name,
+			i.hasThumbnail,
+			f.cdnPath,
+			f.created
 		from 
-			`file` 
-		where assetid = ? and fileid not in (?, ?)
-	", array($row['assetid'], $row['cardlogofileid'] ?? 0, $row['embedlogofileid'] ?? 0)); /* sql cant compare against null */
+			Files f
+		left join FileImageData i on i.fileId = f.fileId
+		where f.assetId = ? and f.fileId not in (?, ?)
+	SQL, array($row['assetid'], $row['cardlogofileid'] ?? 0, $row['embedlogofileid'] ?? 0)); /* sql cant compare against null */
 
 	$screenshots = array();
-	foreach ($srows as $screenshot) {
+	foreach ($screenshots as $screenshot) {
 		$screenshots[] = array(
-			"fileid"            => intval($screenshot["fileid"]),
+			"fileid"            => intval($screenshot["fileId"]),
 			"mainfile"          => formatCdnUrl($screenshot),
-			"filename"          => $screenshot["filename"],
-			"thumbnailfilename" => $screenshot["hasthumbnail"] ? formatCdnUrl($screenshot, '_55_60') : null,
+			"filename"          => $screenshot["name"],
+			"thumbnailfilename" => $screenshot["hasThumbnail"] ? formatCdnUrl($screenshot, '_55_60') : null,
 			"created"           => $screenshot["created"]
 		);
 	}
 
-	$logourlExternal = $row['logocdnpath_external'] ? formatCdnUrlFromCdnPath($row['logocdnpath_external']) : null;
-	$logourlDb = $row['logocdnpath_db'] ? formatCdnUrlFromCdnPath($row['logocdnpath_db']) : null;
+	$logoUrlExternal = $row['logoCdnPathExternal'] ? formatCdnUrlFromCdnPath($row['logoCdnPathExternal']) : null;
+	$logoUrlDb = $row['logoCdnPathDb'] ? formatCdnUrlFromCdnPath($row['logoCdnPathDb']) : null;
 	$mod = array(
 		"modid"           => intval($row["modid"]),
 		"assetid"         => intval($row["assetid"]),
@@ -234,9 +236,9 @@ function listMod($modid)
 		"text"            => $row['text'],
 		"author"          => $row['author'],
 		"urlalias"        => $row['urlalias'],
-		"logofilename"    => $logourlExternal, // @obsolete //NOTE(Rennorb): This is not the filename, but just the link again.
-		"logofile"        => $logourlExternal,
-		"logofiledb"      => $logourlDb,
+		"logofilename"    => $logoUrlExternal, // @obsolete //NOTE(Rennorb): This is not the filename, but just the link again.
+		"logofile"        => $logoUrlExternal,
+		"logofiledb"      => $logoUrlDb,
 		"homepageurl"     => $row['homepageurl'],
 		"sourcecodeurl"   => $row['sourcecodeurl'],
 		"trailervideourl" => $row['trailervideourl'],
@@ -329,7 +331,7 @@ function listMods()
 			`mod`.type,
 			`mod`.urlalias,
 			asset.name,
-			logofileExternal.cdnpath as logoCdnpathExternal,
+			logofileExternal.cdnPath as logoCdnpathExternal,
 			mod.downloads,
 			follows,
 			comments, 
@@ -344,7 +346,7 @@ function listMods()
 			join asset on (`mod`.assetid = asset.assetid)
 			join Users user on (`asset`.createdbyuserid = user.userId)
 			left join ModReleases r on r.modId = `mod`.modid
-			left join file as logofileExternal on mod.embedlogofileid = logofileExternal.fileid
+			left join Files as logofileExternal on logofileExternal.fileId = mod.embedlogofileid
 		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "
 		group by `mod`.modid
 		order by $orderBy $orderDirection
@@ -430,12 +432,12 @@ function listOutOfDateMods($currentModVersions) {
 
 		if($currentModVersions[$release['identifier']] >= $release['version'])  continue; // already has the latest version
 
-		$file = $con->getRow('select * from file where assetid = ? limit 1', [$release['assetId']]);
+		$file = $con->getRow('select * from Files where assetId = ? limit 1', [$release['assetId']]);
 		$outOfDateMods[$release['identifier']] = [
 			'releaseid'  => intval($release['releaseId']),
 			'mainfile'   => formatCdnDownloadUrl($file),
-			'filename'   => $file['filename'],
-			'fileid'     => $file['fileid'] ? intval($file['fileid']) : null,
+			'filename'   => $file['name'],
+			'fileid'     => $file['fileId'] ? intval($file['fileId']) : null,
 			'downloads'  => intval($file['downloads']),
 			'tags'       => array_map(fn($s) => formatSemanticVersion(intval($s)), explode(';', $release["compatibleGameVersions"])),
 			'modidstr'   => $release['identifier'],

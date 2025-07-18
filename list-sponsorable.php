@@ -5,11 +5,11 @@ if ($user['roleCode'] != 'admin') exit("noprivilege");
 const EXTEND_MATCHES_BY = 20;
 
 $rawData = $con->getAll(<<<SQL
-	SELECT a.createdbyuserid, HEX(u.hash) AS `hash`, u.name as username, m.assetid, m.urlalias, a.name, f.cdnpath, m.donateurl, a.text
+	SELECT a.createdbyuserid, HEX(u.hash) AS `hash`, u.name as username, m.assetid, m.urlalias, a.name, f.cdnPath, m.donateurl, a.text
 	FROM `mod` m
 	     JOIN  asset a ON a.assetid = m.assetid
 	     JOIN  Users u ON u.userId = a.createdbyuserid
-	LEFT JOIN `file` f ON f.fileid = m.embedlogofileid
+	LEFT JOIN  Files f ON f.fileId = m.embedlogofileid
 	WHERE m.donateurl <> '' OR a.text LIKE '%co-fi%' OR a.text LIKE '%patreon%'
 SQL);
 
@@ -38,7 +38,7 @@ foreach($rawData as $row) {
 	$modData = [
 		'name'      => $row['name'],
 		'path'      => formatModPath($row),
-		'logoUrl'   => $row['cdnpath'] ? formatCdnUrl($row) : null,
+		'logoUrl'   => $row['cdnPath'] ? formatCdnUrl($row) : null,
 		'matchHtml' => $matchesHTML,
 	];
 

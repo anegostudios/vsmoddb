@@ -96,24 +96,30 @@ class AssetEditor extends AssetController
 		}
 
 		if ($this->assetid) {
-			$this->files = $con->getAll("select *, concat(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where assetid=?", array($this->assetid));
+			$this->files = $con->getAll(<<<SQL
+				SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
+				FROM Files f
+				LEFT JOIN FileImageData i ON i.fileId = f.fileId
+				WHERE assetId = ?
+			SQL, [$this->assetid]);
 		} else if($this->tablename == 'mod') {
 			$this->files = $con->getAll(<<<SQL
-				SELECT *, concat(ST_X(imagesize), 'x', ST_Y(imagesize)) AS imagesize
-				FROM file
-				WHERE assetid IS NULL AND assettypeid = ? AND userid = ?
+				SELECT f.*, i.hasThumbnail, concat(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
+				FROM Files f
+				LEFT JOIN FileImageData i ON i.fileId = f.fileId
+				WHERE f.assetId IS NULL AND f.assetTypeId = ? AND f.userId = ?
 			SQL, [ASSETTYPE_MOD, $user['userId']]);
 		}
 
 		foreach ($this->files as &$file) {
-			$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
+			$file['created'] = date('M jS Y, H:i:s', strtotime($file['created']));
 
-			$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
-			$file["url"] = maybeFormatDownloadTrackingUrlDependingOnFileExt($file);
+			$file['ext'] = substr($file['name'], strrpos($file['name'], '.')+1); // no clue why pathinfo doesnt work here
+			$file['url'] = maybeFormatDownloadTrackingUrlDependingOnFileExt($file);
 		}
 		unset($file);
 
-		$view->assign("files", $this->files);
+		$view->assign('files', $this->files);
 
 		$changelogs = $con->getAll(<<<SQL
 			SELECT ch.text, ch.lastModified, u.name AS username
@@ -205,21 +211,21 @@ class AssetEditor extends AssetController
 			$this->isnew = true;
 
 			assert($this->tablename == 'mod');
-			$assettypeid = ASSETTYPE_MOD;
+			$assetTypeId = ASSETTYPE_MOD;
 
-			update("asset", $this->assetid, array("createdbyuserid" => $user["userId"], "assettypeid" => $assettypeid));
+			update("asset", $this->assetid, array("createdbyuserid" => $user["userId"], "assettypeid" => $assetTypeId));
 			update($this->tablename, $this->recordid, array("assetid" => $this->assetid));
 
-			$filesIds = $con->getCol("select * from file where assetid is null and userid=? and assettypeid=?", array($user['userId'], $assettypeid));
+			$filesIds = $con->getCol("SELECT fileId FROM Files WHERE assetId IS NULL AND userId = ? and assetTypeId = ?", [$user['userId'], $assetTypeId]);
 
 			if (!empty($filesIds)) {
 				// @security: We just grabbed the ids two lines above from the database, direct interpolation is fine.
-				$con->execute('update file set assetid = ? where fileid in (' . implode(',', $filesIds) . ')', $this->assetid);
+				$con->execute('UPDATE Files SET assetId = ? WHERE fileId IN (' . implode(',', $filesIds) . ')', [$this->assetid]);
 			}
 
 			$this->asset = [
 				'assetid' => $this->assetid,
-				'assettypeid' => $assettypeid,
+				'assettypeid' => $assetTypeId,
 				'createdbyuserid' => $user['userId'],
 			];
 

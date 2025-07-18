@@ -136,7 +136,7 @@
 						{else}<strong>Recommended download:</strong><br>
 						{/if}
 
-						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseStable['file'])}">{$recommendedReleaseStable['file']['filename']}</a>
+						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseStable['file'])}">{$recommendedReleaseStable['file']['name']}</a>
 						{if !empty($recommendedReleaseStable['identifier']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseStable}{/if}
 						{if $recommendedReleaseUnstable}<br>{/if}
 					{elseif $fallbackRelease}
@@ -146,7 +146,7 @@
 						{else}<strong>Latest release:</strong><br>
 						{/if}
 
-						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($fallbackRelease['file'])}">{$fallbackRelease['file']['filename']}</a>
+						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($fallbackRelease['file'])}">{$fallbackRelease['file']['name']}</a>
 						{if !empty($fallbackRelease['identifier']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$fallbackRelease}{/if}
 						{if $recommendedReleaseUnstable}<br>{/if}
 					{/if}
@@ -182,7 +182,7 @@
 						<th class="version">Mod Version</th>
 						{if $shouldListCompatibleGameVersion}<th class="gameversion">For Game version</th>{/if}
 						<th class="downloads">Downloads</th>
-						<th class="releasedate">Release date</th>
+						<th class="releasedate">Released</th>
 						<th class="changelog">Changelog</th>
 						<th class="download">Download</th>
 						{if $shouldShowOneClickInstall}<th><abbr title="Requires game version v1.18.0-rc.1 or later, currently not supported on MacOS.">1-click mod install*</abbr></th>{/if}
@@ -208,7 +208,7 @@
 							<td>{if !empty($release['file'])}{intval($release['file']['downloads'])}{/if}</td>
 							<td>{fancyDate($release['created'])}</td>
 							<td>{if $release['text']}<label for="cl-trigger-{$release['assetId']}" class="button square cl-trigger">Show</label>{else}Empty{/if}</td>
-							<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{$release['file']['filename']}</a>{/if}</td>
+							<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{$release['file']['name']}</a>{/if}</td>
 							{if $shouldShowOneClickInstall}<td>{if !empty($release['identifier'])}{include file="button-one-click-install"}{/if}</td>{/if}
 						</tr>
 						{if $release['text']}

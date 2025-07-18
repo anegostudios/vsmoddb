@@ -160,9 +160,9 @@
 			<select name="cardlogofileid">
 				<option value="">--- Default ---</option>
 				{foreach from=$files item=file}
-					{if $file['imagesize'] === '480x320' || $file['imagesize'] === '480x480'}
-					<option value="{$file['fileid']}" data-url="{$file['url']}"{if $asset['cardlogofileid']==$file['fileid']} selected="selected" {/if}>
-						{$file['filename']} [{$file['imagesize']} px]</option>
+					{if $file['imageSize'] === '480x320' || $file['imageSize'] === '480x480'}
+					<option value="{$file['fileId']}" data-url="{$file['url']}"{if $asset['cardlogofileid']==$file['fileId']} selected="selected" {/if}>
+						{$file['name']} [{$file['imageSize']} px]</option>
 					{/if}
 				{/foreach}
 			</select>
@@ -173,9 +173,9 @@
 			<select name="embedlogofileid">
 				<option value="">--- Default (crop ModDB image) ---</option>
 				{foreach from=$files item=file}
-					{if $file['imagesize'] === '480x320' || $file['imagesize'] === '480x480'}
-					<option value="{$file['fileid']}" data-url="{$file['url']}"{if $asset['embedlogofileid']==$file['fileid']} selected="selected" {/if}>
-						{$file['filename']} [{$file['imagesize']} px]</option>
+					{if $file['imageSize'] === '480x320' || $file['imageSize'] === '480x480'}
+					<option value="{$file['fileId']}" data-url="{$file['url']}"{if $asset['embedlogofileid']==$file['fileId']} selected="selected" {/if}>
+						{$file['name']} [{$file['imageSize']} px]</option>
 					{/if}
 				{/foreach}
 			</select>
@@ -191,7 +191,7 @@
 			<div>
 				<h4>{$mod['name']}</h4>
 				<div><small>Description...</small></div>
-				<img src="{empty($mod['logocdnpath_external']) ? '/web/img/mod-default.png' : formatCdnUrlFromCdnPath($mod['logocdnpath_external'])}" />
+				<img src="{empty($mod['logoCdnPathExternal']) ? '/web/img/mod-default.png' : formatCdnUrlFromCdnPath($mod['logoCdnPathExternal'])}" />
 			</div>
 		</div>
 

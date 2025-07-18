@@ -52,13 +52,13 @@ function generateCdnFileBasenameWithPath($userid, $localpath, $originalfilebasen
 
 /**
  * @param string $localpath
- * @param string $cdnpath
+ * @param string $cdnPath
  * @return array{error : false|string}
  */
-function uploadToCdn($localpath, $cdnpath) {
+function uploadToCdn($localpath, $cdnPath) {
 	global $config;
 
-	$url = "https://{$config['bunnyendpoint']}/{$config['bunnyzone']}/{$cdnpath}";
+	$url = "https://{$config['bunnyendpoint']}/{$config['bunnyzone']}/{$cdnPath}";
 
 	$curl = curl_init();
 	curl_setopt_array($curl, [
@@ -88,13 +88,13 @@ function uploadToCdn($localpath, $cdnpath) {
 
 
 /**
- * @param string $cdnpath
+ * @param string $cdnPath
  * @return null|array{error:string}
  */
-function deleteFromCdn($cdnpath) {
+function deleteFromCdn($cdnPath) {
 	global $config;
 
-	$url = "https://{$config['bunnyendpoint']}/{$config['bunnyzone']}/{$cdnpath}";
+	$url = "https://{$config['bunnyendpoint']}/{$config['bunnyzone']}/{$cdnPath}";
 
 	$curl = curl_init();
 	curl_setopt_array($curl, [
@@ -124,35 +124,35 @@ function deleteFromCdn($cdnpath) {
  * Formats a "normal" url to the file.
  * This url is meant to be used for in-browser resources, e.g. a image to be placed onto a page, as compared to a download link for that image.
  * 
- * @param array{cdnpath: string} $file A file database row
- * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
+ * @param array{cdnPath: string} $file A file database row
+ * @param string $filenamePostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */
-function formatCdnUrl($file, $filenamepostfix = '') {
-	return formatCdnUrlFromCdnPath($file['cdnpath'], $filenamepostfix);
+function formatCdnUrl($file, $filenamePostfix = '') {
+	return formatCdnUrlFromCdnPath($file['cdnPath'], $filenamePostfix);
 }
 
 /**
  * Formats a "normal" url to the file.
  * This url is meant to be used for in-browser resources, e.g. a image to be placed onto a page, as compared to a download link for that image.
  * 
- * @param string|array{cdnpath: string} $file Either a file database row or the cdnpath directly;
- * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
+ * @param string|array{cdnPath: string} $file Either a file database row or the cdnpath directly;
+ * @param string $filenamePostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */
-function formatCdnUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
+function formatCdnUrlFromCdnPath($cdnPath, $filenamePostfix = '') {
 	global $config;
 
-	if($filenamepostfix) {
-		splitOffExtension($cdnpath, $pathnoext, $ext);
+	if($filenamePostfix) {
+		splitOffExtension($cdnPath, $pathNoExt, $ext);
 		if($ext === '') {
-			return "{$config['assetserver']}/{$cdnpath}{$filenamepostfix}"; // should never happen in reality, but just in case
+			return "{$config['assetserver']}/{$cdnPath}{$filenamePostfix}"; // should never happen in reality, but just in case
 		}
 
-		return "{$config['assetserver']}/{$pathnoext}{$filenamepostfix}.{$ext}";
+		return "{$config['assetserver']}/{$pathNoExt}{$filenamePostfix}.{$ext}";
 	}
 	else {
-		return "{$config['assetserver']}/{$cdnpath}";
+		return "{$config['assetserver']}/{$cdnPath}";
 	}
 }
 
@@ -160,14 +160,14 @@ function formatCdnUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
  * Formats a download link to the file.
  * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser.
  * 
- * @param array{cdnpath: string, filename:string} $file
+ * @param array{cdnPath: string, name:string} $file
  * @return string
  */
 function formatCdnDownloadUrl($file) {
 	global $config;
 
 	// dl -> used for download name in edge rules
-	return "{$config['assetserver']}/{$file['cdnpath']}?dl={$file['filename']}";
+	return "{$config['assetserver']}/{$file['cdnPath']}?dl={$file['name']}";
 }
 
 
@@ -204,30 +204,30 @@ function bunny_pullLogsAndUpdateDownloadNumbers($date)
 		$url = parse_url($parts[5]);
 		if(!startsWith($url['query'], '?dl=')) continue;
 		
-		$cdnpath = substr($url['path'], 1);
+		$cdnPath = substr($url['path'], 1);
 		$time = intval($parts[2]) / 1000;
 		$date = date(SQL_DATE_FORMAT, $time);
 		$remoteip = $parts[3];
 
 
-		$file = $con->getRow('SELECT * FROM `file` WHERE cdnpath = ?', [$cdnpath]);
+		$file = $con->getRow('SELECT fileId, assetId FROM Files WHERE cdnPath = ?', [$cdnPath]);
 		if (!$file) exit('file not found');
-		$fileid = $file['fileid'];
+		$fileId = $file['fileId'];
 
-		$lastDownload = $con->getOne('SELECT lastDownload FROM FileDownloadTracking WHERE fileId = ? and ipAddress = ?', [$fileid, $remoteip]);
+		$lastDownload = $con->getOne('SELECT lastDownload FROM FileDownloadTracking WHERE fileId = ? and ipAddress = ?', [$fileId, $remoteip]);
 
 		$countAsSeparateDownload = false;
 		if (!$lastDownload) {
 			$countAsSeparateDownload = true;
-			$con->Execute('INSERT INTO FileDownloadTracking (lastUpdate, fileId, ipAddress) VALUES (?, ?, ?)', [$date, $fileid, $remoteip]);
+			$con->Execute('INSERT INTO FileDownloadTracking (lastUpdate, fileId, ipAddress) VALUES (?, ?, ?)', [$date, $fileId, $remoteip]);
 		} else if (strtotime($lastDownload) - $time > 24*3600) {
 			$countAsSeparateDownload = true;
-			$con->Execute('UPDATE FileDownloadTracking SET lastDownload = ? WHERE fileId = ? and ipAddress = ?', [$date, $fileid, $remoteip]);
+			$con->Execute('UPDATE FileDownloadTracking SET lastDownload = ? WHERE fileId = ? and ipAddress = ?', [$date, $fileId, $remoteip]);
 		}
 
 		if ($countAsSeparateDownload) {
-			$con->Execute('UPDATE `file` SET downloads = downloads + 1 WHERE fileid = ?', [$fileid]);
-			$con->Execute('UPDATE `mod`  SET downloads = downloads + 1 WHERE modid = (SELECT r.modId FROM ModReleases r WHERE r.assetId = ?)', [$file['assetid']]);
+			$con->Execute('UPDATE Files SET downloads = downloads + 1 WHERE fileId = ?', [$fileId]);
+			$con->Execute('UPDATE `mod`  SET downloads = downloads + 1 WHERE modid = (SELECT r.modId FROM ModReleases r WHERE r.assetId = ?)', [$file['assetId']]);
 		}
 	}
 }

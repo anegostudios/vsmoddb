@@ -23,12 +23,7 @@ include($config["basepath"] . "lib/fileupload.php");
 include($config["basepath"] . "lib/version.php");
 
 
-$rd = opendir($config["basepath"] . "lib/assetimpl");
-while (($file = readdir($rd))) {
-	if (endsWith($file, ".php")) {
-		include($config["basepath"] . "lib/assetimpl/" . $file);
-	}
-}
+include($config["basepath"] . "lib/assetimpl/modeditor.php");
 
 //mysqli_report(MYSQLI_REPORT_ERROR);
 $con = createADOConnection($config);
@@ -782,8 +777,8 @@ else {
  */
 function formatDownloadTrackingUrl($file)
 {
-	$escapedName = urlencode($file['filename']);
-	return "/download/{$file['fileid']}/{$escapedName}";
+	$escapedName = urlencode($file['name']);
+	return "/download/{$file['fileId']}/{$escapedName}";
 }
 
 /**
@@ -792,7 +787,7 @@ function formatDownloadTrackingUrl($file)
  * Otherwise this just returns the cdn download url without tracking.
  * This is meant specifically for the purpose of the asset file attachement; open images in browser, download everything else and track the download.
  * 
- * @param array{filename:string, fileid:int, ext:string, cdnpath:string} $file
+ * @param array{name:string, fileId:int, ext:string, cdnPath:string} $file
  * @return string
  */
 function maybeFormatDownloadTrackingUrlDependingOnFileExt($file)

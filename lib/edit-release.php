@@ -5,7 +5,7 @@
  * @param array{modid:int, type:'mod'|'tool'|'other'} $mod The mod the release is to be associated with.
  * @param array{text:string, identifier?:string, version:int} $newData
  * @param int[] $newCompatibleGameVersions
- * @param array{assetid:int, fileid:int} $file
+ * @param array{assetId:int, fileId:int} $file
  * @return int The assetId of the newly created release. Zero on failure, very unlikely to fail.
  */
 function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
@@ -24,8 +24,8 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	$releaseId = $con->insert_ID();
 
 	// attach hovering files
-	if($file['assetid'] == 0) {
-		$con->execute('UPDATE file SET assetid = ? WHERE fileid = ?', [$assetId, $file['fileid']]);
+	if($file['assetId'] == 0) {
+		$con->execute('UPDATE Files SET assetId = ? WHERE fileId = ?', [$assetId, $file['fileId']]);
 	}
 
 	$changeToLog = 'Created new release v'.formatSemanticVersion($newData['version']);
@@ -59,7 +59,7 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
  * @param array{releaseid:int, assetId:int, text:string, identifier:string|null, version:int} $existingRelease
  * @param array{text:string, identifier?:string, version:int} $newData
  * @param int[] $newCompatibleGameVersions
- * @param array{assetid:int, fileid:int} $file Unused for now
+ * @param array{assetId:int, fileId:int} $file Unused for now
  * @return bool Indicates if the release did in fact get created. Very unlikely to not succeed.
  */
 function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersions, $file)
@@ -147,14 +147,14 @@ function deleteRelease($modId, $release)
 
 	$con->startTrans();
 
-	$usedFiles = $con->getAssoc('SELECT fileid, cdnpath FROM file WHERE assetid = ?', [$release['assetId']]);
+	$usedFiles = $con->getAssoc('SELECT fileId, cdnPath FROM Files WHERE assetId = ?', [$release['assetId']]);
 	// @perf: This could be merged into less queries, but in theory a release can only have one fiel either way, so this should not matter.
-	foreach($usedFiles as $fileId => $cdnpath) {
-		if($con->getOne('SELECT COUNT(*) FROM file WHERE cdnpath = ?', [$cdnpath]) == 1) {
+	foreach($usedFiles as $fileId => $cdnPath) {
+		if($con->getOne('SELECT COUNT(*) FROM Files WHERE cdnPath = ?', [$cdnPath]) == 1) {
 			// Only delete abandoned files! Unlikely to not be the case for release files, but might aswell be safe.
-			deleteFromCdn($cdnpath);
+			deleteFromCdn($cdnPath);
 		}
-		$con->execute('DELETE FROM file WHERE fileid = ?', [$fileId]);
+		$con->execute('DELETE FROM Files WHERE fileId = ?', [$fileId]);
 	}
 
 	$con->execute('DELETE FROM ModReleases where releaseId = ?', [$release['releaseId']]);
@@ -176,7 +176,7 @@ function deleteRelease($modId, $release)
 	$con->execute(<<<SQL
 		UPDATE `mod` m
 		SET lastreleased = IFNULL(
-			SELECT r.created FROM ModReleases r WHERE r.modId = m.modid ORDER BY r.created DESC LIMIT 1,
+			(SELECT r.created FROM ModReleases r WHERE r.modId = m.modid ORDER BY r.created DESC LIMIT 1),
 			m.created
 		)
 		WHERE m.modid = ?;

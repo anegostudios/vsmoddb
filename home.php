@@ -5,14 +5,14 @@ if (!empty($user)) {
 		SELECT
 			a.*,
 			m.*,
-			logo.cdnpath AS logocdnpath,
-			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+			logo.cdnPath AS logoCdnPath,
+			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 			s.code AS statusCode
 		FROM
 			asset a
 			JOIN `mod` m ON m.assetid = a.assetid
 			LEFT JOIN Status s ON s.statusId = a.statusid
-			LEFT JOIN file AS logo ON logo.fileid = m.cardlogofileid
+			LEFT JOIN Files AS logo ON logo.fileId = m.cardlogofileid
 			LEFT JOIN ModTeamMembers tm ON tm.modId = m.modid
 		WHERE
 			(a.createdbyuserid = ? OR tm.userId = ?)
@@ -24,15 +24,15 @@ if (!empty($user)) {
 		unset($mod['text']);
 		$mod['tags'] = [];
 		$mod['from'] = $user['name'];
-		$mod['modpath'] = formatModPath($mod);
+		$mod['dbPath'] = formatModPath($mod);
 
-		$tagsCached = trim($mod["tagscached"]);
+		$tagsCached = trim($mod['tagscached']);
 		if (!empty($tagsCached)) {
 			$tagData = explode("\r\n", $tagsCached);
 			$tags = [];
 
 			foreach($tagData as $tagrow) {
-				$parts = explode(",", $tagrow);
+				$parts = explode(',', $tagrow);
 				$tags[] = ['name' => $parts[0], 'color' => $parts[1], 'tagId' => $parts[2]];
 			}
 
@@ -49,8 +49,8 @@ if (!empty($user)) {
 		SELECT
 			a.*,
 			m.*,
-			logo.cdnpath AS logocdnpath,
-			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+			logo.cdnPath AS logoCdnPath,
+			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 			u.name AS `from`,
 			rd.created AS releasedate,
 			rd.version AS releaseversion
@@ -59,7 +59,7 @@ if (!empty($user)) {
 			JOIN `mod` m ON m.assetid = a.assetid
 			JOIN Users u ON u.userId = a.createdbyuserid
 			JOIN UserFollowedMods f ON f.modId = m.modid AND f.userId = ?
-			LEFT JOIN file AS logo ON logo.fileid = m.cardlogofileid
+			LEFT JOIN Files AS logo ON logo.fileId = m.cardlogofileid
 			LEFT JOIN ModReleases rd ON rd.modId = m.modid
 		WHERE
 			a.statusid = ".STATUS_RELEASED."
@@ -70,7 +70,7 @@ if (!empty($user)) {
 
 	foreach($followedMods as &$mod) {
 		$mod['statusCode'] = 'published';
-		$mod['modpath'] = formatModPath($mod);
+		$mod['dbPath'] = formatModPath($mod);
 	}
 	unset($mod);
 
@@ -84,14 +84,14 @@ $latestMods = $con->getAll("
 	SELECT
 		a.*,
 		m.*,
-		logo.cdnpath AS logocdnpath,
-		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+		logo.cdnPath AS logoCdnPath,
+		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 		u.name AS `from`
 	FROM
 		asset a
 		join `mod` m ON m.assetid = a.assetid
 		join Users u ON u.userId = a.createdbyuserid
-		left join file AS logo ON logo.fileid = m.cardlogofileid
+		left join Files AS logo ON logo.fileId = m.cardlogofileid
 	WHERE
 		a.statusid = ".STATUS_RELEASED."
 		AND m.created > DATE_SUB(NOW(), INTERVAL 30 DAY)
@@ -102,7 +102,7 @@ $latestMods = $con->getAll("
 
 foreach($latestMods as &$mod) {
 	$mod['statusCode'] = 'published';
-	$mod['modpath'] = formatModPath($mod);
+	$mod['dbPath'] = formatModPath($mod);
 }
 unset($mod);
 
@@ -112,7 +112,7 @@ $lastestComments = $con->getAll('
 	SELECT
 		c.assetId, a.name AS assetName,
 		c.commentId, c.text, c.created,
-		u.name AS username, IFNULL(u.banneduntil >= NOW(), 0) AS isBanned
+		u.name AS username, IFNULL(u.bannedUntil >= NOW(), 0) AS isBanned
 	FROM
 		Comments c
 		join Users u ON u.userId = c.userId

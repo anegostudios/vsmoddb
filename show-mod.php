@@ -10,7 +10,7 @@ $asset = $con->getRow("
 	SELECT
 		a.*,
 		m.*,
-		logo.cdnpath AS logoUrl,
+		logo.cdnPath AS logoUrl,
 		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 		HEX(creator.hash) AS creatorHash,
 		creator.name AS creatorName,
@@ -20,7 +20,7 @@ $asset = $con->getRow("
 		JOIN `mod` m ON m.assetid = a.assetid
 		LEFT JOIN Users creator ON creator.userId = a.createdbyuserid
 		LEFT JOIN Status s ON s.statusId = a.statusid
-		LEFT JOIN file AS logo ON logo.fileid = m.embedlogofileid
+		LEFT JOIN Files AS logo ON logo.fileId = m.embedlogofileid
 	WHERE
 		a.assetid = ?
 ", [$assetId]);
@@ -35,7 +35,7 @@ $teamMembers = $con->getAll(<<<SQL
 SQL, [$asset['modid']]);
 $view->assign('teamMembers', $teamMembers);
 
-$files = $con->getAll("SELECT * FROM `file` WHERE assetid = ? AND fileid NOT IN (?, ?)", 
+$files = $con->getAll('SELECT * FROM Files WHERE assetId = ? AND fileId NOT IN (?, ?)', 
 	[$assetId, $asset['cardlogofileid'] ?? 0, $asset['embedlogofileid'] ?? 0]);  /* sql cant compare against null */
 
 //NOTE(Rennorb): There was a time where we rescaled images for logos. We no longer do that, but in ~140 cases there are still two images for the logo: the actual logo image, and the original one that was uploaded.
@@ -43,8 +43,8 @@ $files = $con->getAll("SELECT * FROM `file` WHERE assetid = ? AND fileid NOT IN 
 // Here is a sql query to get a list of such mods:
 /*
 	select modid, urlalias, Users.name from `mod`
-	join file f on f.fileid = `mod`.cardlogofileid
-	join file f2 on f2.cdnpath = concat(substr(f.cdnpath, 1, length(f.cdnpath) - 12), substr(f.cdnpath, -4))
+	join file f on f.fileId = `mod`.cardlogofileid
+	join file f2 on f2.cdnPath = concat(substr(f.cdnPath, 1, length(f.cdnPath) - 12), substr(f.cdnPath, -4))
 	join asset on `mod`.assetid = asset.assetid
 	join Users on Users.userId = asset.createdbyuserid;
 */
@@ -53,7 +53,7 @@ if($asset['hasLegacyLogo']) {
 	if(endsWith($base, '_480_320')) {
 		$legacyLogoPath = substr($base, 0, strlen($base) - 8).'.'.$ext;
 		foreach ($files as $k => $file) {
-			if($file['cdnpath'] === $legacyLogoPath) {
+			if($file['cdnPath'] === $legacyLogoPath) {
 				unset($files[$k]);
 				break;
 			}
@@ -66,13 +66,13 @@ if(!empty($asset['logoUrl'])) {
 }
 
 foreach ($files as &$file) {
-	$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
-	$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
-	$file["url"] = formatCdnUrl($file);
+	$file['created'] = date('M jS Y, H:i:s', strtotime($file['created']));
+	$file['ext'] = substr($file['name'], strrpos($file['name'], '.')+1); // no clue why pathinfo doesnt work here
+	$file['url'] = formatCdnUrl($file);
 }
 unset($file);
 
-$view->assign("files", $files);
+$view->assign('files', $files);
 
 $deletedFilter = canModerate(null, $user) ? '' : 'AND !c.deleted';
 $comments = $con->getAll(<<<SQL
@@ -138,7 +138,8 @@ $releaseFiles = [];
 if(count($releases)) {
 	$foldedAssetIds = implode(',', array_map(fn($r) => $r['assetId'], $releases));
 	// @security: assetid's come from the database and are numeric, and are therefore sql inert.
-	$releaseFiles = $con->getAssoc("SELECT `file`.assetid, `file`.* FROM `file` WHERE assetid IN ($foldedAssetIds)");
+	//NOTE(Rennorb): Select the assetId for the first column so we can use getAssoc and use it as the key.
+	$releaseFiles = $con->getAssoc("SELECT assetId, f.* FROM Files f WHERE assetId IN ($foldedAssetIds)");
 }
 
 foreach ($releases as &$release) {

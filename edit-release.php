@@ -60,19 +60,19 @@ if(!empty($_POST['save'])) {
 	//TODO(Rennorb) @cleanup @correctness: Attach files on save instead of on upload.
 	if($existingRelease) {
 		$currentFiles = $con->getAll(<<<SQL
-			SELECT file.assetid, file.fileid, mpr.modIdentifier AS modIdentifier, mpr.modVersion AS modVersion
-			FROM file
-			LEFT JOIN ModPeekResult mpr ON mpr.fileId = file.fileid
-			WHERE assetid = ?
+			SELECT f.assetId, f.fileId, mpr.modIdentifier, mpr.modVersion
+			FROM Files f
+			LEFT JOIN ModPeekResult mpr ON mpr.fileId = f.fileId
+			WHERE f.assetId = ?
 		SQL, [$existingRelease['assetId']]);
 	}
 	else {
 		// hovering files
 		$currentFiles = $con->getAll(<<<SQL
-			SELECT file.assetid, file.fileid, mpr.modIdentifier AS modIdentifier, mpr.modVersion AS modVersion, mpr.errors
-			FROM file
-			LEFT JOIN ModPeekResult mpr ON mpr.fileId = file.fileid
-			WHERE assetid IS NULL AND assettypeid = 2 AND userid = ?
+			SELECT f.assetId, f.fileId, mpr.modIdentifier, mpr.modVersion, mpr.errors
+			FROM Files f
+			LEFT JOIN ModPeekResult mpr ON mpr.fileId = f.fileId
+			WHERE f.assetId IS NULL AND f.assetTypeId = 2 AND f.userId = ?
 		SQL, [$user['userId']]);
 
 		if(!empty($currentFiles[0]['errors'])) {
@@ -139,14 +139,14 @@ if(!empty($_POST['save'])) {
 			}
 			else {
 				$sqlIgnoreExistingRelease = $existingRelease ? "r.releaseId != {$existingRelease['releaseId']} AND" : ''; // @security $existingRelease['releaseId'] comes from the database and is numeric, therefore sql inert.
-				$inUseBy = $con->getRow("
+				$inUseBy = $con->getRow(<<<SQL
 					SELECT a.*, r.modId, r.version, m.assetId as modAssetId, m.urlalias
 					FROM ModReleases r
 					JOIN asset a ON a.assetid = r.assetId
 					JOIN `mod` m ON m.modid = r.modId
 					WHERE $sqlIgnoreExistingRelease r.identifier = ? AND (r.modId != ? || r.version = ?)
 					LIMIT 1
-				", [$newData['identifier'], $targetMod['modid'], $newData['version']]);
+				SQL, [$newData['identifier'], $targetMod['modid'], $newData['version']]);
 
 				if ($inUseBy) {
 					if($inUseBy['modId'] == $targetMod['modid'] && $inUseBy['version'] == $newData['version']) {
@@ -227,23 +227,25 @@ else if($existingRelease && !empty($_POST['delete'])) {
 //
 
 if($existingRelease) {
-	$files = $con->getAll("
-		SELECT *, CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) AS imagesize
-		FROM file
-		WHERE assetid = ?
-	", [$existingRelease['assetId']]);
+	$files = $con->getAll(<<<SQL
+		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
+		FROM Files f
+		LEFT JOIN FileImageData i ON i.fileId = f.fileId
+		WHERE f.assetId = ?
+	SQL, [$existingRelease['assetId']]);
 
 	$compatibleGameVersions = $con->getCol('SELECT gameVersion FROM ModReleaseCompatibleGameVersions WHERE releaseId = ?', $existingRelease['releaseId']);
 	$existingRelease['compatibleGameVersions'] = array_flip(array_map('intval', $compatibleGameVersions));
 }
 else {
 	// hovering files
-	$files = $con->getAll("
-		SELECT *, file.fileid, CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) AS imagesize, mpr.modIdentifier, mpr.modVersion, mpr.errors
-		FROM file
-		LEFT JOIN ModPeekResult mpr ON mpr.fileId = file.fileid
-		WHERE assetid IS NULL AND assettypeid = 2 AND userid = ?
-	", [$user['userId']]);
+	$files = $con->getAll(<<<SQL
+		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize, mpr.modIdentifier, mpr.modVersion, mpr.errors
+		FROM Files f
+		LEFT JOIN ModPeekResult mpr ON mpr.fileId = f.fileId
+		LEFT JOIN FileImageData i ON i.fileId = f.fileId
+		WHERE f.assetId IS NULL AND f.assetTypeId = 2 AND f.userId = ?
+	SQL, [$user['userId']]);
 
 	if(!$pushedErrorForCurrentFile && !empty($files[0]['errors'])) {
 		addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$files[0]['errors'], true);
@@ -251,10 +253,10 @@ else {
 }
 
 foreach($files as &$file) {
-	$file["created"] = date("M jS Y, H:i:s", strtotime($file["created"]));
+	$file['created'] = date('M jS Y, H:i:s', strtotime($file['created']));
 
-	$file["ext"] = substr($file["filename"], strrpos($file["filename"], ".")+1); // no clue why pathinfo doesnt work here
-	$file["url"] = maybeFormatDownloadTrackingUrlDependingOnFileExt($file);
+	$file['ext'] = substr($file['name'], strrpos($file['name'], '.')+1); // no clue why pathinfo doesnt work here
+	$file['url'] = maybeFormatDownloadTrackingUrlDependingOnFileExt($file);
 }
 unset($file);
 
@@ -271,8 +273,8 @@ unset($gameVersion);
 $assetChangelog = $existingRelease ? $con->getAll(<<<SQL
 	SELECT ch.text, ch.lastModified, u.name AS username
 	FROM Changelogs ch
-	JOIN Users u ON u.userId = ch.userid
-	WHERE ch.assetid = ?
+	JOIN Users u ON u.userId = ch.userId
+	WHERE ch.assetId = ?
 	ORDER BY ch.created DESC
 	LIMIT 20
 SQL, [$existingRelease['assetId']]) : [];

@@ -137,7 +137,7 @@ function queryModSearchForModCards($searchParams)
 {
 	$mods = queryModSearch($searchParams);
 	foreach($mods as &$mod) {
-		$mod['modpath'] = formatModPath($mod);
+		$mod['dbPath'] = formatModPath($mod);
 	}
 	unset($mod);
 
@@ -222,8 +222,8 @@ function queryModSearch($searchParams)
 			a.lastmodified,
 			a.tagscached,
 			m.*,
-			l.cdnpath AS logocdnpath,
-			l.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+			l.cdnPath AS logoCdnPath,
+			l.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 			c.name AS `from`,
 			s.code AS statusCode,
 			f.userId AS following
@@ -232,7 +232,7 @@ function queryModSearch($searchParams)
 		LEFT JOIN Users c ON c.userId = a.createdbyuserid
 		LEFT JOIN Status s ON s.statusId = a.statusid
 		LEFT JOIN UserFollowedMods f ON f.modId = m.modid and f.userId = $currentUserId
-		LEFT JOIN file l ON l.fileid = m.cardlogofileid
+		LEFT JOIN Files l ON l.fileId = m.cardlogofileid
 		$joinClauses
 		$whereClauses
 		ORDER BY $orderBy

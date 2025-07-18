@@ -365,6 +365,74 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `release` RENAME TO `ModReleases`;
 END IF;
 
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+ TABLE_NAME='file') ) THEN
+    UPDATE `file` f JOIN asset a ON a.assetid = f.assetid SET f.assettypeid = a.assettypeid; 
+    UPDATE `file` f1 
+        JOIN `file` f2 ON f2.cdnpath = REPLACE(f1.cdnpath, '_480_320.', '.') AND f2.assetid IS NOT NULL
+        SET f1.assetid = f2.assetid, f1.assettypeid = 1, f1.imagesize = POINT(480, 320)
+        where f1.assetid is null and f1.cdnpath like '%_480_320.%'; -- fill out auto-resized versions
+    UPDATE `file` SET assettypeid = 1 WHERE assettypeid IS NULL AND cdnpath LIKE '%.png';
+    UPDATE `file` SET assettypeid = 1 WHERE assettypeid IS NULL AND cdnpath LIKE '%.jpg';
+    UPDATE `file` SET assettypeid = 1 WHERE assettypeid IS NULL AND cdnpath LIKE '%.gif';
+    UPDATE `file` SET assettypeid = 2 WHERE assettypeid IS NULL AND cdnpath LIKE '%.dll';
+    UPDATE `file` SET assettypeid = 2 WHERE assettypeid IS NULL AND cdnpath LIKE '%.cs';
+    UPDATE `file` SET assettypeid = 2 WHERE assettypeid IS NULL AND cdnpath LIKE '%.zip';
+    UPDATE file f
+        JOIN asset a on a.assetid = f.assetid
+        SET f.userid = a.createdbyuserid
+        WHERE f.userid is null; -- try pulling userid from asset if not set
+    DELETE f FROM `file` f
+        LEFT JOIN asset a ON a.assetid = f.assetid
+        WHERE f.assetid IS NOT NULL AND a.assetid IS NULL; -- remove entries which had an asset that got deleted
+
+
+
+    CREATE TABLE IF NOT EXISTS `FileImageData` (
+        `fileId`       INT   NOT NULL,
+        `hasThumbnail` BOOL  NOT NULL DEFAULT 0,
+        `size`         POINT     NULL,
+        PRIMARY KEY (`fileId`),
+        CONSTRAINT `FK_FileImageData_fileId` FOREIGN KEY (`fileId`)  REFERENCES `file`(`fileid`) ON UPDATE CASCADE ON DELETE CASCADE
+    )
+    ENGINE = InnoDB;
+
+
+    INSERT INTO FileImageData (fileId, hasThumbnail, size)
+        SELECT fileid, hasthumbnail, imagesize
+        FROM `file`
+        WHERE hasthumbnail OR imagesize IS NOT NULL;
+
+    ALTER TABLE `file` DROP COLUMN `hasthumbnail`;
+    ALTER TABLE `file` DROP COLUMN `imagesize`;
+
+    ALTER TABLE `file` CHANGE COLUMN `fileid` `fileId` INT NOT NULL AUTO_INCREMENT;
+    ALTER TABLE `file` CHANGE COLUMN `assetid` `assetId` INT NULL;
+    ALTER TABLE `file` CHANGE COLUMN `assettypeid` `assetTypeId` INT NOT NULL;
+    ALTER TABLE `file` CHANGE COLUMN `userid` `userId` INT NOT NULL;
+    ALTER TABLE `file` MODIFY COLUMN `downloads` INT NOT NULL DEFAULT 0;
+    ALTER TABLE `file` CHANGE COLUMN `filename` `name` VARCHAR(255) NULL;
+    ALTER TABLE `file` CHANGE COLUMN `cdnpath`  `cdnPath` VARCHAR(255) NULL;
+    ALTER TABLE `file` DROP COLUMN `type`;
+
+
+
+    UPDATE `file` SET created = '0000-00-00' WHERE created IS NULL;
+    ALTER TABLE `file` MODIFY COLUMN `created` DATETIME NOT NULL DEFAULT NOW() AFTER `cdnPath`;
+
+    UPDATE `file` SET lastmodified = created WHERE lastmodified IS NULL;
+    ALTER TABLE `file` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created`;
+
+    ALTER TABLE `file` ADD CONSTRAINT `FK_Files_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetid`) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+    ALTER TABLE `file` ADD CONSTRAINT `FK_Files_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+    ALTER TABLE `file` RENAME TO `Files`;
+END IF;
+
+
+
 DROP TABLE IF EXISTS `assettype`;
 
 END $$

@@ -71,20 +71,20 @@ class ModEditor extends AssetEditor
 		}
 
 		$logoData = $this->assetid ? $con->getRow(<<<SQL
-			SELECT file_db.cdnpath AS path_db, file_external.cdnpath AS path_external
+			SELECT fileDb.cdnPath AS pathDb, fileExternal.cdnPath AS pathExternal
 			FROM `mod` m
-			LEFT JOIN file AS file_db ON file_db.fileid = m.cardlogofileid
-			LEFT JOIN file AS file_external ON file_external.fileid = m.embedlogofileid
+			LEFT JOIN Files AS fileDb ON fileDb.fileId = m.cardlogofileid
+			LEFT JOIN Files AS fileExternal ON fileExternal.fileId = m.embedlogofileid
 			WHERE m.assetid = ?
 		SQL, [$this->assetid]) : null; // @perf
 		$previewData = array_merge($this->asset, [
-			'statusCode'  => 'draft',
-			'legacylogo'  => false,
-			'logocdnpath' => $logoData['path_db'] ?? null, 
-			'logocdnpath_external' => $logoData['path_external'] ?? null, 
-			'modpath'     => '#',
-			'downloads'   => 123456,
-			'comments'    => 123456
+			'statusCode'    => 'draft',
+			'hasLegacyLogo' => false,
+			'logoCdnPath'   => $logoData['pathDb'] ?? null, 
+			'logoCdnPathExternal' => $logoData['pathExternal'] ?? null, 
+			'dbPath'       => '#',
+			'downloads'     => 123456,
+			'comments'      => 123456
 		]);
 		$view->assign('mod', $previewData);
 
@@ -174,7 +174,7 @@ class ModEditor extends AssetEditor
 		}
 		else if(empty($newLogoFileIdExternal)) {
 			if($logoCheck['status'] === 'ok') { // dblogo didn't change, need to fetch size
-				$imageSize = $con->getOne("select CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) from file where fileid = ?", array($newLogoFileIdDb));
+				$imageSize = $con->getOne("SELECT CONCAT(ST_X(size), 'x', ST_Y(size)) FROM FileImageData WHERE fileId = ?", [$newLogoFileIdDb]);
 				//NOTE(Rennorb): This can fail for old images, but at that point we just give up. migration copies over the dbimages either way.
 				if($imageSize) {
 					$logoCheck['status'] = 'size';
@@ -240,8 +240,8 @@ class ModEditor extends AssetEditor
 		if ($statusreverted) {
 			static::unsetOkMessages();
 
-			$modPath = formatModPath($this->asset);
-			addMessage(MSG_CLASS_WARN, "Changes saved, but your mod remains hidden as a 'Draft'.</br>To make your mod public you need to first create at least one <a href='{$modPath}#tab-files'>release</a>.");
+			$dbPath = formatModPath($this->asset);
+			addMessage(MSG_CLASS_WARN, "Changes saved, but your mod remains hidden as a 'Draft'.</br>To make your mod public you need to first create at least one <a href='{$dbPath}#tab-files'>release</a>.");
 
 			return "error";
 		}
@@ -274,7 +274,7 @@ class ModEditor extends AssetEditor
 
 		$updatedAny = false;
 		foreach($this->files as &$file) {
-			if($file['imagesize'] === null) {
+			if($file['imageSize'] === null) {
 				$localpath = tempnam(sys_get_temp_dir(), '');
 				$originalfile = @file_get_contents(formatCdnUrl($file));
 				if ($originalfile === false || file_put_contents($localpath, $originalfile) === false) {
@@ -286,8 +286,13 @@ class ModEditor extends AssetEditor
 
 				unlink($localpath);
 
-				$file['imagesize'] = "{$w}x{$h}";
-				$con->execute('update file set imagesize = POINT(?, ?) where fileid = ?', [$w, $h, $file['fileid']]);
+				$file['imageSize'] = "{$w}x{$h}";
+				$con->execute(<<<SQL
+					INSERT INTO FileImageData (fileId, size)
+						VALUES (?, POINT(?, ?))
+					ON DUPLICATE KEY UPDATE
+						size = VALUES(size)
+				SQL, [$file['fileId'], $w, $h]);
 
 				$updatedAny = true;
 			}
@@ -305,7 +310,7 @@ class ModEditor extends AssetEditor
 	{
 		global $con;
 
-		$imageSize = $con->getOne("select CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where fileid = ?", array($imageFileId));
+		$imageSize = $con->getOne("SELECT CONCAT(ST_X(size), 'x', ST_Y(size)) FROM FileImageData WHERE fileId = ?", [$imageFileId]);
 		if (empty($imageSize)) return ['status' => 'error', 'errormessage' => 'Invalid fileid.'];
 
 		if($imageSize !== '480x320' && $imageSize !== '480x480') {
@@ -324,15 +329,20 @@ class ModEditor extends AssetEditor
 	{
 		global $con;
 
-		$file = $con->getRow('select * from `file` where fileid = ? ', [$imageFileId]);
+		$file = $con->getRow('select * from Files where fileId = ?', [$imageFileId]);
 		if(empty($file)) return ['status' => 'error', 'errormessage' => 'Invalid fileid.'];
 
-		splitOffExtension($file['filename'], $filebasename, $ext);
+		splitOffExtension($file['name'], $filebasename, $ext);
 		$filename = "{$filebasename}_480_320.{$ext}";
 
 		// Test for exisitng cropped image, so we dont create duplicates.
 		if($this->assetid) {
-			$candidate = $con->getOne('select fileid from `file` where assetid = ? and imagesize = POINT(480, 320) and filename = ?', [$this->assetid, $filename]);
+			$candidate = $con->getOne(<<<SQL
+				SELECT f.fileId
+				FROM Files f
+				JOIN FileImageData i ON i.fileId = f.fileId
+				WHERE f.assetId = ? AND i.size = POINT(480, 320) AND f.name = ?
+			SQL, [$this->assetid, $filename]);
 			if($candidate) return ['status' => 'ok', 'fileid' => intval($candidate)];
 		}
 
@@ -356,7 +366,7 @@ class ModEditor extends AssetEditor
 			return ['status' => 'error', 'errormessage' => 'Failed to crop image.'];
 		}
 
-		splitOffExtension($file['cdnpath'], $ogCdnBasePath, $ext);
+		splitOffExtension($file['cdnPath'], $ogCdnBasePath, $ext);
 		$cdnBasePath = "{$ogCdnBasePath}_480_320";
 
 		$thumbStatus = createThumbnailAndUploadToCDN($localPath, $cdnBasePath, $ext);
@@ -376,12 +386,14 @@ class ModEditor extends AssetEditor
 			return ['status' => 'error', 'errormessage' => 'CDN Error: '.$uploadResult['error']];
 		}
 
-		$con->execute(<<<SQL
-			INSERT INTO `file` (assetid, assettypeid, userid, filename, cdnpath, hasthumbnail, imagesize)
-			VALUES (?, ?, ?, ?, ?, 1, POINT(480, 320))
-		SQL, [$file['assetid'], $file['assettypeid'], $file['userid'], $filename, $cdnPath]);
+		$con->execute(
+			'INSERT INTO Files (assetId, assetTypeId, userId, name, cdnPath) VALUES (?, ?, ?, ?, ?)',
+			[$file['assetId'], $file['assetTypeId'], $file['userId'], $filename, $cdnPath]
+		);
+		$fileId = $con->Insert_ID();
+		$con->execute('INSERT INTO FileImageData (fileId, hasThumbnail, size) VALUES (?, 1, POINT(480, 320))', [$fileId]);
 
-		return ['status' => 'ok', 'fileid' => $con->Insert_ID()];
+		return ['status' => 'ok', 'fileid' => $fileId];
 	}
 
 	function handleRevokeNewOwnership($modId)

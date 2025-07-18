@@ -57,9 +57,9 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 	}
 	
 	if ($parentAssetId) {
-		$quantityfiles = $con->getOne("select count(*) from file where assetid=?", array($parentAssetId));
+		$quantityfiles = $con->getOne("select count(*) from Files where assetId = ?", array($parentAssetId));
 	} else {
-		$quantityfiles = $con->getOne("select count(*) from file where assetid is null and assettypeid=? and userid=?", array($assetTypeId, $user['userId']));
+		$quantityfiles = $con->getOne("select count(*) from Files where assetId is null and assetTypeId = ? and userId = ?", array($assetTypeId, $user['userId']));
 	}
 	
 	if ($quantityfiles + 1 > $limits['attachmentCount']) {
@@ -67,53 +67,53 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 	}
 
 
-	$localpath = $file["tmp_name"];
-	$cdnbasepath = generateCdnFileBasenameWithPath($user['userId'], $localpath, $filebasename);
-	$cdnfilepath = "{$cdnbasepath}.{$ext}";
+	$localPath = $file["tmp_name"];
+	$cdnBasePath = generateCdnFileBasenameWithPath($user['userId'], $localPath, $filebasename);
+	$cdnFilePath = "{$cdnBasePath}.{$ext}";
 
-	$data = array("filename" => $file['name'], "cdnpath" => $cdnfilepath, "assettypeid" => $assetTypeId, "userid" => $user['userId']);
-	if($parentAssetId) $data["assetid"] = $parentAssetId;
+	$data = array("name" => $file['name'], "cdnPath" => $cdnFilePath, "assetTypeId" => $assetTypeId, "userId" => $user['userId']);
+	if($parentAssetId) $data["assetId"] = $parentAssetId;
+
+	$acceptedImage = false;
 
 	list($width, $height, $type, $attr) = getimagesize($file["tmp_name"]);
 	if ($type == IMAGETYPE_GIF || $type == IMAGETYPE_JPEG || $type == IMAGETYPE_PNG) {
 		if ($width > 1920 || $height > 1080) {
-			unlink($localpath);
+			unlink($localPath);
 			return array("status" => "error", "errormessage" => 'Image too large! Limit is 1920x1080 pixels');
 		}
 
-		$thumbStatus = createThumbnailAndUploadToCDN($localpath, $cdnbasepath, $ext);
+		$thumbStatus = createThumbnailAndUploadToCDN($localPath, $cdnBasePath, $ext);
 		if($thumbStatus['status'] !== 'ok') {
-			unlink($localpath);
+			unlink($localPath);
 			return $thumbStatus;
 		}
 
-		$data['hasthumbnail'] = true;
+		$acceptedImage = true;
 	}
 
 	// Do this upload after analyzing the image, that way we don't needlessly upload files should resizing fail.
-	$uploadresult = uploadToCdn($localpath, $cdnfilepath);
+	$uploadresult = uploadToCdn($localPath, $cdnFilePath);
 	if($uploadresult['error']) {
-		unlink($localpath);
+		unlink($localPath);
 		return array("status" => "error", "errormessage" => 'CDN Error: '.$uploadresult['error']);
 	}
 
 	$foldedKeys = implode(', ', array_keys($data));
 	$placeholders = substr(str_repeat(',?', count($data)), 1);
-	if(!isset($data['hasthumbnail'])) {
-		$con->execute("insert into file ($foldedKeys) values ($placeholders)", array_values($data));
-	}
-	else {
+	$con->execute("INSERT INTO Files ($foldedKeys) VALUES ($placeholders)", array_values($data));
+	$fileId = $con->Insert_ID();
+	if($acceptedImage) {
 		// :BrokenSqlPointType
-		$con->execute("insert into file (imagesize, $foldedKeys) values (POINT($width, $height), $placeholders)", array_values($data));
+		$con->execute("INSERT INTO FileImageData (fileId, hasThumbnail, size) VALUES ($fileId, 1, POINT($width, $height))");
 	}
-	$fileid = $con->Insert_ID();
 
 	if($parentAssetId) logAssetChanges(array("Uploaded file '{$file['name']}'"), $parentAssetId);
 		
 	$data = array(
 		"status" => "ok",
-		"fileid" => $fileid,
-		"filepath" => formatCdnUrlFromCdnPath($cdnfilepath),
+		"fileid" => $fileId,
+		"filepath" => formatCdnUrlFromCdnPath($cdnFilePath),
 		"thumbnailfilepath" => isset($thumbStatus) ? formatCdnUrlFromCdnPath($thumbStatus['cdnthumbnailpath']) : null,
 		"filename" => $file["name"],
 		"uploaddate" => date("M jS Y, H:i:s")
@@ -121,9 +121,9 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 	if(isset($width)) $data['imagesize'] = "{$width}x{$height}";
 
 	if ($assetTypeId === ASSETTYPE_RELEASE) {
-		$ok = modpeek($localpath, $modInfo);
+		$ok = modpeek($localPath, $modInfo);
 		$con->Execute('insert into ModPeekResult (fileId, errors, modIdentifier, modVersion, type, side, requiredOnClient, requiredOnServer, networkVersion, description, website, iconPath, rawAuthors, rawContributors, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-			[$fileid, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['side'], $modInfo['requiredOnClient'], $modInfo['requiredOnServer'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['iconPath'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawDependencies']]
+			[$fileId, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['side'], $modInfo['requiredOnClient'], $modInfo['requiredOnServer'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['iconPath'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawDependencies']]
 		);
 
 		// array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:int}
@@ -138,7 +138,7 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 		}
 	}
 
-	//TODO(Rennorb) @perf: unlink $localpath here?
+	//TODO(Rennorb) @perf: unlink $localPath here?
 
 	return $data;
 }

@@ -20,8 +20,8 @@ $ok = $con->execute(<<<SQL
 	LEFT JOIN (
 		SELECT r.modId, COUNT(d.lastDownload) as downloads
 		FROM FileDownloadTracking d
-		JOIN `file` f ON f.fileid = d.fileId
-		join ModReleases r on r.assetId = f.assetid
+		JOIN Files f ON f.fileId = d.fileId
+		join ModReleases r on r.assetId = f.assetId
 		WHERE d.lastDownload > DATE_SUB(NOW(), INTERVAL 72 HOUR)
 		GROUP BY r.modId
 	) f1 ON f1.modid = m.modid

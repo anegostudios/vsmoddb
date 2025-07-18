@@ -18,14 +18,14 @@ $userMods = $con->getAll("
 	SELECT
 		a.*,
 		m.*,
-		logo.cdnpath AS logocdnpath,
-		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS legacylogo,
+		logo.cdnPath AS logoCdnPath,
+		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 		s.code AS statusCode
 	FROM
 		asset a
 		JOIN `mod` m ON m.assetid = a.assetid
 		LEFT JOIN Status s ON s.statusId = a.statusid
-		LEFT JOIN file AS logo ON logo.fileid = m.cardlogofileid
+		LEFT JOIN Files AS logo ON logo.fileId = m.cardlogofileid
 		LEFT JOIN ModTeamMembers t ON t.modId = m.modid
 	WHERE
 		(a.createdbyuserid = ? OR t.userId = ?) $sqlWhereExt
@@ -37,7 +37,7 @@ foreach ($userMods as &$row) {
 	unset($row['text']);
 	$row['tags'] = [];
 	$row['from'] = $shownUser['name'];
-	$row['modpath'] = formatModPath($row);
+	$row['dbPath'] = formatModPath($row);
 
 	$tagsCached = trim($row['tagscached']);
 	if (empty($tagsCached)) continue;

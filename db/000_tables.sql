@@ -70,31 +70,36 @@ CREATE TABLE IF NOT EXISTS `ModerationRecords` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `moddb`.`file`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`file` (
-  `fileid` INT NOT NULL AUTO_INCREMENT,
-  `assetid` INT NULL,
-  `assettypeid` INT NULL COMMENT 'Required for assets that don''t exist yet, otherwise we cannot verify if the right assettypeid was passed on during asset creation',
-  `userid` INT NULL,
-  `downloads` INT NULL DEFAULT 0,
-  `filename` VARCHAR(255) NULL,
-  `cdnpath` VARCHAR(255) NULL,
-  `type` ENUM('portrait', 'asset', 'shape', 'texture', 'sound') NULL,
-  `hasthumbnail` BOOL NOT NULL DEFAULT 0, -- could maybe be merged with type
-  `created` DATETIME NOT NULL DEFAULT NOW(),
-  `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `imagesize` POINT NULL, -- :ImageSizeMigration
-  PRIMARY KEY (`fileid`),
-  INDEX `assetid` (`assetid`),
-  INDEX `tempuploadtoken` (`userid`),
-  INDEX `cdnpathidx` (`cdnpath`)  -- used for fast download pingback
+CREATE TABLE IF NOT EXISTS `Files` (
+  `fileId`       INT          NOT NULL AUTO_INCREMENT,
+  `assetId`      INT              NULL, -- has to be nullable because hovering files are not initially attached to a specific asset
+  `assetTypeId`  INT          NOT NULL, -- also required for hovering files
+  `userId`       INT          NOT NULL,
+  `downloads`    INT          NOT NULL DEFAULT 0,
+  `name`         VARCHAR(255)     NULL,
+  `cdnPath`      VARCHAR(255)     NULL,
+  `created`      DATETIME     NOT NULL DEFAULT NOW(),
+  `lastModified` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`fileId`),
+  INDEX `assetid` (`assetId`),
+  INDEX `tempuploadtoken` (`userId`),
+  INDEX `cdnpathidx` (`cdnPath`),  -- TOOD(Rennorb) @cleanup: Unused?
+  CONSTRAINT `FK_Files_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetid`) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT `FK_Files_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT
+)
+ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `FileImageData` (
+  `fileId`       INT   NOT NULL,
+  `hasThumbnail` BOOL  NOT NULL DEFAULT 0,
+  `size`         POINT     NULL,
+  PRIMARY KEY (`fileId`),
+  CONSTRAINT `FK_FileImageData_fileId` FOREIGN KEY (`fileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
 
-CREATE TABLE IF NOT EXISTS `moddb`.`ModPeekResult` (
+CREATE TABLE IF NOT EXISTS `ModPeekResult` (
   `fileId`           INT             NOT NULL,
   `errors`           TEXT                NULL,
   `modIdentifier`    VARCHAR(255)        NULL,
@@ -111,16 +116,16 @@ CREATE TABLE IF NOT EXISTS `moddb`.`ModPeekResult` (
   `rawContributors`  TEXT                NULL,
   `rawDependencies`  TEXT                NULL,
   PRIMARY KEY (`fileId`),
-  CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `file`(`fileid`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
 -- Idea for dependencies
--- CREATE TABLE IF NOT EXISTS `moddb`.`ReleaseFileDependencies` (
+-- CREATE TABLE IF NOT EXISTS `ReleaseFileDependencies` (
 --   `fileId`               INT             NOT NULL,
 --   `dependencyIdentifier` VARCHAR(255)        NULL,
 --   `dependencyMinVersion` BIGINT UNSIGNED NOT NULL,
---   CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `file`(`fileid`) ON UPDATE CASCADE ON DELETE CASCADE
+--   CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
 -- )
 -- ENGINE = InnoDB;
 

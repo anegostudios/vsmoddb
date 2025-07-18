@@ -6,7 +6,7 @@
 $fileId = intval($_GET['fileid'] ?? $urlparts[1] ?? 0);
 if($fileId === 0) showErrorPage(HTTP_BAD_REQUEST, 'Missing fileid.');
 
-$file = $con->getRow('SELECT * FROM `file` WHERE fileid = ?', [$fileId]);
+$file = $con->getRow('SELECT * FROM Files WHERE fileId = ?', [$fileId]);
 if (!$file) showErrorPage(HTTP_NOT_FOUND, 'File not found.');
 
 // do download tracking
@@ -25,8 +25,8 @@ if (!$lastDownload) {
 }
 
 if ($countAsSeparateDownload) {
-	$con->execute('UPDATE `file` SET downloads = downloads + 1 WHERE fileId = ?', [$fileId]);
-	$con->execute('UPDATE `mod`  SET downloads = downloads + 1 WHERE modid = (SELECT r.modId FROM ModReleases r WHERE r.assetId = ?)', [$file['assetid']]);
+	$con->execute('UPDATE Files SET downloads = downloads + 1 WHERE fileId = ?', [$fileId]);
+	$con->execute('UPDATE `mod`  SET downloads = downloads + 1 WHERE modid = (SELECT r.modId FROM ModReleases r WHERE r.assetId = ?)', [$file['assetId']]);
 }
 
 
