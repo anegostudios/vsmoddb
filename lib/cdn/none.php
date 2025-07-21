@@ -9,31 +9,31 @@
  * Generates a unique, reproducible and immutable filename for storage on the cdn.
  * This returns an _almost_ complete storage path, which is still missing the extension. This is useful because we often generate multiple variants of a file, and we would need to split the returned path otherwise. We therefore simply return a path without extension, and the caller assembles the final path(s).
  * 
- * @param int    $userid The id of the user that owns the file.
- * @param string $localpath
- * @param string $originalfilebasename
+ * @param int    $userId The id of the user that owns the file.
+ * @param string $localPath
+ * @param string $originalFileBasename
  * @return string
  */
-function generateCdnFileBasenameWithPath($userid, $localpath, $originalfilebasename)
+function generateCdnFileBasenameWithPath($userId, $localPath, $originalFileBasename)
 {
 	//NOTE(Rennorb): For local storage we just use the filename, no need to do magic and it makes it easier to track and test things.
 	// In theory this can cause collisions, but we don't really care for testing and simplicity is a priority.
-	return "$userid/$originalfilebasename";
+	return "$userId/$originalFileBasename";
 }
 
 
 /**
- * @param string $localpath
+ * @param string $localPath
  * @param string $cdnPath
  * @return array{error : false|string}
  */
-function uploadToCdn($localpath, $cdnPath) {
+function uploadToCdn($localPath, $cdnPath) {
 	$destination = "files/$cdnPath";
 	$path = pathinfo($destination, PATHINFO_DIRNAME);
 	if(!is_dir($path)) {
 		mkdir($path, 0777, true);
 	}
-	$ok = copy($localpath, $destination); // :NoneCDN_NoSecurity
+	$ok = copy($localPath, $destination); // :NoneCDN_NoSecurity
 	return ['error' => $ok ? false : 'Unknown error during file "upload".'];
 }
 

@@ -5,11 +5,11 @@ if ($user['roleCode'] != 'admin') exit("noprivilege");
 const EXTEND_MATCHES_BY = 20;
 
 $rawData = $con->getAll(<<<SQL
-	SELECT a.createdbyuserid, HEX(u.hash) AS `hash`, u.name as username, m.assetid, m.urlalias, a.name, f.cdnPath, m.donateurl, a.text
+	SELECT a.createdByUserId, HEX(u.hash) AS `hash`, u.name as username, m.assetid, m.urlalias, a.name, f.cdnPath, m.donateurl, a.text
 	FROM `mod` m
-	     JOIN  asset a ON a.assetid = m.assetid
-	     JOIN  Users u ON u.userId = a.createdbyuserid
-	LEFT JOIN  Files f ON f.fileId = m.embedlogofileid
+	     JOIN  Assets a ON a.assetId = m.assetid
+	     JOIN  Users  u ON u.userId = a.createdbyuserid
+	LEFT JOIN  Files  f ON f.fileId = m.embedlogofileid
 	WHERE m.donateurl <> '' OR a.text LIKE '%co-fi%' OR a.text LIKE '%patreon%'
 SQL);
 

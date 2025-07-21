@@ -90,15 +90,15 @@ function canEditAsset($asset, $user, $includeTeam = true)
 	$canEditAsTeamMember = false;
 
 	// @cleanup: cursed hackery, breaking the point of the oop asseteditor
-	if ($includeTeam && $asset['assettypeid'] === ASSETTYPE_MOD) {
+	if ($includeTeam && $asset['assetTypeId'] === ASSETTYPE_MOD) {
 		$canEditAsTeamMember = $con->getOne(<<<SQL
 			SELECT 1 
 			FROM ModTeamMembers t 
 			JOIN `mod` ON `mod`.modid = t.modId
 			WHERE assetid = ? AND t.userId = ? AND t.canEdit = 1
-		SQL, array($asset['assetid'], $user['userId']));
+		SQL, array($asset['assetId'], $user['userId']));
 	}
-	else if ($includeTeam && $asset['assettypeid'] === ASSETTYPE_RELEASE) {
+	else if ($includeTeam && $asset['assetTypeId'] === ASSETTYPE_RELEASE) {
 		//NOTE(Rennorb): The second case checks if we are owner of the mod this release belongs to.
 		$canEditAsTeamMember = $con->getOne(<<<SQL
 				SELECT 1 
@@ -109,21 +109,21 @@ function canEditAsset($asset, $user, $includeTeam = true)
 				SELECT 1
 				FROM `mod`
 				JOIN ModReleases r ON r.modId = `mod`.modid AND r.assetId = ?
-				JOIN asset ON asset.assetid = `mod`.assetid AND asset.createdbyuserid = ?
-		SQL, array($asset['assetid'], $user['userId'], $asset['assetid'], $user['userId']));
+				JOIN Assets a ON a.assetId = `mod`.assetid AND a.createdByUserId = ?
+		SQL, array($asset['assetId'], $user['userId'], $asset['assetId'], $user['userId']));
 	}
 
-	return isset($user['userId']) && ($user['userId'] == $asset['createdbyuserid'] || $user['roleCode'] == 'admin' || $user['roleCode'] == 'moderator' || $canEditAsTeamMember);
+	return isset($user['userId']) && ($user['userId'] == $asset['createdByUserId'] || $user['roleCode'] == 'admin' || $user['roleCode'] == 'moderator' || $canEditAsTeamMember);
 }
 
 /**
- * @param array{createdbyuserid:int, 'statusid':int} $asset
- * @param array{userid:int, rolecode:string}         $user    the permission source
+ * @param array{createdByUserId:int, statusId:int} $asset
+ * @param array{userId:int, roleCode:string}         $user    the permission source
  */
 function canDeleteAsset($asset, $user)
 {
 	return isset($user['userId']) && (
-		   ($user['userId'] == $asset['createdbyuserid'] && $asset['statusid'] != STATUS_LOCKED)
+		   ($user['userId'] == $asset['createdByUserId'] && $asset['statusId'] != STATUS_LOCKED)
 		|| $user['roleCode'] == 'admin' || $user['roleCode'] == 'moderator'
 	);
 }
@@ -158,69 +158,69 @@ function loadNotifications($loadAll)
 		switch ($notification['kind']) {
 			case 'newrelease':
 				$cmt = $con->getRow(<<<SQL
-					SELECT a.name AS modname, u.name AS username
+					SELECT a.name AS modName, u.name AS username
 					FROM `mod` m
-					JOIN asset a ON a.assetid = m.assetid
-					JOIN Users u ON u.userId = a.createdbyuserid
+					JOIN Assets a ON a.assetId = m.assetid
+					JOIN Users u ON u.userId = a.createdByUserId
 					WHERE m.modid = ?
 				SQL, [$notification['recordId']]);
 
-				$notification['text'] = "{$cmt['username']} uploaded a new version of {$cmt['modname']}";
+				$notification['text'] = "{$cmt['username']} uploaded a new version of {$cmt['modName']}";
 				break;
 
 			case 'teaminvite':
 				$cmt = $con->getRow(<<<SQL
-					SELECT a.name AS modname, u.name AS username
+					SELECT a.name AS modName, u.name AS username
 					FROM `mod` m
-					JOIN asset a ON a.assetid = m.assetid
-					JOIN Users u ON u.userId = a.createdbyuserid
+					JOIN Assets a ON a.assetId = m.assetid
+					JOIN Users u ON u.userId = a.createdByUserId
 					WHERE m.modid = ? 
 				SQL, [intval($notification['recordId']) & ((1 << 30) - 1)]);  // :InviteEditBit
 
-				$notification['text'] = "{$cmt['username']} invited you to join the team of {$cmt['modname']}";
+				$notification['text'] = "{$cmt['username']} invited you to join the team of {$cmt['modName']}";
 				break;
 
 			case 'modownershiptransfer':
 				$cmt = $con->getRow(<<<SQL
-					SELECT a.name AS modname, u.name AS username
+					SELECT a.name AS modName, u.name AS username
 					FROM `mod` m
-					JOIN asset a ON a.assetid = m.assetid
-					JOIN Users u ON u.userId = a.createdbyuserid
+					JOIN Assets a ON a.assetId = m.assetid
+					JOIN Users u ON u.userId = a.createdByUserId
 					WHERE m.modid = ?
 				SQL, [$notification['recordId']]);
 
-				$notification['text'] = "{$cmt['username']} offered you ownership of {$cmt['modname']}";
+				$notification['text'] = "{$cmt['username']} offered you ownership of {$cmt['modName']}";
 				break;
 
 			case 'newcomment': case 'mentioncomment':
 				$cmt = $con->getRow(<<<SQL
-					SELECT a.name AS modname, u.name AS username
+					SELECT a.name AS modName, u.name AS username
 					FROM Comments c
-					JOIN asset a ON a.assetid = c.assetId
+					JOIN Assets a ON a.assetId = c.assetId
 					JOIN Users u ON u.userId = c.userId
 					WHERE c.commentId = ?
 				SQL, [$notification['recordId']]);
 
 				if ($notification['kind'] === 'newcomment') {
-					$notification['text'] = "{$cmt['username']} commented on {$cmt['modname']}";
+					$notification['text'] = "{$cmt['username']} commented on {$cmt['modName']}";
 				}
 				else {
-					$notification['text'] = "{$cmt['username']} mentioned you in a comment on {$cmt['modname']}";
+					$notification['text'] = "{$cmt['username']} mentioned you in a comment on {$cmt['modName']}";
 				}
 				break;
 
 			case 'modlocked':
-				$modName = $con->getOne('SELECT name FROM `mod` m JOIN asset a ON a.assetid = m.assetid WHERE m.modid = ?', [$notification['recordId']]);
+				$modName = $con->getOne('SELECT name FROM `mod` m JOIN Assets a ON a.assetId = m.assetid WHERE m.modid = ?', [$notification['recordId']]);
 				$notification['text'] = "Your mod '{$modName}' got locked by a moderator";
 				break;
 
 			case 'modunlockrequest':
-				$modName = $con->getOne('SELECT name FROM `mod` m JOIN asset a ON a.assetid = m.assetid WHERE m.modid = ?', [$notification['recordId']]);
+				$modName = $con->getOne('SELECT name FROM `mod` m JOIN Assets a ON a.assetId = m.assetid WHERE m.modid = ?', [$notification['recordId']]);
 				$notification['text'] = "A review-request was issued for a mod locked by you ('{$modName}')";
 				break;
 
 			case 'modunlocked':
-				$modName = $con->getOne('SELECT name from `mod` m JOIN asset a ON a.assetid = m.assetid WHERE m.modid = ?', [$notification['recordId']]);
+				$modName = $con->getOne('SELECT name from `mod` m JOIN Assets a ON a.assetId = m.assetid WHERE m.modid = ?', [$notification['recordId']]);
 				$notification['text'] = "Your mod '{$modName}' got unlocked by a moderator";
 				break;
 		}

@@ -15,7 +15,7 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	$con->startTrans();
 
 	$con->execute(<<<SQL
-		INSERT INTO asset (assettypeid, numsaved, statusid, created, text, createdbyuserid, editedbyuserid)
+		INSERT INTO Assets (assetTypeId, numSaved, statusId, created, text, createdByUserId, editedByUserId)
 		VALUES(2, 1, 2, NOW(), ?, ?, ?)
 	SQL, [$newData['text'], $user['userId'], $user['userId']]);
 	$assetId = $con->insert_ID();
@@ -85,7 +85,7 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 		$con->startTrans();
 
 		if(isset($actualChanges['text'])) {
-			$con->execute('UPDATE asset SET text = ?, editedbyuserid = ? WHERE assetid = ?',
+			$con->execute('UPDATE Assets SET text = ?, editedByUserId = ? WHERE assetId = ?',
 				[$actualChanges['text'], $user['userId'], $existingRelease['assetId']]
 			);
 
@@ -122,7 +122,7 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 			$changesToLog[] = $change;
 		}
 
-		$con->execute('UPDATE asset SET numsaved = numsaved + 1, editedbyuserid = ? WHERE assetid = ?', [$user['userId'], $existingRelease['assetId']]);
+		$con->execute('UPDATE Assets SET numSaved = numSaved + 1, editedByUserId = ? WHERE assetId = ?', [$user['userId'], $existingRelease['assetId']]);
 
 		logAssetChanges($changesToLog, $existingRelease['assetId']);
 
@@ -138,7 +138,7 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 /**
  * @security: Does not perform validation!
  * @param int $modId
- * @param array{assetid:int, releaseid:int} $release
+ * @param array{assetId:int, releaseId:int} $release
  * @return bool Indicates if the release did in fact get deleted. Very unlikely to not succeed.
  */
 function deleteRelease($modId, $release)
@@ -158,7 +158,7 @@ function deleteRelease($modId, $release)
 	}
 
 	$con->execute('DELETE FROM ModReleases where releaseId = ?', [$release['releaseId']]);
-	$con->execute('DELETE FROM asset where assetid = ?', [$release['assetId']]);
+	$con->execute('DELETE FROM Assets where assetId = ?', [$release['assetId']]);
 
 	//TODO(Rennorb) @correctness: Remove / hide unread release notifications for deleted releases.
 	// We cannot remove notifications for deleted releases trivially like we do with comment notifications because release notifications are tracked by modid, not by releaseid.

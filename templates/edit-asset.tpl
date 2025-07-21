@@ -6,7 +6,7 @@
 		<span>
 			<a href="/list/{$entrycode}">{$entryplural}</a>
 		</span> / 
-		<span>{$asset['assetid'] ? $asset['name'] : "Add new ".$entrysingular}</span>
+		<span>{$asset['assetId'] ? $asset['name'] : "Add new ".$entrysingular}</span>
 	</h2>	
 
 	<form method="post" name="deleteform">
@@ -17,8 +17,8 @@
 	<form method="post" name="form1" autocomplete="off" class="flex-list">
 		<input type="hidden" name="at" value="{$user['actionToken']}">
 		<input type="hidden" name="save" value="1">
-		<input type="hidden" name="assetid" value="{$asset['assetid']}">
-		<input type="hidden" name="numsaved" value="{$asset['numsaved']}">
+		<input type="hidden" name="assetid" value="{$asset['assetId']}">
+		<input type="hidden" name="numsaved" value="{$asset['numSaved']}">
 		<input type="hidden" name="saveandback" value="0">
 		
 		<div class="editbox">
@@ -39,11 +39,11 @@
 			</select>
 		</div>
 		
-		{if $asset["assetid"]}
+		{if $asset["assetId"]}
 			<div class="editbox">
-				Created by: {$asset['createdusername']}<br>
-				{if $asset['editedusername'] && $asset['createdusername'] != $asset['editedusername']}Last Edited by: {$asset['editedusername']}<br>{/if}
-				Last modified: {fancyDate($asset['lastmodified'])}
+				Created by: {$asset['createdUsername']}<br>
+				{if $asset['editedUsername'] && $asset['createdUsername'] != $asset['editedUsername']}Last Edited by: {$asset['editedUsername']}<br>{/if}
+				Last modified: {fancyDate($asset['lastModified'])}
 			</div>
 		{/if}
 		
@@ -63,11 +63,11 @@
 		{/if}
 
 		<div style="clear:both;"></div>
-		<h3>Files<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$asset['assetid']}">download all as zip</a>{/if})</span></h3>
+		<h3>Files<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$asset['assetId']}">download all as zip</a>{/if})</span></h3>
 		{include file="edit-asset-files.tpl"}
 		</form>
 
-		{if $asset['assetid']} 
+		{if $asset['assetId']} 
 			<div style="clear:both;"><br></div>
 
 			
@@ -113,7 +113,7 @@
 	<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
 	<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
 	
-	{if $asset['assetid']}
+	{if $asset['assetId']}
 		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete {$entrysingular}</a>
 	{/if}
 {/capture}

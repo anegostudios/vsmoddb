@@ -16,13 +16,13 @@ $asset = $con->getRow("
 		creator.name AS creatorName,
 		s.code AS statusCode
 	FROM 
-		asset a
-		JOIN `mod` m ON m.assetid = a.assetid
-		LEFT JOIN Users creator ON creator.userId = a.createdbyuserid
-		LEFT JOIN Status s ON s.statusId = a.statusid
+		Assets a
+		JOIN `mod` m ON m.assetid = a.assetId
+		LEFT JOIN Users creator ON creator.userId = a.createdByUserId
+		LEFT JOIN Status s ON s.statusId = a.statusId
 		LEFT JOIN Files AS logo ON logo.fileId = m.embedlogofileid
 	WHERE
-		a.assetid = ?
+		a.assetId = ?
 ", [$assetId]);
 
 if (!$asset) showErrorPage(HTTP_NOT_FOUND);
@@ -45,8 +45,8 @@ $files = $con->getAll('SELECT * FROM Files WHERE assetId = ? AND fileId NOT IN (
 	select modid, urlalias, Users.name from `mod`
 	join file f on f.fileId = `mod`.cardlogofileid
 	join file f2 on f2.cdnPath = concat(substr(f.cdnPath, 1, length(f.cdnPath) - 12), substr(f.cdnPath, -4))
-	join asset on `mod`.assetid = asset.assetid
-	join Users on Users.userId = asset.createdbyuserid;
+	join Assets on `mod`.assetid = asset.assetId
+	join Users on Users.userId = asset.createdByUserId;
 */
 if($asset['hasLegacyLogo']) {
 	splitOffExtension($asset['logoUrl'], $base, $ext);
@@ -93,7 +93,7 @@ $comments = $con->getAll(<<<SQL
 SQL, [$assetId]);
 
 foreach ($comments as &$comment) {
-	if ($asset['createdbyuserid'] == $comment['userId']) {
+	if ($asset['createdByUserId'] == $comment['userId']) {
 		$comment['flairCode'] = 'author';
 	}
 
@@ -106,18 +106,7 @@ unset($comment);
 $view->assign("comments", $comments, null, true);
 
 $allTags = $con->getAssoc('SELECT tagId, name FROM Tags');
-
-$tags = array();
-$tagscached = trim($asset["tagscached"]);
-if (!empty($tagscached)) {
-	$tagdata = explode("\r\n", $tagscached);
-	foreach ($tagdata as $tagrow) {
-		$row = explode(",", $tagrow);
-		$tags[] = array('name' => $row[0], 'color' => $row[1], 'tagId' => $row[2], 'text' => $allTags[$row[2]]);
-	}
-}
-
-$view->assign("tags", $tags);
+$view->assign("tags", unwrapCachedTagsWithText($asset["tagsCached"], $allTags));
 
 $releases = $con->getAll(<<<SQL
 	SELECT
@@ -126,7 +115,7 @@ $releases = $con->getAll(<<<SQL
 		GROUP_CONCAT(cgv.gameVersion ORDER BY cgv.gameVersion ASC SEPARATOR ',') AS compatibleGameVersions,
 		GROUP_CONCAT(gv.sortIndex   ORDER BY cgv.gameVersion ASC SEPARATOR ',') AS compatibleGameVersionsIndices
 	FROM ModReleases r
-	JOIN asset a ON a.assetid = r.assetId
+	JOIN Assets a ON a.assetId = r.assetId
 	LEFT JOIN ModReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
 	LEFT JOIN GameVersions gv ON gv.version = cgv.gameVersion
 	WHERE modid = ?
@@ -417,7 +406,7 @@ function processTeamInvitation($asset, $user)
 
 			$con->Execute('UPDATE Notifications SET `read` = 1 WHERE notificationId = ?', [$invite['notificationId']]);
 
-			logAssetChanges([$user['name'].' acepted team invitation'], $asset['assetid']);
+			logAssetChanges([$user['name'].' acepted team invitation'], $asset['assetId']);
 
 			$url = parse_url($_SERVER['REQUEST_URI']);
 			$url['query'] = stripQueryParam($url['query'], 'acceptteaminvite');
@@ -427,7 +416,7 @@ function processTeamInvitation($asset, $user)
 		case 0:
 			$con->Execute('UPDATE Notifications SET `read` = 1 WHERE notificationId = ?', [$invite['notificationId']]);
 
-			logAssetChanges([$user['name'].' rejected team invitation'], $asset['assetid']);
+			logAssetChanges([$user['name'].' rejected team invitation'], $asset['assetId']);
 
 
 			$url = parse_url($_SERVER['REQUEST_URI']);
@@ -451,25 +440,25 @@ function processOwnershipTransfer($asset, $user)
 	switch ($_GET['acceptownershiptransfer']) {
 		case 1:
 			$con->startTrans();
-			$oldOwnerData = $con->getRow('SELECT createdbyuserid, created FROM `asset` WHERE `assetid` = ?', [$asset['assetid']]); // @perf
+			$oldOwnerData = $con->getRow('SELECT createdByUserId, created FROM Assets WHERE assetId = ?', [$asset['assetId']]); // @perf
 			// swap owner and teammember that accepted in the teammembers table
 			$con->execute(<<<SQL
 				UPDATE ModTeamMembers
 				SET userId = ?, canEdit = 1, created = ?
 				WHERE modId = ? AND userId = ?
-			SQL, [$oldOwnerData['createdbyuserid'], $oldOwnerData['created'], $asset['modid'], $user['userId']]);
-			$con->execute('UPDATE asset SET createdbyuserid = ? WHERE assetid = ?', [$user['userId'], $asset['assetid']]);
+			SQL, [$oldOwnerData['createdByUserId'], $oldOwnerData['created'], $asset['modid'], $user['userId']]);
+			$con->execute('UPDATE Assets SET createdByUserId = ? WHERE assetId = ?', [$user['userId'], $asset['assetId']]);
 			$con->execute(<<<SQL
-				UPDATE asset a
+				UPDATE Assets a
 				JOIN `mod` m ON m.modid = ?
-				JOIN ModReleases r ON r.modId = m.modid AND r.assetId = a.assetid
-				set a.createdbyuserid = ?
+				JOIN ModReleases r ON r.modId = m.modid AND r.assetId = a.assetId
+				set a.createdByUserId = ?
 			SQL, [$asset['modid'], $user['userId']]);
 
 			$con->execute('UPDATE Notifications SET `read` = 1 WHERE notificationId = ?', [$pendingInvitationId]);
 			$ok = $con->completeTrans();
 			if($ok) {
-				logAssetChanges(['Ownership migrated to '.$user['name']], $asset['assetid']);
+				logAssetChanges(['Ownership migrated to '.$user['name']], $asset['assetId']);
 			}
 
 			$url = parse_url($_SERVER['REQUEST_URI']);
@@ -480,7 +469,7 @@ function processOwnershipTransfer($asset, $user)
 		case 0:
 			$con->execute('UPDATE Notifications SET `read` = 1 WHERE notificationId = ?', [$pendingInvitationId]);
 
-			logAssetChanges(['Ownership migration rejected by '.$user['name']], $asset['assetid']);
+			logAssetChanges(['Ownership migration rejected by '.$user['name']], $asset['assetId']);
 
 			$url = parse_url($_SERVER['REQUEST_URI']);
 			$url['query'] = stripQueryParam($url['query'], 'acceptownershiptransfer');

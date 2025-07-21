@@ -7,22 +7,22 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 CREATE SCHEMA IF NOT EXISTS `moddb` DEFAULT CHARACTER SET utf8 ;
 USE `moddb` ;
 
--- -----------------------------------------------------
--- Table `moddb`.`asset`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`asset` (
-  `assetid` INT NOT NULL AUTO_INCREMENT,
-  `createdbyuserid` INT NULL,
-  `editedbyuserid` INT NULL,
-  `statusid` INT NULL,
-  `assettypeid` INT NULL,
-  `name` VARCHAR(255) NULL,
-  `text` TEXT NULL,
-  `tagscached` TEXT NULL,
-  `created` DATETIME NULL,
-  `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `numsaved` INT NULL,
-  PRIMARY KEY (`assetid`)
+CREATE TABLE IF NOT EXISTS `Assets` (
+  `assetId`         INT          NOT NULL AUTO_INCREMENT,
+  `createdByUserId` INT          NOT NULL,
+  `editedByUserId`  INT              NULL,
+  `statusId`        INT          NOT NULL,
+  `assetTypeId`     INT          NOT NULL,
+  `name`            VARCHAR(255)     NULL,
+  `text`            TEXT             NULL,
+  `tagsCached`      TEXT             NULL, -- same data as LEFT JOIN ModTags, LEFT JOIN Tags, GROUP_CONCAT(CONCAT(tag...) DELIMITER '\r\n')
+  `numSaved`        INT          NOT NULL DEFAULT 1,
+  `created`         DATETIME     NOT NULL DEFAULT NOW(),
+  `lastModified`    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`assetId`),
+  INDEX `createdByUserId` (`createdByUserId`),
+  CONSTRAINT `FK_Assets_createdByUserId` FOREIGN KEY (`createdByUserId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT `FK_Assets_editedByUserId` FOREIGN KEY (`editedByUserId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
 )
 ENGINE = InnoDB;
 
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS `Files` (
   INDEX `assetid` (`assetId`),
   INDEX `tempuploadtoken` (`userId`),
   INDEX `cdnpathidx` (`cdnPath`),  -- TOOD(Rennorb) @cleanup: Unused?
-  CONSTRAINT `FK_Files_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetid`) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT `FK_Files_assetId` FOREIGN KEY (`assetId`) REFERENCES `Assets`(`assetId`) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT `FK_Files_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT
 )
 ENGINE = InnoDB;
@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS `Comments` (
   PRIMARY KEY (`commentId`),
   INDEX `assetid`(`assetId`),
   INDEX `created`(`created`), -- for the main page query that shows the latest 20 comments
-  -- CONSTRAINT `FK_Comments_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE, -- TODO(Rennorb) @cleanup: For moderation reasons we allow comment asset references these to be dangling for now.
+  -- CONSTRAINT `FK_Comments_assetId` FOREIGN KEY (`assetId`) REFERENCES `Assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE, -- TODO(Rennorb) @cleanup: For moderation reasons we allow comment asset references these to be dangling for now.
   CONSTRAINT `FK_Comments_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT `FK_Comments_lastModaction` FOREIGN KEY (`lastModaction`) REFERENCES `ModerationRecords`(`actionId`) ON UPDATE CASCADE ON DELETE RESTRICT
 )
@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS `ModReleases` (
   UNIQUE INDEX `identifier` (`modId`, `identifier`, `version`),
   UNIQUE INDEX `assetid` (`assetId`),
   INDEX `modid` (`modId`),
-  CONSTRAINT `FK_ModReleases_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetid`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_ModReleases_assetId` FOREIGN KEY (`assetId`) REFERENCES `Assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT `FK_ModReleases_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS `ModTags` (
   `created`      DATETIME  NOT NULL DEFAULT NOW(),
   `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`modId`, `tagId`),
-  CONSTRAINT `FK_Changelogs_modId` FOREIGN KEY (`modID`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_Changelogs_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT `FK_ModTags_tagId` FOREIGN KEY (`tagId`) REFERENCES `Tags`(`tagId`) ON UPDATE CASCADE ON DELETE CASCADE,
 )
 ENGINE = InnoDB;

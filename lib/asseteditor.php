@@ -18,9 +18,9 @@ class AssetEditor extends AssetController
 		parent::__construct($classname);
 
 		$this->columns = array(
-			array("title" => "Name", "code" => "name", "tablename" => "asset", "datatype" => "name"),
-			array("title" => "Text", "code" => "text", "tablename" => "asset"),
-			array("title" => "Status", "code" => "statusid", "tablename" => "asset"),
+			array("title" => "Name", "code" => "name", "tablename" => "Assets", "datatype" => "name"),
+			array("title" => "Text", "code" => "text", "tablename" => "Assets"),
+			array("title" => "Status", "code" => "statusId", "tablename" => "Assets", "default" => 1),
 		);
 	}
 
@@ -32,9 +32,9 @@ class AssetEditor extends AssetController
 		$this->recordid = null;
 
 		if ($this->assetid) {
-			$this->recordid = $con->getOne("select {$this->tablename}id from `{$this->tablename}` where assetid=?", array($this->assetid));
+			$this->recordid = $con->getOne("select {$this->tablename}Id from `{$this->tablename}` where assetId = ?", array($this->assetid));
 
-			$asset = $con->getRow("select * from asset where assetid=?", array($this->assetid));
+			$asset = $con->getRow("select * from Assets where assetId = ?", array($this->assetid));
 
 			if (!canEditAsset($asset, $user)) showErrorPage(HTTP_FORBIDDEN);
 		}
@@ -88,7 +88,7 @@ class AssetEditor extends AssetController
 				$this->asset['tags'] = array_combine($_POST['tagids'], $_POST['tagids']);
 			}
 
-			$this->asset['numsaved'] = empty($_POST['numsaved']) ? 0 : $_POST['numsaved'];
+			$this->asset['numSaved'] = empty($_POST['numsaved']) ? 0 : $_POST['numsaved'];
 		}
 
 		if ($status == 'conflict') {
@@ -136,7 +136,7 @@ class AssetEditor extends AssetController
 	function delete()
 	{
 		global $con;
-		$con->Execute("delete from asset where assetid=?", array($this->assetid));
+		$con->Execute("delete from Assets where assetId = ?", array($this->assetid));
 		$con->Execute("delete from `{$this->tablename}` where {$this->tablename}id=?", array($this->recordid));
 
 		logAssetChanges(array("Deleted asset"), $this->assetid);
@@ -156,7 +156,7 @@ class AssetEditor extends AssetController
 
 		if (!$this->assetid) {
 			assert($this->tablename == 'mod');
-			$this->asset = array("assetid" => 0, "assettypeid" => ASSETTYPE_MOD, "name" => "", "statusid" => 0, "text" => "", "numsaved" => 0);
+			$this->asset = array("assetId" => 0, "assetTypeId" => ASSETTYPE_MOD, "name" => "", "statusId" => 0, "text" => "", "numSaved" => 0);
 
 			foreach ($this->columns as $column) {
 				$this->asset[$column['code']] = null;
@@ -173,12 +173,12 @@ class AssetEditor extends AssetController
 				editor.userId as editeduserid,
 				editor.name as editedusername
 			from 
-				asset 
-				join `{$tablename}` on asset.assetid=`{$tablename}`.assetid
-				left join Users as creator on creator.userId = asset.createdbyuserid
-				left join Users as editor on editor.userId = asset.editedbyuserid
+				Assets asset 
+				join `{$tablename}` on asset.assetId = `{$tablename}`.assetId
+				left join Users as creator on creator.userId = asset.createdByUserId
+				left join Users as editor on editor.userId = asset.editedByUserId
 			where
-				asset.assetid = ?
+				asset.assetId = ?
 		", array($this->assetid));
 
 		if (empty($this->asset)) return;
@@ -206,15 +206,18 @@ class AssetEditor extends AssetController
 		validateActionToken();
 
 		if (!$this->assetid) {
-			$this->assetid = insert("asset");
 			$this->recordid = insert($this->tablename);
 			$this->isnew = true;
 
 			assert($this->tablename == 'mod');
 			$assetTypeId = ASSETTYPE_MOD;
 
-			update("asset", $this->assetid, array("createdbyuserid" => $user["userId"], "assettypeid" => $assetTypeId));
-			update($this->tablename, $this->recordid, array("assetid" => $this->assetid));
+			$con->execute('INSERT INTO Assets (createdByUserId, statusId, assetTypeId) VALUES (?, ?, ?)', 
+				[$user['userId'], STATUS_DRAFT, $assetTypeId]
+			);
+			$this->assetid = $con->Insert_ID();
+
+			$con->execute('UPDATE `mod` SET assetid = ? WHERE modid = ?', [$this->assetid, $this->recordid]);
 
 			$filesIds = $con->getCol("SELECT fileId FROM Files WHERE assetId IS NULL AND userId = ? and assetTypeId = ?", [$user['userId'], $assetTypeId]);
 
@@ -224,9 +227,9 @@ class AssetEditor extends AssetController
 			}
 
 			$this->asset = [
-				'assetid' => $this->assetid,
-				'assettypeid' => $assetTypeId,
-				'createdbyuserid' => $user['userId'],
+				'assetId' => $this->assetid,
+				'assetTypeId' => $assetTypeId,
+				'createdByUserId' => $user['userId'],
 			];
 
 			addMessage(MSG_CLASS_OK, $this->namesingular.' created.'); // @escurity: $this->namesingular is manually speciifed and contains no external input.
@@ -234,17 +237,17 @@ class AssetEditor extends AssetController
 			addMessage(MSG_CLASS_OK, $this->namesingular.' saved.'); // @escurity: $this->namesingular is manually speciifed and contains no external input.
 			$this->loadFromDB();
 			$assetdb = $this->asset;
-			$oldstatusid = $this->asset["statusid"];
+			$oldstatusid = $this->asset["statusId"];
 
 			$status = 'saved';
 		}
 
-		$assetdata = array("editedbyuserid" => $user["userId"]);
+		$assetdata = array("editedByUserId" => $user["userId"]);
 		$recorddata = array();
 
 		foreach ($this->columns as $column) {
 			$col = $column["code"];
-			$val = null;
+			$val = $column["default"] ?? null;
 
 			if (!empty($_POST[$col])) {
 				$val = $_POST[$col];
@@ -266,7 +269,7 @@ class AssetEditor extends AssetController
 				}
 			}
 
-			if ($column["tablename"] == "asset") {
+			if ($column["tablename"] == "Assets") {
 				$assetdata[$col] = $val;
 			} else {
 				$recorddata[$col] = $val;
@@ -280,7 +283,7 @@ class AssetEditor extends AssetController
 
 
 		if ($oldstatusid != STATUS_3 && $_POST["statusid"] == STATUS_3) {
-			$assetdata["readydate"] = date("Y-m-d H:i:s");
+			$assetdata["readydate"] = date("Y-m-d H:i:s"); //TODO(Rennorb) @cleanup
 		}
 		else if($oldstatusid == STATUS_LOCKED) {
 			$modId = intval($this->asset['modid']);
@@ -291,7 +294,7 @@ class AssetEditor extends AssetController
 					return 'error';
 				}
 
-				$createdById = intval($this->asset['createdbyuserid']);
+				$createdById = intval($this->asset['createdByUserId']);
 				// @security: $modId and $createdById are known to be integers and therefore sql inert.
 				$con->execute("INSERT INTO Notifications (kind, recordId, userId) values ('modunlocked', $modId, $createdById)");
 				// Read the unlock request just in case we didn't before and only publsihed the mod again.
@@ -306,17 +309,31 @@ class AssetEditor extends AssetController
 				// @security: $modId and $moderatorUserId are known to be integers and therefore sql inert.
 				$requestExists = $con->getOne("SELECT 1 FROM Notifications WHERE kind = 'modunlockrequest' AND !`read` AND recordId = $modId AND userId = $moderatorUserId");
 				if(!$requestExists) { // prevent spam :BlockedUnlockRequest
-					$con->execute("INSERT INTO Notifications (kind, recordId, userid) VALUES ('modunlockrequest', $modId, $moderatorUserId)");
+					$con->execute("INSERT INTO Notifications (kind, recordId, userId) VALUES ('modunlockrequest', $modId, $moderatorUserId)");
 				}
 			}
 		}
 
-		$assetdata['numsaved'] = $_POST['numsaved'] + 1;
+		$assetdata['numSaved'] = $_POST['numsaved'] + 1;
 
-		update("asset", $this->assetid, $assetdata);
+		{
+			// @security columns are manually set in the class constructor and do not contain user input
+			$assignments = implode(', ', array_map(fn($k) => "`$k` = ?", array_keys($assetdata)));
+			$values = array_values($assetdata);
+			$values[] = $this->assetid;
+			$con->execute("UPDATE Assets SET $assignments WHERE assetId = ?", $values);
+		}
 
 		if (count($recorddata)) {
-			update($this->tablename, $this->recordid, $recorddata);
+			assert($this->tablename === 'mod');
+		
+			{
+				// @security columns are manually set in the class constructor and do not contain user input
+				$assignments = implode(', ', array_map(fn($k) => "`$k` = ?", array_keys($recorddata)));
+				$values = array_values($recorddata);
+				$values[] = $this->recordid;
+				$con->execute("UPDATE `mod` SET $assignments WHERE modid = ?", $values);
+			}
 		}
 
 		if ($this->isnew) {
@@ -333,9 +350,9 @@ class AssetEditor extends AssetController
 	{
 		global $con;
 
-		if ($column["code"] == "statusid") {
-			$oldstatuscode = $con->getOne("select name from Status where statusId=?", array($oldvalue));
-			$newstatuscode = $con->getOne("select name from Status where statusId=?", array($newvalue));
+		if ($column["code"] == "statusId") {
+			$oldstatuscode = $con->getOne("select name from Status where statusId = ?", array($oldvalue));
+			$newstatuscode = $con->getOne("select name from Status where statusId = ?", array($newvalue));
 
 			return  "Modified Status ($oldstatuscode => $newstatuscode)";
 		}
@@ -348,7 +365,7 @@ class AssetEditor extends AssetController
 	{
 		global $con, $view, $user;
 
-		$sqlFilterLockedStatus = $this->asset['statusid'] == STATUS_LOCKED ? '' : ('where statusId != '.STATUS_LOCKED);
+		$sqlFilterLockedStatus = $this->asset['statusId'] == STATUS_LOCKED ? '' : ('where statusId != '.STATUS_LOCKED);
 		$stati = $con->getAll("select * from Status $sqlFilterLockedStatus");
 		$view->assign("stati", $stati);
 

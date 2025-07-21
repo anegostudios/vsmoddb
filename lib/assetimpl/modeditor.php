@@ -45,7 +45,7 @@ class ModEditor extends AssetEditor
 
 		if (!$this->assetid) {
 			$this->asset['type'] = 'mod';
-			$this->asset['createdbyuserid'] = $user['userId'];
+			$this->asset['createdByUserId'] = $user['userId'];
 
 			$view->assign('headerHighlight', HEADER_HIGHLIGHT_SUBMIT_MOD, null, true);
 		}
@@ -61,7 +61,7 @@ class ModEditor extends AssetEditor
 				UNION
 					SELECT u.*, (n.recordId & 1 << 30) AS canEdit, 1 AS pending
 					FROM Notifications n
-					JOIN Users u ON u.userid = n.userId
+					JOIN Users u ON u.userId = n.userId
 					WHERE n.kind = 'teaminvite' AND !n.`read` AND (n.recordId & ((1 << 30) - 1)) = ? -- :InviteEditBit
 			SQL, [$modId, $user['userId'], $modId]);
 
@@ -88,7 +88,7 @@ class ModEditor extends AssetEditor
 		]);
 		$view->assign('mod', $previewData);
 
-		if($this->asset['statusid'] == STATUS_LOCKED) {
+		if($this->asset['statusId'] == STATUS_LOCKED) {
 			$lockInfo = $con->getRow("
 				SELECT rec.reason, n.notificationId
 				FROM ModerationRecords rec
@@ -216,7 +216,7 @@ class ModEditor extends AssetEditor
 		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
 		$hasfiles = $con->getOne("select releaseId from ModReleases where modId = ?", array($modid));
 		$statusreverted = false;
-		if (!$hasfiles && $_POST['statusid'] != STATUS_DRAFT && $this->asset['statusid'] != STATUS_LOCKED) {
+		if (!$hasfiles && $_POST['statusid'] != STATUS_DRAFT && $this->asset['statusId'] != STATUS_LOCKED) {
 			$statusreverted = true;
 			$_POST['statusid'] = STATUS_DRAFT;
 		}
@@ -231,7 +231,7 @@ class ModEditor extends AssetEditor
 		$con->execute('update `mod` set descriptionsearchable = ? where assetid = ?', [textContent($_POST['text']), $this->assetid]);
 
 		if(canEditAsset($this->asset, $user, false)) $this->updateTeamMembers($modid);
-		if($this->asset['createdbyuserid'] == $user['userId']) {
+		if($this->asset['createdByUserId'] == $user['userId']) {
 			if(!$this->updateNewOwner($modid)) {
 				return "error";
 			}
@@ -400,7 +400,7 @@ class ModEditor extends AssetEditor
 	{
 		global $view, $user, $con;
 
-		if (!$this->assetid || $this->asset['createdbyuserid'] != $user['userId'])  return;
+		if (!$this->assetid || $this->asset['createdByUserId'] != $user['userId'])  return;
 
 		// Check if ownership transfer invitation has been sent to a user
 		$newOwner = $con->getRow(<<<SQL
@@ -448,9 +448,9 @@ class ModEditor extends AssetEditor
 			$mergedId = $modId | $editBit;
 
 			if (!array_key_exists($newMemberId, $oldMembers)) {
-				$invitation = $con->getRow("SELECT notificationId, recordId FROM Notifications WHERE kind = 'teaminvite' AND !`read` AND userid = ? AND (recordId & ((1 << 30) - 1)) = ?", [$newMemberId, $modId]);
+				$invitation = $con->getRow("SELECT notificationId, recordId FROM Notifications WHERE kind = 'teaminvite' AND !`read` AND userId = ? AND (recordId & ((1 << 30) - 1)) = ?", [$newMemberId, $modId]);
 				if(empty($invitation)) {
-					$con->execute("INSERT INTO Notifications (kind, userid, recordId) VALUES ('teaminvite', ?, ?)", [$newMemberId, $mergedId]);
+					$con->execute("INSERT INTO Notifications (kind, userId, recordId) VALUES ('teaminvite', ?, ?)", [$newMemberId, $mergedId]);
 
 					$changes[] = "User #{$user['userId']} invited user #{$newMemberId} to join the team".($editBit ? ' with edit permissions' : '').'.';
 				}
@@ -504,7 +504,7 @@ class ModEditor extends AssetEditor
 			return false;
 		}
 
-		$con->Execute("INSERT INTO Notifications (kind, userid, recordId) VALUES ('modownershiptransfer', ?, ?)", [$newOwnerId, $modId]);
+		$con->Execute("INSERT INTO Notifications (kind, userId, recordId) VALUES ('modownershiptransfer', ?, ?)", [$newOwnerId, $modId]);
 
 		logAssetChanges(["User #{$user['userId']} initiated a ownership transfer to user #{$newOwnerId}"], $this->assetid);
 
@@ -561,8 +561,8 @@ class ModEditor extends AssetEditor
 			$changes[] = "Deleted tag{$s} '$removedTagNamesFolded'.";
 		}
 
-		// TODO(Rennorb) @cleanup: tagscached really isn't needed.
-		$con->execute('UPDATE asset SET tagscached = ? WHERE assetid = (SELECT assetid FROM `mod` WHERE modid = ?)', [implode("\r\n", $tagData), $modId]);
+		// TODO(Rennorb) @cleanup @perf: Is tagscached really needed ?
+		$con->execute('UPDATE Assets a JOIN `mod` m ON m.assetid = a.assetId SET a.tagsCached = ? WHERE m.modid = ?', [implode("\r\n", $tagData), $modId]);
 
 		return $changes;
 	}

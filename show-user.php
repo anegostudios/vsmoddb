@@ -13,7 +13,7 @@ if (empty($userHash) || empty($shownUser = getUserByHash($userHash, $con))) {
 	exit();
 }
 
-$sqlWhereExt = (isset($user) && $shownUser['userId'] == $user['userId']) || canModerate($shownUser, $user) ? '' : ' and asset.statusid = 2'; // show drafts if owner or mod
+$sqlWhereExt = (isset($user) && $shownUser['userId'] == $user['userId']) || canModerate($shownUser, $user) ? '' : ' and a.statusId = 2'; // show drafts if owner or mod
 $userMods = $con->getAll("
 	SELECT
 		a.*,
@@ -22,37 +22,25 @@ $userMods = $con->getAll("
 		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 		s.code AS statusCode
 	FROM
-		asset a
-		JOIN `mod` m ON m.assetid = a.assetid
-		LEFT JOIN Status s ON s.statusId = a.statusid
+		Assets a
+		JOIN `mod` m ON m.assetid = a.assetId
+		LEFT JOIN Status s ON s.statusId = a.statusId
 		LEFT JOIN Files AS logo ON logo.fileId = m.cardlogofileid
 		LEFT JOIN ModTeamMembers t ON t.modId = m.modid
 	WHERE
-		(a.createdbyuserid = ? OR t.userId = ?) $sqlWhereExt
-	GROUP BY a.assetid
+		(a.createdByUserId = ? OR t.userId = ?) $sqlWhereExt
+	GROUP BY a.assetId
 	ORDER BY a.created DESC
 ", array($shownUser['userId'], $shownUser['userId']));
 
-foreach ($userMods as &$row) {
-	unset($row['text']);
-	$row['tags'] = [];
-	$row['from'] = $shownUser['name'];
-	$row['dbPath'] = formatModPath($row);
-
-	$tagsCached = trim($row['tagscached']);
-	if (empty($tagsCached)) continue;
-
-	$tagData = explode("\r\n", $tagsCached);
-	$tags = array();
-
-	foreach ($tagData as $tagRow) {
-		$parts = explode(',', $tagRow);
-		$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagId' => $parts[2]);
-	}
-
-	$row['tags'] = $tags;
+foreach ($userMods as &$mod) {
+	unset($mod['text']);
+	$mod['tags'] = [];
+	$mod['from'] = $shownUser['name'];
+	$mod['dbPath'] = formatModPath($mod);
+	$mod['tags'] = unwrapCachedTags($mod['tagsCached']);
 }
-unset($row);
+unset($mod);
 
 if (canModerate($shownUser, $user)) {
 	$changelog = $con->getAll('SELECT text, assetId, created FROM Changelogs WHERE userId = ? ORDER BY created DESC LIMIT 100', [$shownUser['userId']]);

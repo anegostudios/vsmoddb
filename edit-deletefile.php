@@ -29,7 +29,7 @@ if (!$file) {
 $assetId = $file['assetId'];
 
 if ($assetId) {
-	$asset = $con->getRow('SELECT * FROM asset WHERE assetid = ?', [$assetId]);
+	$asset = $con->getRow('SELECT * FROM Assets WHERE assetId = ?', [$assetId]);
 	if (!canEditAsset($asset, $user)) {
 		exit(json_encode(['status' => 'error', 'errormessage' => 'No privilege to delete files from this asset. You may need to login again'])); 
 	}

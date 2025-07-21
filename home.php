@@ -9,14 +9,14 @@ if (!empty($user)) {
 			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 			s.code AS statusCode
 		FROM
-			asset a
-			JOIN `mod` m ON m.assetid = a.assetid
+			Assets a
+			JOIN `mod` m ON m.assetid = a.assetId
 			LEFT JOIN Status s ON s.statusId = a.statusid
 			LEFT JOIN Files AS logo ON logo.fileId = m.cardlogofileid
 			LEFT JOIN ModTeamMembers tm ON tm.modId = m.modid
 		WHERE
 			(a.createdbyuserid = ? OR tm.userId = ?)
-		GROUP BY a.assetid
+		GROUP BY a.assetId
 		ORDER BY a.created DESC
 	", [$user['userId'], $user['userId']]);
 
@@ -25,19 +25,7 @@ if (!empty($user)) {
 		$mod['tags'] = [];
 		$mod['from'] = $user['name'];
 		$mod['dbPath'] = formatModPath($mod);
-
-		$tagsCached = trim($mod['tagscached']);
-		if (!empty($tagsCached)) {
-			$tagData = explode("\r\n", $tagsCached);
-			$tags = [];
-
-			foreach($tagData as $tagrow) {
-				$parts = explode(',', $tagrow);
-				$tags[] = ['name' => $parts[0], 'color' => $parts[1], 'tagId' => $parts[2]];
-			}
-
-			$mod['tags'] = $tags;
-		}
+		$mod['tags'] = unwrapCachedTags($mod['tagsCached']);
 	}
 	unset($mod);
 
@@ -55,14 +43,14 @@ if (!empty($user)) {
 			rd.created AS releasedate,
 			rd.version AS releaseversion
 		FROM
-			asset a
-			JOIN `mod` m ON m.assetid = a.assetid
-			JOIN Users u ON u.userId = a.createdbyuserid
+			Assets a
+			JOIN `mod` m ON m.assetid = a.assetId
+			JOIN Users u ON u.userId = a.createdByUserId
 			JOIN UserFollowedMods f ON f.modId = m.modid AND f.userId = ?
 			LEFT JOIN Files AS logo ON logo.fileId = m.cardlogofileid
 			LEFT JOIN ModReleases rd ON rd.modId = m.modid
 		WHERE
-			a.statusid = ".STATUS_RELEASED."
+			a.statusId = ".STATUS_RELEASED."
 			AND rd.created = (select max(created) from ModReleases r where r.modId = m.modid)
 		ORDER BY
 			releasedate DESC
@@ -88,12 +76,12 @@ $latestMods = $con->getAll("
 		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 		u.name AS `from`
 	FROM
-		asset a
-		join `mod` m ON m.assetid = a.assetid
-		join Users u ON u.userId = a.createdbyuserid
+		Assets a
+		join `mod` m ON m.assetid = a.assetId
+		join Users u ON u.userId = a.createdByUserId
 		left join Files AS logo ON logo.fileId = m.cardlogofileid
 	WHERE
-		a.statusid = ".STATUS_RELEASED."
+		a.statusId = ".STATUS_RELEASED."
 		AND m.created > DATE_SUB(NOW(), INTERVAL 30 DAY)
 	ORDER BY
 		a.created DESC
@@ -116,9 +104,9 @@ $lastestComments = $con->getAll('
 	FROM
 		Comments c
 		join Users u ON u.userId = c.userId
-		join asset a ON a.assetid = c.assetId
+		join Assets a ON a.assetId = c.assetId
 	WHERE
-		a.statusid = '.STATUS_RELEASED.'
+		a.statusId = '.STATUS_RELEASED.'
 		AND !c.deleted
 		AND c.created > DATE_SUB(NOW(), INTERVAL 14 DAY)
 	ORDER BY

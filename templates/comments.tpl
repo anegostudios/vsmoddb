@@ -28,7 +28,7 @@
 											{/if}
 										{elseif canModerate($comment['userId'], $user) && !($comment["userId"] == $user["userId"])}
 												<span class="buttonlinks strikethrough-when-banned">({if !$comment['deleted']}<a href="#editcomment" data-commentid="{$comment['commentId']}">edit comment</a> <a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a> {/if}<a href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}">moderate user</a>)</span>
-										{elseif $asset['creadedbyuserid'] == $user['userId'] && !$comment['deleted']}
+										{elseif $asset['createdByUserId'] == $user['userId'] && !$comment['deleted']}
 												<span class="buttonlinks strikethrough-when-banned">(<a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a>)</span>
 										{/if}
 								{/if}

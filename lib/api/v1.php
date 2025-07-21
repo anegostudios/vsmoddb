@@ -149,22 +149,22 @@ function listMod($modid)
 
 	$row = $con->getRow(<<<SQL
 		select 
-			asset.assetid, 
+			asset.assetId,
 			asset.name,
 			asset.text,
-			asset.tagscached,
+			asset.tagsCached,
 			user.name as author,
 			`mod`.*,
 			logoFileExternal.cdnPath as logoCdnPathExternal,
 			logoFileDb.cdnPath as logoCdnPathDb
 		from 
 			`mod` 
-			join asset on (`mod`.assetid = asset.assetid)
-			join Users user on (`asset`.createdbyuserid = user.userId)
+			join Assets asset on asset.assetId = `mod`.assetid
+			join Users user on user.userId = asset.createdByUserId
 			left join Files as logoFileExternal on (`mod`.embedlogofileid = logoFileExternal.fileId)
 			left join Files as logoFileDb on (`mod`.cardlogofileid = logoFileDb.fileId)
 		where
-			asset.statusid=2
+			asset.statusId = 2
 			and modid = ?
 	SQL, array($modid));
 
@@ -173,11 +173,9 @@ function listMod($modid)
 	$rrows = $con->getAll(<<<SQL
 		select 
 			r.*,
-			asset.*,
 			GROUP_CONCAT(cgv.gameVersion SEPARATOR ';') as compatibleGameVersions
 		from 
 			ModReleases r 
-			join asset on (asset.assetid = r.assetId)
 			left join ModReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
 		where modid = ?
 		group by r.releaseId
@@ -256,7 +254,7 @@ function listMod($modid)
 		// Removing it is however not a good idea becasue it's a public api, and changing it to work differently also isn't great because it would make the behaviour inconsistent between different tables.
 		// We therefore simply keep it in this jank state for now, until a potential future breaking version.
 		"lastmodified"    => $row['lastmodified'],
-		"tags"            => resolveTags($row['tagscached']),
+		"tags"            => unwrapTagNames($row['tagsCached']),
 		"releases"        => $releases,
 		"screenshots"     => $screenshots
 	);
@@ -320,12 +318,12 @@ function listMods()
 	}
 
 
-	$wheresql[] = "asset.statusid=2";
+	$wheresql[] = "asset.statusId = 2";
 
 
 	$rows = $con->getAll("
 		select 
-			asset.assetid, 
+			asset.assetId, 
 			`mod`.modid, 
 			`mod`.side,
 			`mod`.type,
@@ -335,7 +333,7 @@ function listMods()
 			mod.downloads,
 			follows,
 			comments, 
-			tagscached,
+			tagsCached,
 			summary,
 			group_concat(DISTINCT r.identifier ORDER BY r.identifier SEPARATOR ',') as modidstrs,
 			user.name as author,
@@ -343,8 +341,8 @@ function listMods()
 			`mod`.trendingpoints
 		from 
 			`mod` 
-			join asset on (`mod`.assetid = asset.assetid)
-			join Users user on (`asset`.createdbyuserid = user.userId)
+			join Assets asset on (`mod`.assetid = asset.assetId)
+			join Users user on (asset.createdByUserId = user.userId)
 			left join ModReleases r on r.modId = `mod`.modid
 			left join Files as logofileExternal on logofileExternal.fileId = mod.embedlogofileid
 		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "
@@ -354,13 +352,13 @@ function listMods()
 	$mods = array();
 	foreach ($rows as $row) {
 
-		$tags = resolveTags($row["tagscached"]);
+		$tags = unwrapTagNames($row["tagsCached"]);
 
 
 
 		$mods[] = array(
 			"modid"          => intval($row['modid']),
-			"assetid"        => intval($row['assetid']),
+			"assetid"        => intval($row['assetId']),
 			"downloads"      => intval($row['downloads']),
 			"follows"        => intval($row['follows']),
 			"trendingpoints" => intval($row['trendingpoints']),
@@ -381,19 +379,11 @@ function listMods()
 	good(array("statuscode" => 200, "mods" => $mods));
 }
 
-function resolveTags($tagscached)
+function unwrapTagNames($tagsCached)
 {
-	$tags = array();
-	$tagscached = trim($tagscached);
-	if (!empty($tagscached)) {
-		$tagdata = explode("\r\n", $tagscached);
-		foreach ($tagdata as $tagrow) {
-			$parts = explode(",", $tagrow);
-			$tags[] = $parts[0];
-		}
-	}
-
-	return $tags;
+	// cached tags are stored as name,color,id\r\nname2,color2,id2 ... 
+	// This gets the names
+	return array_map(fn($s) => explode(',', $s)[0], explode("\r\n", trim($tagsCached)));
 }
 
 /** Echo a (modidstr -> (release object)) map for each modidstr with a release thats newer than the version specified in currentModVersions.

@@ -14,7 +14,7 @@ if(!empty($_REQUEST['assetid'])) {
 	$existingRelease = $con->getRow(<<<SQL
 		SELECT a.*, r.*, createdBy.name as createdByUsername, lastEditedBy.name as lastEditedByUsername
 		FROM ModReleases r
-		JOIN asset a ON a.assetid = r.assetId
+		JOIN Assets a ON a.assetId = r.assetId
 		LEFT JOIN Users createdBy ON createdBy.userId = a.createdbyuserid 
 		LEFT JOIN Users lastEditedBy ON lastEditedBy.userId = a.editedbyuserid 
 		WHERE r.assetId = ?
@@ -24,7 +24,7 @@ if(!empty($_REQUEST['assetid'])) {
 		$targetMod = $con->getRow(<<<SQL
 			SELECT a.*, m.*
 			FROM `mod` m
-			JOIN asset a ON a.assetid = m.assetid
+			JOIN Assets a ON a.assetId = m.assetid
 			WHERE m.modid = ?
 		SQL, [$existingRelease['modId']]);
 	}
@@ -34,7 +34,7 @@ else if(!empty($_REQUEST['modid'])) {
 	$targetMod = $con->getRow(<<<SQL
 		SELECT a.*, m.*
 		FROM `mod` m
-		JOIN asset a ON a.assetid = m.assetid
+		JOIN Assets a ON a.assetId = m.assetid
 		WHERE m.modid = ?
 	SQL, [$_REQUEST['modid']]);
 }
@@ -142,7 +142,7 @@ if(!empty($_POST['save'])) {
 				$inUseBy = $con->getRow(<<<SQL
 					SELECT a.*, r.modId, r.version, m.assetId as modAssetId, m.urlalias
 					FROM ModReleases r
-					JOIN asset a ON a.assetid = r.assetId
+					JOIN Assets a ON a.assetId = r.assetId
 					JOIN `mod` m ON m.modid = r.modId
 					WHERE $sqlIgnoreExistingRelease r.identifier = ? AND (r.modId != ? || r.version = ?)
 					LIMIT 1
@@ -156,7 +156,7 @@ if(!empty($_POST['save'])) {
 					else {
 						$mid = htmlspecialchars($newData['identifier']);
 						$mpath = formatModPath(['urlalias' => $inUseBy['urlalias'], 'assetid' => $inUseBy['modAssetId']]);
-						addMessage(MSG_CLASS_ERROR, "This modid ('$mid') is already in use by another mod (<a href='$mpath'>link</a>).");
+						addMessage(MSG_CLASS_ERROR, "This modid ('$mid') is already in use by another mod (<a href='$mpath' target='_blank'>link</a>).");
 					}
 				}
 			}

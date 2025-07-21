@@ -10,7 +10,7 @@ class AssetList extends AssetController {
 	function __construct($classname) {
 		parent::__construct($classname);
 		
-		$this->declareColumn(0, array("title" => "Tags", "code" => "tagscached", "datatype" => "tags"));
+		$this->declareColumn(0, array("title" => "Tags", "code" => "tagsCached", "datatype" => "tags"));
 		$this->declareColumn(1, array("title" => "Name", "code" => "name"));
 		$this->declareColumn(2, array("title" => "Status", "code" => "statusname"));
 		$this->declareColumn(3, array("title" => "Created By", "code" => "from"));
@@ -35,10 +35,10 @@ class AssetList extends AssetController {
 				s.code as statuscode,
 				s.name as statusname{$this->extracolumns}
 			from 
-				asset 
-				join `{$this->tablename}` on asset.assetid = `{$this->tablename}`.assetid
-				left join Users user on asset.createdbyuserid = user.userid
-				left join Status s on s.statusId = asset.statusid
+				Assets asset
+				join `{$this->tablename}` on asset.assetId = `{$this->tablename}`.assetId
+				left join Users user on asset.createdByUserId = user.userId
+				left join Status s on s.statusId = asset.statusId
 			" . (count($this->wheresql) ? "where " . implode(" and ", $this->wheresql) : "") . "
 			order by {$this->orderby}
 		";
@@ -52,10 +52,10 @@ class AssetList extends AssetController {
 			unset($row['text']);
 			$tags = array();
 			
-			$tagscached = trim($row["tagscached"]);
-			if (!empty($tagscached)) { 
+			$tagsCached = trim($row["tagsCached"]);
+			if (!empty($tagsCached)) { 
 			
-				$tagdata = explode("\r\n", $tagscached);
+				$tagdata = explode("\r\n", $tagsCached);
 				
 				foreach($tagdata as $tagrow) {
 					$parts = explode(",", $tagrow);

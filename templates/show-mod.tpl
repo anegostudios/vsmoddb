@@ -83,7 +83,7 @@
 			<script>if(location.hash !== '#tab-files') document.getElementById('tab-description').checked = true;</script>
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
-					<a class="button large shine strikethrough-when-banned" href="/edit/mod/?assetid={$asset['assetid']}">Edit</a>&nbsp;
+					<a class="button large shine strikethrough-when-banned" href="/edit/mod/?assetid={$asset['assetId']}">Edit</a>&nbsp;
 					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modid']}">Add release</a>
 				{/if}
 			</div>
@@ -155,7 +155,7 @@
 						{else}<strong>For testers:</strong><br>
 						{/if}
 
-						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseUnstable['file'])}">{$recommendedReleaseUnstable['file']['filename']}</a>
+						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseUnstable['file'])}">{$recommendedReleaseUnstable['file']['name']}</a>
 						{if !empty($recommendedReleaseUnstable['identifier']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
 					{/if}
 				</p>

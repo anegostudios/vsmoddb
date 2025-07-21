@@ -37,25 +37,25 @@ $config["bunnyapikey"] = "aaaaaaaa-bbbb-cccc-ddddddddddddxxxxxxxxxxxxxxxxxx-eeee
  * 
  * This returns an _almost_ complete storage path, which is still missing the extension. This is useful because we often generate multiple variants of a file, and we would need to split the returned path otherwise. We therefore simply return a path without extension, and the caller assembles the final path(s).
  * 
- * @param int    $userid The id of the user that owns the file.
- * @param string $localpath
- * @param string $originalfilebasename
+ * @param int    $userId The id of the user that owns the file.
+ * @param string $localPath
+ * @param string $originalFileBasename
  * @return string
  */
-function generateCdnFileBasenameWithPath($userid, $localpath, $originalfilebasename)
+function generateCdnFileBasenameWithPath($userId, $localPath, $originalFileBasename)
 {
-	$h = hash_init('md5', HASH_HMAC, $userid);
-	hash_update_file($h, $localpath);
-	return urlencode(substr($originalfilebasename, 0, 20)).'_'.hash_final($h, false);
+	$h = hash_init('md5', HASH_HMAC, $userId);
+	hash_update_file($h, $localPath);
+	return urlencode(substr($originalFileBasename, 0, 20)).'_'.hash_final($h, false);
 }
 
 
 /**
- * @param string $localpath
+ * @param string $localPath
  * @param string $cdnPath
  * @return array{error : false|string}
  */
-function uploadToCdn($localpath, $cdnPath) {
+function uploadToCdn($localPath, $cdnPath) {
 	global $config;
 
 	$url = "https://{$config['bunnyendpoint']}/{$config['bunnyzone']}/{$cdnPath}";
@@ -65,8 +65,8 @@ function uploadToCdn($localpath, $cdnPath) {
 		CURLOPT_URL => $url,
 		CURLOPT_PUT => true,
 		CURLOPT_RETURNTRANSFER => true,
-		CURLOPT_INFILE => fopen($localpath, 'rb'),
-		CURLOPT_INFILESIZE => filesize($localpath),
+		CURLOPT_INFILE => fopen($localPath, 'rb'),
+		CURLOPT_INFILESIZE => filesize($localPath),
 		CURLOPT_HTTPHEADER => [
 			"AccessKey: {$config['bunnykey']}",
 			'Content-Type: application/octet-stream',

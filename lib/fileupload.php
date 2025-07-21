@@ -34,7 +34,7 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 	$limits = UPLOAD_LIMITS[$assetTypeId];
 
 	if ($parentAssetId) {
-		$asset = $con->getRow("select * from asset where assetid=?", array($parentAssetId));
+		$asset = $con->getRow("select * from Assets where assetId = ?", array($parentAssetId));
 		
 		if (!$asset) {
 			return array("status" => "error", "errormessage" => 'Asset does not exist (anymore)'); 

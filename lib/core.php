@@ -15,7 +15,6 @@ include($config["basepath"] . "lib/tags.php");
 include($config["basepath"] . "lib/3rdparty/adodb5/adodb-exceptions.inc.php");
 include($config["basepath"] . "lib/3rdparty/adodb5/adodb.inc.php");
 
-include($config["basepath"] . "lib/asset.php");
 include($config["basepath"] . "lib/assetcontroller.php");
 include($config["basepath"] . "lib/assetlist.php");
 include($config["basepath"] . "lib/asseteditor.php");
@@ -67,7 +66,7 @@ function update($tablename, $recordid, $data)
 	}
 
 	$updatessql = "
-			update `{$tablename}` set " . join(", ", $columnnames) . " where {$tablename}id = ?";
+			update `{$tablename}` set " . join(", ", $columnnames) . " where {$tablename}Id = ?";
 
 	return $con->Execute($updatessql, array_merge(
 		$values,
@@ -772,7 +771,7 @@ else {
  * Formats a download tracking link to the file.
  * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser as well as tracking that download (-attempt).
  * 
- * @param array{filename:string, fileid:int} $file
+ * @param array{name:string, fileid:int} $file
  * @return string
  */
 function formatDownloadTrackingUrl($file)

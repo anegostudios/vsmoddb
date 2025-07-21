@@ -28,7 +28,8 @@ if ($save) {
 
 		addMessage(MSG_CLASS_OK, 'Tag created.');
 
-		header("Location: /edit/tag?tagid=$tagId");
+		if (!empty($_POST['saveandback']))  header('Location: /list/tag?saved=1');
+		else header("Location: /edit/tag?tagid=$tagId");
 		exit();
 	} else {
 		$con->execute('UPDATE Tags SET name = ?, text = ?, color = ? WHERE tagId = ?', [$name, $text, $color, $tagId]);

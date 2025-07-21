@@ -216,11 +216,11 @@ function queryModSearch($searchParams)
 
 	return $con->getAll("
 		SELECT DISTINCT
-			a.createdbyuserid,
+			a.createdByUserId,
 			a.name,
 			a.created,
-			a.lastmodified,
-			a.tagscached,
+			a.lastModified,
+			a.tagsCached,
 			m.*,
 			l.cdnPath AS logoCdnPath,
 			l.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
@@ -228,9 +228,9 @@ function queryModSearch($searchParams)
 			s.code AS statusCode,
 			f.userId AS following
 		FROM `mod` m
-		JOIN asset a ON a.assetid = m.assetid
-		LEFT JOIN Users c ON c.userId = a.createdbyuserid
-		LEFT JOIN Status s ON s.statusId = a.statusid
+		JOIN Assets a ON a.assetId = m.assetid
+		LEFT JOIN Users c ON c.userId = a.createdByUserId
+		LEFT JOIN Status s ON s.statusId = a.statusId
 		LEFT JOIN UserFollowedMods f ON f.modId = m.modid and f.userId = $currentUserId
 		LEFT JOIN Files l ON l.fileId = m.cardlogofileid
 		$joinClauses

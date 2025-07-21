@@ -22,10 +22,10 @@ switch($urlparts[1]) {
 				validateContentType('text/html');
 
 				$modData = $con->getRow(<<<SQL
-					SELECT m.assetid, a.createdbyuserid
+					SELECT m.assetid, a.createdByUserId
 					FROM `mod` m
-					JOIN asset a ON a.assetid = m.assetid
-					WHERE modid = ?
+					JOIN Assets a ON a.assetId = m.assetid
+					WHERE m.modid = ?
 				SQL, [$modId]);
 				$assetId = intval($modData['assetid']);
 				if(!$assetId)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown modid.']);
@@ -37,14 +37,14 @@ switch($urlparts[1]) {
 				$commentId = $con->insert_ID();
 				$con->execute('UPDATE `mod` SET comments = comments + 1 WHERE assetid = ?', [$assetId]);
 
-				$creatorUserId = intval($modData['createdbyuserid']);
+				$creatorUserId = intval($modData['createdByUserId']);
 				$currentUserId = intval($user['userId']);
 
 				// Notifications for user mentions:
 				if(preg_match_all('/user-hash="([a-z0-9]{20})"/i', $commentHtml, $rawMatches)) {
 					$foldedHashes = implode(',', array_map(fn($h) => "UNHEX('$h')", $rawMatches[1]));
 					// The mod author always gets sent their own notification, but users thend to reply to them by @ing them.
-					// For this reason we take out any references to the mod author and ourself here (`user.userid not in ($creatorUserId, $currentUserId)`).
+					// For this reason we take out any references to the mod author and ourself here (`user.userId not in ($creatorUserId, $currentUserId)`).
 
 					// @security: $rawMatches are validated to be alphanumeric and therefore sql inert by the regex. $commentId, $currentUserId and $creatorUserId are known to be integers.
 					$con->execute(<<<SQL
@@ -88,25 +88,25 @@ switch($urlparts[1]) {
 		if(!$reason) fail(HTTP_BAD_REQUEST, ['error' => 'Reason must not be empty.']);
 
 		$modData = $con->getRow(<<<SQL
-			SELECT m.assetid, a.createdbyuserid
+			SELECT m.assetid, a.createdByUserId
 			FROM `mod` m
-			JOIN asset a ON a.assetid = m.assetid
+			JOIN Assets a ON a.assetId = m.assetid
 			WHERE m.modid = ?
 		SQL, [$modId]);
 		if(!$modData) fail(HTTP_NOT_FOUND);
 
 		$con->startTrans();
 		// @security: assetid comes from the db and is an int, therefore sql inert. 
-		$con->execute('UPDATE asset SET statusid = '.STATUS_LOCKED.' WHERE assetid = '.$modData['assetid']);
+		$con->execute('UPDATE Assets SET statusId = '.STATUS_LOCKED.' WHERE assetId = '.$modData['assetid']);
 		logAssetChanges(['Locked Mod for reason: '.$reason], $modData['assetid']);
 
-		logModeratorAction($modData['createdbyuserid'], $user['userId'], MODACTION_KIND_LOCK, $modId, SQL_DATE_FOREVER, $reason);
+		logModeratorAction($modData['createdByUserId'], $user['userId'], MODACTION_KIND_LOCK, $modId, SQL_DATE_FOREVER, $reason);
 
 		// Just in case we have not "read" a corresponding review-request notification for the mod we are (re-)locking, mark it as read.
 		// If we don't do this we we might not get new unlock requests. :BlockedUnlockRequest
 		$con->execute("UPDATE Notifications SET `read` = 1 WHERE kind = 'modunlockrequest' AND userId = ? AND recordId = ?", [$user['userId'], $modId]);
 
-		$con->execute("INSERT INTO Notifications (userId, kind, recordId) VALUES (?, 'modlocked', ?)", [$modData['createdbyuserid'], $modId]);
+		$con->execute("INSERT INTO Notifications (userId, kind, recordId) VALUES (?, 'modlocked', ?)", [$modData['createdByUserId'], $modId]);
 
 		$ok = $con->completeTrans();
 		if($ok) good();

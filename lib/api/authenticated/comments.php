@@ -47,9 +47,9 @@ switch($_SERVER['REQUEST_METHOD']) {
 		validateUserNotBanned();
 
 		$comment = $con->getRow(<<<SQL
-			SELECT c.assetId, c.userId, a.createdbyuserid AS modCreatedBy
+			SELECT c.assetId, c.userId, a.createdByUserId AS modCreatedBy
 			FROM Comments c
-			JOIN asset a ON a.assetid = c.assetId
+			JOIN Assets a ON a.assetId = c.assetId
 			WHERE c.commentId = ? AND !c.deleted
 		SQL, [$commentId]);
 		if(!$comment)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown commentid.']);

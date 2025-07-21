@@ -6,7 +6,7 @@
 		<span>
 			<a href="/list/mod">Mods</a>
 		</span> /
-		{if $asset['assetid']}
+		{if $asset['assetId']}
 			<span>
 				<a href="{formatModPath($mod)}">{$asset["name"]}</a>
 			</span> / 
@@ -30,15 +30,15 @@
 	<form method="post" name="form1" autocomplete="off" class="flex-list">
 		<input type="hidden" name="at" value="{$user['actionToken']}">
 		<input type="hidden" name="save" value="1">
-		<input type="hidden" name="assetid" value="{$asset['assetid']}">
-		<input type="hidden" name="numsaved" value="{$asset['numsaved']}">
+		<input type="hidden" name="assetid" value="{$asset['assetId']}">
+		<input type="hidden" name="numsaved" value="{$asset['numSaved']}">
 		<input type="hidden" name="saveandback" value="0">
 
 		<div class="editbox short">
 			<label><abbr title="Only mods with Status 'Published' are publicly visible">Status</abbr></label>
-			<select name="statusid"{if $asset['statusid'] == STATUS_LOCKED && !canModerate(null, $user)} disabled="true"{/if}>
+			<select name="statusid"{if $asset['statusId'] == STATUS_LOCKED && !canModerate(null, $user)} disabled="true"{/if}>
 				{foreach from=$stati item=status}
-					<option value="{$status['statusId']}"{if $asset['statusid']==$status['statusId']} selected="selected"{/if}>{$status['name']}</option>
+					<option value="{$status['statusId']}"{if $asset['statusId']==$status['statusId']} selected="selected"{/if}>{$status['name']}</option>
 				{/foreach}
 			</select>
 		</div>
@@ -91,10 +91,10 @@
 			<div id="teammembers-box" class="editbox wide pending-markers">
 				<label>Team Members</label>
 				<select name="teammemberids[]" multiple data-placeholder="Search Users"
-					data-url="/api/authors?name=\{name}" data-ownerid="{$asset['createdbyuserid']}">
+					data-url="/api/authors?name=\{name}" data-ownerid="{$asset['createdByUserId']}">
 					{if !empty($teamMembers)}
 						{foreach from=$teamMembers item=teamMember}
-							<option selected class="maybe-accepted{if !$teamMember['pending']} accepted{/if}" value="{$teamMember['userid']}" title="{$teamMember['name']}">{$teamMember['name']}</option>
+							<option selected class="maybe-accepted{if !$teamMember['pending']} accepted{/if}" value="{$teamMember['userId']}" title="{$teamMember['name']}">{$teamMember['name']}</option>
 						{/foreach}
 					{/if}
 				</select>
@@ -104,13 +104,13 @@
 				<label>Team Members with edit permissions</label>
 				<select name="teammembereditids[]" multiple data-placeholder="Search Members">
 					{foreach from=$teamMembers item=teamMember}
-						<option {if $teamMember['canEdit']}selected{/if} class="maybe-accepted{if !$teamMember['pending']} accepted{/if}" value="{$teamMember['userid']}" title="{$teamMember['name']}">{$teamMember['name']}</option>
+						<option {if $teamMember['canEdit']}selected{/if} class="maybe-accepted{if !$teamMember['pending']} accepted{/if}" value="{$teamMember['userId']}" title="{$teamMember['name']}">{$teamMember['name']}</option>
 					{/foreach}
 				</select>
 			</div>
 		{/if}
 
-		<h3 class="flex-fill">Screenshots<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$asset['assetid']}">download all as zip</a>{/if})</span></h3>
+		<h3 class="flex-fill">Screenshots<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$asset['assetId']}">download all as zip</a>{/if})</span></h3>
 		{include file="edit-asset-files.tpl"}
 
 		<h3 class="flex-fill">Links</h3>
@@ -195,7 +195,7 @@
 			</div>
 		</div>
 
-		{if $asset['assetid'] && canEditAsset($asset, $user, false)}
+		{if $asset['assetId'] && canEditAsset($asset, $user, false)}
 			<h3 class="flex-fill">Ownership transfer</h3>
 
 			<div class="editbox wide">
@@ -203,7 +203,7 @@
 					<span>An ownership transfer invitation has been sent to: {$ownershipTransferUser}.</span>
 					<br>
 					<span>You may revoke the pending invitation using the button below:</span>
-					<p><a href="/edit/mod/?assetid={$asset['assetid']}&revokenewownership=1" class="button btndelete">REVOKE</a></p>
+					<p><a href="/edit/mod/?assetid={$asset['assetId']}&revokenewownership=1" class="button btndelete">REVOKE</a></p>
 				{else}
 					<div>
 						<label>Select new owner</label>
@@ -217,7 +217,7 @@
 						<select name="newownerid">
 							<option value="" selected="selected">--- Select new owner ---</option>
 							{foreach from=$teamMembers item=teamMember}
-								{if !$teamMember['pending']}<option value="{$teamMember['userid']}" title="{$teamMember['name']}">{$teamMember['name']}</option>{/if}
+								{if !$teamMember['pending']}<option value="{$teamMember['userId']}" title="{$teamMember['name']}">{$teamMember['name']}</option>{/if}
 							{/foreach}
 						</select>
 					</div>
@@ -230,9 +230,9 @@
 
 <p style="clear:both"><br/></p>
 
-<a class="button large submit shine" href="javascript:submitForm(0)">{if $asset['statusid'] != STATUS_LOCKED || canModerate(null, $user)}Save{else}Request Review{/if}</a>
+<a class="button large submit shine" href="javascript:submitForm(0)">{if $asset['statusId'] != STATUS_LOCKED || canModerate(null, $user)}Save{else}Request Review{/if}</a>
 
-{if $asset['assetid'] && canDeleteAsset($asset, $user)}
+{if $asset['assetId'] && canDeleteAsset($asset, $user)}
 	<span style="float:right;">
 		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete Mod</a>
 	</span>

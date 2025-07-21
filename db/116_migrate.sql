@@ -435,6 +435,43 @@ END IF;
 
 DROP TABLE IF EXISTS `assettype`;
 
+
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+ TABLE_NAME='asset') ) THEN
+    ALTER TABLE `asset` CHANGE COLUMN `assetid` `assetId` INT NOT NULL AUTO_INCREMENT;
+
+    DELETE FROM `asset` WHERE `createdbyuserid` IS NULL;
+    ALTER TABLE `asset` CHANGE COLUMN `createdbyuserid` `createdByUserId` INT NOT NULL;
+
+    ALTER TABLE `asset` CHANGE COLUMN `editedbyuserid` `editedByUserId` INT NULL;
+
+    UPDATE `asset` SET `statusid` = 2 WHERE `statusid` IS NULL AND assettypeid = 2; -- set releases without status to released, releases can't really be drafted right now
+    UPDATE `asset` SET `statusid` = 1 WHERE `statusid` IS NULL AND assettypeid = 1;  -- set mods without status to draft
+    ALTER TABLE `asset` CHANGE COLUMN `statusid` `statusId` INT NOT NULL;
+
+    ALTER TABLE `asset` CHANGE COLUMN `assettypeid` `assetTypeId` INT NOT NULL;
+
+    ALTER TABLE `asset` CHANGE COLUMN `tagscached` `tagsCached` TEXT NULL;
+
+    UPDATE `asset` SET numsaved = 1 WHERE numsaved IS NULL;
+    ALTER TABLE `asset` CHANGE COLUMN `numsaved` `numSaved` INT NOT NULL DEFAULT 1;
+
+
+    UPDATE `asset` SET created = '0000-00-00' WHERE created IS NULL;
+    ALTER TABLE `asset` MODIFY COLUMN `created` DATETIME NOT NULL DEFAULT NOW() AFTER `numSaved`;
+
+    UPDATE `asset` SET lastmodified = created WHERE lastmodified IS NULL;
+    ALTER TABLE `asset` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created`;
+
+    ALTER TABLE `asset` ADD CONSTRAINT `FK_Assets_createdByUserId` FOREIGN KEY (`createdByUserId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+    ALTER TABLE `asset` ADD CONSTRAINT `FK_Assets_editedByUserId` FOREIGN KEY (`editedByUserId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+    ALTER TABLE `asset` RENAME TO `Assets`;
+END IF;
+
+
 END $$
 
 CALL upgrade_database__moderation() $$
