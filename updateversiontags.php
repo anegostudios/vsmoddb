@@ -26,11 +26,11 @@ sort($allVersions); // sort ascending so the keys are in the correct order
 $foldedValues = implode(', ', array_map(fn($k, $v) => "($v, $k)", array_keys($allVersions), $allVersions));
 
 // @security: All keys and values are numeric and therefore SQL inert.
-$con->Execute("
+$con->Execute(<<<SQL
 	INSERT INTO GameVersions (version, sortIndex)
 		VALUES $foldedValues
 	ON DUPLICATE KEY UPDATE
 		sortIndex = VALUES(sortIndex)
-");
+SQL);
 
 echo count(array_diff($allVersions, $storedVersions)) . ' new versions added.';

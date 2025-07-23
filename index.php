@@ -61,6 +61,11 @@ switch($urlparts[0]) { // :ReservedUrlPrefixes
 		include("lib/notification.php");
 		exit();
 
+	case 'webhooks':
+		array_shift($urlparts);
+		include("lib/webhook-handlers.php");
+		exit();
+
 	case 'list':
 	case 'show':
 	case 'edit':
