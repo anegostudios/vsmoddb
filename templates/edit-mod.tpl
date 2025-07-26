@@ -68,7 +68,7 @@
 
 		<div class="editbox wide">
 			<label><abbr title="If set, your mod can be reached with this custom url. Only alphabetical letters are allowed.">URL Alias</abbr></label>
-			<label for="inp-urlalias" class="prefixed-input" data-prefix="https://mods.vintagestory.at/"><input id="inp-urlalias" type="text" name="urlalias" value="{$asset['urlalias']}" style="width: 21ch" /></label>
+			<label for="inp-urlalias" class="prefixed-input" data-prefix="https://mods.vintagestory.at/"><input id="inp-urlalias" type="text" name="urlalias" value="{$asset['urlAlias']}" style="width: 21ch" /></label>
 		</div>
 
 		<div class="editbox flex-fill">
@@ -116,32 +116,32 @@
 		<h3 class="flex-fill">Links</h3>
 		<div class="editbox">
 			<label>Homepage or Forum Post Url</label>
-			<input type="url" name="homepageurl" value="{$asset['homepageurl']}" />
+			<input type="url" name="homepageurl" value="{$asset['homepageUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Trailer Video Url</label>
-			<input type="url" name="trailervideourl" value="{$asset['trailervideourl']}" />
+			<input type="url" name="trailervideourl" value="{$asset['trailerVideoUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Source Code Url</label>
-			<input type="url" name="sourcecodeurl" value="{$asset['sourcecodeurl']}" />
+			<input type="url" name="sourcecodeurl" value="{$asset['sourceCodeUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Issue tracker Url</label>
-			<input type="url" name="issuetrackerurl" value="{$asset['issuetrackerurl']}" />
+			<input type="url" name="issuetrackerurl" value="{$asset['issueTrackerUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Wiki Url</label>
-			<input type="url" name="wikiurl" value="{$asset['wikiurl']}" />
+			<input type="url" name="wikiurl" value="{$asset['wikiUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Donate Url</label>
-			<input type="url" name="donateurl" value="{$asset['donateurl']}" />
+			<input type="url" name="donateurl" value="{$asset['donateUrl']}" />
 		</div>
 
 		<h3 class="flex-fill">Additional information</h3>
@@ -182,11 +182,11 @@
 		</div>
 
 		<div class="flex-spacer"></div>
-		<div id="preview-box-card" class="editbox" style="width: calc(300px + .5em); align-self: baseline;" data-fid="{$mod['cardlogofileid']}">
+		<div id="preview-box-card" class="editbox" style="width: calc(300px + .5em); align-self: baseline;" data-fid="{$mod['cardLogoFileId']}">
 			<label>ModDB Card Preview</label>
 			{include file="list-mod-entry"}
 		</div>
-		<div id="preview-box-embed" class="editbox" style="width: calc(300px + .5em); align-self: baseline;" data-fid="{$mod['embedlogofileid']}">
+		<div id="preview-box-embed" class="editbox" style="width: calc(300px + .5em); align-self: baseline;" data-fid="{$mod['embedLogoFileId']}">
 			<label><label><abbr title="Every platform uses this data differently, this is just an example of what it might look like.">External Preview</abbr></label></label>
 			<div>
 				<h4>{$mod['name']}</h4>
@@ -240,7 +240,7 @@
 
 {capture name="footerjs"}
 	<script type="text/javascript">
-		const targetModId = {$asset['modid'] ?? 0};
+		const targetModId = {$asset['modId'] ?? 0};
 		function lockModDlg(btnEl) {
 			const message = prompt("Locking a mod will disable automatic downloads for the duration.\nPlease provide a reason for locking this mod.\nThis reason will be displayed to the mod author and logged. The reason message should contain information on how the author can get their mod to be unlocked again.");
 

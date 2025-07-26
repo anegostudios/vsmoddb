@@ -2,7 +2,7 @@
 
 /**
  * @security: Does not perform validation!
- * @param array{modid:int, type:'mod'|'tool'|'other'} $mod The mod the release is to be associated with.
+ * @param array{modId:int, type:'mod'|'tool'|'other'} $mod The mod the release is to be associated with.
  * @param array{text:string, identifier?:string, version:int} $newData
  * @param int[] $newCompatibleGameVersions
  * @param array{assetId:int, fileId:int} $file
@@ -20,7 +20,7 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	SQL, [$newData['text'], $user['userId'], $user['userId']]);
 	$assetId = $con->insert_ID();
 	
-	$con->execute('INSERT INTO ModReleases (modId, assetId, identifier, version) VALUES(?, ?, ?, ?)', [$mod['modid'], $assetId, $newData['identifier'] ?? NULL, $newData['version']]);
+	$con->execute('INSERT INTO ModReleases (modId, assetId, identifier, version) VALUES(?, ?, ?, ?)', [$mod['modId'], $assetId, $newData['identifier'] ?? NULL, $newData['version']]);
 	$releaseId = $con->insert_ID();
 
 	// attach hovering files
@@ -40,23 +40,23 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 
 	logAssetChanges([$changeToLog], $assetId);
 
-	updateGameVersionsCached($mod['modid']);
-	$con->execute('UPDATE `mod` set lastreleased = NOW() WHERE modid = ?', [$mod['modid']]);
+	updateGameVersionsCached($mod['modId']);
+	$con->execute('UPDATE Mods set lastReleased = NOW() WHERE modId = ?', [$mod['modId']]);
 
 	$con->Execute("
 		INSERT INTO Notifications (userId, kind, recordId)
 		SELECT userId, 'newrelease', ?
 		FROM UserFollowedMods
 		WHERE modId = ? AND flags & ".FOLLOW_FLAG_CREATE_NOTIFICATIONS."
-	", [$mod['modid'], $mod['modid']]);
+	", [$mod['modId'], $mod['modId']]);
 
 	return $con->completeTrans() ? $assetId : 0;
 }
 
 /**
  * @security: Does not perform validation!
- * @param array{modid:int, type:'mod'|'tool'|'other'} $mod The mod the release is to be associated with.
- * @param array{releaseid:int, assetId:int, text:string, identifier:string|null, version:int} $existingRelease
+ * @param array{modId:int, type:'mod'|'tool'|'other'} $mod The mod the release is to be associated with.
+ * @param array{releaseId:int, assetId:int, text:string, identifier:string|null, version:int} $existingRelease
  * @param array{text:string, identifier?:string, version:int} $newData
  * @param int[] $newCompatibleGameVersions
  * @param array{assetId:int, fileId:int} $file Unused for now
@@ -126,8 +126,8 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 
 		logAssetChanges($changesToLog, $existingRelease['assetId']);
 
-		updateGameVersionsCached($mod['modid']);
-		$con->execute('UPDATE `mod` set lastreleased = NOW() WHERE modid = ?', [$mod['modid']]);
+		updateGameVersionsCached($mod['modId']);
+		$con->execute('UPDATE Mods set lastReleased = NOW() WHERE modId = ?', [$mod['modId']]);
 
 		$ok = $con->completeTrans();
 	}
@@ -172,14 +172,14 @@ function deleteRelease($modId, $release)
 
 	updateGameVersionsCached($modId);
 
-	// Reset lastreleased to the last release, or the mod creation date if there is no other release.
+	// Reset lastReleased to the last release, or the mod creation date if there is no other release.
 	$con->execute(<<<SQL
-		UPDATE `mod` m
-		SET lastreleased = IFNULL(
-			(SELECT r.created FROM ModReleases r WHERE r.modId = m.modid ORDER BY r.created DESC LIMIT 1),
+		UPDATE Mods m
+		SET lastReleased = IFNULL(
+			(SELECT r.created FROM ModReleases r WHERE r.modId = m.modId ORDER BY r.created DESC LIMIT 1),
 			m.created
 		)
-		WHERE m.modid = ?;
+		WHERE m.modId = ?;
 	SQL, [$modId]);
 
 	return $con->completeTrans();

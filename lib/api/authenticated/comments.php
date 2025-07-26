@@ -63,13 +63,13 @@ switch($_SERVER['REQUEST_METHOD']) {
 			$lastModAction = logModeratorAction($comment['userId'], $user['userId'], MODACTION_KIND_DELETE, $commentId, SQL_DATE_FOREVER, null);
 	
 			$con->Execute('UPDATE Comments SET deleted = 1, lastModaction = ? WHERE commentId = ?', [$lastModAction, $commentId]);
-			$con->Execute('UPDATE `mod` SET comments = comments - 1 WHERE assetid = ?', [$comment["assetId"]]);
+			$con->Execute('UPDATE Mods SET comments = comments - 1 WHERE assetId = ?', [$comment['assetId']]);
 		
 			$changelog = "Deleted comment #$commentId of user #{$user['userId']}";
 		}
 		else {
 			$con->Execute('UPDATE Comments SET deleted = 1 WHERE commentId = ?', [$commentId]);
-			$con->Execute('UPDATE `mod` SET comments = comments - 1 WHERE assetid = ?', [$comment["assetId"]]);
+			$con->Execute('UPDATE Mods SET comments = comments - 1 WHERE assetId = ?', [$comment['assetId']]);
 	
 			$changelog = "User #{$user['userId']} deleted own comment #$commentId";
 		}

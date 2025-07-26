@@ -22,12 +22,12 @@ switch($urlparts[1]) {
 				validateContentType('text/html');
 
 				$modData = $con->getRow(<<<SQL
-					SELECT m.assetid, a.createdByUserId
-					FROM `mod` m
-					JOIN Assets a ON a.assetId = m.assetid
-					WHERE m.modid = ?
+					SELECT m.assetId, a.createdByUserId
+					FROM Mods m
+					JOIN Assets a ON a.assetId = m.assetId
+					WHERE m.modId = ?
 				SQL, [$modId]);
-				$assetId = intval($modData['assetid']);
+				$assetId = intval($modData['assetId']);
 				if(!$assetId)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown modid.']);
 
 				$commentHtml = trim(sanitizeHtml(file_get_contents('php://input')));
@@ -35,7 +35,7 @@ switch($urlparts[1]) {
 
 				$con->execute('INSERT INTO Comments (assetId, userId, text) VALUES (?, ?, ?)', [$assetId, $user['userId'], $commentHtml]);
 				$commentId = $con->insert_ID();
-				$con->execute('UPDATE `mod` SET comments = comments + 1 WHERE assetid = ?', [$assetId]);
+				$con->execute('UPDATE Mods SET comments = comments + 1 WHERE assetId = ?', [$assetId]);
 
 				$creatorUserId = intval($modData['createdByUserId']);
 				$currentUserId = intval($user['userId']);
@@ -88,17 +88,17 @@ switch($urlparts[1]) {
 		if(!$reason) fail(HTTP_BAD_REQUEST, ['error' => 'Reason must not be empty.']);
 
 		$modData = $con->getRow(<<<SQL
-			SELECT m.assetid, a.createdByUserId
-			FROM `mod` m
-			JOIN Assets a ON a.assetId = m.assetid
-			WHERE m.modid = ?
+			SELECT m.assetId, a.createdByUserId
+			FROM Mods m
+			JOIN Assets a ON a.assetId = m.assetId
+			WHERE m.modId = ?
 		SQL, [$modId]);
 		if(!$modData) fail(HTTP_NOT_FOUND);
 
 		$con->startTrans();
 		// @security: assetid comes from the db and is an int, therefore sql inert. 
-		$con->execute('UPDATE Assets SET statusId = '.STATUS_LOCKED.' WHERE assetId = '.$modData['assetid']);
-		logAssetChanges(['Locked Mod for reason: '.$reason], $modData['assetid']);
+		$con->execute('UPDATE Assets SET statusId = '.STATUS_LOCKED.' WHERE assetId = '.$modData['assetId']);
+		logAssetChanges(['Locked Mod for reason: '.$reason], $modData['assetId']);
 
 		logModeratorAction($modData['createdByUserId'], $user['userId'], MODACTION_KIND_LOCK, $modId, SQL_DATE_FOREVER, $reason);
 

@@ -10,21 +10,22 @@ class ModEditor extends AssetEditor
 
 		parent::__construct("mod");
 
+		$this->tablename = "Mods";
 		$this->namesingular = "Mod";
 		$this->nameplural = "Mods";
 
-		$this->declareColumn(3, array("title" => "Homepage url", "code" => "homepageurl", "datatype" => "url", "tablename" => "mod"));
-		$this->declareColumn(4, array("title" => "Source code url", "code" => "sourcecodeurl", "datatype" => "url", "tablename" => "mod"));
-		$this->declareColumn(5, array("title" => "Trailer video url", "code" => "trailervideourl", "datatype" => "url", "tablename" => "mod"));
-		$this->declareColumn(6, array("title" => "Issue tracker url", "code" => "issuetrackerurl", "datatype" => "url", "tablename" => "mod"));
-		$this->declareColumn(7, array("title" => "Wiki url", "code" => "wikiurl", "datatype" => "url", "tablename" => "mod"));
-		$this->declareColumn(13, array("title" => "Donate url", "code" => "donateurl", "datatype" => "url", "tablename" => "mod"));
-		$this->declareColumn(8, array("title" => "Side", "code" => "side", "tablename" => "mod"));
-		$this->declareColumn(9, array("title" => "Logo image", "code" => "cardlogofileid", "tablename" => "mod"));
-		$this->declareColumn(9, array("title" => "Logo image", "code" => "embedlogofileid", "tablename" => "mod"));
-		$this->declareColumn(10, array("title" => "Mod Type", "code" => "type", "tablename" => "mod"));
-		$this->declareColumn(11, array("title" => "URL Alias", "code" => "urlalias", "tablename" => "mod"));
-		$this->declareColumn(12, array("title" => "Summary", "code" => "summary", "tablename" => "mod", "datatype" => "name"));
+		$this->declareColumn(3, array("title" => "Homepage url", "code" => "homepageUrl", "datatype" => "url", "tablename" => "Mods"));
+		$this->declareColumn(4, array("title" => "Source code url", "code" => "sourceCodeUrl", "datatype" => "url", "tablename" => "Mods"));
+		$this->declareColumn(5, array("title" => "Trailer video url", "code" => "trailerVideoUrl", "datatype" => "url", "tablename" => "Mods"));
+		$this->declareColumn(6, array("title" => "Issue tracker url", "code" => "issueTrackerUrl", "datatype" => "url", "tablename" => "Mods"));
+		$this->declareColumn(7, array("title" => "Wiki url", "code" => "wikiUrl", "datatype" => "url", "tablename" => "Mods"));
+		$this->declareColumn(13, array("title" => "Donate url", "code" => "donateUrl", "datatype" => "url", "tablename" => "Mods"));
+		$this->declareColumn(8, array("title" => "Side", "code" => "side", "tablename" => "Mods"));
+		$this->declareColumn(9, array("title" => "Logo image", "code" => "cardLogoFileId", "tablename" => "Mods"));
+		$this->declareColumn(9, array("title" => "Logo image", "code" => "embedLogoFileId", "tablename" => "Mods"));
+		$this->declareColumn(10, array("title" => "Mod Type", "code" => "type", "tablename" => "Mods"));
+		$this->declareColumn(11, array("title" => "URL Alias", "code" => "urlAlias", "tablename" => "Mods"));
+		$this->declareColumn(12, array("title" => "Summary", "code" => "summary", "tablename" => "Mods", "datatype" => "name"));
 	}
 
 	function load()
@@ -51,7 +52,7 @@ class ModEditor extends AssetEditor
 		}
 
 		if ($this->assetid && canEditAsset($this->asset, $user, false)) {
-			$modId = $con->getOne('SELECT modid FROM `mod` WHERE assetid = ?', [$this->assetid]);
+			$modId = $con->getOne('SELECT modId FROM Mods WHERE assetId = ?', [$this->assetid]);
 
 			$teamMembers = $con->getAll(<<<SQL
 					SELECT u.*, t.canEdit, 0 AS pending
@@ -72,7 +73,7 @@ class ModEditor extends AssetEditor
 
 		$logoData = $this->assetid ? $con->getRow(<<<SQL
 			SELECT fileDb.cdnPath AS pathDb, fileExternal.cdnPath AS pathExternal
-			FROM `mod` m
+			FROM Mods m
 			LEFT JOIN Files AS fileDb ON fileDb.fileId = m.cardlogofileid
 			LEFT JOIN Files AS fileExternal ON fileExternal.fileId = m.embedlogofileid
 			WHERE m.assetid = ?
@@ -122,8 +123,8 @@ class ModEditor extends AssetEditor
 	function delete()
 	{
 		global $con;
-		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
-		$con->Execute("delete from ModReleases where modId = ?", array($modid));
+		$modId = $con->getOne("select modId from Mods where assetId = ?", array($this->assetid));
+		$con->Execute("delete from ModReleases where modId = ?", array($modId));
 		parent::delete();
 	}
 
@@ -137,7 +138,7 @@ class ModEditor extends AssetEditor
 
 		$_POST['urlalias'] = preg_replace("/[^a-z]+/", "", strtolower($_POST['urlalias']));
 		if (!empty($_POST['urlalias'])) {
-			if ($con->getOne("select modid from `mod` where urlalias=? and assetid!=?", array($_POST['urlalias'], $this->assetid))) {
+			if ($con->getOne("select modId from Mods where urlAlias = ? and assetId != ?", array($_POST['urlalias'], $this->assetid))) {
 				addMessage(MSG_CLASS_ERROR, 'Not saved. This url alias is already taken. Please choose another.');
 				return 'error';
 			}
@@ -148,10 +149,10 @@ class ModEditor extends AssetEditor
 			}
 		}
 
-		$oldLogoData = $con->getRow("select cardlogofileid, embedlogofileid from `mod` where assetid = ?", array($this->assetid));
-		$oldLogoFileIdDb = $oldLogoData['cardlogofileid'] ?? null;
+		$oldLogoData = $con->getRow("select cardLogoFileId, embedLogoFileId from Mods where assetId = ?", array($this->assetid));
+		$oldLogoFileIdDb = $oldLogoData['cardLogoFileId'] ?? null;
 		$newLogoFileIdDb = $_POST['cardlogofileid'] ?? null;
-		$oldLogoFileIdExternal = $oldLogoData['embedlogofileid'] ?? null;
+		$oldLogoFileIdExternal = $oldLogoData['embedLogoFileId'] ?? null;
 		$newLogoFileIdExternal = $_POST['embedlogofileid'] ?? null;
 
 		$logoCheck = ['status' => 'ok', 'errormessage' => ''];
@@ -213,7 +214,7 @@ class ModEditor extends AssetEditor
 		}
 
 
-		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
+		$modid = $con->getOne("select modId from Mods where assetId = ?", array($this->assetid));
 		$hasfiles = $con->getOne("select releaseId from ModReleases where modId = ?", array($modid));
 		$statusreverted = false;
 		if (!$hasfiles && $_POST['statusid'] != STATUS_DRAFT && $this->asset['statusId'] != STATUS_LOCKED) {
@@ -225,10 +226,10 @@ class ModEditor extends AssetEditor
 		logAssetChanges($tagchanges, $this->assetid);
 
 		if ($this->isnew) {
-			$con->Execute("update `mod` set lastreleased = `mod`.created where assetid = ?", array($this->assetid));
+			$con->Execute("update Mods set lastReleased = created where assetId = ?", array($this->assetid));
 		}
 
-		$con->execute('update `mod` set descriptionsearchable = ? where assetid = ?', [textContent($_POST['text']), $this->assetid]);
+		$con->execute('update Mods set descriptionSearchable = ? where assetId = ?', [textContent($_POST['text']), $this->assetid]);
 
 		if(canEditAsset($this->asset, $user, false)) $this->updateTeamMembers($modid);
 		if($this->asset['createdByUserId'] == $user['userId']) {
@@ -562,7 +563,7 @@ class ModEditor extends AssetEditor
 		}
 
 		// TODO(Rennorb) @cleanup @perf: Is tagscached really needed ?
-		$con->execute('UPDATE Assets a JOIN `mod` m ON m.assetid = a.assetId SET a.tagsCached = ? WHERE m.modid = ?', [implode("\r\n", $tagData), $modId]);
+		$con->execute('UPDATE Assets a JOIN Mods m ON m.assetId = a.assetId SET a.tagsCached = ? WHERE m.modId = ?', [implode("\r\n", $tagData), $modId]);
 
 		return $changes;
 	}

@@ -40,7 +40,7 @@ $view->assign("assetserver", $config['assetserver']);
 
 
 //NOTE(Rennorb): Technically we should only count the public mods, but in reality this probably doesn't matter for production and just counting all mods makes the query simpler.
-$view->assign('totalModCount', $con->getOne('SELECT COUNT(*) from `mod`'), null, true);
+$view->assign('totalModCount', $con->getOne('SELECT COUNT(*) from Mods'), null, true);
 
 
 // insert db record
@@ -306,13 +306,13 @@ function stripQueryParams($query, $paramNames)
 	return implode('&', $params);
 }
 
-/** Formats the path to a mod page using the urlalias of the mod if possible.
- * @param array{urlalias : string, assetid : int} $mod
+/** Formats the path to a mod page using the urlAlias of the mod if possible.
+ * @param array{urlAlias : string, assetId : int} $mod
  * @return string Path to the mod page starting with the root slash.
  */
 function formatModPath($mod)
 {
-	return $mod['urlalias'] ? ('/'.$mod['urlalias']) : ("/show/mod/" . $mod['assetid']);
+	return $mod['urlAlias'] ? ('/'.$mod['urlAlias']) : ("/show/mod/" . $mod['assetId']);
 }
 
 

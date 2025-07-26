@@ -158,14 +158,14 @@ function listMod($modid)
 			logoFileExternal.cdnPath as logoCdnPathExternal,
 			logoFileDb.cdnPath as logoCdnPathDb
 		from 
-			`mod` 
-			join Assets asset on asset.assetId = `mod`.assetid
+			Mods `mod`
+			join Assets asset on asset.assetId = `mod`.assetId
 			join Users user on user.userId = asset.createdByUserId
-			left join Files as logoFileExternal on (`mod`.embedlogofileid = logoFileExternal.fileId)
-			left join Files as logoFileDb on (`mod`.cardlogofileid = logoFileDb.fileId)
+			left join Files as logoFileExternal on (`mod`.embedLogoFileId = logoFileExternal.fileId)
+			left join Files as logoFileDb on (`mod`.cardLogoFileId = logoFileDb.fileId)
 		where
 			asset.statusId = 2
-			and modid = ?
+			and modId = ?
 	SQL, array($modid));
 
 	if (empty($row)) fail("404");
@@ -177,10 +177,10 @@ function listMod($modid)
 		from 
 			ModReleases r 
 			left join ModReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
-		where modid = ?
+		where modId = ?
 		group by r.releaseId
 		order by r.created desc
-	SQL, array($row['modid']));
+	SQL, array($row['modId']));
 
 	$releases = array();
 	foreach ($rrows as $release) {
@@ -212,7 +212,7 @@ function listMod($modid)
 			Files f
 		left join FileImageData i on i.fileId = f.fileId
 		where f.assetId = ? and f.fileId not in (?, ?)
-	SQL, array($row['assetid'], $row['cardlogofileid'] ?? 0, $row['embedlogofileid'] ?? 0)); /* sql cant compare against null */
+	SQL, array($row['assetId'], $row['cardLogoFileId'] ?? 0, $row['embedLogoFileId'] ?? 0)); /* sql cant compare against null */
 
 	$screenshots = array();
 	foreach ($screenshots as $screenshot) {
@@ -228,32 +228,32 @@ function listMod($modid)
 	$logoUrlExternal = $row['logoCdnPathExternal'] ? formatCdnUrlFromCdnPath($row['logoCdnPathExternal']) : null;
 	$logoUrlDb = $row['logoCdnPathDb'] ? formatCdnUrlFromCdnPath($row['logoCdnPathDb']) : null;
 	$mod = array(
-		"modid"           => intval($row["modid"]),
-		"assetid"         => intval($row["assetid"]),
+		"modid"           => intval($row["modId"]),
+		"assetid"         => intval($row["assetId"]),
 		"name"            => $row['name'],
 		"text"            => $row['text'],
 		"author"          => $row['author'],
-		"urlalias"        => $row['urlalias'],
+		"urlalias"        => $row['urlAlias'],
 		"logofilename"    => $logoUrlExternal, // @obsolete //NOTE(Rennorb): This is not the filename, but just the link again.
 		"logofile"        => $logoUrlExternal,
 		"logofiledb"      => $logoUrlDb,
-		"homepageurl"     => $row['homepageurl'],
-		"sourcecodeurl"   => $row['sourcecodeurl'],
-		"trailervideourl" => $row['trailervideourl'],
-		"issuetrackerurl" => $row['issuetrackerurl'],
-		"wikiurl"         => $row['wikiurl'],
+		"homepageurl"     => $row['homepageUrl'],
+		"sourcecodeurl"   => $row['sourceCodeUrl'],
+		"trailervideourl" => $row['trailerVideoUrl'],
+		"issuetrackerurl" => $row['issueTrackerUrl'],
+		"wikiurl"         => $row['wikiUrl'],
 		"downloads"       => intval($row['downloads']),
 		"follows"         => intval($row['follows']),
-		"trendingpoints"  => intval($row['trendingpoints']),
+		"trendingpoints"  => intval($row['trendingPoints']),
 		"comments"        => intval($row['comments']),
 		"side"            => $row['side'],
 		"type"            => $row['type'],
 		"created"         => $row['created'],
-		"lastreleased"    => $row['lastreleased'],
+		"lastreleased"    => $row['lastReleased'],
 		//NOTE(Rennorb): This field updates on download number changes and is therefore pretty much useless.
 		// Removing it is however not a good idea becasue it's a public api, and changing it to work differently also isn't great because it would make the behaviour inconsistent between different tables.
 		// We therefore simply keep it in this jank state for now, until a potential future breaking version.
-		"lastmodified"    => $row['lastmodified'],
+		"lastmodified"    => $row['lastModified'],
 		"tags"            => unwrapTagNames($row['tagsCached']),
 		"releases"        => $releases,
 		"screenshots"     => $screenshots
@@ -288,7 +288,7 @@ function listMods()
 
 	if (!empty($_GET["tagids"])) {
 		foreach ($_GET["tagids"] as $tagid) {
-			$wheresql[] = "exists (select 1 from ModTags where ModTags.modId = `mod`.modid and ModTags.tagId = ?)";
+			$wheresql[] = "exists (select 1 from ModTags where ModTags.modId = `mod`.modId and ModTags.tagId = ?)";
 			$wherevalues[] = $tagid;
 		}
 	}
@@ -299,7 +299,7 @@ function listMods()
 	}
 
 	if (!empty($_GET["gameversion"])) {
-		$wheresql[] = "exists (select 1 from ModCompatibleMajorGameVersionsCached cmv where cmv.modId = `mod`.modid and cmv.majorGameVersion = ?)";
+		$wheresql[] = "exists (select 1 from ModCompatibleMajorGameVersionsCached cmv where cmv.modId = `mod`.modId and cmv.majorGameVersion = ?)";
 		$wherevalues[] = intval($_GET["gameversion"]) & VERSION_MASK_PRIMARY;
 	}
 
@@ -314,7 +314,7 @@ function listMods()
 
 	if ($gvs) {
 		$gamevers = array_map("intval", $gvs);
-		$wheresql[] = "exists (select 1 from ModCompatibleGameVersionsCached cgv where cgv.modId = `mod`.modid and cgv.gameVersion in (" . implode(",", $gamevers) . "))";
+		$wheresql[] = "exists (select 1 from ModCompatibleGameVersionsCached cgv where cgv.modId = `mod`.modId and cgv.gameVersion in (" . implode(",", $gamevers) . "))";
 	}
 
 
@@ -324,10 +324,10 @@ function listMods()
 	$rows = $con->getAll("
 		select 
 			asset.assetId, 
-			`mod`.modid, 
+			`mod`.modId, 
 			`mod`.side,
 			`mod`.type,
-			`mod`.urlalias,
+			`mod`.urlAlias,
 			asset.name,
 			logofileExternal.cdnPath as logoCdnpathExternal,
 			mod.downloads,
@@ -337,16 +337,16 @@ function listMods()
 			summary,
 			group_concat(DISTINCT r.identifier ORDER BY r.identifier SEPARATOR ',') as modidstrs,
 			user.name as author,
-			`mod`.lastreleased,
-			`mod`.trendingpoints
+			`mod`.lastReleased,
+			`mod`.trendingPoints
 		from 
-			`mod` 
-			join Assets asset on (`mod`.assetid = asset.assetId)
+			Mods `mod` 
+			join Assets asset on (`mod`.assetId = asset.assetId)
 			join Users user on (asset.createdByUserId = user.userId)
-			left join ModReleases r on r.modId = `mod`.modid
-			left join Files as logofileExternal on logofileExternal.fileId = mod.embedlogofileid
+			left join ModReleases r on r.modId = `mod`.modId
+			left join Files as logofileExternal on logofileExternal.fileId = mod.embedLogoFileId
 		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "
-		group by `mod`.modid
+		group by `mod`.modId
 		order by $orderBy $orderDirection
 	", $wherevalues);
 	$mods = array();
@@ -357,22 +357,22 @@ function listMods()
 
 
 		$mods[] = array(
-			"modid"          => intval($row['modid']),
+			"modid"          => intval($row['modId']),
 			"assetid"        => intval($row['assetId']),
 			"downloads"      => intval($row['downloads']),
 			"follows"        => intval($row['follows']),
-			"trendingpoints" => intval($row['trendingpoints']),
+			"trendingpoints" => intval($row['trendingPoints']),
 			"comments"       => intval($row['comments']),
 			"name"           => $row['name'],
 			"summary"        => $row['summary'],
 			"modidstrs"      => !empty($row['modidstrs']) ? explode(",", $row['modidstrs']) : array(),
 			"author"         => $row['author'],
-			"urlalias"       => $row['urlalias'],
+			"urlalias"       => $row['urlAlias'],
 			"side"           => $row['side'],
 			"type"           => $row['type'],
 			"logo"           => $row['logoCdnpathExternal'] ? formatCdnUrlFromCdnPath($row['logoCdnpathExternal']) : null,
 			"tags"           => $tags,
-			"lastreleased"   => $row['lastreleased']
+			"lastreleased"   => $row['lastReleased']
 		);
 	}
 

@@ -17,10 +17,10 @@ $asset = $con->getRow("
 		s.code AS statusCode
 	FROM 
 		Assets a
-		JOIN `mod` m ON m.assetid = a.assetId
+		JOIN Mods m ON m.assetId = a.assetId
 		LEFT JOIN Users creator ON creator.userId = a.createdByUserId
 		LEFT JOIN Status s ON s.statusId = a.statusId
-		LEFT JOIN Files AS logo ON logo.fileId = m.embedlogofileid
+		LEFT JOIN Files AS logo ON logo.fileId = m.embedLogoFileId
 	WHERE
 		a.assetId = ?
 ", [$assetId]);
@@ -32,20 +32,20 @@ $teamMembers = $con->getAll(<<<SQL
 	FROM ModTeamMembers t
 	JOIN Users u ON u.userId = t.userId
 	WHERE t.modId = ?
-SQL, [$asset['modid']]);
+SQL, [$asset['modId']]);
 $view->assign('teamMembers', $teamMembers);
 
 $files = $con->getAll('SELECT * FROM Files WHERE assetId = ? AND fileId NOT IN (?, ?)', 
-	[$assetId, $asset['cardlogofileid'] ?? 0, $asset['embedlogofileid'] ?? 0]);  /* sql cant compare against null */
+	[$assetId, $asset['cardLogoFileId'] ?? 0, $asset['embedLogoFileId'] ?? 0]);  /* sql cant compare against null */
 
 //NOTE(Rennorb): There was a time where we rescaled images for logos. We no longer do that, but in ~140 cases there are still two images for the logo: the actual logo image, and the original one that was uploaded.
 // Since we don't show the logo in the slideshow anymore, we also need to remove that second file that got uploaded, without removing it from the database so it stays downloadable for the mod author until they replace it.
 // Here is a sql query to get a list of such mods:
 /*
-	select modid, urlalias, Users.name from `mod`
-	join file f on f.fileId = `mod`.cardlogofileid
+	select modId, urlAlias, Users.name from Mods
+	join file f on f.fileId = Mods.cardLogoFileId
 	join file f2 on f2.cdnPath = concat(substr(f.cdnPath, 1, length(f.cdnPath) - 12), substr(f.cdnPath, -4))
-	join Assets on `mod`.assetid = asset.assetId
+	join Assets on Mods.assetId = asset.assetId
 	join Users on Users.userId = asset.createdByUserId;
 */
 if($asset['hasLegacyLogo']) {
@@ -118,10 +118,10 @@ $releases = $con->getAll(<<<SQL
 	JOIN Assets a ON a.assetId = r.assetId
 	LEFT JOIN ModReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
 	LEFT JOIN GameVersions gv ON gv.version = cgv.gameVersion
-	WHERE modid = ?
+	WHERE modId = ?
 	GROUP BY r.releaseId
 	ORDER BY r.version DESC, MAX(cgv.gameVersion) DESC, r.created DESC
-SQL, [$asset['modid']]);
+SQL, [$asset['modId']]);
 
 $releaseFiles = [];
 if(count($releases)) {
@@ -340,7 +340,7 @@ $oneClickInstallWorks = !preg_match('/macintosh|mac os x|mac_powerpc|iphone|ipod
 $view->assign("shouldShowOneClickInstall", $oneClickInstallWorks && $asset['type'] === 'mod', null, false);
 $view->assign("shouldListCompatibleGameVersion", $asset['type'] === 'mod', null, false);
 $view->assign("changelogColspan", 5 + ($asset['type'] === 'mod' ? ($oneClickInstallWorks ? 2 : 1) : 0), null, false);
-$view->assign("isFollowing", empty($user) ? 0 : $con->getOne('SELECT modid FROM UserFollowedMods WHERE modId = ? AND userId = ?', [$asset['modid'], $user['userId']]));
+$view->assign("isFollowing", empty($user) ? 0 : $con->getOne('SELECT modId FROM UserFollowedMods WHERE modId = ? AND userId = ?', [$asset['modId'], $user['userId']]));
 
 if (!empty($user)) {
 	processTeamInvitation($asset, $user);
@@ -391,7 +391,7 @@ function processTeamInvitation($asset, $user)
 {
 	global $con, $view;
 
-	$invite = $con->getRow("SELECT notificationId, recordId FROM Notifications WHERE kind = 'teaminvite' AND !`read` AND userId = ? AND (recordId & ((1 << 30) - 1)) = ?", [$user['userId'], $asset['modid']]); // :InviteEditBit
+	$invite = $con->getRow("SELECT notificationId, recordId FROM Notifications WHERE kind = 'teaminvite' AND !`read` AND userId = ? AND (recordId & ((1 << 30) - 1)) = ?", [$user['userId'], $asset['modId']]); // :InviteEditBit
 	$pending = !empty($invite);
 	$view->assign("teaminvite", $pending);
 	if(!$pending) return;
@@ -402,7 +402,7 @@ function processTeamInvitation($asset, $user)
 	switch ($_GET['acceptteaminvite']) {
 		case 1:
 			$canEdit = (intval($invite['recordId']) & (1 << 30)) ? 1 : 0; // :InviteEditBit
-			$con->Execute('INSERT INTO ModTeamMembers (modId, userId, canEdit) values (?, ?, ?)', [$asset['modid'], $user['userId'], $canEdit]);
+			$con->Execute('INSERT INTO ModTeamMembers (modId, userId, canEdit) values (?, ?, ?)', [$asset['modId'], $user['userId'], $canEdit]);
 
 			$con->Execute('UPDATE Notifications SET `read` = 1 WHERE notificationId = ?', [$invite['notificationId']]);
 
@@ -430,7 +430,7 @@ function processOwnershipTransfer($asset, $user)
 {
 	global $con, $view;
 
-	$pendingInvitationId = $con->getOne("SELECT notificationId FROM Notifications WHERE kind = 'modownershiptransfer' AND !`read` AND userId = ? AND recordId = ?", [$user['userId'], $asset['modid']]);
+	$pendingInvitationId = $con->getOne("SELECT notificationId FROM Notifications WHERE kind = 'modownershiptransfer' AND !`read` AND userId = ? AND recordId = ?", [$user['userId'], $asset['modId']]);
 	$view->assign("transferownership", $pendingInvitationId);
 	if(!$pendingInvitationId) return;
 
@@ -446,14 +446,14 @@ function processOwnershipTransfer($asset, $user)
 				UPDATE ModTeamMembers
 				SET userId = ?, canEdit = 1, created = ?
 				WHERE modId = ? AND userId = ?
-			SQL, [$oldOwnerData['createdByUserId'], $oldOwnerData['created'], $asset['modid'], $user['userId']]);
+			SQL, [$oldOwnerData['createdByUserId'], $oldOwnerData['created'], $asset['modId'], $user['userId']]);
 			$con->execute('UPDATE Assets SET createdByUserId = ? WHERE assetId = ?', [$user['userId'], $asset['assetId']]);
 			$con->execute(<<<SQL
 				UPDATE Assets a
-				JOIN `mod` m ON m.modid = ?
-				JOIN ModReleases r ON r.modId = m.modid AND r.assetId = a.assetId
+				JOIN Mods m ON m.modId = ?
+				JOIN ModReleases r ON r.modId = m.modId AND r.assetId = a.assetId
 				set a.createdByUserId = ?
-			SQL, [$asset['modid'], $user['userId']]);
+			SQL, [$asset['modId'], $user['userId']]);
 
 			$con->execute('UPDATE Notifications SET `read` = 1 WHERE notificationId = ?', [$pendingInvitationId]);
 			$ok = $con->completeTrans();

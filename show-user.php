@@ -23,10 +23,10 @@ $userMods = $con->getAll("
 		s.code AS statusCode
 	FROM
 		Assets a
-		JOIN `mod` m ON m.assetid = a.assetId
+		JOIN Mods m ON m.assetId = a.assetId
 		LEFT JOIN Status s ON s.statusId = a.statusId
-		LEFT JOIN Files AS logo ON logo.fileId = m.cardlogofileid
-		LEFT JOIN ModTeamMembers t ON t.modId = m.modid
+		LEFT JOIN Files AS logo ON logo.fileId = m.cardLogoFileId
+		LEFT JOIN ModTeamMembers t ON t.modId = m.modId
 	WHERE
 		(a.createdByUserId = ? OR t.userId = ?) $sqlWhereExt
 	GROUP BY a.assetId

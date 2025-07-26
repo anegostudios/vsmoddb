@@ -21,8 +21,8 @@
 		<input type="hidden" name="at" value="{$user['actionToken']}">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="assetid" value="{$release['assetId']}">
-		<input type="hidden" name="modid" value="{$mod['modid']}">
-		<input type="hidden" name="numsaved" value="{$release['numsaved']}">
+		<input type="hidden" name="modid" value="{$mod['modId']}">
+		<input type="hidden" name="numsaved" value="{$release['numSaved']}">
 		<input type="hidden" name="saveandback" value="0">
 		
 		{if $mod['type'] === 'mod'}

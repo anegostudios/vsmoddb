@@ -157,28 +157,6 @@ CREATE TABLE IF NOT EXISTS `Comments` (
 )
 ENGINE = InnoDB;
 
-
-CREATE TABLE IF NOT EXISTS `ModReleases` (
-  `releaseId`    INT             NOT NULL AUTO_INCREMENT,
-  `assetId`      INT             NOT NULL,
-  `modId`        INT             NOT NULL,
-  `identifier`   VARCHAR(255)        NULL, -- TODO
-  `version`      BIGINT UNSIGNED NOT NULL,
-  `detailText`   TEXT                NULL,
-  `created`      DATETIME        NOT NULL DEFAULT NOW(),
-  `lastModified` TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`releaseId`),
-  -- This has to include identifier, as one mod can contain releases for multiple identifier's.
-  -- This also has to include the modid, as tool/other mods dont need to have a identifier.
-  UNIQUE INDEX `identifier` (`modId`, `identifier`, `version`),
-  UNIQUE INDEX `assetid` (`assetId`),
-  INDEX `modid` (`modId`),
-  CONSTRAINT `FK_ModReleases_assetId` FOREIGN KEY (`assetId`) REFERENCES `Assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT `FK_ModReleases_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE
-)
-ENGINE = InnoDB;
-
-
 CREATE TABLE IF NOT EXISTS `Changelogs` (
   `changelogId`  INT       NOT NULL AUTO_INCREMENT,
   `assetId`      INT           NULL, -- null for file deletions as of now
@@ -206,51 +184,68 @@ CREATE TABLE IF NOT EXISTS `Tags` (
 ENGINE = InnoDB;
 
 
+CREATE TABLE IF NOT EXISTS `Mods` (
+  `modId`                 INT          NOT NULL AUTO_INCREMENT,
+  `assetId`               INT          NOT NULL,
+  `urlAlias`              VARCHAR(45)      NULL,
+  `cardLogoFileId`        INT              NULL,
+  `embedLogoFileId`       INT              NULL,
+  `homepageUrl`           VARCHAR(255)     NULL,
+  `sourceCodeUrl`         VARCHAR(255)     NULL,
+  `trailerVideoUrl`       VARCHAR(255)     NULL,
+  `issueTrackerUrl`       VARCHAR(255)     NULL,
+  `wikiUrl`               VARCHAR(255)     NULL,
+  `donateUrl`             VARCHAR(255)     NULL,
+  `summary`               VARCHAR(100) NOT NULL,
+  `descriptionSearchable` TEXT             NULL, -- No fulltext index for now, we didnt have one before. Might want to look into that at some point
+  `downloads`             INT          NOT NULL DEFAULT 0,
+  `follows`               INT          NOT NULL DEFAULT 0,
+  `trendingPoints`        INT          NOT NULL DEFAULT 0,
+  `comments`              INT          NOT NULL DEFAULT 0,
+  `side`                  ENUM('client', 'server', 'both') NULL,
+  `type`                  ENUM('mod', 'externaltool', 'other') NULL DEFAULT 'mod',
+  `lastReleased`          DATETIME         NULL,
+  `created`               DATETIME     NOT NULL DEFAULT NOW(),
+  `lastModified`          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`modId`),
+  INDEX `urlalias` (`urlAlias`),
+  INDEX `trendingpoints_id` (`trendingPoints`, `modId`),
+  INDEX `lastreleased_id` (`lastReleased`, `modId`),
+  INDEX `downloads_id` (`downloads`, `modId`),
+  CONSTRAINT `FK_Mods_assetId` FOREIGN KEY (`assetId`) REFERENCES `Assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_Mods_cardLogoFileId` FOREIGN KEY (`cardLogoFileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL,
+  CONSTRAINT `FK_Mods_embedLogoFileId` FOREIGN KEY (`embedLogoFileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL
+)
+ENGINE = InnoDB;
+
 CREATE TABLE IF NOT EXISTS `ModTags` (
   `modId`        INT       NOT NULL,
   `tagId`        INT       NOT NULL,
   `created`      DATETIME  NOT NULL DEFAULT NOW(),
   `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`modId`, `tagId`),
-  CONSTRAINT `FK_Changelogs_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_Changelogs_modId` FOREIGN KEY (`modId`) REFERENCES `Mods`(`modId`) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT `FK_ModTags_tagId` FOREIGN KEY (`tagId`) REFERENCES `Tags`(`tagId`) ON UPDATE CASCADE ON DELETE CASCADE,
 )
 ENGINE = InnoDB;
 
-
--- -----------------------------------------------------
--- Table `moddb`.`mod`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `moddb`.`mod` (
-  `modid` INT NOT NULL AUTO_INCREMENT,
-  `assetid` INT NULL,
-  `urlalias` VARCHAR(45) NULL,
-  `cardlogofileid` INT NULL,
-  `embedlogofileid` INT NULL,
-  `homepageurl` VARCHAR(255) NULL,
-  `sourcecodeurl` VARCHAR(255) NULL,
-  `trailervideourl` VARCHAR(255) NULL,
-  `issuetrackerurl` VARCHAR(255) NULL,
-  `wikiurl` VARCHAR(255) NULL,
-  `donateurl` VARCHAR(255) NULL,
-  `summary` VARCHAR(100) NULL,
-  `descriptionsearchable` TEXT NULL, -- No fulltext index for now, we didnt have one before. Might want to look into that at some point
-  `downloads` INT NOT NULL DEFAULT 0,
-  `follows` INT NULL DEFAULT 0,
-  `trendingpoints` INT NOT NULL DEFAULT 0,
-  `comments` INT NOT NULL DEFAULT 0,
-  `side` ENUM('client', 'server', 'both') NULL,
-  `type` ENUM('mod', 'externaltool', 'other') NULL DEFAULT 'mod',
-  `created` DATETIME NULL,
-  `lastmodified` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `lastreleased` DATETIME NULL,
-  `supportedversions` TEXT NULL,
-  PRIMARY KEY (`modid`),
-  FULLTEXT INDEX `supportedversions` (`supportedversions`),
-  INDEX `urlalias` (`urlalias`),
-  INDEX `trendingpoints_id` (`trendingpoints`, `modid`),
-  INDEX `lastreleased_id` (`lastreleased`, `modid`),
-  INDEX `downloads_id` (`downloads`, `modid`)
+CREATE TABLE IF NOT EXISTS `ModReleases` (
+  `releaseId`    INT             NOT NULL AUTO_INCREMENT,
+  `assetId`      INT             NOT NULL,
+  `modId`        INT             NOT NULL,
+  `identifier`   VARCHAR(255)        NULL, -- TODO
+  `version`      BIGINT UNSIGNED NOT NULL,
+  `detailText`   TEXT                NULL,
+  `created`      DATETIME        NOT NULL DEFAULT NOW(),
+  `lastModified` TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`releaseId`),
+  -- This has to include identifier, as one mod can contain releases for multiple identifier's.
+  -- This also has to include the modId, as tool/other mods dont need to have a identifier.
+  UNIQUE INDEX `identifier` (`modId`, `identifier`, `version`),
+  UNIQUE INDEX `assetid` (`assetId`),
+  INDEX `modid` (`modId`),
+  CONSTRAINT `FK_ModReleases_assetId` FOREIGN KEY (`assetId`) REFERENCES `Assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_ModReleases_modId` FOREIGN KEY (`modId`) REFERENCES `Mods`(`modId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
@@ -332,7 +327,7 @@ CREATE TABLE IF NOT EXISTS `UserFollowedMods` (
   `flags`   TINYINT  NOT NULL DEFAULT 1, -- by default follow with notifications
   UNIQUE INDEX `modiduserid` (`modId`, `userId`),
   INDEX `userid` (`userId`),
-  CONSTRAINT `FK_UserFolowedMods_modId`  FOREIGN KEY (`modId`)  REFERENCES `mod`(`modid`)   ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_UserFolowedMods_modId`  FOREIGN KEY (`modId`)  REFERENCES `Mods`(`modId`)   ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT `FK_UserFolowedMods_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
@@ -347,7 +342,7 @@ CREATE TABLE IF NOT EXISTS `ModTeamMembers` (
   INDEX `modid_userid` (`modId`, `userId`),
   INDEX `userid` (`userId`),
   INDEX `modid` (`modId`),
-  CONSTRAINT `FK_ModTeamMembers_modId`  FOREIGN KEY (`modId`)  REFERENCES `mod`(`modid`)   ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_ModTeamMembers_modId`  FOREIGN KEY (`modId`)  REFERENCES `Mods`(`modId`)   ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT `FK_ModTeamMembers_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = InnoDB;
 

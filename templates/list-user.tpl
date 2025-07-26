@@ -51,10 +51,5 @@
 	</table>
 
 
-{capture name="buttons"}
-	<a class="button large shine" href="/edit/user">New User</a>
-{/capture}
-
-
 
 {include file="footer"}

@@ -31,41 +31,41 @@ COMMIT;
 
 
 -- -----------------------------------------------------
--- Data for table `moddb`.`mod`
+-- Data for table `moddb`.`Mods`
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `moddb`;
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (1, 'examplemodone','Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (2, 'examplemodtwo','Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (3, 'examplemodthree','Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (4, 'examplemodfour','Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (5, 'examplemodfive','Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (6, 'examplemodsix','Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (7, 'examplemodseven','Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (8, 'examplemodeight','Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (9, 'examplemodnine','Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (10, 'examplemodten','Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (11, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (12, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (13, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (14, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (15, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (16, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (17, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (18, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (19, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (20, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (21, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (22, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (23, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (24, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (25, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (26, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (27, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (28, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (29, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (30, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO `moddb`.`mod` (assetid, urlalias, summary, side, created, lastreleased) VALUES (31, NULL, 'Some Summary.', 'both', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (1, 'examplemodone',  'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (2, 'examplemodtwo',  'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (3, 'examplemodthree','Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (4, 'examplemodfour', 'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (5, 'examplemodfive', 'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (6, 'examplemodsix',  'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (7, 'examplemodseven','Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (8, 'examplemodeight','Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (9, 'examplemodnine', 'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (10, 'examplemodten', 'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (11, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (12, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (13, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (14, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (15, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (16, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (17, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (18, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (19, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (20, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (21, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (22, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (23, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (24, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (25, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (26, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (27, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (28, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (29, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (30, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
+INSERT INTO `Mods` (assetId, urlAlias, summary, side, lastReleased) VALUES (31, NULL,            'Some Summary.', 'both', CURRENT_TIMESTAMP);
 
 COMMIT;
 

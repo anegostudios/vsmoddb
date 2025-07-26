@@ -1,25 +1,25 @@
 <?php
 
-if ($user['roleCode'] != 'admin') exit("noprivilege");
+if ($user['roleCode'] != 'admin')  showErrorPage(HTTP_FORBIDDEN);
 
 const EXTEND_MATCHES_BY = 20;
 
 $rawData = $con->getAll(<<<SQL
-	SELECT a.createdByUserId, HEX(u.hash) AS `hash`, u.name as username, m.assetid, m.urlalias, a.name, f.cdnPath, m.donateurl, a.text
-	FROM `mod` m
-	     JOIN  Assets a ON a.assetId = m.assetid
-	     JOIN  Users  u ON u.userId = a.createdbyuserid
-	LEFT JOIN  Files  f ON f.fileId = m.embedlogofileid
-	WHERE m.donateurl <> '' OR a.text LIKE '%co-fi%' OR a.text LIKE '%patreon%'
+	SELECT a.createdByUserId, HEX(u.hash) AS `hash`, u.name as username, m.assetId, m.urlAlias, a.name, f.cdnPath, m.donateUrl, a.text
+	FROM Mods m
+	     JOIN Assets a ON a.assetId = m.assetId
+	     JOIN Users  u ON u.userId = a.createdByUserId
+	LEFT JOIN Files  f ON f.fileId = m.embedLogoFileId
+	WHERE m.donateUrl <> '' OR a.text LIKE '%co-fi%' OR a.text LIKE '%patreon%'
 SQL);
 
 $dataByUser = [];
 foreach($rawData as $row) {
-	$ownerId = $row['createdbyuserid'];
+	$ownerId = $row['createdByUserId'];
 
 	$matchesHTML = '';
-	if($row['donateurl']) {
-		$matchesHTML = '<span>Donate URL: <mark>'.htmlspecialchars($row['donateurl']).'</mark></span>';
+	if($row['donateUrl']) {
+		$matchesHTML = '<span>Donate URL: <mark>'.htmlspecialchars($row['donateUrl']).'</mark></span>';
 	}
 
 	$rawText = $row['text'] ?? '';
@@ -44,13 +44,13 @@ foreach($rawData as $row) {
 
 	if(array_key_exists($ownerId, $dataByUser)) {
 		$dataByUser[$ownerId]['mods'][] = $modData;
-		if($row['donateurl']) $dataByUser[$ownerId]['confirmedurls'][htmlspecialchars($row['donateurl'])] = 1;
+		if($row['donateUrl']) $dataByUser[$ownerId]['confirmedUrls'][htmlspecialchars($row['donateUrl'])] = 1;
 	}
 	else {
 		$dataByUser[$ownerId] = [
 			'userHash'      => $row['hash'],
 			'username'      => $row['username'],
-			'confirmedUrls' => $row['donateurl'] ? [htmlspecialchars($row['donateurl']) => 1] : [],
+			'confirmedUrls' => $row['donateUrl'] ? [htmlspecialchars($row['donateUrl']) => 1] : [],
 			'mods'          => [$modData],
 		];
 	}

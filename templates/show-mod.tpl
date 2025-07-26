@@ -61,20 +61,20 @@
 	<ul class="tabs no-mark">
 		<li><label for="tab-description" onclick="location.hash = 'tab-description'">Description</label></li>
 		<li><label for="tab-files" onclick="location.hash = 'tab-files'">Files</label></li>
-		{if $asset['homepageurl']}
-			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['homepageurl']}">Homepage</a></li>
+		{if $asset['homepageUrl']}
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['homepageUrl']}">Homepage</a></li>
 		{/if}
-		{if $asset['wikiurl']}
-			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['wikiurl']}">Wiki</a></li>
+		{if $asset['wikiUrl']}
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['wikiUrl']}">Wiki</a></li>
 		{/if}
-		{if $asset['issuetrackerurl']}
-			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['issuetrackerurl']}">Issue tracker</a></li>
+		{if $asset['issueTrackerUrl']}
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['issueTrackerUrl']}">Issue tracker</a></li>
 		{/if}
-		{if $asset['sourcecodeurl']}
-			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['sourcecodeurl']}">Source</a></li>
+		{if $asset['sourceCodeUrl']}
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['sourceCodeUrl']}">Source</a></li>
 		{/if}
-		{if $asset['donateurl']}
-			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['donateurl']}">Donate</a></li>
+		{if $asset['donateUrl']}
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['donateUrl']}">Donate</a></li>
 		{/if}
 	</ul>
 
@@ -84,23 +84,23 @@
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
 					<a class="button large shine strikethrough-when-banned" href="/edit/mod/?assetid={$asset['assetId']}">Edit</a>&nbsp;
-					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modid']}">Add release</a>
+					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modId']}">Add release</a>
 				{/if}
 			</div>
 
 			<div class="imageslideshow fotorama" data-max-width="min(800px, 100%)" data-max-height="450" data-autoplay="5000" data-nav="thumbs" data-allowfullscreen="true">
-				{if (!empty($asset['trailervideourl']))}
-					<a rel="nofollow" href="{$asset['trailervideourl']}">Trailer Video</a>
+				{if (!empty($asset['trailerVideoUrl']))}
+					<a rel="nofollow" href="{$asset['trailerVideoUrl']}">Trailer Video</a>
 				{/if}
 				{foreach from=$files item=file}
 					<img src="{$file['url']}">
 				{/foreach}
-				{if empty($files) && empty($asset['trailervideourl']) && !empty($asset['logoUrl'])}
+				{if empty($files) && empty($asset['trailerVideoUrl']) && !empty($asset['logoUrl'])}
 				<img src="{$asset['logoUrl']}">
 				{/if}
 			</div>
 
-			<div class="infobox{if empty($asset['trailervideourl']) && empty($files)} nomedia{/if}">
+			<div class="infobox{if empty($asset['trailerVideoUrl']) && empty($files)} nomedia{/if}">
 				<span class="text-weak">Tags:</span>
 				{foreach from=$tags item=tag}
 					<a href="/list/mod/?tagids[]={$tag['tagId']}" class="tag" style="background-color:{$tag['color']}"
@@ -120,7 +120,7 @@
 
 				<span class="text-weak">Side:</span> {ucfirst($asset['side'])}<br>
 				<span class="text-weak">Created:</span> {fancyDate($asset['created'])}<br>
-				<span class="text-weak">Last modified:</span> {fancyDate($asset['lastreleased'])}<br>
+				<span class="text-weak">Last modified:</span> {fancyDate($asset['lastReleased'])}<br>
 				<span class="text-weak">Downloads:</span> {intval($asset['downloads'])}<br>
 				<a href="{if !empty($user)}#follow{else}/login{/if}"
 					class="interactbox {if $isFollowing}on{else}off{/if}">
@@ -170,7 +170,7 @@
 			<script>if(location.hash === '#tab-files') document.getElementById('tab-files').checked = true;</script>
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
-					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modid']}">Add release</a>
+					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modId']}">Add release</a>
 				{/if}
 			</div>
 
@@ -249,7 +249,7 @@
 
 {capture name="footerjs"}
 	<script type="text/javascript">
-		modid = {$asset['modid']};
+		modid = {$asset['modId']};
 
 		$(document).ready(function() {
 			$("a[href='#follow']").click(function() {

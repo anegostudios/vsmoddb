@@ -94,8 +94,8 @@ function canEditAsset($asset, $user, $includeTeam = true)
 		$canEditAsTeamMember = $con->getOne(<<<SQL
 			SELECT 1 
 			FROM ModTeamMembers t 
-			JOIN `mod` ON `mod`.modid = t.modId
-			WHERE assetid = ? AND t.userId = ? AND t.canEdit = 1
+			JOIN Mods m ON m.modId = t.modId
+			WHERE assetId = ? AND t.userId = ? AND t.canEdit = 1
 		SQL, array($asset['assetId'], $user['userId']));
 	}
 	else if ($includeTeam && $asset['assetTypeId'] === ASSETTYPE_RELEASE) {
@@ -104,12 +104,12 @@ function canEditAsset($asset, $user, $includeTeam = true)
 				SELECT 1 
 				FROM ModTeamMembers t 
 				JOIN ModReleases r ON r.modId = t.modId
-				WHERE assetid = ? AND t.userId = ? AND t.canEdit = 1
+				WHERE assetId = ? AND t.userId = ? AND t.canEdit = 1
 			union
 				SELECT 1
-				FROM `mod`
-				JOIN ModReleases r ON r.modId = `mod`.modid AND r.assetId = ?
-				JOIN Assets a ON a.assetId = `mod`.assetid AND a.createdByUserId = ?
+				FROM Mods m
+				JOIN ModReleases r ON r.modId = m.modId AND r.assetId = ?
+				JOIN Assets a ON a.assetId = m.assetId AND a.createdByUserId = ?
 		SQL, array($asset['assetId'], $user['userId'], $asset['assetId'], $user['userId']));
 	}
 
@@ -159,10 +159,10 @@ function loadNotifications($loadAll)
 			case 'newrelease':
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
-					FROM `mod` m
-					JOIN Assets a ON a.assetId = m.assetid
+					FROM Mods m
+					JOIN Assets a ON a.assetId = m.assetId
 					JOIN Users u ON u.userId = a.createdByUserId
-					WHERE m.modid = ?
+					WHERE m.modId = ?
 				SQL, [$notification['recordId']]);
 
 				$notification['text'] = "{$cmt['username']} uploaded a new version of {$cmt['modName']}";
@@ -171,10 +171,10 @@ function loadNotifications($loadAll)
 			case 'teaminvite':
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
-					FROM `mod` m
-					JOIN Assets a ON a.assetId = m.assetid
+					FROM Mods m
+					JOIN Assets a ON a.assetId = m.assetId
 					JOIN Users u ON u.userId = a.createdByUserId
-					WHERE m.modid = ? 
+					WHERE m.modId = ? 
 				SQL, [intval($notification['recordId']) & ((1 << 30) - 1)]);  // :InviteEditBit
 
 				$notification['text'] = "{$cmt['username']} invited you to join the team of {$cmt['modName']}";
@@ -183,10 +183,10 @@ function loadNotifications($loadAll)
 			case 'modownershiptransfer':
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
-					FROM `mod` m
-					JOIN Assets a ON a.assetId = m.assetid
+					FROM Mods m
+					JOIN Assets a ON a.assetId = m.assetId
 					JOIN Users u ON u.userId = a.createdByUserId
-					WHERE m.modid = ?
+					WHERE m.modId = ?
 				SQL, [$notification['recordId']]);
 
 				$notification['text'] = "{$cmt['username']} offered you ownership of {$cmt['modName']}";
@@ -210,17 +210,17 @@ function loadNotifications($loadAll)
 				break;
 
 			case 'modlocked':
-				$modName = $con->getOne('SELECT name FROM `mod` m JOIN Assets a ON a.assetId = m.assetid WHERE m.modid = ?', [$notification['recordId']]);
+				$modName = $con->getOne('SELECT name FROM Mods m JOIN Assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
 				$notification['text'] = "Your mod '{$modName}' got locked by a moderator";
 				break;
 
 			case 'modunlockrequest':
-				$modName = $con->getOne('SELECT name FROM `mod` m JOIN Assets a ON a.assetId = m.assetid WHERE m.modid = ?', [$notification['recordId']]);
+				$modName = $con->getOne('SELECT name FROM Mods m JOIN Assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
 				$notification['text'] = "A review-request was issued for a mod locked by you ('{$modName}')";
 				break;
 
 			case 'modunlocked':
-				$modName = $con->getOne('SELECT name from `mod` m JOIN Assets a ON a.assetId = m.assetid WHERE m.modid = ?', [$notification['recordId']]);
+				$modName = $con->getOne('SELECT name from Mods m JOIN Assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
 				$notification['text'] = "Your mod '{$modName}' got unlocked by a moderator";
 				break;
 		}

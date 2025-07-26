@@ -23,9 +23,9 @@ if(!empty($_REQUEST['assetid'])) {
 	if($existingRelease) {
 		$targetMod = $con->getRow(<<<SQL
 			SELECT a.*, m.*
-			FROM `mod` m
-			JOIN Assets a ON a.assetId = m.assetid
-			WHERE m.modid = ?
+			FROM Mods m
+			JOIN Assets a ON a.assetId = m.assetId
+			WHERE m.modId = ?
 		SQL, [$existingRelease['modId']]);
 	}
 }
@@ -33,9 +33,9 @@ if(!empty($_REQUEST['assetid'])) {
 else if(!empty($_REQUEST['modid'])) {
 	$targetMod = $con->getRow(<<<SQL
 		SELECT a.*, m.*
-		FROM `mod` m
-		JOIN Assets a ON a.assetId = m.assetid
-		WHERE m.modid = ?
+		FROM Mods m
+		JOIN Assets a ON a.assetId = m.assetId
+		WHERE m.modId = ?
 	SQL, [$_REQUEST['modid']]);
 }
 
@@ -140,22 +140,22 @@ if(!empty($_POST['save'])) {
 			else {
 				$sqlIgnoreExistingRelease = $existingRelease ? "r.releaseId != {$existingRelease['releaseId']} AND" : ''; // @security $existingRelease['releaseId'] comes from the database and is numeric, therefore sql inert.
 				$inUseBy = $con->getRow(<<<SQL
-					SELECT a.*, r.modId, r.version, m.assetId as modAssetId, m.urlalias
+					SELECT a.*, r.modId, r.version, m.assetId as modAssetId, m.urlAlias
 					FROM ModReleases r
 					JOIN Assets a ON a.assetId = r.assetId
-					JOIN `mod` m ON m.modid = r.modId
+					JOIN Mods m ON m.modId = r.modId
 					WHERE $sqlIgnoreExistingRelease r.identifier = ? AND (r.modId != ? || r.version = ?)
 					LIMIT 1
-				SQL, [$newData['identifier'], $targetMod['modid'], $newData['version']]);
+				SQL, [$newData['identifier'], $targetMod['modId'], $newData['version']]);
 
 				if ($inUseBy) {
-					if($inUseBy['modId'] == $targetMod['modid'] && $inUseBy['version'] == $newData['version']) {
+					if($inUseBy['modId'] == $targetMod['modId'] && $inUseBy['version'] == $newData['version']) {
 						$rv = formatSemanticVersion(intval($newData['version']));
 						addMessage(MSG_CLASS_ERROR, "This version ($rv) of the mod has already been released (<a href='/edit/release/?assetid={$inUseBy['assetId']}'>link</a>).");
 					}
 					else {
 						$mid = htmlspecialchars($newData['identifier']);
-						$mpath = formatModPath(['urlalias' => $inUseBy['urlalias'], 'assetid' => $inUseBy['modAssetId']]);
+						$mpath = formatModPath(['urlAlias' => $inUseBy['urlAlias'], 'assetid' => $inUseBy['modAssetId']]);
 						addMessage(MSG_CLASS_ERROR, "This modid ('$mid') is already in use by another mod (<a href='$mpath' target='_blank'>link</a>).");
 					}
 				}
@@ -214,7 +214,7 @@ if(!empty($_POST['save'])) {
 else if($existingRelease && !empty($_POST['delete'])) {
 	validateActionToken();
 
-	$ok = deleteRelease($targetMod['modid'], $existingRelease);
+	$ok = deleteRelease($targetMod['modId'], $existingRelease);
 	if($ok) {
 		forceRedirect(formatModPath($targetMod).'#tab-files');
 		exit();
@@ -285,7 +285,7 @@ if(!$existingRelease) {
 	$existingRelease = [
 		'assetId'    => 0,
 		'text'       => $_POST['text'] ?? '',
-		'numsaved'   => 0,
+		'numSaved'   => 0,
 		'compatibleGameVersions' => empty($_POST['cgvs']) ? [] : array_flip(array_filter(array_map('compileSemanticVersion', $_POST['cgvs']))),
 	];
 

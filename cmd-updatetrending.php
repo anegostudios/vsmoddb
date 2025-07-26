@@ -10,13 +10,13 @@ include("lib/config.php");
 include("lib/core.php");
 
 $ok = $con->execute(<<<SQL
-	UPDATE `mod` m
+	UPDATE Mods m
 	LEFT JOIN (
 		SELECT c.assetId, COUNT(c.commentId) AS comments
 		FROM Comments c
 		WHERE c.created > DATE_SUB(NOW(), INTERVAL 72 HOUR)
 		GROUP BY c.assetId
-	) c1 ON c1.assetId = m.assetid
+	) c1 ON c1.assetId = m.assetId
 	LEFT JOIN (
 		SELECT r.modId, COUNT(d.lastDownload) as downloads
 		FROM FileDownloadTracking d
@@ -24,8 +24,8 @@ $ok = $con->execute(<<<SQL
 		join ModReleases r on r.assetId = f.assetId
 		WHERE d.lastDownload > DATE_SUB(NOW(), INTERVAL 72 HOUR)
 		GROUP BY r.modId
-	) f1 ON f1.modid = m.modid
-	SET m.trendingpoints = IFNULL(f1.downloads, 0) + 5 * IFNULL(c1.comments, 0)
+	) f1 ON f1.modId = m.modId
+	SET m.trendingPoints = IFNULL(f1.downloads, 0) + 5 * IFNULL(c1.comments, 0)
 SQL);
 
 if(!$ok) http_response_code(HTTP_INTERNAL_ERROR);

@@ -13,10 +13,10 @@ if (!empty($_POST['save'])) {
 }
 
 $followedMods = $con->getAll('
-	SELECT f.modId, a.name, f.flags, `mod`.urlalias, a.assetId
+	SELECT f.modId, a.name, f.flags, m.urlAlias, a.assetId
 	FROM UserFollowedMods f
-	JOIN `mod` ON `mod`.modid = f.modId
-	JOIN Assets a ON a.assetId = `mod`.assetid
+	JOIN Mods m ON m.modId = f.modId
+	JOIN Assets a ON a.assetId = m.assetId
 	WHERE f.userId = ?
 ', [$user['userId']]);
 

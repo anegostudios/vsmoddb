@@ -32,7 +32,8 @@ class AssetEditor extends AssetController
 		$this->recordid = null;
 
 		if ($this->assetid) {
-			$this->recordid = $con->getOne("select {$this->tablename}Id from `{$this->tablename}` where assetId = ?", array($this->assetid));
+			
+			$this->recordid = $con->getOne("select {$this->namesingular}Id from `{$this->tablename}` where assetId = ?", array($this->assetid));
 
 			$asset = $con->getRow("select * from Assets where assetId = ?", array($this->assetid));
 
@@ -102,7 +103,7 @@ class AssetEditor extends AssetController
 				LEFT JOIN FileImageData i ON i.fileId = f.fileId
 				WHERE assetId = ?
 			SQL, [$this->assetid]);
-		} else if($this->tablename == 'mod') {
+		} else if($this->tablename === 'Mods') {
 			$this->files = $con->getAll(<<<SQL
 				SELECT f.*, i.hasThumbnail, concat(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
 				FROM Files f
@@ -155,7 +156,7 @@ class AssetEditor extends AssetController
 		$tablename = $this->tablename;
 
 		if (!$this->assetid) {
-			assert($this->tablename == 'mod');
+			assert($this->tablename === 'Mods');
 			$this->asset = array("assetId" => 0, "assetTypeId" => ASSETTYPE_MOD, "name" => "", "statusId" => 0, "text" => "", "numSaved" => 0);
 
 			foreach ($this->columns as $column) {
@@ -183,8 +184,8 @@ class AssetEditor extends AssetController
 
 		if (empty($this->asset)) return;
 
-		if ($this->tablename === 'mod') {
-			$this->asset['tags'] = array_flip($con->getCol('SELECT tagId FROM ModTags WHERE modId = ?', array($this->asset['modid'])));
+		if ($this->tablename === 'Mods') {
+			$this->asset['tags'] = array_flip($con->getCol('SELECT tagId FROM ModTags WHERE modId = ?', array($this->asset['modId'])));
 		}
 	}
 
@@ -206,10 +207,9 @@ class AssetEditor extends AssetController
 		validateActionToken();
 
 		if (!$this->assetid) {
-			$this->recordid = insert($this->tablename);
 			$this->isnew = true;
 
-			assert($this->tablename == 'mod');
+			assert($this->tablename == 'Mods');
 			$assetTypeId = ASSETTYPE_MOD;
 
 			$con->execute('INSERT INTO Assets (createdByUserId, statusId, assetTypeId) VALUES (?, ?, ?)', 
@@ -217,7 +217,10 @@ class AssetEditor extends AssetController
 			);
 			$this->assetid = $con->Insert_ID();
 
-			$con->execute('UPDATE `mod` SET assetid = ? WHERE modid = ?', [$this->assetid, $this->recordid]);
+			$con->execute("INSERT INTO {$this->tablename} (assetId, summary) VALUES (?, '')", [$this->assetid]);
+			$this->recordid = $con->Insert_ID();
+
+			$con->execute('UPDATE Mods SET assetId = ? WHERE modId = ?', [$this->assetid, $this->recordid]);
 
 			$filesIds = $con->getCol("SELECT fileId FROM Files WHERE assetId IS NULL AND userId = ? and assetTypeId = ?", [$user['userId'], $assetTypeId]);
 
@@ -286,7 +289,7 @@ class AssetEditor extends AssetController
 			$assetdata["readydate"] = date("Y-m-d H:i:s"); //TODO(Rennorb) @cleanup
 		}
 		else if($oldstatusid == STATUS_LOCKED) {
-			$modId = intval($this->asset['modid']);
+			$modId = intval($this->asset['modId']);
 			if($_POST["statusid"] != STATUS_LOCKED) {
 				if(!canModerate(null, $user)) {
 					addMessage(MSG_CLASS_ERROR, "Only moderators may change the state of a locked mod.");
@@ -325,14 +328,14 @@ class AssetEditor extends AssetController
 		}
 
 		if (count($recorddata)) {
-			assert($this->tablename === 'mod');
+			assert($this->tablename === 'Mods');
 		
 			{
 				// @security columns are manually set in the class constructor and do not contain user input
 				$assignments = implode(', ', array_map(fn($k) => "`$k` = ?", array_keys($recorddata)));
 				$values = array_values($recorddata);
 				$values[] = $this->recordid;
-				$con->execute("UPDATE `mod` SET $assignments WHERE modid = ?", $values);
+				$con->execute("UPDATE Mods SET $assignments WHERE modId = ?", $values);
 			}
 		}
 
@@ -371,7 +374,7 @@ class AssetEditor extends AssetController
 
 		$view->assign("user", $user);
 
-		$tags = $this->tablename === 'mod' ? $con->getAll("SELECT * FROM Tags ORDER BY name") : [];
+		$tags = $this->tablename === 'Mods' ? $con->getAll("SELECT * FROM Tags ORDER BY name") : [];
 		$view->assign("tags", $tags);
 
 		$view->assign("asset", $this->asset);

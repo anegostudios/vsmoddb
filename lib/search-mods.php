@@ -2,11 +2,11 @@
 
 const VALID_ORDER_BY_COLUMNS = [
 	// key/cursor selector   column name         desc pretty text    asc pretty text
-	'trendingpoints'    => ['m.trendingpoints', 'Most trending'   , 'Least trending'  ],
+	'trendingPoints'    => ['m.trendingPoints', 'Most trending'   , 'Least trending'  ],
 	'downloads'         => ['m.downloads'     , 'Most downloaded' , 'Least downloaded'],
 	'comments'          => ['m.comments'      , 'Most comments'   , 'Least comments'  ],
 	'name'              => ['a.name'          , 'Name descending' , 'Name ascending'  ],
-	'lastreleased'      => ['m.lastreleased'  , 'Recently updated', 'Least updated'   ],
+	'lastReleased'      => ['m.lastReleased'  , 'Recently updated', 'Least updated'   ],
 	'created'           => ['m.created'       , 'Recently added'  , 'First added'     ],
 ];
 
@@ -28,7 +28,7 @@ const VALID_ORDER_BY_COLUMNS = [
 function validateModSearchInputs(&$outParams)
 {
 	$outParams = [
-		'order'   => ['lastreleased', 'desc'],
+		'order'   => ['lastReleased', 'desc'],
 		'filters' => [],
 		'limit'   => 0,
 		'cursor'  => [],
@@ -38,7 +38,13 @@ function validateModSearchInputs(&$outParams)
 		$orderBy = $_REQUEST['sortby'];
 
 		if(!array_key_exists($orderBy, VALID_ORDER_BY_COLUMNS)) {
-			return "Invalid sortby: '$orderBy'.";
+			switch($orderBy) {
+				case 'trendingpoints': $orderBy = 'trendingPoints'; break; // @legacy
+				case 'lastreleased':   $orderBy = 'lastReleased';   break; // @legacy
+
+				default:
+					return "Invalid sortby: '$orderBy'.";
+			}
 		}
 
 		$outParams['order'][0] = $orderBy;
@@ -166,15 +172,15 @@ function queryModSearch($searchParams)
 				break;
 
 			case 'tags':
-				$joinClauses .= 'JOIN ModTags t ON t.modId = m.modid AND t.tagId IN ('.implode(',', $value).')'; // @security: value must be filtered
+				$joinClauses .= 'JOIN ModTags t ON t.modId = m.modId AND t.tagId IN ('.implode(',', $value).')'; // @security: value must be filtered
 				break;
 
 			case 'gameversions':
-				$joinClauses .= 'JOIN ModCompatibleGameVersionsCached mcv ON mcv.modId = m.modid AND mcv.gameVersion IN ('.implode(',', $value).')'; // @security: value must be filtered
+				$joinClauses .= 'JOIN ModCompatibleGameVersionsCached mcv ON mcv.modId = m.modId AND mcv.gameVersion IN ('.implode(',', $value).')'; // @security: value must be filtered
 				break;
 
 			case 'majorversion':
-				$joinClauses .= 'JOIN ModCompatibleMajorGameVersionsCached mcmv ON mcmv.modId = m.modid AND mcmv.majorGameVersion = ?';
+				$joinClauses .= 'JOIN ModCompatibleMajorGameVersionsCached mcmv ON mcmv.modId = m.modId AND mcmv.majorGameVersion = ?';
 				array_unshift($sqlParams, $value); // This needs to be in front of others because JOIN happens before WHERE.
 				break;
 
@@ -194,20 +200,20 @@ function queryModSearch($searchParams)
 	if($searchParams['limit']) {
 		$limitClause = 'LIMIT '.$searchParams['limit'];
 
-		$orderBy .= ', m.modid '.$searchParams['order'][1];
+		$orderBy .= ', m.modId '.$searchParams['order'][1];
 
 		if($searchParams['cursor']) {
 			// Format a condition like
-			//   WHERE (m.downloads > 10 OR (m.downloads = 10 AND m.modid > 5))
-			// The idea here is to always order the results by some metric _AND_ the modid, so we have a unique column to follow with our cursor.
-			// This is also the reason why we add ORDER BY modid if when fetching with limits.
+			//   WHERE (m.downloads > 10 OR (m.downloads = 10 AND m.modId > 5))
+			// The idea here is to always order the results by some metric _AND_ the modId, so we have a unique column to follow with our cursor.
+			// This is also the reason why we add ORDER BY modId if when fetching with limits.
 			// This allows us to avoid the ungodly slow LIMIT OFFSET.
 
 			$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
 			$col = VALID_ORDER_BY_COLUMNS[$searchParams['order'][0]][0];
 			$comparison = $searchParams['order'][1] === 'asc' ? '>' : '<';
 			list($colCursor, $idCursor) = $searchParams['cursor'];
-			$whereClauses .= "($col $comparison ? OR ($col = ? AND m.modid $comparison $idCursor))"; // @security: value must be filtered
+			$whereClauses .= "($col $comparison ? OR ($col = ? AND m.modId $comparison $idCursor))"; // @security: value must be filtered
 			$sqlParams[] = $colCursor; $sqlParams[] = $colCursor;
 		}
 	}
@@ -227,12 +233,12 @@ function queryModSearch($searchParams)
 			c.name AS `from`,
 			s.code AS statusCode,
 			f.userId AS following
-		FROM `mod` m
-		JOIN Assets a ON a.assetId = m.assetid
+		FROM Mods m
+		JOIN Assets a ON a.assetId = m.assetId
 		LEFT JOIN Users c ON c.userId = a.createdByUserId
 		LEFT JOIN Status s ON s.statusId = a.statusId
-		LEFT JOIN UserFollowedMods f ON f.modId = m.modid and f.userId = $currentUserId
-		LEFT JOIN Files l ON l.fileId = m.cardlogofileid
+		LEFT JOIN UserFollowedMods f ON f.modId = m.modId and f.userId = $currentUserId
+		LEFT JOIN Files l ON l.fileId = m.cardLogoFileId
 		$joinClauses
 		$whereClauses
 		ORDER BY $orderBy
@@ -256,9 +262,9 @@ function getNextFetchCursor($searchParams, $mods)
 	$cursorVal = $lastMod[$searchParams['order'][0]];
 	// prevent header injection just in case
 	$cursorVal = rawurlencode($cursorVal);
-	$modid = rawurlencode($lastMod['modid']);
+	$modId = rawurlencode($lastMod['modId']);
 
-	return "&cursor[]={$cursorVal}&cursor[]={$modid}";
+	return "&cursor[]={$cursorVal}&cursor[]={$modId}";
 }
 
 

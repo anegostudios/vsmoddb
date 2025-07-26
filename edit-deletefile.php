@@ -42,8 +42,8 @@ if ($assetId) {
 
 splitOffExtension($file['cdnPath'], $noext, $ext);
 
-$con->Execute('UPDATE `mod` SET cardlogofileid = NULL WHERE cardlogofileid = ?', [$fileId]);
-$con->Execute('UPDATE `mod` SET embedlogofileid = NULL WHERE embedlogofileid = ?', [$fileId]);
+$con->Execute('UPDATE Mods SET cardLogoFileId = NULL WHERE cardLogoFileId = ?', [$fileId]);
+$con->Execute('UPDATE Mods SET embedLogoFileId = NULL WHERE embedLogoFileId = ?', [$fileId]);
 $con->Execute('DELETE FROM Files WHERE fileId = ?', [$fileId]);
 
 $countOfFilesUsingThisCDNPath = $con->getOne('SELECT COUNT(*) FROM Files WHERE cdnPath = ?', [$file['cdnPath']]);

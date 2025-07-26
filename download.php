@@ -26,7 +26,7 @@ if (!$lastDownload) {
 
 if ($countAsSeparateDownload) {
 	$con->execute('UPDATE Files SET downloads = downloads + 1 WHERE fileId = ?', [$fileId]);
-	$con->execute('UPDATE `mod`  SET downloads = downloads + 1 WHERE modid = (SELECT r.modId FROM ModReleases r WHERE r.assetId = ?)', [$file['assetId']]);
+	$con->execute('UPDATE Mods  SET downloads = downloads + 1 WHERE modId = (SELECT r.modId FROM ModReleases r WHERE r.assetId = ?)', [$file['assetId']]);
 }
 
 

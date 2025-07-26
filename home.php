@@ -10,12 +10,12 @@ if (!empty($user)) {
 			s.code AS statusCode
 		FROM
 			Assets a
-			JOIN `mod` m ON m.assetid = a.assetId
-			LEFT JOIN Status s ON s.statusId = a.statusid
-			LEFT JOIN Files AS logo ON logo.fileId = m.cardlogofileid
-			LEFT JOIN ModTeamMembers tm ON tm.modId = m.modid
+			JOIN Mods m ON m.assetId = a.assetId
+			LEFT JOIN Status s ON s.statusId = a.statusId
+			LEFT JOIN Files AS logo ON logo.fileId = m.cardLogoFileId
+			LEFT JOIN ModTeamMembers tm ON tm.modId = m.modId
 		WHERE
-			(a.createdbyuserid = ? OR tm.userId = ?)
+			(a.createdByUserId = ? OR tm.userId = ?)
 		GROUP BY a.assetId
 		ORDER BY a.created DESC
 	", [$user['userId'], $user['userId']]);
@@ -40,20 +40,20 @@ if (!empty($user)) {
 			logo.cdnPath AS logoCdnPath,
 			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 			u.name AS `from`,
-			rd.created AS releasedate,
-			rd.version AS releaseversion
+			rd.created AS releaseDate,
+			rd.version AS releaseVersion
 		FROM
 			Assets a
-			JOIN `mod` m ON m.assetid = a.assetId
+			JOIN Mods m ON m.assetId = a.assetId
 			JOIN Users u ON u.userId = a.createdByUserId
-			JOIN UserFollowedMods f ON f.modId = m.modid AND f.userId = ?
-			LEFT JOIN Files AS logo ON logo.fileId = m.cardlogofileid
-			LEFT JOIN ModReleases rd ON rd.modId = m.modid
+			JOIN UserFollowedMods f ON f.modId = m.modId AND f.userId = ?
+			LEFT JOIN Files AS logo ON logo.fileId = m.cardLogoFileId
+			LEFT JOIN ModReleases rd ON rd.modId = m.modId
 		WHERE
 			a.statusId = ".STATUS_RELEASED."
-			AND rd.created = (select max(created) from ModReleases r where r.modId = m.modid)
+			AND rd.created = (select max(created) from ModReleases r where r.modId = m.modId)
 		ORDER BY
-			releasedate DESC
+			releaseDate DESC
 	", [$user['userId']]);
 
 	foreach($followedMods as &$mod) {
@@ -77,9 +77,9 @@ $latestMods = $con->getAll("
 		u.name AS `from`
 	FROM
 		Assets a
-		join `mod` m ON m.assetid = a.assetId
+		join Mods m ON m.assetId = a.assetId
 		join Users u ON u.userId = a.createdByUserId
-		left join Files AS logo ON logo.fileId = m.cardlogofileid
+		left join Files AS logo ON logo.fileId = m.cardLogoFileId
 	WHERE
 		a.statusId = ".STATUS_RELEASED."
 		AND m.created > DATE_SUB(NOW(), INTERVAL 30 DAY)

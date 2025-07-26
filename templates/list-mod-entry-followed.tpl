@@ -17,8 +17,8 @@
 			<br>by {$mod['from']}
 		</a>
 		<br>
-		Latest version: <a href="{$mod['dbPath']}#tab-files">{formatSemanticVersion($mod['releaseversion'])} from
-		<br>{fancyDate($mod['releasedate'])}</a>
+		Latest version: <a href="{$mod['dbPath']}#tab-files">{formatSemanticVersion($mod['releaseVersion'])} from
+		<br>{fancyDate($mod['releaseDate'])}</a>
 	</div>
 
 	{if time()-strtotime($mod['created']) < 10*24*3600}<span class="ribbon-tr" style="background: #ffe300">New!</span>{/if}

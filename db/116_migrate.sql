@@ -472,6 +472,63 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 END IF;
 
 
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+ TABLE_NAME='mod') ) THEN
+    ALTER TABLE `mod` CHANGE COLUMN `modid` `modId` INT NOT NULL AUTO_INCREMENT;
+
+    ALTER TABLE `mod` CHANGE COLUMN `assetid` `assetId` INT NOT NULL;
+
+    ALTER TABLE `mod` CHANGE COLUMN `urlalias` `urlAlias` VARCHAR(45) NULL;
+
+    ALTER TABLE `mod` CHANGE COLUMN `cardlogofileid` `cardLogoFileId` INT NULL;
+    ALTER TABLE `mod` CHANGE COLUMN `embedlogofileid` `embedLogoFileId` INT NULL;
+
+    ALTER TABLE `mod` CHANGE COLUMN `homepageurl`     `homepageUrl`      VARCHAR(255) NULL;
+    ALTER TABLE `mod` CHANGE COLUMN `sourcecodeurl`   `sourceCodeUrl`    VARCHAR(255) NULL;
+    ALTER TABLE `mod` CHANGE COLUMN `trailervideourl` `trailerVideoUrl`  VARCHAR(255) NULL;
+    ALTER TABLE `mod` CHANGE COLUMN `issuetrackerurl` `issueTrackerUrl`  VARCHAR(255) NULL;
+    ALTER TABLE `mod` CHANGE COLUMN `wikiurl`         `wikiUrl`          VARCHAR(255) NULL;
+    ALTER TABLE `mod` CHANGE COLUMN `donateurl`       `donateUrl`        VARCHAR(255) NULL;
+
+    UPDATE `mod` m
+        SET m.summary = IF(LENGTH(m.descriptionsearchable) <= 100, m.descriptionsearchable, CONCAT(SUBSTRING(m.descriptionsearchable, 1, 97), '...'))
+        WHERE m.summary IS NULL;
+    ALTER TABLE `mod` MODIFY COLUMN `summary` VARCHAR(100) NOT NULL;
+
+    ALTER TABLE `mod` CHANGE COLUMN `descriptionsearchable` `descriptionSearchable` TEXT NULL;
+
+    ALTER TABLE `mod` MODIFY COLUMN `follows` INT NOT NULL DEFAULT 0;
+
+    ALTER TABLE `mod` CHANGE COLUMN `trendingpoints` `trendingPoints` INT NOT NULL DEFAULT 0;
+
+    ALTER TABLE `mod` MODIFY COLUMN `type` ENUM('mod', 'externaltool', 'other') NULL DEFAULT 'mod';
+
+    ALTER TABLE `mod` CHANGE COLUMN `lastreleased` `lastReleased` DATETIME NULL;
+
+    ALTER TABLE `mod` DROP COLUMN `supportedversions`;
+
+    UPDATE `mod` SET created = '0000-00-00' WHERE created IS NULL;
+    ALTER TABLE `mod` MODIFY COLUMN `created` DATETIME NOT NULL DEFAULT NOW() AFTER `lastReleased`;
+
+    UPDATE `mod` SET lastmodified = created WHERE lastmodified IS NULL;
+    ALTER TABLE `mod` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created`;
+
+    ALTER TABLE `mod` ADD CONSTRAINT `FK_Mods_assetId` FOREIGN KEY (`assetId`) REFERENCES `Assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE;
+    UPDATE `mod` m 
+        LEFT JOIN Files f ON f.fileId = m.cardLogoFileId
+        SET m.cardLogoFileId = NULL
+        WHERE f.fileId IS NULL AND m.cardLogoFileId IS NOT NULL;
+    ALTER TABLE `mod` ADD CONSTRAINT `FK_Mods_cardLogoFileId` FOREIGN KEY (`cardLogoFileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL;
+    UPDATE `mod` m 
+        LEFT JOIN Files f ON f.fileId = m.embedLogoFileId
+        SET m.embedLogoFileId = NULL
+        WHERE f.fileId IS NULL AND m.embedLogoFileId IS NOT NULL;
+    ALTER TABLE `mod` ADD CONSTRAINT `FK_Mods_embedLogoFileId` FOREIGN KEY (`embedLogoFileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+    ALTER TABLE `mod` RENAME TO `Mods`;
+END IF;
+
 END $$
 
 CALL upgrade_database__moderation() $$
