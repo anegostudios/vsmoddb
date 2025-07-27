@@ -297,23 +297,29 @@ function listMods()
 		$wherevalues[] = intval($_GET["author"]);
 	}
 
+	function parseVersion($rawValue)
+	{
+		return startsWith($rawValue, '-') ? intval(substr($rawValue, 1)) : compileSemanticVersion($rawValue);
+	}
+	function parsePrimaryVersion($rawValue)
+	{
+		return startsWith($rawValue, '-') ? intval(substr($rawValue, 1)) & VERSION_MASK_PRIMARY : compilePrimaryVersion($rawValue);
+	}
+
 	if (!empty($_GET["gameversion"])) {
-		$wheresql[] = "exists (select assettag.tagid from assettag where assettag.assetid in (select assetid from `release` where `mod`.modid =`release`.modid) and assettag.tagid=?)";
-		$wherevalues[] = intval($_GET["gameversion"]);
+		$wheresql[] = "exists (select 1 from ModCompatibleMajorGameVersionsCached cmv where cmv.modId = `mod`.modId and cmv.majorGameVersion = ?)";
+		$wherevalues[] = parsePrimaryVersion($_GET["gameversion"]);
 	}
 
 
 	$gvs = null;
-	if (!empty($_GET["gameversions"])) {
-		$gvs = $_GET["gameversions"];
-	}
-	if (!empty($_GET["gv"])) {
-		$gvs = array($_GET["gv"]);
-	}
+	if (!empty($_GET["gv"]))                $gvs = [$_GET["gv"]];
+	else if (!empty($_GET["gameversions"])) $gvs = $_GET["gameversions"];
 
 	if ($gvs) {
-		$gamevers = array_map("intval", $gvs);
-		$wheresql[] = "exists (select 1 from modversioncached where `mod`.modid =`modversioncached`.modid and modversioncached.tagid in (" . implode(",", $gamevers) . "))";
+		$gamevers = array_map("parseVersion", $gvs);
+		// @security: parseVersion produces integer values which are sql inert.
+		$wheresql[] = "exists (select 1 from ModCompatibleGameVersionsCached cgv where cgv.modId = `mod`.modId and cgv.gameVersion in (" . implode(",", $gamevers) . "))";
 	}
 
 
