@@ -6,7 +6,7 @@ include_once $config['basepath']. 'lib/recommend-release.php';
 
 function mkRelease($version, $gameVersions)
 {
-	return ['modversion' => $version, 'compatibleGameVersions' => $gameVersions, 'maxCompatibleGameVersion' => max($gameVersions)];
+	return ['version' => $version, 'compatibleGameVersions' => $gameVersions, 'maxCompatibleGameVersion' => max($gameVersions)];
 }
 
 function stable($version) { return $version << 32 | 0xffff; }
@@ -105,7 +105,7 @@ final class ReleaseRecommendationsTest extends TestCase {
 
 		recommendReleases($releases, $maxStable, $maxUnstable, $recommended, $testers, $fallback);
 
-		$this->assertEquals(stable(4), $recommended['modversion'], formatVersionComp(stable(4), $recommended['modversion']));
+		$this->assertEquals(stable(4), $recommended['version'], formatVersionComp(stable(4), $recommended['version']));
 		$this->assertEquals(null, $testers);
 	}
 
@@ -123,8 +123,8 @@ final class ReleaseRecommendationsTest extends TestCase {
 
 		recommendReleases($releases, $maxStable, $maxUnstable, $recommended, $testers, $fallback);
 
-		$this->assertEquals(stable(4), $recommended['modversion'], formatVersionComp(stable(4), $recommended['modversion']));
-		$this->assertEquals(pre(5, 1), $testers['modversion'], formatVersionComp(pre(5, 1), $testers['modversion']));
+		$this->assertEquals(stable(4), $recommended['version'], formatVersionComp(stable(4), $recommended['version']));
+		$this->assertEquals(pre(5, 1), $testers['version'], formatVersionComp(pre(5, 1), $testers['version']));
 	}
 
 	/** @test */
@@ -144,8 +144,8 @@ final class ReleaseRecommendationsTest extends TestCase {
 		recommendReleases($releases, $maxStable, $maxUnstable, $recommended, $testers, $fallback);
 
 		$this->assertEquals(null, $recommended);
-		$this->assertEquals(stable(4), $testers['modversion'], formatVersionComp(stable(4), $testers['modversion']));
-		$this->assertEquals(stable(1), $fallback['modversion'], formatVersionComp(stable(1), $fallback['modversion']));
+		$this->assertEquals(stable(4), $testers['version'], formatVersionComp(stable(4), $testers['version']));
+		$this->assertEquals(stable(1), $fallback['version'], formatVersionComp(stable(1), $fallback['version']));
 	}
 
 	/** @test */
@@ -164,7 +164,7 @@ final class ReleaseRecommendationsTest extends TestCase {
 
 		$this->assertEquals(null, $recommended);
 		$this->assertEquals(null, $testers);
-		$this->assertEquals(stable(2), $fallback['modversion'], formatVersionComp(stable(2), $fallback['modversion']));
+		$this->assertEquals(stable(2), $fallback['version'], formatVersionComp(stable(2), $fallback['version']));
 	}
 
 	/** @test */
@@ -185,7 +185,7 @@ final class ReleaseRecommendationsTest extends TestCase {
 
 		recommendReleases($releases, $maxStable, $maxUnstable, $recommended, $testers, $fallback);
 
-		$this->assertEquals(stable(1), $recommended['modversion'], formatVersionComp(stable(1), $recommended['modversion']));
+		$this->assertEquals(stable(1), $recommended['version'], formatVersionComp(stable(1), $recommended['version']));
 		$this->assertEquals(null, $testers);
 	}
 
@@ -207,6 +207,6 @@ final class ReleaseRecommendationsTest extends TestCase {
 
 		$this->assertEquals(null, $recommended);
 		$this->assertEquals(null, $testers);
-		$this->assertEquals(stable(4), $fallback['modversion'], formatVersionComp(stable(4), $fallback['modversion']));
+		$this->assertEquals(stable(4), $fallback['version'], formatVersionComp(stable(4), $fallback['version']));
 	}
 }
