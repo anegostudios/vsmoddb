@@ -1,6 +1,6 @@
 <?php
 
-if ($user['rolecode'] != 'admin') exit("noprivilege");
+if ($user['roleCode'] != 'admin') showErrorPage(HTTP_FORBIDDEN);
 
 $view->assign("columns", array(array("cssclassname" => "", "code" => "name", "title" => "Name"), array("cssclassname" => "", "code" => "color", "title" => "Color", "datatype" => "color")));
 $view->assign("entrycode", "tag");
@@ -15,10 +15,10 @@ if (!empty($_GET["saved"])) {
 }
 
 
-$view->assign("rows", $con->getAll("select tag.*, assettype.name as assettypename from tag left join assettype on (tag.assettypeid = assettype.assettypeid) order by tag.assettypeid, tag.tagtypeid, tag.name"));
+$view->assign('rows', $con->getAll("SELECT *, LPAD(HEX(color), 8, '0') AS color FROM tags ORDER BY kind, name"));
 
 
-$gameVersionStrings = $con->getCol('select version from GameVersions order by version desc');
+$gameVersionStrings = $con->getCol('SELECT version FROM gameVersions ORDER BY version DESC');
 $gameVersionStrings = array_map('formatSemanticVersion', $gameVersionStrings);
 $view->assign('gameVersionStrings', $gameVersionStrings, null, true);
 

@@ -1136,6 +1136,9 @@ button.moderator::before {
 /* download count */
 .release-table.gv tr>td:nth-child(3),
 .release-table.no-gv tr>td:nth-child(2) { text-align: right; }
+/* release date */
+.release-table.gv tr>td:nth-child(4),
+.release-table.no-gv tr>td:nth-child(3) { text-wrap: nowrap; }
 /* changelog button */
 .release-table.gv tr>td:nth-child(5),
 .release-table.no-gv tr>td:nth-child(4) { text-align: center; }

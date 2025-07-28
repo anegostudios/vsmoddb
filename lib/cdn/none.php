@@ -9,48 +9,43 @@
  * Generates a unique, reproducible and immutable filename for storage on the cdn.
  * This returns an _almost_ complete storage path, which is still missing the extension. This is useful because we often generate multiple variants of a file, and we would need to split the returned path otherwise. We therefore simply return a path without extension, and the caller assembles the final path(s).
  * 
- * @param int    $userid The id of the user that owns the file.
- * @param string $localpath
- * @param string $originalfilebasename
+ * @param int    $userId The id of the user that owns the file.
+ * @param string $localPath
+ * @param string $originalFileBasename
  * @return string
  */
-function generateCdnFileBasenameWithPath($userid, $localpath, $originalfilebasename)
+function generateCdnFileBasenameWithPath($userId, $localPath, $originalFileBasename)
 {
 	//NOTE(Rennorb): For local storage we just use the filename, no need to do magic and it makes it easier to track and test things.
 	// In theory this can cause collisions, but we don't really care for testing and simplicity is a priority.
-	return "$userid/$originalfilebasename";
+	return "$userId/$originalFileBasename";
 }
 
 
 /**
- * @param string $localpath
- * @param string $cdnpath
+ * @param string $localPath
+ * @param string $cdnPath
  * @return array{error : false|string}
  */
-function uploadToCdn($localpath, $cdnpath) {
-	$destination = "files/$cdnpath";
+function uploadToCdn($localPath, $cdnPath) {
+	$destination = "files/$cdnPath";
 	$path = pathinfo($destination, PATHINFO_DIRNAME);
 	if(!is_dir($path)) {
 		mkdir($path, 0777, true);
 	}
-	$ok = copy($localpath, $destination); // :NoneCDN_NoSecurity
+	$ok = copy($localPath, $destination); // :NoneCDN_NoSecurity
 	return ['error' => $ok ? false : 'Unknown error during file "upload".'];
 }
 
 
 /**
- * @param string $cdnpath
+ * @param string $cdnPath
  * @return null|array{error:string}
  */
-function deleteFromCdn($cdnpath) {
+function deleteFromCdn($cdnPath) {
 	global $config;
 
-	$e = ErrorHandler::$errorreporting;
-	ErrorHandler::$errorreporting &= ~E_WARNING; // suppress warnings from non-existent deletions
-
-	$ok = unlink($config['basepath']."files/$cdnpath");
-	
-	ErrorHandler::$errorreporting = $e;
+	$ok = @unlink($config['basepath']."files/$cdnPath");
 	
 	return ['error' => $ok ? false : 'Unknown error during file removal.'];
 }
@@ -60,12 +55,12 @@ function deleteFromCdn($cdnpath) {
  * Formats a "normal" url to the file.
  * This url is meant to be used for in-browser resources, e.g. a image to be placed onto a page, as compared to a download link for that image.
  * 
- * @param array{cdnpath: string} $file A file database row
+ * @param array{cdnPath: string} $file A file database row
  * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */
-function formatCdnUrl($file, $filenamepostfix = '') {
-	$url = formatCdnUrlFromCdnPath($file['cdnpath'], $filenamepostfix);
+function formatCdnUrl($file, $filenamePostfix = '') {
+	$url = formatCdnUrlFromCdnPath($file['cdnPath'], $filenamePostfix);
 
 	// Evil hackery to test for the case where we use this internally to feed get_file_contents, where we cannot just pass a url fragment.
 	$trace = debug_backtrace(0, 2);
@@ -82,23 +77,23 @@ function formatCdnUrl($file, $filenamepostfix = '') {
  * Formats a "normal" url to the file.
  * This url is meant to be used for in-browser resources, e.g. a image to be placed onto a page, as compared to a download link for that image.
  * 
- * @param string|array{cdnpath: string} $file Either a file database row or the cdnpath directly;
- * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
+ * @param string|array{cdnPath: string} $file Either a file database row or the cdnpath directly;
+ * @param string $filenamePostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */
-function formatCdnUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
-	$basepath = '/cdnfile';
+function formatCdnUrlFromCdnPath($cdnPath, $filenamePostfix = '') {
+	$basePath = '/cdnfile';
 
-	if($filenamepostfix) {
-		splitOffExtension($cdnpath, $pathnoext, $ext);
+	if($filenamePostfix) {
+		splitOffExtension($cdnPath, $pathnoext, $ext);
 		if($ext === '') {
-			return "{$basepath}/{$cdnpath}{$filenamepostfix}"; // should never happen in reality, but just in case
+			return "{$basePath}/{$cdnPath}{$filenamePostfix}"; // should never happen in reality, but just in case
 		}
 
-		return "{$basepath}/{$pathnoext}{$filenamepostfix}.{$ext}";
+		return "{$basePath}/{$pathnoext}{$filenamePostfix}.{$ext}";
 	}
 	else {
-		return "{$basepath}/{$cdnpath}";
+		return "{$basePath}/{$cdnPath}";
 	}
 }
 
@@ -106,11 +101,11 @@ function formatCdnUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
  * Formats a download link to the file.
  * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser.
  * 
- * @param array{cdnpath: string, filename:string} $file
+ * @param array{cdnPath: string, name:string} $file
  * @return string
  */
 function formatCdnDownloadUrl($file) {
-	list($path, $name) = explode('/', $file['cdnpath'], 2);
+	@list($path, $name) = explode('/', $file['cdnPath'], 2); // suppress errors when loading data from other cdns locally for testing
 	$name = urlencode($name);
 	return "/cdndl/{$path}/{$name}";
 }

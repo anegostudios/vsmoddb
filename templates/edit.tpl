@@ -3,7 +3,7 @@
 <div class="edit">
 
 	<h2>
-		<span class="assettype">
+		<span>
 			<a href="/list/{$entrycode}">{$entryplural}</a>
 		</span> / 
 		<span>{$row[$entrycode.'id'] ? $row["name"] : "Add new ".$entrysingular}</span>

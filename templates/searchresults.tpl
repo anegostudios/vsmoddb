@@ -10,7 +10,7 @@
 			<select name="statusid">
 				<option value="">-</option>
 				{foreach from=$stati item=status}
-					<option value="{$status['statusid']}" {if $searchvalues['statusid']==$status['statusid']}selected="selected"{/if}>{$status['name']}</option>
+					<option value="{$status['statusId']}" {if $searchvalues['statusid']==$status['statusId']}selected="selected"{/if}>{$status['name']}</option>
 				{/foreach}
 			</select>
 		</div>
@@ -19,7 +19,7 @@
 			<select style="width:300px;" name="tagids[]" multiple>
 				<option value="">-</option>
 				{foreach from=$tags item=tag}
-					<option value="{$tag['tagid']}" {if !empty($searchvalues['tagids'][$tag['tagid']])}selected="selected"{/if}>{$tag['name']}</option>
+					<option value="{$tag['tagId']}" {if !empty($searchvalues['tagids'][$tag['tagId']])}selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
 			</select>
 		</div>

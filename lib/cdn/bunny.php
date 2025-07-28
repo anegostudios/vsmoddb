@@ -37,36 +37,36 @@ $config["bunnyapikey"] = "aaaaaaaa-bbbb-cccc-ddddddddddddxxxxxxxxxxxxxxxxxx-eeee
  * 
  * This returns an _almost_ complete storage path, which is still missing the extension. This is useful because we often generate multiple variants of a file, and we would need to split the returned path otherwise. We therefore simply return a path without extension, and the caller assembles the final path(s).
  * 
- * @param int    $userid The id of the user that owns the file.
- * @param string $localpath
- * @param string $originalfilebasename
+ * @param int    $userId The id of the user that owns the file.
+ * @param string $localPath
+ * @param string $originalFileBasename
  * @return string
  */
-function generateCdnFileBasenameWithPath($userid, $localpath, $originalfilebasename)
+function generateCdnFileBasenameWithPath($userId, $localPath, $originalFileBasename)
 {
-	$h = hash_init('md5', HASH_HMAC, $userid);
-	hash_update_file($h, $localpath);
-	return urlencode(substr($originalfilebasename, 0, 20)).'_'.hash_final($h, false);
+	$h = hash_init('md5', HASH_HMAC, $userId);
+	hash_update_file($h, $localPath);
+	return urlencode(substr($originalFileBasename, 0, 20)).'_'.hash_final($h, false);
 }
 
 
 /**
- * @param string $localpath
- * @param string $cdnpath
+ * @param string $localPath
+ * @param string $cdnPath
  * @return array{error : false|string}
  */
-function uploadToCdn($localpath, $cdnpath) {
+function uploadToCdn($localPath, $cdnPath) {
 	global $config;
 
-	$url = "https://{$config['bunnyendpoint']}/{$config['bunnyzone']}/{$cdnpath}";
+	$url = "https://{$config['bunnyendpoint']}/{$config['bunnyzone']}/{$cdnPath}";
 
 	$curl = curl_init();
 	curl_setopt_array($curl, [
 		CURLOPT_URL => $url,
 		CURLOPT_PUT => true,
 		CURLOPT_RETURNTRANSFER => true,
-		CURLOPT_INFILE => fopen($localpath, 'rb'),
-		CURLOPT_INFILESIZE => filesize($localpath),
+		CURLOPT_INFILE => fopen($localPath, 'rb'),
+		CURLOPT_INFILESIZE => filesize($localPath),
 		CURLOPT_HTTPHEADER => [
 			"AccessKey: {$config['bunnykey']}",
 			'Content-Type: application/octet-stream',
@@ -88,13 +88,13 @@ function uploadToCdn($localpath, $cdnpath) {
 
 
 /**
- * @param string $cdnpath
+ * @param string $cdnPath
  * @return null|array{error:string}
  */
-function deleteFromCdn($cdnpath) {
+function deleteFromCdn($cdnPath) {
 	global $config;
 
-	$url = "https://{$config['bunnyendpoint']}/{$config['bunnyzone']}/{$cdnpath}";
+	$url = "https://{$config['bunnyendpoint']}/{$config['bunnyzone']}/{$cdnPath}";
 
 	$curl = curl_init();
 	curl_setopt_array($curl, [
@@ -124,35 +124,35 @@ function deleteFromCdn($cdnpath) {
  * Formats a "normal" url to the file.
  * This url is meant to be used for in-browser resources, e.g. a image to be placed onto a page, as compared to a download link for that image.
  * 
- * @param array{cdnpath: string} $file A file database row
- * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
+ * @param array{cdnPath: string} $file A file database row
+ * @param string $filenamePostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */
-function formatCdnUrl($file, $filenamepostfix = '') {
-	return formatCdnUrlFromCdnPath($file['cdnpath'], $filenamepostfix);
+function formatCdnUrl($file, $filenamePostfix = '') {
+	return formatCdnUrlFromCdnPath($file['cdnPath'], $filenamePostfix);
 }
 
 /**
  * Formats a "normal" url to the file.
  * This url is meant to be used for in-browser resources, e.g. a image to be placed onto a page, as compared to a download link for that image.
  * 
- * @param string|array{cdnpath: string} $file Either a file database row or the cdnpath directly;
- * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
+ * @param string|array{cdnPath: string} $file Either a file database row or the cdnpath directly;
+ * @param string $filenamePostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */
-function formatCdnUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
+function formatCdnUrlFromCdnPath($cdnPath, $filenamePostfix = '') {
 	global $config;
 
-	if($filenamepostfix) {
-		splitOffExtension($cdnpath, $pathnoext, $ext);
+	if($filenamePostfix) {
+		splitOffExtension($cdnPath, $pathNoExt, $ext);
 		if($ext === '') {
-			return "{$config['assetserver']}/{$cdnpath}{$filenamepostfix}"; // should never happen in reality, but just in case
+			return "{$config['assetserver']}/{$cdnPath}{$filenamePostfix}"; // should never happen in reality, but just in case
 		}
 
-		return "{$config['assetserver']}/{$pathnoext}{$filenamepostfix}.{$ext}";
+		return "{$config['assetserver']}/{$pathNoExt}{$filenamePostfix}.{$ext}";
 	}
 	else {
-		return "{$config['assetserver']}/{$cdnpath}";
+		return "{$config['assetserver']}/{$cdnPath}";
 	}
 }
 
@@ -160,14 +160,14 @@ function formatCdnUrlFromCdnPath($cdnpath, $filenamepostfix = '') {
  * Formats a download link to the file.
  * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser.
  * 
- * @param array{cdnpath: string, filename:string} $file
+ * @param array{cdnPath: string, name:string} $file
  * @return string
  */
 function formatCdnDownloadUrl($file) {
 	global $config;
 
 	// dl -> used for download name in edge rules
-	return "{$config['assetserver']}/{$file['cdnpath']}?dl={$file['filename']}";
+	return "{$config['assetserver']}/{$file['cdnPath']}?dl={$file['name']}";
 }
 
 
@@ -204,29 +204,30 @@ function bunny_pullLogsAndUpdateDownloadNumbers($date)
 		$url = parse_url($parts[5]);
 		if(!startsWith($url['query'], '?dl=')) continue;
 		
-		$cdnpath = substr($url['path'], 1);
+		$cdnPath = substr($url['path'], 1);
 		$time = intval($parts[2]) / 1000;
 		$date = date(SQL_DATE_FORMAT, $time);
 		$remoteip = $parts[3];
 
 
-		$file = $con->getRow("select * from file where cdnpath=?", array($cdnpath));
-		if (!$file) exit("file not found");
-		$fileid = $file['fileid'];
+		$file = $con->getRow('SELECT fileId, assetId FROM files WHERE cdnPath = ?', [$cdnPath]);
+		if (!$file) exit('file not found');
+		$fileId = $file['fileId'];
 
-		$olddate = $con->getOne("select date from downloadip where fileid=? and ipaddress=?", array($fileid, $remoteip));
-		$docount = false;
-		if (!$olddate) {
-			$docount = true;
-			$con->Execute("insert into downloadip values (?, ?, ?)", array($remoteip, $fileid, $date));
-		} else if (strtotime($olddate) + 24*3600 < $time) {
-			$docount = true;
-			$con->Execute("update downloadip set date=? where fileid=? and ipaddress=?", array($date, $fileid, $remoteip));
+		$lastDownload = $con->getOne('SELECT lastDownload FROM fileDownloadTracking WHERE fileId = ? and ipAddress = ?', [$fileId, $remoteip]);
+
+		$countAsSeparateDownload = false;
+		if (!$lastDownload) {
+			$countAsSeparateDownload = true;
+			$con->Execute('INSERT INTO fileDownloadTracking (lastUpdate, fileId, ipAddress) VALUES (?, ?, ?)', [$date, $fileId, $remoteip]);
+		} else if (strtotime($lastDownload) - $time > 24*3600) {
+			$countAsSeparateDownload = true;
+			$con->Execute('UPDATE fileDownloadTracking SET lastDownload = ? WHERE fileId = ? and ipAddress = ?', [$date, $fileId, $remoteip]);
 		}
 
-		if ($docount) {
-			$con->Execute("update file set downloads=downloads+1 where fileid=?", array($fileid));
-			$con->Execute("update `mod` set downloads=downloads+1 where modid=(select `release`.modid from `release` where `release`.assetid=?)", array($file['assetid']));
+		if ($countAsSeparateDownload) {
+			$con->Execute('UPDATE files SET downloads = downloads + 1 WHERE fileId = ?', [$fileId]);
+			$con->Execute('UPDATE mods  SET downloads = downloads + 1 WHERE modId = (SELECT r.modId FROM modReleases r WHERE r.assetId = ?)', [$file['assetId']]);
 		}
 	}
 }

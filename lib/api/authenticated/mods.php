@@ -21,47 +21,46 @@ switch($urlparts[1]) {
 				validateActionTokenAPI();
 				validateContentType('text/html');
 
-				$modData = $con->getRow('
-					select m.assetid, a.createdbyuserid
-					from `mod` m
-					join asset a on a.assetid = m.assetid
-					where modid = ?
-				', [$modId]);
-				$assetId = intval($modData['assetid']);
+				$modData = $con->getRow(<<<SQL
+					SELECT m.assetId, a.createdByUserId
+					FROM mods m
+					JOIN assets a ON a.assetId = m.assetId
+					WHERE m.modId = ?
+				SQL, [$modId]);
+				$assetId = intval($modData['assetId']);
 				if(!$assetId)  fail(HTTP_NOT_FOUND, ['reason' => 'Unknown modid.']);
 
 				$commentHtml = trim(sanitizeHtml(file_get_contents('php://input')));
 				if(!$commentHtml)  fail(HTTP_BAD_REQUEST, ['reason' => 'Comment must not be empty.']);
 
-				$con->execute('insert into comment (assetid, userid, text, created) values (?, ?, ?, now())', [$assetId, $user['userid'], $commentHtml]);
+				$con->execute('INSERT INTO comments (assetId, userId, text) VALUES (?, ?, ?)', [$assetId, $user['userId'], $commentHtml]);
 				$commentId = $con->insert_ID();
-				$con->execute('update `mod` set comments = comments + 1 where assetid = ?', [$assetId]);
+				$con->execute('UPDATE mods SET comments = comments + 1 WHERE assetId = ?', [$assetId]);
 
-				$creatorUserId = intval($modData['createdbyuserid']);
-				$currentUserId = intval($user['userid']);
+				$creatorUserId = intval($modData['createdByUserId']);
+				$currentUserId = intval($user['userId']);
 
 				// Notifications for user mentions:
 				if(preg_match_all('/user-hash="([a-z0-9]{20})"/i', $commentHtml, $rawMatches)) {
-					$foldedHashes = implode(',', array_map(fn($h) => "'$h'", $rawMatches[1]));
+					$foldedHashes = implode(',', array_map(fn($h) => "UNHEX('$h')", $rawMatches[1]));
 					// The mod author always gets sent their own notification, but users thend to reply to them by @ing them.
-					// For this reason we take out any references to the mod author and ourself here (`user.userid not in ($creatorUserId, $currentUserId)`).
+					// For this reason we take out any references to the mod author and ourself here (`user.userId not in ($creatorUserId, $currentUserId)`).
 
 					// @security: $rawMatches are validated to be alphanumeric and therefore sql inert by the regex. $commentId, $currentUserId and $creatorUserId are known to be integers.
-					$con->execute("
-						insert into notification (type, recordid, userid)
-						select 'mentioncomment', $commentId, userid
-						from user
-						where
-							substring(sha2(concat(user.userid, user.created), 512), 1, 20) in ($foldedHashes)
-							and user.userid not in ($creatorUserId, $currentUserId)
-					");
+					$con->execute(<<<SQL
+						INSERT INTO notifications (kind, recordId, userId)
+						SELECT 'mentioncomment', $commentId, u.userId
+						FROM users u
+						WHERE u.`hash` IN ($foldedHashes)
+							AND u.userId NOT IN ($creatorUserId, $currentUserId)
+					SQL);
 				}
 
 				// Send notification about the new comment to the main mod author:
 				//TODO(Rennorb): Send notifications to all opt-in contributors, requires adding config option and table changes.
 				if($currentUserId !== $creatorUserId) { // Don't send a notification to ourself if we are the one commenting.
 					// @security: $commentId and $creatorUserId are known to be integers.
-					$con->execute("insert into notification (type, recordid, userid) values ('newcomment', $commentId, $creatorUserId)");
+					$con->execute("INSERT INTO notifications (kind, recordId, userId) VALUES ('newcomment', $commentId, $creatorUserId)");
 				}
 
 				logAssetChanges(['Added a new comment.'], $assetId);
@@ -88,26 +87,26 @@ switch($urlparts[1]) {
 		$reason = htmlspecialchars(trim($reason));
 		if(!$reason) fail(HTTP_BAD_REQUEST, ['error' => 'Reason must not be empty.']);
 
-		$modData = $con->getRow('
-			select m.assetid, a.createdbyuserid
-			from `mod` m
-			join asset a on a.assetid = m.assetid
-			where m.modid = ?
-		', [$modId]);
+		$modData = $con->getRow(<<<SQL
+			SELECT m.assetId, a.createdByUserId
+			FROM mods m
+			JOIN assets a ON a.assetId = m.assetId
+			WHERE m.modId = ?
+		SQL, [$modId]);
 		if(!$modData) fail(HTTP_NOT_FOUND);
 
 		$con->startTrans();
 		// @security: assetid comes from the db and is an int, therefore sql inert. 
-		$con->execute('update asset set statusid = '.STATUS_LOCKED.' where assetid = '.$modData['assetid']);
-		logAssetChanges(['Locked Mod for reason: '.$reason], $modData['assetid']);
+		$con->execute('UPDATE assets SET statusId = '.STATUS_LOCKED.' WHERE assetId = '.$modData['assetId']);
+		logAssetChanges(['Locked Mod for reason: '.$reason], $modData['assetId']);
 
-		logModeratorAction($modData['createdbyuserid'], $user['userid'], MODACTION_KIND_LOCK, $modId, SQL_DATE_FOREVER, $reason);
+		logModeratorAction($modData['createdByUserId'], $user['userId'], MODACTION_KIND_LOCK, $modId, SQL_DATE_FOREVER, $reason);
 
 		// Just in case we have not "read" a corresponding review-request notification for the mod we are (re-)locking, mark it as read.
 		// If we don't do this we we might not get new unlock requests. :BlockedUnlockRequest
-		$con->execute("update notification set `read` = 1 where type = 'modunlockrequest' and userid = ? and recordid = ?", [$user['userid'], $modId]);
+		$con->execute("UPDATE notifications SET `read` = 1 WHERE kind = 'modunlockrequest' AND userId = ? AND recordId = ?", [$user['userId'], $modId]);
 
-		$con->execute("insert into notification (userid, type, recordid) values (?, 'modlocked', ?)", [$modData['createdbyuserid'], $modId]);
+		$con->execute("INSERT INTO notifications (userId, kind, recordId) VALUES (?, 'modlocked', ?)", [$modData['createdByUserId'], $modId]);
 
 		$ok = $con->completeTrans();
 		if($ok) good();

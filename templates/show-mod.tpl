@@ -3,10 +3,10 @@
 <meta content="{$asset['name']}" property="og:title" />
 <meta content="{strip_tags($assetraw['text'])}" property="og:description" />
 <meta name="twitter:card" content="summary_large_image">
-{if (empty($asset['logourl']))}
+{if (empty($asset['logoUrl']))}
 <meta content="/web/img/mod-default.png" property="og:image" />
 {else}
-<meta content="{$asset['logourl']}" property="og:image" />
+<meta content="{$asset['logoUrl']}" property="og:image" />
 {/if}
 <meta content="#91A357" data-react-helmet="true" name="theme-color" />
 {/capture}
@@ -33,9 +33,9 @@
 	</div>
 {/if}
 
-<div class="edit-asset mod-{$asset['statuscode']}">
+<div class="edit-asset mod-{$asset['statusCode']}">
 	<h2>
-		<span class="assettype">
+		<span>
 			<a href="/list/mod">Mods</a>
 		</span> /
 		<span>
@@ -43,12 +43,12 @@
 		</span>
 	</h2>
 
-	{if $asset['statuscode']=='draft'}
+	{if $asset['statusCode']=='draft'}
 		<div class="showmod-draftnotice">
 			<h2 style="margin-bottom: 0;">Draft</h2>
 			<small>Set to published to be listed. A draft mod is still visible to everyone via direct link</small>
 		</div>
-	{elseif $asset['statuscode']=='locked'}
+	{elseif $asset['statusCode']=='locked'}
 		<div class="showmod-draftnotice" style="color:#e00">
 			<h2 style="margin-bottom: 0;">Locked&nbsp;<i class="ico alert"></i></h2>
 			<small>This mod has been locked by a moderator. The author may edit their mod to address existing issues.</small>
@@ -61,20 +61,20 @@
 	<ul class="tabs no-mark">
 		<li><label for="tab-description" onclick="location.hash = 'tab-description'">Description</label></li>
 		<li><label for="tab-files" onclick="location.hash = 'tab-files'">Files</label></li>
-		{if $asset['homepageurl']}
-			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['homepageurl']}">Homepage</a></li>
+		{if $asset['homepageUrl']}
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['homepageUrl']}">Homepage</a></li>
 		{/if}
-		{if $asset['wikiurl']}
-			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['wikiurl']}">Wiki</a></li>
+		{if $asset['wikiUrl']}
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['wikiUrl']}">Wiki</a></li>
 		{/if}
-		{if $asset['issuetrackerurl']}
-			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['issuetrackerurl']}">Issue tracker</a></li>
+		{if $asset['issueTrackerUrl']}
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['issueTrackerUrl']}">Issue tracker</a></li>
 		{/if}
-		{if $asset['sourcecodeurl']}
-			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['sourcecodeurl']}">Source</a></li>
+		{if $asset['sourceCodeUrl']}
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['sourceCodeUrl']}">Source</a></li>
 		{/if}
-		{if $asset['donateurl']}
-			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['donateurl']}">Donate</a></li>
+		{if $asset['donateUrl']}
+			<li><a class="external" rel="external nofollow" target="_blank" href="{$asset['donateUrl']}">Donate</a></li>
 		{/if}
 	</ul>
 
@@ -83,47 +83,47 @@
 			<script>if(location.hash !== '#tab-files') document.getElementById('tab-description').checked = true;</script>
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
-					<a class="button large shine strikethrough-when-banned" href="/edit/mod/?assetid={$asset['assetid']}">Edit</a>&nbsp;
-					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modid']}">Add release</a>
+					<a class="button large shine strikethrough-when-banned" href="/edit/mod/?assetid={$asset['assetId']}">Edit</a>&nbsp;
+					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modId']}">Add release</a>
 				{/if}
 			</div>
 
 			<div class="imageslideshow fotorama" data-max-width="min(800px, 100%)" data-max-height="450" data-autoplay="5000" data-nav="thumbs" data-allowfullscreen="true">
-				{if (!empty($asset['trailervideourl']))}
-					<a rel="nofollow" href="{$asset['trailervideourl']}">Trailer Video</a>
+				{if (!empty($asset['trailerVideoUrl']))}
+					<a rel="nofollow" href="{$asset['trailerVideoUrl']}">Trailer Video</a>
 				{/if}
 				{foreach from=$files item=file}
 					<img src="{$file['url']}">
 				{/foreach}
-				{if empty($files) && empty($asset['trailervideourl']) && !empty($asset['logourl'])}
-				<img src="{$asset['logourl']}">
+				{if empty($files) && empty($asset['trailerVideoUrl']) && !empty($asset['logoUrl'])}
+				<img src="{$asset['logoUrl']}">
 				{/if}
 			</div>
 
-			<div class="infobox{if empty($asset['trailervideourl']) && empty($files)} nomedia{/if}">
+			<div class="infobox{if empty($asset['trailerVideoUrl']) && empty($files)} nomedia{/if}">
 				<span class="text-weak">Tags:</span>
 				{foreach from=$tags item=tag}
-					<a href="/list/mod/?tagids[]={$tag['tagid']}" class="tag" style="background-color:{$tag['color']}"
+					<a href="/list/mod/?tagids[]={$tag['tagId']}" class="tag" style="background-color:{$tag['color']}"
 						title="{$tag['text']}">#{$tag['name']}</a>
 				{/foreach}
 				<br>
 
-				{if !empty($teammembers)}
+				{if !empty($teamMembers)}
 					<span class="text-weak">Authors:</span>
 
-					<a class="username" href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>{foreach from=$teammembers item=teammember}, <a class="username" href="/show/user/{$teammember['usertoken']}">{$teammember['name']}</a>{/foreach}
+					<a class="username" href="/show/user/{$asset['creatorHash']}">{$asset['creatorName']}</a>{foreach from=$teamMembers item=teamMember}, <a class="username" href="/show/user/{$teamMember['userHash']}">{$teamMember['name']}</a>{/foreach}
 				{else}
-					<span class="text-weak">Author:</span> <a class="username" href="/show/user/{$createdusertoken}">{$asset['createdusername']}</a>
+					<span class="text-weak">Author:</span> <a class="username" href="/show/user/{$asset['creatorHash']}">{$asset['creatorName']}</a>
 				{/if}
 
 				<br>
 
 				<span class="text-weak">Side:</span> {ucfirst($asset['side'])}<br>
 				<span class="text-weak">Created:</span> {fancyDate($asset['created'])}<br>
-				<span class="text-weak">Last modified:</span> {fancyDate($asset['lastreleased'])}<br>
+				<span class="text-weak">Last modified:</span> {fancyDate($asset['lastReleased'])}<br>
 				<span class="text-weak">Downloads:</span> {intval($asset['downloads'])}<br>
 				<a href="{if !empty($user)}#follow{else}/login{/if}"
-					class="interactbox {if $isfollowing}on{else}off{/if}">
+					class="interactbox {if $isFollowing}on{else}off{/if}">
 					<span class="off"><i class="bx bx-star"></i>Follow</span>
 					<span class="on"><i class="bx bxs-star"></i>Unfollow</span>
 					<span class="count">{$asset["follows"]}</span>
@@ -136,8 +136,8 @@
 						{else}<strong>Recommended download:</strong><br>
 						{/if}
 
-						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseStable['file'])}">{$recommendedReleaseStable['file']['filename']}</a>
-						{if !empty($recommendedReleaseStable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseStable}{/if}
+						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseStable['file'])}">{$recommendedReleaseStable['file']['name']}</a>
+						{if !empty($recommendedReleaseStable['identifier']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseStable}{/if}
 						{if $recommendedReleaseUnstable}<br>{/if}
 					{elseif $fallbackRelease}
 						{if count($fallbackRelease['compatibleGameVersions']) > 0}<strong>
@@ -146,8 +146,8 @@
 						{else}<strong>Latest release:</strong><br>
 						{/if}
 
-						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($fallbackRelease['file'])}">{$fallbackRelease['file']['filename']}</a>
-						{if !empty($fallbackRelease['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$fallbackRelease}{/if}
+						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($fallbackRelease['file'])}">{$fallbackRelease['file']['name']}</a>
+						{if !empty($fallbackRelease['identifier']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$fallbackRelease}{/if}
 						{if $recommendedReleaseUnstable}<br>{/if}
 					{/if}
 					{if $recommendedReleaseUnstable}
@@ -155,8 +155,8 @@
 						{else}<strong>For testers:</strong><br>
 						{/if}
 
-						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseUnstable['file'])}">{$recommendedReleaseUnstable['file']['filename']}</a>
-						{if !empty($recommendedReleaseUnstable['modidstr']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
+						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseUnstable['file'])}">{$recommendedReleaseUnstable['file']['name']}</a>
+						{if !empty($recommendedReleaseUnstable['identifier']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
 					{/if}
 				</p>
 			</div>
@@ -170,7 +170,7 @@
 			<script>if(location.hash === '#tab-files') document.getElementById('tab-files').checked = true;</script>
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
-					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modid']}">Add release</a>
+					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modId']}">Add release</a>
 				{/if}
 			</div>
 
@@ -182,7 +182,7 @@
 						<th class="version">Mod Version</th>
 						{if $shouldListCompatibleGameVersion}<th class="gameversion">For Game version</th>{/if}
 						<th class="downloads">Downloads</th>
-						<th class="releasedate">Release date</th>
+						<th class="releasedate">Released</th>
 						<th class="changelog">Changelog</th>
 						<th class="download">Download</th>
 						{if $shouldShowOneClickInstall}<th><abbr title="Requires game version v1.18.0-rc.1 or later, currently not supported on MacOS.">1-click mod install*</abbr></th>{/if}
@@ -191,11 +191,11 @@
 				<tbody>
 				{if !empty($releases)}
 					{foreach from=$releases item=release}
-						<tr data-assetid="{$release['assetid']}" {if !isset($first)} class="latest"{/if}>
+						<tr data-assetid="{$release['assetId']}" {if !isset($first)} class="latest"{/if}>
 							<td>
 								{if isset($user) && canEditAsset($asset, $user)}
-									<a style="display:block;" href="/edit/release?assetid={$release['assetid']}">{formatSemanticVersion($release['modversion'])}</a>
-								{else}{formatSemanticVersion($release['modversion'])}{/if}
+									<a style="display:block;" href="/edit/release?assetid={$release['assetId']}">{formatSemanticVersion($release['version'])}</a>
+								{else}{formatSemanticVersion($release['version'])}{/if}
 							</td>
 							{if $shouldListCompatibleGameVersion}<td>
 								<div class="tags">
@@ -207,14 +207,14 @@
 							</td>{/if}
 							<td>{if !empty($release['file'])}{intval($release['file']['downloads'])}{/if}</td>
 							<td>{fancyDate($release['created'])}</td>
-							<td>{if $release["text"]}<label for="cl-trigger-{$release['assetid']}" class="button square cl-trigger">Show</label>{else}Empty{/if}</td>
-							<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{$release['file']['filename']}</a>{/if}</td>
-							{if $shouldShowOneClickInstall}<td>{if !empty($release['modidstr'])}{include file="button-one-click-install"}{/if}</td>{/if}
+							<td>{if $release['text']}<label for="cl-trigger-{$release['assetId']}" class="button square cl-trigger">Show</label>{else}Empty{/if}</td>
+							<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{$release['file']['name']}</a>{/if}</td>
+							{if $shouldShowOneClickInstall}<td>{if !empty($release['identifier'])}{include file="button-one-click-install"}{/if}</td>{/if}
 						</tr>
-						{if $release["text"]}
+						{if $release['text']}
 						<tr><td class="collapsable cl-changelog" colspan="{$changelogColspan}">
-							<input type="checkbox" id="cl-trigger-{$release['assetid']}" autocomplete="off">
-							<div><div><div class="release-changelog">{$release["text"]}</div></div></div>
+							<input type="checkbox" id="cl-trigger-{$release['assetId']}" autocomplete="off">
+							<div><div><div class="release-changelog">{$release['text']}</div></div></div>
 						</td></tr>
 						{/if}
 						{assign var="first" value="1"}
@@ -249,7 +249,7 @@
 
 {capture name="footerjs"}
 	<script type="text/javascript">
-		modid = {$asset['modid']};
+		modid = {$asset['modId']};
 
 		$(document).ready(function() {
 			$("a[href='#follow']").click(function() {

@@ -6,7 +6,7 @@ switch(count($urlparts)) {
 	case 0:
 		switch($_SERVER['REQUEST_METHOD']) {
 			case 'GET':
-				$versions = $con->getCol('SELECT version FROM GameVersions ORDER BY version DESC');
+				$versions = $con->getCol('SELECT version FROM gameVersions ORDER BY version DESC');
 				$versions = array_map(fn($s) => formatSemanticVersion(intval($s)), $versions);
 		
 				good($versions);
@@ -14,14 +14,14 @@ switch(count($urlparts)) {
 			case 'POST':
 				if(empty($_POST['new'])) fail(HTTP_BAD_REQUEST);
 
-				if($user['rolecode'] !== 'admin') fail(HTTP_FORBIDDEN);
+				if($user['roleCode'] !== 'admin') fail(HTTP_FORBIDDEN);
 				validateActionTokenAPI();
 				validateUserNotBanned();
 
 				$newVersion = compileSemanticVersion($_POST['new']);
 				if($newVersion === false) fail(HTTP_BAD_REQUEST);
 
-				$allVersions = array_map('intval', $con->getCol('SELECT `version` FROM GameVersions'));
+				$allVersions = array_map('intval', $con->getCol('SELECT `version` FROM gameVersions'));
 				$prevCount = count($allVersions);
 
 				$allVersions[] = $newVersion;
@@ -35,7 +35,7 @@ switch(count($urlparts)) {
 
 				// @security: All keys and values are numeric and therefore SQL inert.
 				$ok = $con->Execute("
-					INSERT INTO GameVersions (version, sortIndex)
+					INSERT INTO gameVersions (version, sortIndex)
 						VALUES $foldedValues
 					ON DUPLICATE KEY UPDATE
 						sortIndex = VALUES(sortIndex)
@@ -52,7 +52,7 @@ switch(count($urlparts)) {
 	case 1:
 		switch($_SERVER['REQUEST_METHOD']) {
 			case 'DELETE':
-				if($user['rolecode'] !== 'admin') fail(HTTP_FORBIDDEN);
+				if($user['roleCode'] !== 'admin') fail(HTTP_FORBIDDEN);
 				validateActionTokenAPI();
 				validateUserNotBanned();
 
@@ -60,10 +60,10 @@ switch(count($urlparts)) {
 				if($targetVersion === false) fail(HTTP_BAD_REQUEST);
 
 				$con->startTrans();
-				$con->Execute('DELETE FROM GameVersions where version = ?', [$targetVersion]);
+				$con->Execute('DELETE FROM gameVersions where version = ?', [$targetVersion]);
 				$didDelete = $con->affected_rows() == 1;
 				if($didDelete) {
-					$con->Execute('UPDATE GameVersions SET sortIndex = sortIndex - 1 where version > ?', [$targetVersion]);
+					$con->Execute('UPDATE gameVersions SET sortIndex = sortIndex - 1 where version > ?', [$targetVersion]);
 				}
 				$ok = $con->completeTrans();
 

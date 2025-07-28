@@ -2,16 +2,16 @@
 
 <div class="edit">
 
-	{if $row['tagid']}
+	{if $row['tagId']}
 		<h2>
-			<span class="assettype">
+			<span>
 				<a href="/list/tag">Tags</a>
 			</span> / 
 			<span>{$row["name"]}</span>
 		</h2>	
 	{else}
 		<h2>
-			<span class="assettype">
+			<span>
 				<a href="/list/tag">Tags</a>
 			</span> / 
 			<span>Add new Tag</span>
@@ -19,12 +19,12 @@
 	{/if}
 
 	<form method="post" name="deleteform">
-		<input type="hidden" name="at" value="{$user['actiontoken']}">
+		<input type="hidden" name="at" value="{$user['actionToken']}">
 		<input type="hidden" name="delete" value="1">
 	</form>
 
 	<form method="post" name="form1" autocomplete="off" class="flex-list">
-		<input type="hidden" name="at" value="{$user['actiontoken']}">
+		<input type="hidden" name="at" value="{$user['actionToken']}">
 		<input type="hidden" name="save" value="1">
 		<input type="hidden" name="saveandback" value="0">
 		
@@ -35,7 +35,7 @@
 
 		<div class="editbox">
 			<label>Color</label>
-			<input type="text" class="color" name="code" class="required" value="{$row['color']}"/>
+			<input type="color" class="color" name="color" class="required" value="#{substr($row['color'], 0, 6)}"/>
 		</div>
 
 		<div class="editbox flex-fill">
@@ -49,7 +49,7 @@
 	<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
 	<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
 	
-	{if $row['tagid']}
+	{if $row['tagId']}
 		<div style="height: 1em"></div>
 		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete Tag</a>
 	{/if}

@@ -15,7 +15,6 @@ include($config["basepath"] . "lib/tags.php");
 include($config["basepath"] . "lib/3rdparty/adodb5/adodb-exceptions.inc.php");
 include($config["basepath"] . "lib/3rdparty/adodb5/adodb.inc.php");
 
-include($config["basepath"] . "lib/asset.php");
 include($config["basepath"] . "lib/assetcontroller.php");
 include($config["basepath"] . "lib/assetlist.php");
 include($config["basepath"] . "lib/asseteditor.php");
@@ -23,35 +22,31 @@ include($config["basepath"] . "lib/fileupload.php");
 include($config["basepath"] . "lib/version.php");
 
 
-$rd = opendir($config["basepath"] . "lib/assetimpl");
-while (($file = readdir($rd))) {
-	if (endsWith($file, ".php")) {
-		include($config["basepath"] . "lib/assetimpl/" . $file);
-	}
-}
+include($config["basepath"] . "lib/assetimpl/modeditor.php");
 
 //mysqli_report(MYSQLI_REPORT_ERROR);
 $con = createADOConnection($config);
 $view = new View();
 
-// may later on be modified by asset specific overrides
-global $maxFileUploadSizeMB;
-$maxFileUploadSizeMB = round(file_upload_max_size() / (1024 * 1024), 1);
-$view->assign("fileuploadmaxsize", $maxFileUploadSizeMB);
-
-$view->assign("assetserver", $config['assetserver']);
-
 $ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;
 
 
+const KB = 1024;
+const MB = 1024 * KB;
+const GB = 1024 * MB;
+
+
+$view->assign("assetserver", $config['assetserver']);
+
+
 //NOTE(Rennorb): Technically we should only count the public mods, but in reality this probably doesn't matter for production and just counting all mods makes the query simpler.
-$view->assign('totalModCount', $con->getOne('SELECT COUNT(*) from `mod`'), null, true);
+$view->assign('totalModCount', $con->getOne('SELECT COUNT(*) from mods'), null, true);
 
 
 // insert db record
-function insert($tablename, $recordid = null, $con = null)
+function insert($tablename)
 {
-	if (!$con) $con = $GLOBALS['con'];
+	global $con;
 
 	$con->Execute("insert into `{$tablename}` (created) values (now())");
 
@@ -59,9 +54,9 @@ function insert($tablename, $recordid = null, $con = null)
 }
 
 // update db record
-function update($tablename, $recordid, $data, $con = null)
+function update($tablename, $recordid, $data)
 {
-	if (!$con) $con = $GLOBALS['con'];
+	global $con;
 
 	$columnnames = array();
 	$values = array();
@@ -71,7 +66,7 @@ function update($tablename, $recordid, $data, $con = null)
 	}
 
 	$updatessql = "
-			update `{$tablename}` set " . join(", ", $columnnames) . " where {$tablename}id = ?";
+			update `{$tablename}` set " . join(", ", $columnnames) . " where {$tablename}Id = ?";
 
 	return $con->Execute($updatessql, array_merge(
 		$values,
@@ -311,13 +306,13 @@ function stripQueryParams($query, $paramNames)
 	return implode('&', $params);
 }
 
-/** Formats the path to a mod page using the urlalias of the mod if possible.
- * @param array{urlalias : string, assetid : int} $mod
+/** Formats the path to a mod page using the urlAlias of the mod if possible.
+ * @param array{urlAlias : string, assetId : int} $mod
  * @return string Path to the mod page starting with the root slash.
  */
 function formatModPath($mod)
 {
-	return $mod['urlalias'] ? ('/'.$mod['urlalias']) : ("/show/mod/" . $mod['assetid']);
+	return $mod['urlAlias'] ? ('/'.$mod['urlAlias']) : ("/show/mod/" . $mod['assetId']);
 }
 
 
@@ -343,32 +338,32 @@ const SQL_MOD_CARD_TRANSITION_DATE = "2025-03-10 15:50:00";
 
 /**
  * @param string[] $changes
- * @param int $assetid
+ * @param int $assetId
  */
-function logAssetChanges($changes, $assetid)
+function logAssetChanges($changes, $assetId)
 {
+	if (empty($changes)) return;
 	global $con, $user;
 
-	if (!empty($changes)) {
-		$change = $con->getRow('
-			SELECT *
-			FROM changelog
-			WHERE userid = ? AND assetid = ? AND lastmodified >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
-			ORDER BY created DESC
-			LIMIT 1
-		', [$user['userid'], $assetid]);
-		if ($change) {
-			$changesdb = explode("\r\n", $change["text"]);
-			$changelogid = $change["changelogid"];
+	$changes = implode("\r\n", $changes);
 
-			$changes = array_merge($changes, $changesdb);
-		}
+	$activeChangeId = $con->getOne(<<<SQL
+		SELECT changelogId
+		FROM changelogs
+		WHERE userId = ? AND assetId = ? AND lastModified >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+		ORDER BY created DESC
+		LIMIT 1
+	SQL, [$user['userId'], $assetId]);
 
-		if (!$change) {
-			$changelogid = insert("changelog");
-		}
-
-		update("changelog", $changelogid, array("assetid" => $assetid, "userid" => $user["userid"], "text" => implode("\r\n", $changes)));
+	if ($activeChangeId) {
+		$con->execute("UPDATE changelogs SET text = CONCAT(?, '\n\r', text) WHERE changelogId = ?",
+			[$changes, $activeChangeId]
+		);
+	}
+	else {
+		$con->execute('INSERT INTO changelogs (assetId, userId, text) VALUES (?, ?, ?)',
+			[$assetId, $user["userId"], $changes]
+		);
 	}
 }
 
@@ -401,18 +396,20 @@ const SQL_DATE_FORMAT = "Y-m-d H:i:s";
 
 
 /**
- * @param int            $targetuserId
- * @param int            $moderatoruserId
+ * @param int            $targetUserId
+ * @param int            $moderatorUserId
  * @param MODACTION_KIND $kind
- * @param int            $recordId The id of the related record in the type-specific table.
+ * @param int            $recordId The id of the related record in the kind-specific table.
  * @param string         $until
  * @param string|null    $reason
  * @return int generated modaction id
  */
-function logModeratorAction($targetuserId, $moderatoruserId, $kind, $recordId, $until, $reason)
+function logModeratorAction($targetUserId, $moderatorUserId, $kind, $recordId, $until, $reason)
 {
 	global $con;
-	$con->Execute('insert into moderationrecord (targetuserid, moderatorid, kind, recordid, until, reason) values (?,?,?,?,?,?)', [$targetuserId, $moderatoruserId, $kind, $recordId, $until, $reason]);
+	$con->Execute('INSERT INTO moderationRecords (targetUserId, moderatorId, kind, recordId, until, reason) VALUES (?,?,?,?,?,?)',
+		[$targetUserId, $moderatorUserId, $kind, $recordId, $until, $reason]
+	);
 	return $con->Insert_ID();
 }
 
@@ -737,21 +734,6 @@ function sendPostData($path, $data, $remoteurl = null)
 	return $result;
 }
 
-
-function getUserHash($userid, $joindate)
-{
-	return substr(hash("sha512", $userid . $joindate), 0, 20);
-}
-
-function getUserByHash($hashcode, $con)
-{
-	return $con->getRow("
-		select *, ifnull(user.banneduntil >= NOW(), 0) as `isbanned`
-		from user
-		where substring(sha2(concat(user.userid, user.created), 512), 1, 20) = ?
-	", array($hashcode));
-}
-
 /**
  * Splits of the last extension from a path, gives back the whole path without extension and the extension.
  * More light-weight than pathinfo.
@@ -789,13 +771,13 @@ else {
  * Formats a download tracking link to the file.
  * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser as well as tracking that download (-attempt).
  * 
- * @param array{filename:string, fileid:int} $file
+ * @param array{name:string, fileid:int} $file
  * @return string
  */
 function formatDownloadTrackingUrl($file)
 {
-	$escapedName = urlencode($file['filename']);
-	return "/download/{$file['fileid']}/{$escapedName}";
+	$escapedName = urlencode($file['name']);
+	return "/download/{$file['fileId']}/{$escapedName}";
 }
 
 /**
@@ -804,7 +786,7 @@ function formatDownloadTrackingUrl($file)
  * Otherwise this just returns the cdn download url without tracking.
  * This is meant specifically for the purpose of the asset file attachement; open images in browser, download everything else and track the download.
  * 
- * @param array{filename:string, fileid:int, ext:string, cdnpath:string} $file
+ * @param array{name:string, fileId:int, ext:string, cdnPath:string} $file
  * @return string
  */
 function maybeFormatDownloadTrackingUrlDependingOnFileExt($file)
@@ -819,6 +801,7 @@ function maybeFormatDownloadTrackingUrlDependingOnFileExt($file)
 }
 
 const HTTP_CREATED             = 201;
+const HTTP_FOUND               = 302;
 const HTTP_BAD_REQUEST         = 400;
 const HTTP_UNAUTHORIZED        = 401;
 const HTTP_FORBIDDEN           = 403;
@@ -892,3 +875,20 @@ const HEADER_HIGHLIGHT_SUBMIT_MOD    = 3;
 const HEADER_HIGHLIGHT_NOTIFICATIONS = 4;
 const HEADER_HIGHLIGHT_ADMIN_TOOLS   = 5;
 const HEADER_HIGHLIGHT_CURRENT_USER  = 6;
+
+
+const TAG_KIND_PREDEFINED = 2;
+
+
+
+const ASSETTYPE_MOD = 1;
+const ASSETTYPE_RELEASE = 2;
+
+const STATUS_DRAFT = 1;
+const STATUS_RELEASED = 2;
+const STATUS_3 = 3;
+const STATUS_LOCKED = 4;
+
+
+include($config["basepath"] . "lib/upload-limits.php");
+$view->assignRefUnfiltered('maxFileUploadSize', $maxFileUploadSize);

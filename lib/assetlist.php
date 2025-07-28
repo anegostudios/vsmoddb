@@ -10,7 +10,7 @@ class AssetList extends AssetController {
 	function __construct($classname) {
 		parent::__construct($classname);
 		
-		$this->declareColumn(0, array("title" => "Tags", "code" => "tagscached", "datatype" => "tags"));
+		$this->declareColumn(0, array("title" => "Tags", "code" => "tagsCached", "datatype" => "tags"));
 		$this->declareColumn(1, array("title" => "Name", "code" => "name"));
 		$this->declareColumn(2, array("title" => "Status", "code" => "statusname"));
 		$this->declareColumn(3, array("title" => "Created By", "code" => "from"));
@@ -32,13 +32,13 @@ class AssetList extends AssetController {
 				asset.*, 
 				`{$this->tablename}`.*,
 				user.name as `from`,
-				status.code as statuscode,
-				status.name as statusname{$this->extracolumns}
+				s.code as statuscode,
+				s.name as statusname{$this->extracolumns}
 			from 
-				asset 
-				join `{$this->tablename}` on asset.assetid = `{$this->tablename}`.assetid
-				left join user on asset.createdbyuserid = user.userid
-				left join status on asset.statusid = status.statusid
+				assets asset
+				join `{$this->tablename}` on asset.assetId = `{$this->tablename}`.assetId
+				left join users user on asset.createdByUserId = user.userId
+				left join status s on s.statusId = asset.statusId
 			" . (count($this->wheresql) ? "where " . implode(" and ", $this->wheresql) : "") . "
 			order by {$this->orderby}
 		";
@@ -50,32 +50,26 @@ class AssetList extends AssetController {
 		
 		foreach ($rows as $row) {
 			unset($row['text']);
-			$tags=array();
+			$tags = array();
 			
-			$tagscached = trim($row["tagscached"]);
-			if (!empty($tagscached)) { 
+			$tagsCached = trim($row["tagsCached"]);
+			if (!empty($tagsCached)) { 
 			
-				$tagdata = explode("\r\n", $tagscached);
+				$tagdata = explode("\r\n", $tagsCached);
 				
 				foreach($tagdata as $tagrow) {
 					$parts = explode(",", $tagrow);
-					$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagid' => $parts[2]);
+					$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagId' => $parts[2]);
 				}
 			
 				$row['tags'] = $tags;
 			}
 			$this->rows[] = $row;
 		}
-		
-		
-		
 	}
 	
 	public function loadFilters() {
-		global $con;
-	
 		if (!empty($_GET["text"])) {
-
 			$this->wheresql[] = "(asset.name like ? or asset.text like ?)";
 			
 			$this->wherevalues[] = "%" . escapeStringForLikeQuery($_GET["text"]) . "%";
@@ -83,21 +77,6 @@ class AssetList extends AssetController {
 
 			$this->searchvalues["text"] = $_GET["text"];
 		}
-		
-		if(!empty($_GET["tagids"])) {
-			$wheresql = "";
-			foreach($_GET["tagids"] as $tagid) {
-				if (!empty($wheresql)) $wheresql .= " or ";
-				$wheresql .= "exists (select assettag.tagid from assettag where assettag.assetid=asset.assetid and assettag.tagid=?)";
-				$this->wherevalues[] = $tagid;
-			}
-			
-			$this->wheresql[] .= "(" . $wheresql . ")";
-			
-			$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
-			$this->searchvalues["tagids"] = array_combine($_GET["tagids"], array_fill(0, count($_GET["tagids"]), 1));
-		}
-		
 	}
 	
 	
@@ -107,15 +86,9 @@ class AssetList extends AssetController {
 		
 		$view->assign("searchvalues", $this->searchvalues);
 		
-		$stati = $con->getAll("select * from status order by sortorder");
+		$stati = $con->getAll("select * from status");
 		$view->assign("stati", $stati);
 		
-		$assettypeid = $con->getOne("select assettypeid from assettype where code=?", array($this->tablename));
-		$tags = $con->getAll("select * from tag where assettypeid=?", array($assettypeid));
-		$tags = sortTags($assettypeid, $tags);
-		
-		$view->assign("tags", $tags);
-
 		if (!empty($_GET["deleted"])) {
 			addMessage(MSG_CLASS_OK, $this->namesingular.' deleted.'); // @escurity: $this->namesingular is manually speciifed and contains no external input.
 		}

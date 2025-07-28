@@ -11,23 +11,23 @@ if (empty($user)) {
 }
 
 if ($urlparts[1] == 'clearall') {
-	$con->Execute("update notification set `read`=1 where userid=?", array($user['userid']));
+	$con->Execute('UPDATE notifications SET `read` = 1 WHERE userId = ?', [$user['userId']]);
 	goBackOrRootFallback();
 	exit();
 }
 
-$notification = $con->getRow("select * from notification where notificationid=?", array($urlparts[1]));
+$notification = $con->getRow('SELECT * FROM notifications WHERE notificationId = ?', [$urlparts[1]]);
 
 if (empty($notification)) {
 	goBackOrRootFallback();
 	exit();
 }
 
-switch($notification['type']) {
-	case "newrelease":
-		$con->execute("update notification set `read` = 1 where notificationid = ?", array($notification['notificationid']));
+switch($notification['kind']) {
+	case 'newrelease':
+		$con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]);
 
-		$mod = $con->getRow("select assetid, urlalias from `mod` where modid = ?", array($notification['recordid']));
+		$mod = $con->getRow('SELECT assetId, urlAlias FROM mods WHERE modId = ?', [$notification['recordId']]);
 
 		forceRedirect([
 			'path'     => formatModPath($mod),
@@ -36,32 +36,32 @@ switch($notification['type']) {
 		exit();
 
 	case "modlocked": case "modunlockrequest": case "modunlocked":
-		$con->execute("update notification set `read` = 1 where notificationid = ?", array($notification['notificationid']));
+		$con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$notification['notificationId']]);
 
-		$mod = $con->getRow("select assetid, urlalias from `mod` where modid = ?", array($notification['recordid']));
+		$mod = $con->getRow('SELECT assetId, urlAlias FROM mods WHERE modId = ?', [$notification['recordId']]);
 
 		forceRedirect(formatModPath($mod));
 		exit();
 
 	case "teaminvite": case "modownershiptransfer":
-		$mod = $con->getRow("select assetid, urlalias from `mod` where modid = ?", array((intval($notification['recordid']) & ((1 << 30) - 1)))); // :InviteEditBit
+		$mod = $con->getRow('SELECT assetId, urlAlias FROM mods WHERE modId = ?', [(intval($notification['recordId']) & ((1 << 30) - 1))]); // :InviteEditBit
 
-		forceRedirect(['path' => formatModPath($mod)]);
+		forceRedirect(formatModPath($mod));
 		exit();
 
 	case "newcomment": case "mentioncomment":
-		$mod = $con->getRow("
-			select `mod`.assetid, `mod`.urlalias
-			from `mod`
-			join comment on comment.assetid = `mod`.assetid
-			where commentid = ?
-		", array($notification['recordid']));
+		$mod = $con->getRow(<<<SQL
+			SELECT m.assetId, m.urlAlias
+			FROM mods m
+			JOIN comments c ON c.assetId = m.assetId
+			WHERE c.commentId = ?
+		SQL, [$notification['recordId']]);
 
-		$con->execute('update notification set `read` = 1 where notificationid = ?', [$notification['notificationid']]); // TODO @setting
+		$con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]); // TODO @setting
 
 		forceRedirect([
 			'path'     => formatModPath($mod),
-			'fragment' => 'cmt-'.$notification['recordid'],
+			'fragment' => 'cmt-'.$notification['recordId'],
 		]);
 		exit();
 }

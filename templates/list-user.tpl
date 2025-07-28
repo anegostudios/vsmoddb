@@ -1,8 +1,8 @@
 {include file="header"}
 
 	<h2>
-		<span class="assettype">
-			<a href="/list/{$entrycode}">{intval(count($rows))} {$entryplural}</a>
+		<span>
+			<a href="/list/user">{intval(count($rows))} Users</a>
 		</span>
 	</h2>	
 	
@@ -18,11 +18,11 @@
 	</form>	
 	<p style="clear:both;">&nbsp;</p>
 	
-	<table class="stdtable" id="{$entryplural}">
+	<table class="stdtable" id="Users">
 		<thead>
 			<tr>
 				{foreach from=$columns item=column}
-					<th class="{$column['cssclassname']}">{$column['title']}</th>
+					<th>{$column['title']}</th>
 				{/foreach}
 			</tr>
 		</thead>
@@ -32,17 +32,12 @@
 				<tr>
 					{foreach from=$columns item=column}
 						<td>
-							<a href="/show/user/{getUserHash($row['userid'], $row['created'])}">
-							{if $column['code'] == "iconfilepath"}
-								{if $row["iconfilepath"]}<img width="50" src="/files/icons/{$row['iconfilepath']}">{/if}
-							{else}
+							<a href="/show/user/{$row['hash']}">
 								{if isset($column["format"]) && $column["format"] == "date"} 
 									{fancyDate($row[$column['code']])}
 								{else}
 									{$row[$column['code']]}
 								{/if}
-								
-							{/if}
 							</a>
 						</td>
 					{/foreach}
@@ -54,11 +49,6 @@
 		{/if}
 		</tbody>
 	</table>
-
-
-{capture name="buttons"}
-	<a class="button large shine" href="/edit/{$entrycode}">New {$entrysingular}</a>
-{/capture}
 
 
 

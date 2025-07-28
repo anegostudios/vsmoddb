@@ -1,69 +1,55 @@
 <?php
 
-$usertoken = $urlparts[2] ?? null;
-$shownuser = null;
+$userHash = $urlparts[2] ?? null;
+$shownUser = null;
 
-if (strlen($usertoken) > 20) {
+if (strlen($userHash) > 20) {
+	showErrorPage(HTTP_BAD_REQUEST);
+	exit();
+}
+
+if (empty($userHash) || empty($shownUser = getUserByHash($userHash, $con))) {
 	showErrorPage(HTTP_NOT_FOUND);
 	exit();
 }
 
-if (empty($usertoken) || empty($shownuser = getUserByHash($usertoken, $con))) {
-	showErrorPage(HTTP_NOT_FOUND);
-	exit();
+$sqlWhereExt = (isset($user) && $shownUser['userId'] == $user['userId']) || canModerate($shownUser, $user) ? '' : ' and a.statusId = 2'; // show drafts if owner or mod
+$userMods = $con->getAll("
+	SELECT
+		a.*,
+		m.*,
+		logo.cdnPath AS logoCdnPath,
+		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
+		s.code AS statusCode
+	FROM
+		assets a
+		JOIN mods m ON m.assetId = a.assetId
+		LEFT JOIN status s ON s.statusId = a.statusId
+		LEFT JOIN files AS logo ON logo.fileId = m.cardLogoFileId
+		LEFT JOIN modTeamMembers t ON t.modId = m.modId
+	WHERE
+		(a.createdByUserId = ? OR t.userId = ?) $sqlWhereExt
+	GROUP BY a.assetId
+	ORDER BY a.created DESC
+", array($shownUser['userId'], $shownUser['userId']));
+
+foreach ($userMods as &$mod) {
+	unset($mod['text']);
+	$mod['tags'] = [];
+	$mod['from'] = $shownUser['name'];
+	$mod['dbPath'] = formatModPath($mod);
+	$mod['tags'] = unwrapCachedTags($mod['tagsCached']);
+}
+unset($mod);
+
+if (canModerate($shownUser, $user)) {
+	$changelog = $con->getAll('SELECT text, assetId, created FROM changelogs WHERE userId = ? ORDER BY created DESC LIMIT 100', [$shownUser['userId']]);
+	$view->assign('changelog', $changelog);
 }
 
-$view->assign("usertoken", $usertoken);
+if($shownUser['userId'] == $user['userId']) $view->assign('headerHighlight', HEADER_HIGHLIGHT_CURRENT_USER, null, true);
 
-$sqlWhereExt = (isset($user) && $shownuser['userid'] == $user['userid']) || canModerate($shownuser, $user) ? '' : ' and asset.statusid = 2'; // show drafts if owner or mod
-$authormods = $con->getAll("
-	select 
-		asset.*, 
-		`mod`.*,
-		logofile.cdnpath as logocdnpath,
-		logofile.created < '".SQL_MOD_CARD_TRANSITION_DATE."' as legacylogo,
-		status.code as statuscode
-	from 
-		asset 
-		join `mod` on asset.assetid = `mod`.assetid
-		left join status on asset.statusid = status.statusid
-		left join file as logofile on mod.cardlogofileid = logofile.fileid
-		left join teammember on `mod`.modid = teammember.modid
-	where
-		(asset.createdbyuserid = ? or teammember.userid = ?) $sqlWhereExt
-	group by asset.assetid
-	order by asset.created desc
-", array($shownuser['userid'], $shownuser['userid']));
-
-foreach ($authormods as &$row) {
-	unset($row['text']);
-	$row["tags"] = array();
-	$row['from'] = $shownuser['name'];
-	$row['modpath'] = formatModPath($row);
-
-	$tagscached = trim($row["tagscached"]);
-	if (empty($tagscached)) continue;
-
-	$tagdata = explode("\r\n", $tagscached);
-	$tags = array();
-
-	foreach ($tagdata as $tagrow) {
-		$parts = explode(",", $tagrow);
-		$tags[] = array('name' => $parts[0], 'color' => $parts[1], 'tagid' => $parts[2]);
-	}
-
-	$row['tags'] = $tags;
-}
-unset($row);
-
-if (canModerate($shownuser, $user)) {
-	$changelog = $con->getAll("select * from changelog where userid=? order by created desc limit 100", array($shownuser["userid"]));
-	$view->assign("changelog", $changelog);
-}
-
-if($shownuser['userid'] == $user['userid']) $view->assign('headerHighlight', HEADER_HIGHLIGHT_CURRENT_USER, null, true);
-
-$view->assign("mods", $authormods);
-$view->assign("user", $user);
-$view->assign("shownuser", $shownuser);
-$view->display("show-user");
+$view->assign('mods', $userMods);
+$view->assign('user', $user);
+$view->assign('shownUser', $shownUser, null, true);
+$view->display('show-user');

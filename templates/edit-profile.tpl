@@ -8,7 +8,7 @@
 
 	<h2>
 		<span>
-			<a href="/show/user/{$usertoken}">Profile</a>
+			<a href="/show/user/{$userHash}">Profile</a>
 		</span> / 
 		<span>Edit</span>
 	</h2>

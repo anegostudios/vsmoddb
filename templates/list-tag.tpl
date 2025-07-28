@@ -1,7 +1,7 @@
 {include file="header"}
 
 	<h2>
-		<span class="assettype">
+		<span>
 			<a href="/list/tag">{intval(count($rows))} Tags</a>
 		</span>
 	</h2>	
@@ -18,21 +18,8 @@
 		{if !empty($rows)}
 			{foreach from=$rows item=row}
 				<tr>
-					{foreach from=$columns item=column}
-						<td>
-							<a href="/edit/tag?tagid={$row['tagid']}">
-							{if $column['code'] == "iconfilepath"}
-								{if $row["iconfilepath"]}<img width="50" src="/files/icons/{$row['iconfilepath']}">{/if}
-							{else}
-								{if isset($column["format"]) && $column["format"] == "date"} 
-									{fancyDate($row[$column['code']])}
-								{else}
-									{$row[$column['code']]}
-								{/if}
-							{/if}
-							</a>
-						</td>
-					{/foreach}
+					<td><a href="/edit/tag?tagid={$row['tagId']}">{$row['name']}</a></td>
+					<td><a href="/edit/tag?tagid={$row['tagId']}"><span style="display: inline-block; vertical-align: bottom; height: 1.2em; aspect-ratio: 1; background-color: #{$row['color']}"></span> {$row['color']}</a></td>
 				</tr>
 			{/foreach}
 		{else}

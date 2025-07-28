@@ -17,19 +17,19 @@
 				{/if}
 			
 				{foreach from=$comments item=comment}
-					<div id="cmt-{$comment['commentid']}" class="editbox comment{if $comment['deleted']} deleted{/if}" data-timestamp="{strtotime($comment['created'])}">
+					<div id="cmt-{$comment['commentId']}" class="editbox comment{if $comment['deleted']} deleted{/if}" data-timestamp="{strtotime($comment['created'])}">
 						<div class="title">
-							<a style="text-decoration:none;" href="#cmt-{$comment['commentid']}">&#128172;</a>
-							<a href="/show/user/{$comment['usertoken']}">{$comment['username']}</a>{if !empty($comment["flaircode"])} <small class="flair flair-{$comment['flaircode']}"></small>{/if}{if $comment['isbanned']}&nbsp;<span style="color:red;">[currently restricted]</span>{/if}, {fancyDate($comment['created'])} {if $comment['modifieddate']}(modified at {$comment['modifieddate']}){/if}{if $comment['lastmodaction']} (edited by moderator){/if}
+							<a style="text-decoration:none;" href="#cmt-{$comment['commentId']}">&#128172;</a>
+							<a href="/show/user/{$comment['userHash']}">{$comment['username']}</a>{if !empty($comment["flairCode"])} <small class="flair flair-{$comment['flairCode']}"></small>{/if}{if $comment['isBanned']}&nbsp;<span style="color:red;">[currently restricted]</span>{/if}, {fancyDate($comment['created'])} {if $comment['contentLastModified']}(modified {fancyDate($comment['contentLastModified'])}{if $comment['lastModaction'] == MODACTION_KIND_EDIT} by a moderator{/if}){/if}{if $comment['lastModaction'] == MODACTION_KIND_DELETE} (deleted by moderator){/if}
 								{if !empty($user)}
-										{if $comment["userid"] == $user["userid"]}
+										{if $comment["userId"] == $user["userId"]}
 											{if !$comment['deleted']}
-												<span class="buttonlinks strikethrough-when-banned">(<a href="#editcomment" data-commentid="{$comment['commentid']}">edit comment</a> <a style="margin-left:5px;"  href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>)</span>
+												<span class="buttonlinks strikethrough-when-banned">(<a href="#editcomment" data-commentid="{$comment['commentId']}">edit comment</a> <a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a>)</span>
 											{/if}
-										{elseif canModerate($comment['userid'], $user) && !($comment["userid"] == $user["userid"])}
-												<span class="buttonlinks strikethrough-when-banned">({if !$comment['deleted']}<a href="#editcomment" data-commentid="{$comment['commentid']}">edit comment</a><a style="margin-left:5px;"  href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>{/if}<a style="margin-left:5px;"  href="/moderate/user/{$comment['usertoken']}?source-comment={$comment['commentid']}">moderate user</a>)</span>
-										{elseif $asset['createduserid'] == $user['userid'] && !$comment['deleted']}
-												<span class="buttonlinks strikethrough-when-banned">(<a href="#deletecomment" data-commentid="{$comment['commentid']}">delete</a>)</span>
+										{elseif canModerate($comment['userId'], $user) && !($comment["userId"] == $user["userId"])}
+												<span class="buttonlinks strikethrough-when-banned">({if !$comment['deleted']}<a href="#editcomment" data-commentid="{$comment['commentId']}">edit comment</a> <a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a> {/if}<a href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}">moderate user</a>)</span>
+										{elseif $asset['createdByUserId'] == $user['userId'] && !$comment['deleted']}
+												<span class="buttonlinks strikethrough-when-banned">(<a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a>)</span>
 										{/if}
 								{/if}
 						</div>
@@ -39,4 +39,4 @@
 				{/foreach}
 			</div>
 			
-			<span class="buttonlinks template">&nbsp;(<a href="#editcomment" data-commentid="0">edit comment</a> <a style="margin-left:5px;" href="#deletecomment" data-commentid="0">delete</a>)</span>
+			<span class="buttonlinks template">&nbsp;(<a href="#editcomment" data-commentid="0">edit comment</a> <a href="#deletecomment" data-commentid="0">delete</a>)</span>

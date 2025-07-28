@@ -3,7 +3,7 @@
 //NOTE(Rennorb): Assume the user object exists.
 
 if(empty($urlparts)) {
-	$ids = $con->getCol('select notificationid from notification where `read` = 0 and userid = ?', [$user['userid']]);
+	$ids = $con->getCol('SELECT notificationId FROM notifications WHERE !`read` AND userId = ?', [$user['userId']]);
 	good($ids);
 }
 
@@ -19,10 +19,11 @@ switch($urlparts[0]) {
 		
 		$foldedIds = implode(',', $ids);
 
-		$idsWithoutPermission = $con->getCol("select notificationid from notification where notificationid in ($foldedIds) and userid != ?", [$user['userid']]);
+		// @security: Ids ($foldedIds) are knows / filtered to be integers, and therefore sql inert.
+		$idsWithoutPermission = $con->getCol("SELECT notificationId FROM notifications WHERE notificationId IN ($foldedIds) AND userId != ?", [$user['userId']]);
 		if(!empty($idsWithoutPermission)) fail(403, ['reason' => 'Invalid ids provided.', 'invalid_ids' => $idsWithoutPermission]);
 
-		$con->execute("update notification set `read` = 1 where notificationid in ($foldedIds)");
+		$con->execute("UPDATE notifications SET `read` = 1 WHERE notificationId in ($foldedIds)");
 		good();
 
 	case 'settings':
@@ -33,24 +34,24 @@ switch($urlparts[0]) {
 				validateMethod('POST');
 				if(count($urlparts) < 3)   fail(400, ['reason' => 'Missing id.']);
 
-				$modid = filter_var($urlparts[2], FILTER_VALIDATE_INT);
-				if($modid === false)   fail(400, ['reason' => 'Malformed id query param.']);
+				$modId = filter_var($urlparts[2], FILTER_VALIDATE_INT);
+				if($modId === false)   fail(400, ['reason' => 'Malformed id query param.']);
 
 				if(count($urlparts) === 3) {
 					$newFlags = filter_input(INPUT_POST, 'new', FILTER_VALIDATE_INT);
 					if($newFlags === null)   fail(400, ['reason' => 'Missing new settings value.']);
 					if($newFlags === false)   fail(400, ['reason' => 'Malformed new settings value.']);
 
-					$con->execute('
-						insert into follow
-							(modid, userid, flags, created) values (?, ?, ?, now())
-						on duplicate key
-							update flags = ?
-					', [$modid, $user['userid'], $newFlags, $newFlags]);
+					$con->execute(<<<SQL
+						INSERT INTO userFollowedMods
+							(modId, userId, flags) VALUES (?, ?, ?)
+						ON DUPLICATE KEY
+							UPDATE flags = ?
+					SQL, [$modId, $user['userId'], $newFlags, $newFlags]);
 					if($con->affected_rows() == 1) {
 						//NOTE(Rennorb): MariaDB / MySQL returns two rows affected on update.
 						// For this reason we are able to differentiate between update and new insert without extra queries.
-						$con->execute('update `mod` set follows = follows + 1 where modid = ?', [$modid]);
+						$con->execute('UPDATE mods SET follows = follows + 1 WHERE modId = ?', [$modId]);
 					}
 
 					good();
@@ -59,9 +60,9 @@ switch($urlparts[0]) {
 				switch($urlparts[3]) {
 					case 'unfollow':
 						validateMethod('POST');
-						$con->execute('delete from follow where modid = ? and userid = ?', [$modid, $user['userid']]);
+						$con->execute('DELETE FROM userFollowedMods WHERE modId = ? AND userId = ?', [$modId, $user['userId']]);
 						if($con->affected_rows()) {
-							$con->execute('update `mod` set follows = follows - 1 where modid = ?', [$modid]);
+							$con->execute('UPDATE mods SET follows = follows - 1 WHERE modId = ?', [$modId]);
 						}
 
 						good();

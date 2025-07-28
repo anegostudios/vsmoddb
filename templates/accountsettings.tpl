@@ -2,7 +2,7 @@
 <h3>Account Settings</h3>
 
 <form method="post" autocomplete="off" class="flex-list">
-	<input type="hidden" name="at" value="{$user['actiontoken']}">
+	<input type="hidden" name="at" value="{$user['actionToken']}">
 
 	<div class="editbox">
 		<label>Name (<a class="external" href="https://account.vintagestory.at/profile">edit</a>)</label>
@@ -52,9 +52,9 @@
 	</thead>
 	<tbody>
 		{foreach from=$followedMods item=followedMod}
-			<tr data-modid="{$followedMod['modid']}" data-flags="{$followedMod['flags']}">
+			<tr data-modid="{$followedMod['modId']}" data-flags="{$followedMod['flags']}">
 				<td><a href="{formatModPath($followedMod)}" target="_blank">{$followedMod['name']}</a></td>
-				<td><label class="toggle" for="ch-0-{$followedMod['modid']}"><input id="ch-0-{$followedMod['modid']}" data-bit="0" type="checkbox"{if $followedMod['flags'] & FOLLOW_FLAG_CREATE_NOTIFICATIONS} checked="true"{/if} autocomplete="off" /></label></td>
+				<td><label class="toggle" for="ch-0-{$followedMod['modId']}"><input id="ch-0-{$followedMod['modId']}" data-bit="0" type="checkbox"{if $followedMod['flags'] & FOLLOW_FLAG_CREATE_NOTIFICATIONS} checked="true"{/if} autocomplete="off" /></label></td>
 			</tr>
 		{/foreach}
 	</tbody>

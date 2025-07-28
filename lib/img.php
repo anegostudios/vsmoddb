@@ -65,7 +65,7 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 			if (strlen($newfile)) {
 				$filename = $newfile;
 			} else {
-				$filename = preg_replace("/(?U)(.*)(\.\w+)$/","\\1$ext\\2",$file);
+				$filename = preg_replace("/(?U)(.*)(\.\w+)$/", "\\1$ext\\2", $file);
 			}
 			break;
 		
@@ -186,7 +186,7 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 			return null;
 	}
 
-	if (strtolower($output) == 'file') {
+	if (strtolower($output) === 'file') {
 		@chmod($filename, 0664);
 		return $filename;
 	}

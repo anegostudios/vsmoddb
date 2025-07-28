@@ -5,11 +5,11 @@
 {if count($notifications)}
 <form id="notifications-list" autocomplete="off">
 	{foreach from=$notifications item=notification}
-		<label class="list-entry" for="nid-{$notification['notificationid']}" data-label="{formatDateRelative($notification['created'])}">
-			<input type="checkbox" name="nids[]" value="{$notification['notificationid']}" id="nid-{$notification['notificationid']}" />
+		<label class="list-entry" for="nid-{$notification['notificationId']}" data-label="{formatDateRelative($notification['created'])}">
+			<input type="checkbox" name="nids[]" value="{$notification['notificationId']}" id="nid-{$notification['notificationId']}" />
 			{$notification['text']}
 			<div class="flex-spacer"></div>
-			<a href="/notification/{$notification['notificationid']}">Go There</a>
+			<a href="/notification/{$notification['notificationId']}">Go There</a>
 			<a class="n-clear" href="#">Clear</a>
 		</label>
 	{/foreach}

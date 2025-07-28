@@ -17,8 +17,6 @@ class ErrorHandler {
 	static $timeoutstriggered = 0;
 	// Make sure to print a user error only once
 	static $usererrorprinted = false;
-	// equivalent to error_reporting()
-	static $errorreporting = E_ALL;
 	// when in productionmode, in what errors shall we display a user friendly error message? (set in setupErrorHandling())
 	static $productionreporting = null;
 	// If set, empty files with ip-adresses as names are made where a timeout has happened
@@ -55,13 +53,16 @@ class ErrorHandler {
 		);
 	*/
 	public static function setupErrorHandling($timeouthandling = null) {
-		error_reporting(E_ALL & ~E_DEPRECATED);
-
 		// The types of PHP Errors which should show a user friendly error message when outside the debug mode
 		// We hope that only serious errors will disrupt user experience
 		self::$productionreporting = E_ERROR | E_PARSE | E_COMPILE_ERROR;
 
-		error_reporting(self::$productionreporting);
+		if(self::isDebugMode()) {
+			error_reporting(E_ALL & ~E_DEPRECATED);
+		}
+		else {
+			error_reporting(self::$productionreporting);
+		}
 
 
 		/* Error handling through functions of this class */
@@ -100,10 +101,6 @@ class ErrorHandler {
 
 	}
 
-
-	public static function setErrorReporting($value) {
-		ErrorHandler::$errorreporting = $value;
-	}
 
 	public static function isDebugMode() {
 		return DEBUG;
@@ -188,7 +185,7 @@ class ErrorHandler {
 
 
 	public static function HandleError($errno, $errstr, $errfile, $errline ) {
-		if (($errno & ErrorHandler::$errorreporting) == 0) return;
+		if (($errno & error_reporting()) == 0) return;
 
 		// Prevent infinite recursion and flooding of log files
 		if (self::$errorsthrown++ > 10) return;

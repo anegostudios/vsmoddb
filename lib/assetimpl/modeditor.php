@@ -10,21 +10,22 @@ class ModEditor extends AssetEditor
 
 		parent::__construct("mod");
 
+		$this->tablename = "mods";
 		$this->namesingular = "Mod";
-		$this->nameplural = "Mods";
+		$this->nameplural = "mods";
 
-		$this->declareColumn(3, array("title" => "Homepage url", "code" => "homepageurl", "datatype" => "url", "tablename" => "mod"));
-		$this->declareColumn(4, array("title" => "Source code url", "code" => "sourcecodeurl", "datatype" => "url", "tablename" => "mod"));
-		$this->declareColumn(5, array("title" => "Trailer video url", "code" => "trailervideourl", "datatype" => "url", "tablename" => "mod"));
-		$this->declareColumn(6, array("title" => "Issue tracker url", "code" => "issuetrackerurl", "datatype" => "url", "tablename" => "mod"));
-		$this->declareColumn(7, array("title" => "Wiki url", "code" => "wikiurl", "datatype" => "url", "tablename" => "mod"));
-		$this->declareColumn(13, array("title" => "Donate url", "code" => "donateurl", "datatype" => "url", "tablename" => "mod"));
-		$this->declareColumn(8, array("title" => "Side", "code" => "side", "tablename" => "mod"));
-		$this->declareColumn(9, array("title" => "Logo image", "code" => "cardlogofileid", "tablename" => "mod"));
-		$this->declareColumn(9, array("title" => "Logo image", "code" => "embedlogofileid", "tablename" => "mod"));
-		$this->declareColumn(10, array("title" => "Mod Type", "code" => "type", "tablename" => "mod"));
-		$this->declareColumn(11, array("title" => "URL Alias", "code" => "urlalias", "tablename" => "mod"));
-		$this->declareColumn(12, array("title" => "Summary", "code" => "summary", "tablename" => "mod", "datatype" => "name"));
+		$this->declareColumn(3, array("title" => "Homepage url", "code" => "homepageUrl", "datatype" => "url", "tablename" => "mods"));
+		$this->declareColumn(4, array("title" => "Source code url", "code" => "sourceCodeUrl", "datatype" => "url", "tablename" => "mods"));
+		$this->declareColumn(5, array("title" => "Trailer video url", "code" => "trailerVideoUrl", "datatype" => "url", "tablename" => "mods"));
+		$this->declareColumn(6, array("title" => "Issue tracker url", "code" => "issueTrackerUrl", "datatype" => "url", "tablename" => "mods"));
+		$this->declareColumn(7, array("title" => "Wiki url", "code" => "wikiUrl", "datatype" => "url", "tablename" => "mods"));
+		$this->declareColumn(13, array("title" => "Donate url", "code" => "donateUrl", "datatype" => "url", "tablename" => "mods"));
+		$this->declareColumn(8, array("title" => "Side", "code" => "side", "tablename" => "mods"));
+		$this->declareColumn(9, array("title" => "Logo image", "code" => "cardLogoFileId", "tablename" => "mods"));
+		$this->declareColumn(9, array("title" => "Logo image", "code" => "embedLogoFileId", "tablename" => "mods"));
+		$this->declareColumn(10, array("title" => "Mod Type", "code" => "type", "tablename" => "mods"));
+		$this->declareColumn(11, array("title" => "URL Alias", "code" => "urlAlias", "tablename" => "mods"));
+		$this->declareColumn(12, array("title" => "Summary", "code" => "summary", "tablename" => "mods", "datatype" => "name"));
 	}
 
 	function load()
@@ -45,59 +46,59 @@ class ModEditor extends AssetEditor
 
 		if (!$this->assetid) {
 			$this->asset['type'] = 'mod';
-			$this->asset['createdbyuserid'] = $user['userid'];
+			$this->asset['createdByUserId'] = $user['userId'];
 
 			$view->assign('headerHighlight', HEADER_HIGHLIGHT_SUBMIT_MOD, null, true);
 		}
 
 		if ($this->assetid && canEditAsset($this->asset, $user, false)) {
-			$modId = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
+			$modId = $con->getOne('SELECT modId FROM mods WHERE assetId = ?', [$this->assetid]);
 
-			$teammembers = $con->getAll("
-					select u.*, t.canedit, 0 as `pending`
-					from user u
-					join teammember t on u.userid = t.userid
-					where t.modid = ? and u.userid != ?
-				union
-					select u.*, (n.recordid & 1 << 30) as `canedit`, 1 as `pending`
-					from notification n
-					join user u on u.userid = n.userid
-					where n.type = 'teaminvite' and n.`read` = 0 and (n.recordid & ((1 << 30) - 1)) = ? -- :InviteEditBit
-			", array($modId, $user['userid'], $modId));
+			$teamMembers = $con->getAll(<<<SQL
+					SELECT u.*, t.canEdit, 0 AS pending
+					FROM modTeamMembers t
+					JOIN users u ON u.userId = t.userId
+					WHERE t.modId = ? AND u.userId != ?
+				UNION
+					SELECT u.*, (n.recordId & 1 << 30) AS canEdit, 1 AS pending
+					FROM notifications n
+					JOIN users u ON u.userId = n.userId
+					WHERE n.kind = 'teaminvite' AND !n.`read` AND (n.recordId & ((1 << 30) - 1)) = ? -- :InviteEditBit
+			SQL, [$modId, $user['userId'], $modId]);
 
-			$view->assign("teammembers", $teammembers);
+			$view->assign('teamMembers', $teamMembers);
 
 			$this->handleRevokeNewOwnership($modId);
 		}
 
-		$logoData = $this->assetid ? $con->getRow('
-			select file_db.cdnpath as path_db, file_external.cdnpath as path_external
-			from `mod` 
-			left join file as file_db on file_db.fileid = `mod`.cardlogofileid
-			left join file as file_external on file_external.fileid = `mod`.embedlogofileid
-			where `mod`.assetid = ?
-		', [$this->assetid]) : null; // @perf
+		$logoData = $this->assetid ? $con->getRow(<<<SQL
+			SELECT fileDb.cdnPath AS pathDb, fileExternal.cdnPath AS pathExternal
+			FROM mods m
+			LEFT JOIN files AS fileDb ON fileDb.fileId = m.cardlogofileid
+			LEFT JOIN files AS fileExternal ON fileExternal.fileId = m.embedlogofileid
+			WHERE m.assetid = ?
+		SQL, [$this->assetid]) : null; // @perf
 		$previewData = array_merge($this->asset, [
-			'statuscode'  => 'draft',
-			'legacylogo'  => false,
-			'logocdnpath' => $logoData['path_db'] ?? null, 
-			'logocdnpath_external' => $logoData['path_external'] ?? null, 
-			'modpath'     => '#',
-			'downloads'   => 123456,
-			'comments'    => 123456
+			'statusCode'    => 'draft',
+			'hasLegacyLogo' => false,
+			'logoCdnPath'   => $logoData['pathDb'] ?? null, 
+			'logoCdnPathExternal' => $logoData['pathExternal'] ?? null, 
+			'dbPath'       => '#',
+			'downloads'     => 123456,
+			'comments'      => 123456
 		]);
 		$view->assign('mod', $previewData);
 
-		if($this->asset['statusid'] == STATUS_LOCKED) {
+		if($this->asset['statusId'] == STATUS_LOCKED) {
 			$lockInfo = $con->getRow("
-				select r.reason, n.notificationid
-				from moderationrecord r
-				left join notification n on n.type = 'modunlockrequest' and n.recordid = ? and n.created >= r.created
-				where r.kind = ".MODACTION_KIND_LOCK.' and r.until >= NOW() and r.recordid = ?
-				order by r.until desc, r.actionid desc
-			', [$modId, $modId]);
+				SELECT rec.reason, n.notificationId
+				FROM moderationRecords rec
+				LEFT JOIN notifications n ON n.kind = 'modunlockrequest' AND n.recordId = ? AND n.created >= rec.created
+				WHERE rec.kind = ".MODACTION_KIND_LOCK." AND rec.until >= NOW() AND rec.recordId = ?
+				ORDER BY rec.until DESC, rec.actionId DESC
+			", [$modId, $modId]);
 			$lockReason = htmlspecialchars($lockInfo['reason']);
-			if($lockInfo['notificationid']) {
+			if($lockInfo['notificationId']) {
 				$nextStepHint = !canModerate(null, $user) 
 					? 'You have submitted for review and will receive a notification once the review has concluded.'
 					: 'The author has submitted the current state for review.';
@@ -107,14 +108,14 @@ class ModEditor extends AssetEditor
 				$nextStepHint = '';
 				$callToAction = '<p>Address these issues and submit for a review to get your mod published again.</p>';
 			}
-			addMessage(MSG_CLASS_ERROR.' permanent', "
+			addMessage(MSG_CLASS_ERROR.' permanent', <<<HTML
 				<h3 style='text-align: center;'>This mod has been locked by a moderator.</h3>
 				<p>
 					<h4 style='margin-bottom: 0.25em;'>Reason:</h4>
 					<blockquote>{$lockReason}</blockquote>
 				</p>
 				$callToAction
-			");
+			HTML);
 			if($nextStepHint) addMessage(MSG_CLASS_OK.' permanent', $nextStepHint);
 		}
 	}
@@ -122,8 +123,8 @@ class ModEditor extends AssetEditor
 	function delete()
 	{
 		global $con;
-		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
-		$con->Execute("delete from `release` where modid=?", array($modid));
+		$modId = $con->getOne("select modId from mods where assetId = ?", array($this->assetid));
+		$con->Execute("delete from modReleases where modId = ?", array($modId));
 		parent::delete();
 	}
 
@@ -137,7 +138,7 @@ class ModEditor extends AssetEditor
 
 		$_POST['urlalias'] = preg_replace("/[^a-z]+/", "", strtolower($_POST['urlalias']));
 		if (!empty($_POST['urlalias'])) {
-			if ($con->getOne("select modid from `mod` where urlalias=? and assetid!=?", array($_POST['urlalias'], $this->assetid))) {
+			if ($con->getOne("select modId from mods where urlAlias = ? and assetId != ?", array($_POST['urlalias'], $this->assetid))) {
 				addMessage(MSG_CLASS_ERROR, 'Not saved. This url alias is already taken. Please choose another.');
 				return 'error';
 			}
@@ -148,10 +149,10 @@ class ModEditor extends AssetEditor
 			}
 		}
 
-		$oldLogoData = $con->getRow("select cardlogofileid, embedlogofileid from `mod` where assetid = ?", array($this->assetid));
-		$oldLogoFileIdDb = $oldLogoData['cardlogofileid'] ?? null;
+		$oldLogoData = $con->getRow("select cardLogoFileId, embedLogoFileId from mods where assetId = ?", array($this->assetid));
+		$oldLogoFileIdDb = $oldLogoData['cardLogoFileId'] ?? null;
 		$newLogoFileIdDb = $_POST['cardlogofileid'] ?? null;
-		$oldLogoFileIdExternal = $oldLogoData['embedlogofileid'] ?? null;
+		$oldLogoFileIdExternal = $oldLogoData['embedLogoFileId'] ?? null;
 		$newLogoFileIdExternal = $_POST['embedlogofileid'] ?? null;
 
 		$logoCheck = ['status' => 'ok', 'errormessage' => ''];
@@ -174,7 +175,7 @@ class ModEditor extends AssetEditor
 		}
 		else if(empty($newLogoFileIdExternal)) {
 			if($logoCheck['status'] === 'ok') { // dblogo didn't change, need to fetch size
-				$imageSize = $con->getOne("select CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) from file where fileid = ?", array($newLogoFileIdDb));
+				$imageSize = $con->getOne("SELECT CONCAT(ST_X(size), 'x', ST_Y(size)) FROM fileImageData WHERE fileId = ?", [$newLogoFileIdDb]);
 				//NOTE(Rennorb): This can fail for old images, but at that point we just give up. migration copies over the dbimages either way.
 				if($imageSize) {
 					$logoCheck['status'] = 'size';
@@ -212,28 +213,36 @@ class ModEditor extends AssetEditor
 			return 'error';
 		}
 
-		$modid = $con->getOne("select modid from `mod` where assetid=?", array($this->assetid));
-		$hasfiles = $con->getOne("select releaseid from `release` where modid=?", array($modid));
+
+		$modid = $con->getOne("select modId from mods where assetId = ?", array($this->assetid));
+		$hasfiles = $con->getOne("select releaseId from modReleases where modId = ?", array($modid));
 		$statusreverted = false;
-		if (!$hasfiles && $_POST['statusid'] != STATUS_DRAFT && $this->asset['statusid'] != STATUS_LOCKED) {
+		if (!$hasfiles && $_POST['statusid'] != STATUS_DRAFT && $this->asset['statusId'] != STATUS_LOCKED) {
 			$statusreverted = true;
 			$_POST['statusid'] = STATUS_DRAFT;
 		}
 
+		$tagchanges = $this->updateTags($modid);
+		logAssetChanges($tagchanges, $this->assetid);
+
 		if ($this->isnew) {
-			$con->Execute("update `mod` set lastreleased = `mod`.created where assetid = ?", array($this->assetid));
+			$con->Execute("update mods set lastReleased = created where assetId = ?", array($this->assetid));
 		}
 
-		$con->execute('update `mod` set descriptionsearchable = ? where assetid = ?', [textContent($_POST['text']), $this->assetid]);
+		$con->execute('update mods set descriptionSearchable = ? where assetId = ?', [textContent($_POST['text']), $this->assetid]);
 
 		if(canEditAsset($this->asset, $user, false)) $this->updateTeamMembers($modid);
-		if($this->asset['createdbyuserid'] == $user['userid']) $this->updateNewOwner($modid);
+		if($this->asset['createdByUserId'] == $user['userId']) {
+			if(!$this->updateNewOwner($modid)) {
+				return "error";
+			}
+		}
 
 		if ($statusreverted) {
 			static::unsetOkMessages();
 
-			$modPath = formatModPath($this->asset);
-			addMessage(MSG_CLASS_WARN, "Changes saved, but your mod remains hidden as a 'Draft'.</br>To make your mod public you need to first create at least one <a href='{$modPath}#tab-files'>release</a>.");
+			$dbPath = formatModPath($this->asset);
+			addMessage(MSG_CLASS_WARN, "Changes saved, but your mod remains hidden as a 'Draft'.</br>To make your mod public you need to first create at least one <a href='{$dbPath}#tab-files'>release</a>.");
 
 			return "error";
 		}
@@ -266,10 +275,10 @@ class ModEditor extends AssetEditor
 
 		$updatedAny = false;
 		foreach($this->files as &$file) {
-			if($file['imagesize'] === null) {
+			if($file['imageSize'] === null) {
 				$localpath = tempnam(sys_get_temp_dir(), '');
 				$originalfile = @file_get_contents(formatCdnUrl($file));
-				if (file_put_contents($localpath, $originalfile) === false) {
+				if ($originalfile === false || file_put_contents($localpath, $originalfile) === false) {
 					unlink($localpath);
 					continue;
 				}
@@ -278,8 +287,13 @@ class ModEditor extends AssetEditor
 
 				unlink($localpath);
 
-				$file['imagesize'] = "{$w}x{$h}";
-				$con->execute('update file set imagesize = POINT(?, ?) where fileid = ?', [$w, $h, $file['fileid']]);
+				$file['imageSize'] = "{$w}x{$h}";
+				$con->execute(<<<SQL
+					INSERT INTO fileImageData (fileId, size)
+						VALUES (?, POINT(?, ?))
+					ON DUPLICATE KEY UPDATE
+						size = VALUES(size)
+				SQL, [$file['fileId'], $w, $h]);
 
 				$updatedAny = true;
 			}
@@ -297,7 +311,7 @@ class ModEditor extends AssetEditor
 	{
 		global $con;
 
-		$imageSize = $con->getOne("select CONCAT(ST_X(imagesize), 'x', ST_Y(imagesize)) as imagesize from file where fileid = ?", array($imageFileId));
+		$imageSize = $con->getOne("SELECT CONCAT(ST_X(size), 'x', ST_Y(size)) FROM fileImageData WHERE fileId = ?", [$imageFileId]);
 		if (empty($imageSize)) return ['status' => 'error', 'errormessage' => 'Invalid fileid.'];
 
 		if($imageSize !== '480x320' && $imageSize !== '480x480') {
@@ -316,15 +330,20 @@ class ModEditor extends AssetEditor
 	{
 		global $con;
 
-		$file = $con->getRow('select * from `file` where fileid = ? ', [$imageFileId]);
+		$file = $con->getRow('select * from files where fileId = ?', [$imageFileId]);
 		if(empty($file)) return ['status' => 'error', 'errormessage' => 'Invalid fileid.'];
 
-		splitOffExtension($file['filename'], $filebasename, $ext);
+		splitOffExtension($file['name'], $filebasename, $ext);
 		$filename = "{$filebasename}_480_320.{$ext}";
 
 		// Test for exisitng cropped image, so we dont create duplicates.
 		if($this->assetid) {
-			$candidate = $con->getOne('select fileid from `file` where assetid = ? and imagesize = POINT(480, 320) and filename = ?', [$this->assetid, $filename]);
+			$candidate = $con->getOne(<<<SQL
+				SELECT f.fileId
+				FROM files f
+				JOIN fileImageData i ON i.fileId = f.fileId
+				WHERE f.assetId = ? AND i.size = POINT(480, 320) AND f.name = ?
+			SQL, [$this->assetid, $filename]);
 			if($candidate) return ['status' => 'ok', 'fileid' => intval($candidate)];
 		}
 
@@ -348,7 +367,7 @@ class ModEditor extends AssetEditor
 			return ['status' => 'error', 'errormessage' => 'Failed to crop image.'];
 		}
 
-		splitOffExtension($file['cdnpath'], $ogCdnBasePath, $ext);
+		splitOffExtension($file['cdnPath'], $ogCdnBasePath, $ext);
 		$cdnBasePath = "{$ogCdnBasePath}_480_320";
 
 		$thumbStatus = createThumbnailAndUploadToCDN($localPath, $cdnBasePath, $ext);
@@ -368,26 +387,29 @@ class ModEditor extends AssetEditor
 			return ['status' => 'error', 'errormessage' => 'CDN Error: '.$uploadResult['error']];
 		}
 
-		$con->execute("
-			insert into file (created, assetid, assettypeid, userid, filename, cdnpath, hasthumbnail, imagesize)
-			values (now(), ?, ?, ?, ?, ?, 1, POINT(480, 320))
-		", [$file['assetid'], $file['assettypeid'], $file['userid'], $filename, $cdnPath]);
+		$con->execute(
+			'INSERT INTO files (assetId, assetTypeId, userId, name, cdnPath) VALUES (?, ?, ?, ?, ?)',
+			[$file['assetId'], $file['assetTypeId'], $file['userId'], $filename, $cdnPath]
+		);
+		$fileId = $con->Insert_ID();
+		$con->execute('INSERT INTO fileImageData (fileId, hasThumbnail, size) VALUES (?, 1, POINT(480, 320))', [$fileId]);
 
-		return ['status' => 'ok', 'fileid' => $con->Insert_ID()];
+		return ['status' => 'ok', 'fileid' => $fileId];
 	}
 
 	function handleRevokeNewOwnership($modId)
 	{
 		global $view, $user, $con;
 
-		if (!$this->assetid || $this->asset['createdbyuserid'] != $user['userid'])  return;
+		if (!$this->assetid || $this->asset['createdByUserId'] != $user['userId'])  return;
 
 		// Check if ownership transfer invitation has been sent to a user
-		$newOwner = $con->getRow("select u.userid, u.name, n.notificationid
-			from notification as n
-			join user u on u.userid = n.userid
-			where type = 'modownershiptransfer' and recordid = ? and `read` = 0
-		", array($modId));
+		$newOwner = $con->getRow(<<<SQL
+			SELECT u.userId, u.name, n.notificationId
+			FROM notifications AS n
+			JOIN users u ON u.userId = n.userId
+			WHERE n.kind = 'modownershiptransfer' AND n.recordId = ? AND !n.`read`
+		SQL, array($modId));
 			
 		if (empty($newOwner)) return;
 		$view->assign("ownershipTransferUser", $newOwner['name']);
@@ -395,7 +417,7 @@ class ModEditor extends AssetEditor
 		if (empty($_GET['revokenewownership'])) return;
 
 		// Mark notification to new owner as read without doing anything else. Effectively ignores the offer.
-		$con->Execute("update notification set `read` = 1 WHERE notificationid = ?", [$newOwner['notificationid']]);
+		$con->Execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$newOwner['notificationId']]);
 
 		logAssetChanges(['Ownership migration aborted'], $this->assetid);
 
@@ -414,8 +436,8 @@ class ModEditor extends AssetEditor
 		$newEditorMemberIds = filter_input(INPUT_POST, 'teammembereditids', FILTER_VALIDATE_INT, FILTER_FORCE_ARRAY) ?? [];
 		$newEditorMemberIds = array_flip($newEditorMemberIds);
 
-		$oldMembers = $con->getAll("select userid, canedit, teammemberid from teammember where modid = ?", array($modId));
-		$oldMembers = array_combine(array_column($oldMembers, 'userid'), $oldMembers);
+		$oldMembers = $con->getAll('SELECT userId, canEdit, teamMemberId FROM modTeamMembers WHERE modId = ?', [$modId]);
+		$oldMembers = array_combine(array_column($oldMembers, 'userId'), $oldMembers);
 
 		$changes = array();
 
@@ -427,62 +449,122 @@ class ModEditor extends AssetEditor
 			$mergedId = $modId | $editBit;
 
 			if (!array_key_exists($newMemberId, $oldMembers)) {
-				$invitation = $con->getRow("select notificationid, recordid from notification where type = 'teaminvite' and `read` = 0 and userid = ? and (recordid & ((1 << 30) - 1)) = ?", array($newMemberId, $modId));
+				$invitation = $con->getRow("SELECT notificationId, recordId FROM notifications WHERE kind = 'teaminvite' AND !`read` AND userId = ? AND (recordId & ((1 << 30) - 1)) = ?", [$newMemberId, $modId]);
 				if(empty($invitation)) {
-					$con->execute("insert into notification (type, userid, recordid) VALUES ('teaminvite', ?, ?)", array($newMemberId, $mergedId));
+					$con->execute("INSERT INTO notifications (kind, userId, recordId) VALUES ('teaminvite', ?, ?)", [$newMemberId, $mergedId]);
 
-					$changes[] = "User #{$user['userid']} invited user #{$newMemberId} to join the team".($editBit ? ' with edit permissions' : '').'.';
+					$changes[] = "User #{$user['userId']} invited user #{$newMemberId} to join the team".($editBit ? ' with edit permissions' : '').'.';
 				}
-				else if ($invitation['recordid'] != $mergedId) {
-					$con->execute("update notification set recordid = ? where notificationid = ?", array($mergedId, $invitation['notificationid']));
+				else if ($invitation['recordId'] != $mergedId) {
+					$con->execute('UPDATE notifications SET recordId = ? WHERE notificationId = ?', [$mergedId, $invitation['notificationId']]);
 
 					$changes[] = $editBit
-						? "User #{$user['userid']} promoted invitation to user #{$newMemberId} to editor."
-						: "User #{$user['userid']} demoted invitation to user #{$newMemberId} to normal member.";
+						? "User #{$user['userId']} promoted invitation to user #{$newMemberId} to editor."
+						: "User #{$user['userId']} demoted invitation to user #{$newMemberId} to normal member.";
 				}
 			}
-			else if (boolval($oldMembers[$newMemberId]['canedit']) !== boolval($editBit)) {
-				$con->execute("update teammember set canedit = ? where teammemberid = ?", array($editBit ? 1 : 0, $oldMembers[$newMemberId]['teammemberid']));
+			else if (boolval($oldMembers[$newMemberId]['canEdit']) !== boolval($editBit)) {
+				$con->execute('UPDATE modTeamMembers SET canEdit = ? WHERE teamMemberId = ?', [$editBit ? 1 : 0, $oldMembers[$newMemberId]['teamMemberId']]);
 
 				$changes[] = $editBit
-					? "User #{$user['userid']} promoted teammember user #{$newMemberId} to editor."
-					: "User #{$user['userid']} demoted teammember user #{$newMemberId} to normal member.";
+					? "User #{$user['userId']} promoted teammember user #{$newMemberId} to editor."
+					: "User #{$user['userId']} demoted teammember user #{$newMemberId} to normal member.";
 			}
 
 			unset($oldMembers[$newMemberId]);
 		}
 
 		foreach ($oldMembers as $member) {
-			$con->Execute("delete from teammember where teammemberid = ?", array($member['teammemberid']));
-			$changes[] = "User #{$user['userid']} removed teammember user #{$member['userid']}.";
+			$con->Execute('DELETE FROM modTeamMembers WHERE teamMemberId = ?', [$member['teamMemberId']]);
+			$changes[] = "User #{$user['userId']} removed teammember user #{$member['userId']}.";
 		}
 
 		logAssetChanges($changes, $this->assetid);
 	}
 
+	/**
+	 * @param int $modId
+	 * @return bool
+	 */
 	function updateNewOwner($modId)
 	{
-		global $con, $view, $user;
+		global $con, $user;
 
 		$newOwnerId = filter_input(INPUT_POST, 'newownerid', FILTER_VALIDATE_INT);
-		if($newOwnerId === false) return;
+		if(!$newOwnerId) return true;
 
-		$currentNewOwnerId = $con->getOne("select userid from notification where type = 'modownershiptransfer' and `read` = 0 and recordid = ?", array($modId));
+		$currentNewOwnerId = $con->getOne("SELECT userId FROM notifications WHERE kind = 'modownershiptransfer' AND !`read` AND recordId = ?", [$modId]);
 		if ($currentNewOwnerId) {
 			addMessage(MSG_CLASS_ERROR, 'An invitation to transfer ownership has already been sent to '.($currentNewOwnerId == $newOwnerId ? 'this user.' : 'a different user.'));
-			return;
+			return false;
 		}
 
-		$isTeamMember = $con->getOne("select 1 from teammember where modid = ? and userid = ?", array($modId, $newOwnerId));
-		if ($isTeamMember) {
+		$isTeamMember = $con->getOne('SELECT 1 FROM modTeamMembers WHERE modId = ? AND userId = ?', [$modId, $newOwnerId]);
+		if (!$isTeamMember) {
 			addMessage(MSG_CLASS_ERROR, 'The user selected for ownership transfer is not a team member.');
-			return;
+			return false;
 		}
 
-		$con->Execute("insert into notification (type, userid, recordid) VALUES ('modownershiptransfer', ?, ?)", array($newOwnerId, $modId));
+		$con->Execute("INSERT INTO notifications (kind, userId, recordId) VALUES ('modownershiptransfer', ?, ?)", [$newOwnerId, $modId]);
 
-		logAssetChanges(["User #{$user['userid']} initiated a ownership transfer to user #{$newOwnerId}"], $this->assetid);
+		logAssetChanges(["User #{$user['userId']} initiated a ownership transfer to user #{$newOwnerId}"], $this->assetid);
 
-		return;
+		return true;
+	}
+
+	/**
+	 * @param int $modId
+	 * @return string[] changelog
+	 */
+	function updateTags($modId)
+	{
+		global $con;
+
+		$oldTags = $con->getAssoc('SELECT t.tagId, t.name, t.color FROM modTags mt JOIN tags t ON t.tagId = mt.tagId WHERE mt.modId = ?', [$modId]);
+
+		$changes = [];
+		$tagData = [];
+
+		if (!empty($_POST['tagids'])) {
+			$addedNamesFolded = '';
+
+			foreach ($_POST['tagids'] as $tagId) {
+				$tag = $oldTags[$tagId] ?? null;
+
+				if($tag === null) {
+					$con->execute('INSERT INTO modTags (modId, tagId) VALUES (?, ?)', [$modId, $tagId]);
+
+					$tag = $con->getRow('SELECT name, color FROM tags WHERE tagId = ?', [$tagId]);
+
+					if ($addedNamesFolded) $addedNamesFolded .= "', '";
+					$addedNamesFolded .= $tag['name'];
+				}
+				else {
+					unset($oldTags[$tagId]);
+				}
+
+				$tagData[] = $tag['name'] . ',#' . str_pad(dechex($tag['color']), 8, '0') . ',' . $tagId;
+			}
+
+			if ($addedNamesFolded) {
+				$s = contains($addedNamesFolded, ',') ? 's' : '';
+				$changes[] = "Added tag{$s} '$addedNamesFolded'.";
+			}
+		}
+
+		if (!empty($oldTags)) {
+			$removedTagIdsFolded = implode(',', array_keys($oldTags));
+			// @security: $oldTags and its keys are obtained form the database, are numeric and therefore sql inert.
+			$con->Execute("DELETE FROM modTags WHERE modId = ? AND tagId IN ($removedTagIdsFolded)", [$modId]);
+
+			$removedTagNamesFolded = implode("', '", array_map(fn ($t) => $t['name'], $oldTags));
+			$s = count($oldTags) !== 1 ? 's' : '';
+			$changes[] = "Deleted tag{$s} '$removedTagNamesFolded'.";
+		}
+
+		// TODO(Rennorb) @cleanup @perf: Is tagscached really needed ?
+		$con->execute('UPDATE assets a JOIN mods m ON m.assetId = a.assetId SET a.tagsCached = ? WHERE m.modId = ?', [implode("\r\n", $tagData), $modId]);
+
+		return $changes;
 	}
 }

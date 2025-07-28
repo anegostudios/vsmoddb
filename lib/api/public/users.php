@@ -18,23 +18,16 @@ switch($urlparts[0]) {
 
 		//TODO(Rennorb) @correctness: This at least selects perfect matches, but something like order by levenshtein distance would be better.
 		// Issue here is just performance, this needs a bit more thinking.
-		$rows = $con->getAll("
-				select
-					name,
-					substring(sha2(concat(userid, created), 512), 1, 20) as hash
-				from user
-				where name = ?
-			union
-				select
-					name,
-					substring(sha2(concat(userid, created), 512), 1, 20) as hash
-				from user
-				where name like ?
-			limit ?
-		", [$search, '%'.escapeStringForLikeQuery($search).'%', $limit]);
-		$map = [];
-		foreach($rows as $row) {
-			$map[$row['hash']] = $row['name'];
-		}
+		$map = $con->getAssoc(<<<SQL
+			SELECT HEX(hash), name
+				FROM users
+				WHERE name = ?
+			UNION
+				SELECT HEX(hash), name
+				FROM users
+				WHERE name LIKE ?
+			LIMIT ?
+		SQL, [$search, '%'.escapeStringForLikeQuery($search).'%', $limit]);
+
 		good($map, JSON_FORCE_OBJECT);
 }

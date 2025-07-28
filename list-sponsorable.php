@@ -1,25 +1,25 @@
 <?php
 
-if ($user['rolecode'] != 'admin') exit("noprivilege");
+if ($user['roleCode'] != 'admin')  showErrorPage(HTTP_FORBIDDEN);
 
 const EXTEND_MATCHES_BY = 20;
 
-$rawData = $con->getAll("
-	SELECT a.createdbyuserid, u.created, u.name as username, m.assetid, m.urlalias, a.name, f.cdnpath, m.donateurl, a.text
-	FROM `mod` m
-	     JOIN  asset a ON a.assetid = m.assetid
-	     JOIN  user  u ON u.userid = a.createdbyuserid
-	LEFT JOIN `file` f ON f.fileid = m.embedlogofileid
-	WHERE m.donateurl <> '' OR a.text LIKE '%co-fi%' OR a.text LIKE '%patreon%'
-");
+$rawData = $con->getAll(<<<SQL
+	SELECT a.createdByUserId, HEX(u.hash) AS `hash`, u.name as username, m.assetId, m.urlAlias, a.name, f.cdnPath, m.donateUrl, a.text
+	FROM mods m
+	     JOIN assets a ON a.assetId = m.assetId
+	     JOIN users  u ON u.userId = a.createdByUserId
+	LEFT JOIN files  f ON f.fileId = m.embedLogoFileId
+	WHERE m.donateUrl <> '' OR a.text LIKE '%co-fi%' OR a.text LIKE '%patreon%'
+SQL);
 
 $dataByUser = [];
 foreach($rawData as $row) {
-	$ownerId = $row['createdbyuserid'];
+	$ownerId = $row['createdByUserId'];
 
 	$matchesHTML = '';
-	if($row['donateurl']) {
-		$matchesHTML = '<span>Donate URL: <mark>'.htmlspecialchars($row['donateurl']).'</mark></span>';
+	if($row['donateUrl']) {
+		$matchesHTML = '<span>Donate URL: <mark>'.htmlspecialchars($row['donateUrl']).'</mark></span>';
 	}
 
 	$rawText = $row['text'] ?? '';
@@ -38,19 +38,19 @@ foreach($rawData as $row) {
 	$modData = [
 		'name'      => $row['name'],
 		'path'      => formatModPath($row),
-		'logourl'   => $row['cdnpath'] ? formatCdnUrl($row) : null,
-		'matchhtml' => $matchesHTML,
+		'logoUrl'   => $row['cdnPath'] ? formatCdnUrl($row) : null,
+		'matchHtml' => $matchesHTML,
 	];
 
 	if(array_key_exists($ownerId, $dataByUser)) {
 		$dataByUser[$ownerId]['mods'][] = $modData;
-		if($row['donateurl']) $dataByUser[$ownerId]['confirmedurls'][htmlspecialchars($row['donateurl'])] = 1;
+		if($row['donateUrl']) $dataByUser[$ownerId]['confirmedUrls'][htmlspecialchars($row['donateUrl'])] = 1;
 	}
 	else {
 		$dataByUser[$ownerId] = [
-			'userhash'      => getUserHash($ownerId, $row['created']),
+			'userHash'      => $row['hash'],
 			'username'      => $row['username'],
-			'confirmedurls' => $row['donateurl'] ? [htmlspecialchars($row['donateurl']) => 1] : [],
+			'confirmedUrls' => $row['donateUrl'] ? [htmlspecialchars($row['donateUrl']) => 1] : [],
 			'mods'          => [$modData],
 		];
 	}

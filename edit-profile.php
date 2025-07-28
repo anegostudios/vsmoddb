@@ -1,24 +1,29 @@
 <?php
-$usertoken = $urlparts[2] ?? null;
-if(empty($usertoken)) showErrorPage(HTTP_BAD_REQUEST, 'Missing usertoken.');
+$userHash = $urlparts[2] ?? null;
+if(empty($userHash)) showErrorPage(HTTP_BAD_REQUEST, 'Missing user hash.');
 
-$shownuser = getUserByHash($usertoken, $con);
-if (empty($shownuser)) showErrorPage(HTTP_NOT_FOUND, 'User not found.');
+$shownUser = getUserByHash($userHash, $con);
+if (empty($shownUser)) showErrorPage(HTTP_NOT_FOUND, 'User not found.');
 
-if (!canEditProfile($shownuser, $user)) showErrorPage(HTTP_FORBIDDEN);
+if (!canEditProfile($shownUser, $user)) showErrorPage(HTTP_FORBIDDEN);
 
-if (!empty($_POST["save"])) {	
-	$data = array(
-		"bio" => sanitizeHtml($_POST["bio"]),
-	);
-	
-	update("user", $shownuser["userid"], $data);
-	addMessage(MSG_CLASS_OK, 'New profile information saved.');
-	
-	$shownuser = array_merge($shownuser, $data);
+if (!empty($_POST['save'])) {	
+	$ok = $con->execute('UPDATE users SET bio = ? WHERE userId = ?', [sanitizeHtml($_POST['bio']), $shownUser['userId']]);
+	if ($ok) {
+		// addMessage(MSG_CLASS_OK, 'New profile information saved.');
+
+		if($shownUser['userId'] == $user['userId']) $log = 'Changed their profile bio.';
+		else $log = "Changed #{$shownUser['userId']} ({$shownUser['name']})s profile bio.";
+		logAssetChanges([$log], null);
+		
+		forceRedirectAfterPOST();
+		exit();
+	}
+
+	addMessage(MSG_CLASS_ERROR, 'Internal Server Error.');
 }
 
-if($shownuser['userid'] == $user['userid']) $view->assign('headerHighlight', HEADER_HIGHLIGHT_CURRENT_USER, null, true);
-$view->assign("usertoken", $usertoken);
-$view->assign("bio", $shownuser['bio']);
-$view->display("edit-profile.tpl");
+if($shownUser['userId'] == $user['userId']) $view->assign('headerHighlight', HEADER_HIGHLIGHT_CURRENT_USER, null, true);
+$view->assign('userHash', $userHash);
+$view->assign('bio', $shownUser['bio']);
+$view->display('edit-profile.tpl');

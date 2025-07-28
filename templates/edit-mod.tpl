@@ -3,10 +3,10 @@
 <div class="edit-asset edit-mod">
 
 	<h2>
-		<span class="assettype">
+		<span>
 			<a href="/list/mod">Mods</a>
 		</span> /
-		{if $asset['assetid']}
+		{if $asset['assetId']}
 			<span>
 				<a href="{formatModPath($mod)}">{$asset["name"]}</a>
 			</span> / 
@@ -23,22 +23,22 @@
 	{/if}
 
 	<form method="post" name="deleteform">
-		<input type="hidden" name="at" value="{$user['actiontoken']}">
+		<input type="hidden" name="at" value="{$user['actionToken']}">
 		<input type="hidden" name="delete" value="1">
 	</form>
 
 	<form method="post" name="form1" autocomplete="off" class="flex-list">
-		<input type="hidden" name="at" value="{$user['actiontoken']}">
+		<input type="hidden" name="at" value="{$user['actionToken']}">
 		<input type="hidden" name="save" value="1">
-		<input type="hidden" name="assetid" value="{$asset['assetid']}">
-		<input type="hidden" name="numsaved" value="{$asset['numsaved']}">
+		<input type="hidden" name="assetid" value="{$asset['assetId']}">
+		<input type="hidden" name="numsaved" value="{$asset['numSaved']}">
 		<input type="hidden" name="saveandback" value="0">
 
 		<div class="editbox short">
 			<label><abbr title="Only mods with Status 'Published' are publicly visible">Status</abbr></label>
-			<select name="statusid"{if $asset['statusid'] == STATUS_LOCKED && !canModerate(null, $user)} disabled="true"{/if}>
+			<select name="statusid"{if $asset['statusId'] == STATUS_LOCKED && !canModerate(null, $user)} disabled="true"{/if}>
 				{foreach from=$stati item=status}
-					<option value="{$status['statusid']}"{if $asset['statusid']==$status['statusid']} selected="selected"{/if}>{$status['name']}</option>
+					<option value="{$status['statusId']}"{if $asset['statusId']==$status['statusId']} selected="selected"{/if}>{$status['name']}</option>
 				{/foreach}
 			</select>
 		</div>
@@ -56,7 +56,7 @@
 			<label>Tags</label>
 			<select name="tagids[]" multiple>
 				{foreach from=$tags item=tag}
-					<option value="{$tag['tagid']}" title="{$tag['text']}"{if !empty($asset['tags'][$tag['tagid']])} selected="selected"{/if}>{$tag['name']}</option>
+					<option value="{$tag['tagId']}" title="{$tag['text']}"{if isset($asset['tags'][$tag['tagId']])} selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
 			</select>
 		</div>
@@ -68,7 +68,7 @@
 
 		<div class="editbox wide">
 			<label><abbr title="If set, your mod can be reached with this custom url. Only alphabetical letters are allowed.">URL Alias</abbr></label>
-			<label for="inp-urlalias" class="prefixed-input" data-prefix="https://mods.vintagestory.at/"><input id="inp-urlalias" type="text" name="urlalias" value="{$asset['urlalias']}" style="width: 21ch" /></label>
+			<label for="inp-urlalias" class="prefixed-input" data-prefix="https://mods.vintagestory.at/"><input id="inp-urlalias" type="text" name="urlalias" value="{$asset['urlAlias']}" style="width: 21ch" /></label>
 		</div>
 
 		<div class="editbox flex-fill">
@@ -91,10 +91,10 @@
 			<div id="teammembers-box" class="editbox wide pending-markers">
 				<label>Team Members</label>
 				<select name="teammemberids[]" multiple data-placeholder="Search Users"
-					data-url="/api/authors?name=\{name}" data-ownerid="{$asset['createdbyuserid']}">
-					{if !empty($teammembers)}
-						{foreach from=$teammembers item=teammember}
-							<option selected class="maybe-accepted{if !$teammember['pending']} accepted{/if}" value="{$teammember['userid']}" title="{$teammember['name']}">{$teammember['name']}</option>
+					data-url="/api/authors?name=\{name}" data-ownerid="{$asset['createdByUserId']}">
+					{if !empty($teamMembers)}
+						{foreach from=$teamMembers item=teamMember}
+							<option selected class="maybe-accepted{if !$teamMember['pending']} accepted{/if}" value="{$teamMember['userId']}" title="{$teamMember['name']}">{$teamMember['name']}</option>
 						{/foreach}
 					{/if}
 				</select>
@@ -103,45 +103,45 @@
 			<div id="teameditors-box" class="editbox wide pending-markers">
 				<label>Team Members with edit permissions</label>
 				<select name="teammembereditids[]" multiple data-placeholder="Search Members">
-					{foreach from=$teammembers item=teammember}
-						<option {if $teammember['canedit']}selected{/if} class="maybe-accepted{if !$teammember['pending']} accepted{/if}" value="{$teammember['userid']}" title="{$teammember['name']}">{$teammember['name']}</option>
+					{foreach from=$teamMembers item=teamMember}
+						<option {if $teamMember['canEdit']}selected{/if} class="maybe-accepted{if !$teamMember['pending']} accepted{/if}" value="{$teamMember['userId']}" title="{$teamMember['name']}">{$teamMember['name']}</option>
 					{/foreach}
 				</select>
 			</div>
 		{/if}
 
-		<h3 class="flex-fill">Screenshots<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$asset['assetid']}">download all as zip</a>{/if})</span></h3>
+		<h3 class="flex-fill">Screenshots<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$asset['assetId']}">download all as zip</a>{/if})</span></h3>
 		{include file="edit-asset-files.tpl"}
 
 		<h3 class="flex-fill">Links</h3>
 		<div class="editbox">
 			<label>Homepage or Forum Post Url</label>
-			<input type="url" name="homepageurl" value="{$asset['homepageurl']}" />
+			<input type="url" name="homepageurl" value="{$asset['homepageUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Trailer Video Url</label>
-			<input type="url" name="trailervideourl" value="{$asset['trailervideourl']}" />
+			<input type="url" name="trailervideourl" value="{$asset['trailerVideoUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Source Code Url</label>
-			<input type="url" name="sourcecodeurl" value="{$asset['sourcecodeurl']}" />
+			<input type="url" name="sourcecodeurl" value="{$asset['sourceCodeUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Issue tracker Url</label>
-			<input type="url" name="issuetrackerurl" value="{$asset['issuetrackerurl']}" />
+			<input type="url" name="issuetrackerurl" value="{$asset['issueTrackerUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Wiki Url</label>
-			<input type="url" name="wikiurl" value="{$asset['wikiurl']}" />
+			<input type="url" name="wikiurl" value="{$asset['wikiUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Donate Url</label>
-			<input type="url" name="donateurl" value="{$asset['donateurl']}" />
+			<input type="url" name="donateurl" value="{$asset['donateUrl']}" />
 		</div>
 
 		<h3 class="flex-fill">Additional information</h3>
@@ -160,9 +160,9 @@
 			<select name="cardlogofileid">
 				<option value="">--- Default ---</option>
 				{foreach from=$files item=file}
-					{if $file['imagesize'] === '480x320' || $file['imagesize'] === '480x480'}
-					<option value="{$file['fileid']}" data-url="{$file['url']}"{if $asset['cardlogofileid']==$file['fileid']} selected="selected" {/if}>
-						{$file['filename']} [{$file['imagesize']} px]</option>
+					{if $file['imageSize'] === '480x320' || $file['imageSize'] === '480x480'}
+					<option value="{$file['fileId']}" data-url="{$file['url']}"{if $asset['cardlogofileid']==$file['fileId']} selected="selected" {/if}>
+						{$file['name']} [{$file['imageSize']} px]</option>
 					{/if}
 				{/foreach}
 			</select>
@@ -173,29 +173,29 @@
 			<select name="embedlogofileid">
 				<option value="">--- Default (crop ModDB image) ---</option>
 				{foreach from=$files item=file}
-					{if $file['imagesize'] === '480x320' || $file['imagesize'] === '480x480'}
-					<option value="{$file['fileid']}" data-url="{$file['url']}"{if $asset['embedlogofileid']==$file['fileid']} selected="selected" {/if}>
-						{$file['filename']} [{$file['imagesize']} px]</option>
+					{if $file['imageSize'] === '480x320' || $file['imageSize'] === '480x480'}
+					<option value="{$file['fileId']}" data-url="{$file['url']}"{if $asset['embedlogofileid']==$file['fileId']} selected="selected" {/if}>
+						{$file['name']} [{$file['imageSize']} px]</option>
 					{/if}
 				{/foreach}
 			</select>
 		</div>
 
 		<div class="flex-spacer"></div>
-		<div id="preview-box-card" class="editbox" style="width: calc(300px + .5em); align-self: baseline;" data-fid="{$mod['cardlogofileid']}">
+		<div id="preview-box-card" class="editbox" style="width: calc(300px + .5em); align-self: baseline;" data-fid="{$mod['cardLogoFileId']}">
 			<label>ModDB Card Preview</label>
 			{include file="list-mod-entry"}
 		</div>
-		<div id="preview-box-embed" class="editbox" style="width: calc(300px + .5em); align-self: baseline;" data-fid="{$mod['embedlogofileid']}">
+		<div id="preview-box-embed" class="editbox" style="width: calc(300px + .5em); align-self: baseline;" data-fid="{$mod['embedLogoFileId']}">
 			<label><label><abbr title="Every platform uses this data differently, this is just an example of what it might look like.">External Preview</abbr></label></label>
 			<div>
 				<h4>{$mod['name']}</h4>
 				<div><small>Description...</small></div>
-				<img src="{empty($mod['logocdnpath_external']) ? '/web/img/mod-default.png' : formatCdnUrlFromCdnPath($mod['logocdnpath_external'])}" />
+				<img src="{empty($mod['logoCdnPathExternal']) ? '/web/img/mod-default.png' : formatCdnUrlFromCdnPath($mod['logoCdnPathExternal'])}" />
 			</div>
 		</div>
 
-		{if $asset['assetid'] && canEditAsset($asset, $user, false)}
+		{if $asset['assetId'] && canEditAsset($asset, $user, false)}
 			<h3 class="flex-fill">Ownership transfer</h3>
 
 			<div class="editbox wide">
@@ -203,21 +203,21 @@
 					<span>An ownership transfer invitation has been sent to: {$ownershipTransferUser}.</span>
 					<br>
 					<span>You may revoke the pending invitation using the button below:</span>
-					<p><a href="/edit/mod/?assetid={$asset['assetid']}&revokenewownership=1" class="button btndelete">REVOKE</a></p>
+					<p><a href="/edit/mod/?assetid={$asset['assetId']}&revokenewownership=1" class="button btndelete">REVOKE</a></p>
 				{else}
 					<div>
 						<label>Select new owner</label>
 						<small>Ownership can only be transferred by the current owner of this resource.</small>
 						<br>
-						<small>Ownership can only be transferred to an existing teammember.</small>
+						<small>Ownership can only be transferred to an existing team member.</small>
 						<br>
 						<small>A notification will be sent to the specified user, inviting them to accept ownership.</small>
 						<br>
 
 						<select name="newownerid">
 							<option value="" selected="selected">--- Select new owner ---</option>
-							{foreach from=$teammembers item=teammember}
-								{if !$teammember['pending']}<option value="{$teammember['userid']}" title="{$teammember['name']}">{$teammember['name']}</option>{/if}
+							{foreach from=$teamMembers item=teamMember}
+								{if !$teamMember['pending']}<option value="{$teamMember['userId']}" title="{$teamMember['name']}">{$teamMember['name']}</option>{/if}
 							{/foreach}
 						</select>
 					</div>
@@ -230,9 +230,9 @@
 
 <p style="clear:both"><br/></p>
 
-<a class="button large submit shine" href="javascript:submitForm(0)">{if $asset['statusid'] != STATUS_LOCKED || canModerate(null, $user)}Save{else}Request Review{/if}</a>
+<a class="button large submit shine" href="javascript:submitForm(0)">{if $asset['statusId'] != STATUS_LOCKED || canModerate(null, $user)}Save{else}Request Review{/if}</a>
 
-{if $asset['assetid'] && canDeleteAsset($asset, $user)}
+{if $asset['assetId'] && canDeleteAsset($asset, $user)}
 	<span style="float:right;">
 		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete Mod</a>
 	</span>
@@ -240,7 +240,7 @@
 
 {capture name="footerjs"}
 	<script type="text/javascript">
-		const targetModId = {$asset['modid'] ?? 0};
+		const targetModId = {$asset['modId'] ?? 0};
 		function lockModDlg(btnEl) {
 			const message = prompt("Locking a mod will disable automatic downloads for the duration.\nPlease provide a reason for locking this mod.\nThis reason will be displayed to the mod author and logged. The reason message should contain information on how the author can get their mod to be unlocked again.");
 

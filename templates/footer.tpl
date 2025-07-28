@@ -24,9 +24,9 @@
 	<script src="/web/js/fotorama.js"></script>
 
 	<script type="text/javascript">
-		assetid = {$asset['assetid'] ?? 0};
-		assettypeid = {$asset['assettypeid'] ?? 0};
-		actiontoken = "{$user['actiontoken'] ?? ''}";
+		assetid = {$asset['assetId'] ?? 0};
+		assettypeid = {$asset['assetTypeId'] ?? 0};
+		actiontoken = "{$user['actionToken'] ?? ''}";
 		
 		$(document).ready(function() {
 			$("select").each(function() {

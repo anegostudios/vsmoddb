@@ -23,21 +23,21 @@ $action = $urlparts[0];
 
 switch ($action) {
 	case "tags":
-		$rows = $con->getAll("select tagid, name, text, color from tag where assettypeid=1");
+		$rows = $con->getAll("select tagId, name, text, color from tags");
 		$rows = sortTags(1, $rows);
 		$tags = array();
 		foreach ($rows as $row) {
 			$tags[] = array(
-				"tagid" => intval($row["tagid"]),
+				"tagid" => intval($row["tagId"]),
 				"name" => $row['name'],
-				"color" => $row["color"]
+				"color" => '#'.str_pad($row["color"], 8, '0', STR_PAD_LEFT),
 			);
 		}
 		good(array("statuscode" => 200, "tags" => $tags));
 		break;
 		
 	case "gameversions":
-		$versions = $con->getAll('select version from GameVersions order by version');
+		$versions = $con->getAll('select version from gameVersions order by version');
 		foreach ($versions as &$version) {
 			$v = intval($version['version']);
 			$version = array(
@@ -63,13 +63,13 @@ switch ($action) {
 
 	case "authors":
 		if (isset($_GET["name"])) {
-			$rows = $con->getAll("select userid, name from user where (banneduntil is null or banneduntil < now()) and name like ? limit 10", "%".escapeStringForLikeQuery(substr($_GET["name"], 0, 20))."%");
+			$rows = $con->getAll("select userId, name from users where (banneduntil is null or banneduntil < now()) and name like ? limit 10", "%".escapeStringForLikeQuery(substr($_GET["name"], 0, 20))."%");
 		} else {		
-			$rows = $con->getAll("select userid, name from user");
+			$rows = $con->getAll("select userId, name from users");
 		}
 		
 		$authors = array_map(fn($row) => [
-			"userid" => intval($row["userid"]),
+			"userid" => intval($row["userId"]),
 			"name"   => $row['name'],
 		], $rows);
 
@@ -77,27 +77,29 @@ switch ($action) {
 		break;
 
 	case "comments":
-		$wheresql = '';
-		$limit = 'limit 100';
+		$whereSql = '';
+		$limitSql = 'limit 100';
 
 		if (intval($urlparts[1] ?? 0) > 0) {
-			$wheresql = 'AND assetid='.intval($urlparts[1]);
-			$limit = '';
+			$whereSql = 'AND assetId='.intval($urlparts[1]);
+			$limitSql = '';
 		}
 
-		$rows = $con->getAll("
-			select commentid, assetid, userid, text, created, lastmodified 
-			from comment where !deleted $wheresql 
-			order by lastmodified DESC $limit");
+		$rows = $con->getAll(<<<SQL
+			select commentId, assetId, userId, text, created, lastModified
+			from Comment
+			where !deleted $whereSql
+			order by lastModified DESC $limitSql
+		SQL);
 		$comments = array();
 		foreach ($rows as $row) {
 			$comments[] = array(
-				"commentid" => intval($row["commentid"]),
-				"assetid" => intval($row["assetid"]),
-				"userid" => intval($row["userid"]),
+				"commentid" => intval($row["commentId"]),
+				"assetid" => intval($row["assetId"]),
+				"userid" => intval($row["userId"]),
 				"text" => $row['text'],
 				"created" => $row['created'],
-				"lastmodified" => $row['lastmodified']
+				"lastmodified" => $row['lastModified']
 			);
 		}
 		good(array("statuscode" => 200, "comments" => $comments));
@@ -105,8 +107,7 @@ switch ($action) {
 
 	case "changelogs":
 		$error = 'This information was previously available, but is no longer distributed. Version 2 of the api might provide this information at some point in the future.';
-		header('Cache-Control: no-cache, no-store');
-		header('Clear-Site-Data: "cache"');
+		header('Cache-Control: max-age=604800, immutable');
 		exit(json_encode(array(
 			"statuscode" => "410",
 			"changelogs" => [
@@ -143,117 +144,117 @@ function listMod($modid)
 	global $con;
 
 	if ($modid != "" . intval($modid)) {
-		$modid = $con->getOne("select modid from `release` where `release`.modidstr=?", array($modid));
+		$modid = $con->getOne("select modId from modReleases where identifier = ?", array($modid));
 	}
 
-	$row = $con->getRow("select 
-			asset.assetid, 
+	$row = $con->getRow(<<<SQL
+		select 
+			asset.assetId,
 			asset.name,
 			asset.text,
-			asset.tagscached,
+			asset.tagsCached,
 			user.name as author,
 			`mod`.*,
-			logofile_external.cdnpath as logocdnpath_external,
-			logofile_db.cdnpath as logocdnpath_db
+			logoFileExternal.cdnPath as logoCdnPathExternal,
+			logoFileDb.cdnPath as logoCdnPathDb
 		from 
-			`mod` 
-			join asset on (`mod`.assetid = asset.assetid)
-			join user on (`asset`.createdbyuserid = user.userid)
-			left join file as logofile_external on (`mod`.embedlogofileid = logofile_external.fileid)
-			left join file as logofile_db on (`mod`.cardlogofileid = logofile_db.fileid)
+			mods `mod`
+			join assets asset on asset.assetId = `mod`.assetId
+			join users user on user.userId = asset.createdByUserId
+			left join files as logoFileExternal on (`mod`.embedLogoFileId = logoFileExternal.fileId)
+			left join files as logoFileDb on (`mod`.cardLogoFileId = logoFileDb.fileId)
 		where
-			asset.statusid=2
-			and modid=?
-	", array($modid));
+			asset.statusId = 2
+			and modId = ?
+	SQL, array($modid));
 
 	if (empty($row)) fail("404");
 
-	$rrows = $con->getAll("
+	$rrows = $con->getAll(<<<SQL
 		select 
-			`release`.*,
-			asset.*,
+			r.*,
 			GROUP_CONCAT(cgv.gameVersion SEPARATOR ';') as compatibleGameVersions
 		from 
-			`release` 
-			join asset on (asset.assetid = `release`.assetid)
-			left join ModReleaseCompatibleGameVersions cgv on cgv.releaseId = `release`.releaseid
-		where modid=?
-		group by `release`.releaseid
-		order by release.created desc
-	", array($row['modid']));
+			modReleases r 
+			left join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
+		where modId = ?
+		group by r.releaseId
+		order by r.created desc
+	SQL, array($row['modId']));
 
 	$releases = array();
 	foreach ($rrows as $release) {
-		$file = $con->getRow("select * from file where assetid=? limit 1", array($release['assetid']));
+		$file = $con->getRow("select * from files where assetId = ? limit 1", array($release['assetId']));
 
 		$releases[] = array(
-			"releaseid"  => intval($release['releaseid']),
+			"releaseid"  => intval($release['releaseId']),
 			"mainfile"   => empty($file) ? "" : formatCdnDownloadUrl($file),
-			"filename"   => empty($file) ? 0 : $file["filename"],
-			"fileid"     => isset($file['fileid']) ? intval($file['fileid']) : null,
+			"filename"   => empty($file) ? 0 : $file["name"],
+			"fileid"     => isset($file['fileId']) ? intval($file['fileId']) : null,
 			"downloads"  => empty($file) ? 0 : intval($file["downloads"]),
 			"tags"       => array_map(fn($s) => formatSemanticVersion(intval($s)), explode(';', $release["compatibleGameVersions"])),
-			"modidstr"   => $release['modidstr'],
-			"modversion" => formatSemanticVersion(intval($release['modversion'])),
+			"modidstr"   => $release['identifier'],
+			"modversion" => formatSemanticVersion(intval($release['version'])),
 			"created"    => $release['created'],
 			"changelog"  => $release['text'],
 		);
 	}
 
-	$srows = $con->getAll("
+	$screenshots = $con->getAll(<<<SQL
 		select 
-			fileid,
-			assetid,
-			filename,
-			hasthumbnail,
-			cdnpath,
-			created
+			f.fileId,
+			f.assetId,
+			f.name,
+			i.hasThumbnail,
+			f.cdnPath,
+			f.created
 		from 
-			`file` 
-		where assetid = ? and fileid not in (?, ?)
-	", array($row['assetid'], $row['cardlogofileid'] ?? 0, $row['embedlogofileid'] ?? 0)); /* sql cant compare against null */
+			files f
+		left join fileImageData i on i.fileId = f.fileId
+		where f.assetId = ? and f.fileId not in (?, ?)
+	SQL, array($row['assetId'], $row['cardLogoFileId'] ?? 0, $row['embedLogoFileId'] ?? 0)); /* sql cant compare against null */
 
 	$screenshots = array();
-	foreach ($srows as $screenshot) {
+	foreach ($screenshots as $screenshot) {
 		$screenshots[] = array(
-			"fileid"            => intval($screenshot["fileid"]),
+			"fileid"            => intval($screenshot["fileId"]),
 			"mainfile"          => formatCdnUrl($screenshot),
-			"filename"          => $screenshot["filename"],
-			"thumbnailfilename" => $screenshot["hasthumbnail"] ? formatCdnUrl($screenshot, '_55_60') : null,
+			"filename"          => $screenshot["name"],
+			"thumbnailfilename" => $screenshot["hasThumbnail"] ? formatCdnUrl($screenshot, '_55_60') : null,
 			"created"           => $screenshot["created"]
 		);
 	}
 
-	$logourlExternal = $row['logocdnpath_external'] ? formatCdnUrlFromCdnPath($row['logocdnpath_external']) : null;
-	$logourlDb = $row['logocdnpath_db'] ? formatCdnUrlFromCdnPath($row['logocdnpath_db']) : null;
+	$logoUrlExternal = $row['logoCdnPathExternal'] ? formatCdnUrlFromCdnPath($row['logoCdnPathExternal']) : null;
+	$logoUrlDb = $row['logoCdnPathDb'] ? formatCdnUrlFromCdnPath($row['logoCdnPathDb']) : null;
 	$mod = array(
-		"modid"           => intval($row["modid"]),
-		"assetid"         => intval($row["assetid"]),
+		"modid"           => intval($row["modId"]),
+		"assetid"         => intval($row["assetId"]),
 		"name"            => $row['name'],
 		"text"            => $row['text'],
 		"author"          => $row['author'],
-		"urlalias"        => $row['urlalias'],
-		"logofilename"    => $logourlExternal, // @obsolete //NOTE(Rennorb): This is not the filename, but just the link again.
-		"logofile"        => $logourlExternal,
-		"logofiledb"      => $logourlDb,
-		"homepageurl"     => $row['homepageurl'],
-		"sourcecodeurl"   => $row['sourcecodeurl'],
-		"trailervideourl" => $row['trailervideourl'],
-		"issuetrackerurl" => $row['issuetrackerurl'],
-		"wikiurl"         => $row['wikiurl'],
+		"urlalias"        => $row['urlAlias'],
+		"logofilename"    => $logoUrlExternal, // @obsolete //NOTE(Rennorb): This is not the filename, but just the link again.
+		"logofile"        => $logoUrlExternal,
+		"logofiledb"      => $logoUrlDb,
+		"homepageurl"     => $row['homepageUrl'],
+		"sourcecodeurl"   => $row['sourceCodeUrl'],
+		"trailervideourl" => $row['trailerVideoUrl'],
+		"issuetrackerurl" => $row['issueTrackerUrl'],
+		"wikiurl"         => $row['wikiUrl'],
 		"downloads"       => intval($row['downloads']),
 		"follows"         => intval($row['follows']),
-		"trendingpoints"  => intval($row['trendingpoints']),
+		"trendingpoints"  => intval($row['trendingPoints']),
 		"comments"        => intval($row['comments']),
 		"side"            => $row['side'],
 		"type"            => $row['type'],
 		"created"         => $row['created'],
-		"lastreleased"    => $row['lastreleased'],
+		"lastreleased"    => $row['lastReleased'],
 		//NOTE(Rennorb): This field updates on download number changes and is therefore pretty much useless.
 		// Removing it is however not a good idea becasue it's a public api, and changing it to work differently also isn't great because it would make the behaviour inconsistent between different tables.
 		// We therefore simply keep it in this jank state for now, until a potential future breaking version.
-		"lastmodified"    => $row['lastmodified'],
-		"tags"            => resolveTags($row['tagscached']),
+		"lastmodified"    => $row['lastModified'],
+		"tags"            => unwrapTagNames($row['tagsCached']),
 		"releases"        => $releases,
 		"screenshots"     => $screenshots
 	);
@@ -287,13 +288,13 @@ function listMods()
 
 	if (!empty($_GET["tagids"])) {
 		foreach ($_GET["tagids"] as $tagid) {
-			$wheresql[] = "exists (select assettag.tagid from assettag where assettag.assetid=asset.assetid and assettag.tagid=?)";
+			$wheresql[] = "exists (select 1 from modTags where modTags.modId = `mod`.modId and modTags.tagId = ?)";
 			$wherevalues[] = $tagid;
 		}
 	}
 
 	if (!empty($_GET["author"])) {
-		$wheresql[] = "user.userid=?";
+		$wheresql[] = "user.userId=?";
 		$wherevalues[] = intval($_GET["author"]);
 	}
 
@@ -307,7 +308,7 @@ function listMods()
 	}
 
 	if (!empty($_GET["gameversion"])) {
-		$wheresql[] = "exists (select 1 from ModCompatibleMajorGameVersionsCached cmv where cmv.modId = `mod`.modId and cmv.majorGameVersion = ?)";
+		$wheresql[] = "exists (select 1 from modCompatibleMajorGameVersionsCached cmv where cmv.modId = `mod`.modId and cmv.majorGameVersion = ?)";
 		$wherevalues[] = parsePrimaryVersion($_GET["gameversion"]);
 	}
 
@@ -319,84 +320,76 @@ function listMods()
 	if ($gvs) {
 		$gamevers = array_map("parseVersion", $gvs);
 		// @security: parseVersion produces integer values which are sql inert.
-		$wheresql[] = "exists (select 1 from ModCompatibleGameVersionsCached cgv where cgv.modId = `mod`.modId and cgv.gameVersion in (" . implode(",", $gamevers) . "))";
+		$wheresql[] = "exists (select 1 from modCompatibleGameVersionsCached cgv where cgv.modId = `mod`.modId and cgv.gameVersion in (" . implode(",", $gamevers) . "))";
 	}
 
 
-	$wheresql[] = "asset.statusid=2";
+	$wheresql[] = "asset.statusId = 2";
 
 
 	$rows = $con->getAll("
 		select 
-			asset.assetid, 
-			`mod`.modid, 
+			asset.assetId, 
+			`mod`.modId, 
 			`mod`.side,
 			`mod`.type,
-			`mod`.urlalias,
+			`mod`.urlAlias,
 			asset.name,
-			logofile_external.cdnpath as logocdnpath_external,
+			logofileExternal.cdnPath as logoCdnpathExternal,
 			mod.downloads,
 			follows,
 			comments, 
-			tagscached,
+			tagsCached,
 			summary,
-			group_concat(DISTINCT `release`.modidstr ORDER BY `release`.modidstr SEPARATOR ',') as modidstrs,
+			group_concat(DISTINCT r.identifier ORDER BY r.identifier SEPARATOR ',') as modidstrs,
 			user.name as author,
-			`mod`.lastreleased,
-			`mod`.trendingpoints
+			`mod`.lastReleased,
+			`mod`.trendingPoints
 		from 
-			`mod` 
-			join asset on (`mod`.assetid = asset.assetid)
-			join user on (`asset`.createdbyuserid = user.userid)
-			left join `release` on `release`.modid = `mod`.modid
-			left join file as logofile_external on mod.embedlogofileid = logofile_external.fileid
+			mods `mod` 
+			join assets asset on (`mod`.assetId = asset.assetId)
+			join users user on (asset.createdByUserId = user.userId)
+			left join modReleases r on r.modId = `mod`.modId
+			left join files as logofileExternal on logofileExternal.fileId = mod.embedLogoFileId
 		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "
-		group by `mod`.modid
+		group by `mod`.modId
 		order by $orderBy $orderDirection
 	", $wherevalues);
 	$mods = array();
 	foreach ($rows as $row) {
 
-		$tags = resolveTags($row["tagscached"]);
+		$tags = unwrapTagNames($row["tagsCached"]);
 
 
 
 		$mods[] = array(
-			"modid"          => intval($row['modid']),
-			"assetid"        => intval($row['assetid']),
+			"modid"          => intval($row['modId']),
+			"assetid"        => intval($row['assetId']),
 			"downloads"      => intval($row['downloads']),
 			"follows"        => intval($row['follows']),
-			"trendingpoints" => intval($row['trendingpoints']),
+			"trendingpoints" => intval($row['trendingPoints']),
 			"comments"       => intval($row['comments']),
 			"name"           => $row['name'],
 			"summary"        => $row['summary'],
 			"modidstrs"      => !empty($row['modidstrs']) ? explode(",", $row['modidstrs']) : array(),
 			"author"         => $row['author'],
-			"urlalias"       => $row['urlalias'],
+			"urlalias"       => $row['urlAlias'],
 			"side"           => $row['side'],
 			"type"           => $row['type'],
-			"logo"           => $row['logocdnpath_external'] ? formatCdnUrlFromCdnPath($row['logocdnpath_external']) : null,
+			"logo"           => $row['logoCdnpathExternal'] ? formatCdnUrlFromCdnPath($row['logoCdnpathExternal']) : null,
 			"tags"           => $tags,
-			"lastreleased"   => $row['lastreleased']
+			"lastreleased"   => $row['lastReleased']
 		);
 	}
 
 	good(array("statuscode" => 200, "mods" => $mods));
 }
 
-function resolveTags($tagscached)
+function unwrapTagNames($tagsCached)
 {
-	$tags = array();
-	$tagscached = trim($tagscached);
-	if (!empty($tagscached)) {
-		$tagdata = explode("\r\n", $tagscached);
-		foreach ($tagdata as $tagrow) {
-			$parts = explode(",", $tagrow);
-			$tags[] = $parts[0];
-		}
-	}
-
-	return $tags;
+	// cached tags are stored as name,color,id\r\nname2,color2,id2 ... 
+	// This gets the names
+	return array_map(fn($s) => explode(',', $s)[0], explode("\r\n", trim($tagsCached)));
 }
 
 /** Echo a (modidstr -> (release object)) map for each modidstr with a release thats newer than the version specified in currentModVersions.
@@ -410,41 +403,41 @@ function listOutOfDateMods($currentModVersions) {
 
 	$releases = $con->getAll("
 		select
-			r.modid,
-			r.releaseid,
-			r.modidstr,
-			r.modversion,
+			r.modId,
+			r.releaseId,
+			r.identifier,
+			r.version,
 			r.created,
-			r.assetid,
+			r.assetId,
 			GROUP_CONCAT(cgv.gameVersion SEPARATOR ';') as compatibleGameVersions
-		from `release` r
-		join ModReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseid
-		where r.modidstr in ($modIdStrParams)
-		group by r.releaseid
-		order by r.modidstr, r.modversion desc
+		from modReleases r
+		join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
+		where r.identifier in ($modIdStrParams)
+		group by r.releaseId
+		order by r.identifier, r.version desc
 	", $modIdStrs);
 
 	$outOfDateMods = [];
-	$lastModidstr = null;
+	$lastIdentifier = null;
 	foreach($releases as $release) {
-		// The list is ordered by modversion coming from the db, and releases with the same modidstr are grouped 
+		// The list is ordered by modversion coming from the db, and releases with the same identifier are grouped 
 		// (not grouped in the sql sense, grouped as in right next to each other).
-		// Every time that field changes we know we are looking at the latest version of that modidstr.
-		if($lastModidstr === $release['modidstr'])  continue;
-		$lastModidstr = $release['modidstr'];
+		// Every time that field changes we know we are looking at the latest version of that identifier.
+		if($lastIdentifier === $release['identifier'])  continue;
+		$lastIdentifier = $release['identifier'];
 
-		if($currentModVersions[$release['modidstr']] >= $release['modversion'])  continue; // already has the latest version
+		if($currentModVersions[$release['identifier']] >= $release['version'])  continue; // already has the latest version
 
-		$file = $con->getRow('select * from file where assetid = ? limit 1', [$release['assetid']]);
-		$outOfDateMods[$release['modidstr']] = [
-			'releaseid'  => intval($release['releaseid']),
+		$file = $con->getRow('select * from files where assetId = ? limit 1', [$release['assetId']]);
+		$outOfDateMods[$release['identifier']] = [
+			'releaseid'  => intval($release['releaseId']),
 			'mainfile'   => formatCdnDownloadUrl($file),
-			'filename'   => $file['filename'],
-			'fileid'     => $file['fileid'] ? intval($file['fileid']) : null,
+			'filename'   => $file['name'],
+			'fileid'     => $file['fileId'] ? intval($file['fileId']) : null,
 			'downloads'  => intval($file['downloads']),
 			'tags'       => array_map(fn($s) => formatSemanticVersion(intval($s)), explode(';', $release["compatibleGameVersions"])),
-			'modidstr'   => $release['modidstr'],
-			'modversion' => formatSemanticVersion(intval($release['modversion'])),
+			'modidstr'   => $release['identifier'],
+			'modversion' => formatSemanticVersion(intval($release['version'])),
 			'created'    => $release['created'],
 		];
 	}

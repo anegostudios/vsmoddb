@@ -20,7 +20,7 @@
 		<span data-label="Tags">
 			<select style="width:300px;" name="tagids[]" multiple>
 				{foreach from=$tags item=tag}
-					<option value="{$tag['tagid']}" title="{$tag['text']}"{if isset($selectedParams['tags'][$tag['tagid']])} selected="selected"{/if}>{$tag['name']}</option>
+					<option value="{$tag['tagId']}" title="{$tag['text']}"{if isset($selectedParams['tags'][$tag['tagId']])} selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
 			</select>
 		</span>

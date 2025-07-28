@@ -114,13 +114,13 @@ function recommendReleases($releases, $maxDesiredGameVersionStable, $maxDesiredG
 	$releasesByMaxGameVersion = $releases;
 	usort($releasesByMaxGameVersion, fn($a, $b) => (
 		(($b['maxCompatibleGameVersion'] - $a['maxCompatibleGameVersion']) << 1) // Make room for the second property comparison. This difference should never be so large as to get cut of by shifting it by one. 
-		| ($b['modversion'] > $a['modversion'] ? 1 : 0) // If two releases have the same maxversion, use their version to determine the order
+		| ($b['version'] > $a['version'] ? 1 : 0) // If two releases have the same maxversion, use their version to determine the order
 	));
 
 	$hasStableFallback = null;
 	foreach($releasesByMaxGameVersion as $release) {
 		if(in_array($maxDesiredGameVersionStable, $release['compatibleGameVersions'], true)) {
-			if(!isPreReleaseVersion($release['modversion'])) {
+			if(!isPreReleaseVersion($release['version'])) {
 				$out_recommendedRelease = $release;
 				break; // If there is a newer unstable version we already found it.
 			}
