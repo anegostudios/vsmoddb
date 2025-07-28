@@ -22,11 +22,11 @@ $userMods = $con->getAll("
 		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 		s.code AS statusCode
 	FROM
-		Assets a
-		JOIN Mods m ON m.assetId = a.assetId
-		LEFT JOIN Status s ON s.statusId = a.statusId
-		LEFT JOIN Files AS logo ON logo.fileId = m.cardLogoFileId
-		LEFT JOIN ModTeamMembers t ON t.modId = m.modId
+		assets a
+		JOIN mods m ON m.assetId = a.assetId
+		LEFT JOIN status s ON s.statusId = a.statusId
+		LEFT JOIN files AS logo ON logo.fileId = m.cardLogoFileId
+		LEFT JOIN modTeamMembers t ON t.modId = m.modId
 	WHERE
 		(a.createdByUserId = ? OR t.userId = ?) $sqlWhereExt
 	GROUP BY a.assetId
@@ -43,7 +43,7 @@ foreach ($userMods as &$mod) {
 unset($mod);
 
 if (canModerate($shownUser, $user)) {
-	$changelog = $con->getAll('SELECT text, assetId, created FROM Changelogs WHERE userId = ? ORDER BY created DESC LIMIT 100', [$shownUser['userId']]);
+	$changelog = $con->getAll('SELECT text, assetId, created FROM changelogs WHERE userId = ? ORDER BY created DESC LIMIT 100', [$shownUser['userId']]);
 	$view->assign('changelog', $changelog);
 }
 

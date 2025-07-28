@@ -6,10 +6,10 @@ const EXTEND_MATCHES_BY = 20;
 
 $rawData = $con->getAll(<<<SQL
 	SELECT a.createdByUserId, HEX(u.hash) AS `hash`, u.name as username, m.assetId, m.urlAlias, a.name, f.cdnPath, m.donateUrl, a.text
-	FROM Mods m
-	     JOIN Assets a ON a.assetId = m.assetId
-	     JOIN Users  u ON u.userId = a.createdByUserId
-	LEFT JOIN Files  f ON f.fileId = m.embedLogoFileId
+	FROM mods m
+	     JOIN assets a ON a.assetId = m.assetId
+	     JOIN users  u ON u.userId = a.createdByUserId
+	LEFT JOIN files  f ON f.fileId = m.embedLogoFileId
 	WHERE m.donateUrl <> '' OR a.text LIKE '%co-fi%' OR a.text LIKE '%patreon%'
 SQL);
 

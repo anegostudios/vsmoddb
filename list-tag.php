@@ -15,10 +15,10 @@ if (!empty($_GET["saved"])) {
 }
 
 
-$view->assign('rows', $con->getAll("SELECT *, LPAD(HEX(color), 8, '0') AS color FROM Tags ORDER BY kind, name"));
+$view->assign('rows', $con->getAll("SELECT *, LPAD(HEX(color), 8, '0') AS color FROM tags ORDER BY kind, name"));
 
 
-$gameVersionStrings = $con->getCol('SELECT version FROM GameVersions ORDER BY version DESC');
+$gameVersionStrings = $con->getCol('SELECT version FROM gameVersions ORDER BY version DESC');
 $gameVersionStrings = array_map('formatSemanticVersion', $gameVersionStrings);
 $view->assign('gameVersionStrings', $gameVersionStrings, null, true);
 

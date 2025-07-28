@@ -35,10 +35,10 @@ class AssetList extends AssetController {
 				s.code as statuscode,
 				s.name as statusname{$this->extracolumns}
 			from 
-				Assets asset
+				assets asset
 				join `{$this->tablename}` on asset.assetId = `{$this->tablename}`.assetId
-				left join Users user on asset.createdByUserId = user.userId
-				left join Status s on s.statusId = asset.statusId
+				left join users user on asset.createdByUserId = user.userId
+				left join status s on s.statusId = asset.statusId
 			" . (count($this->wheresql) ? "where " . implode(" and ", $this->wheresql) : "") . "
 			order by {$this->orderby}
 		";
@@ -86,7 +86,7 @@ class AssetList extends AssetController {
 		
 		$view->assign("searchvalues", $this->searchvalues);
 		
-		$stati = $con->getAll("select * from Status");
+		$stati = $con->getAll("select * from status");
 		$view->assign("stati", $stati);
 		
 		if (!empty($_GET["deleted"])) {

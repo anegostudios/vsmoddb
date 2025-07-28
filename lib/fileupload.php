@@ -34,7 +34,7 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 	$limits = UPLOAD_LIMITS[$assetTypeId];
 
 	if ($parentAssetId) {
-		$asset = $con->getRow("select * from Assets where assetId = ?", array($parentAssetId));
+		$asset = $con->getRow("select * from assets where assetId = ?", array($parentAssetId));
 		
 		if (!$asset) {
 			return array("status" => "error", "errormessage" => 'Asset does not exist (anymore)'); 
@@ -57,9 +57,9 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 	}
 	
 	if ($parentAssetId) {
-		$quantityfiles = $con->getOne("select count(*) from Files where assetId = ?", array($parentAssetId));
+		$quantityfiles = $con->getOne("select count(*) from files where assetId = ?", array($parentAssetId));
 	} else {
-		$quantityfiles = $con->getOne("select count(*) from Files where assetId is null and assetTypeId = ? and userId = ?", array($assetTypeId, $user['userId']));
+		$quantityfiles = $con->getOne("select count(*) from files where assetId is null and assetTypeId = ? and userId = ?", array($assetTypeId, $user['userId']));
 	}
 	
 	if ($quantityfiles + 1 > $limits['attachmentCount']) {
@@ -101,11 +101,11 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 
 	$foldedKeys = implode(', ', array_keys($data));
 	$placeholders = substr(str_repeat(',?', count($data)), 1);
-	$con->execute("INSERT INTO Files ($foldedKeys) VALUES ($placeholders)", array_values($data));
+	$con->execute("INSERT INTO files ($foldedKeys) VALUES ($placeholders)", array_values($data));
 	$fileId = $con->Insert_ID();
 	if($acceptedImage) {
 		// :BrokenSqlPointType
-		$con->execute("INSERT INTO FileImageData (fileId, hasThumbnail, size) VALUES ($fileId, 1, POINT($width, $height))");
+		$con->execute("INSERT INTO fileImageData (fileId, hasThumbnail, size) VALUES ($fileId, 1, POINT($width, $height))");
 	}
 
 	if($parentAssetId) logAssetChanges(array("Uploaded file '{$file['name']}'"), $parentAssetId);
@@ -122,7 +122,7 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 
 	if ($assetTypeId === ASSETTYPE_RELEASE) {
 		$ok = modpeek($localPath, $modInfo);
-		$con->Execute('insert into ModPeekResult (fileId, errors, modIdentifier, modVersion, type, side, requiredOnClient, requiredOnServer, networkVersion, description, website, iconPath, rawAuthors, rawContributors, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+		$con->Execute('insert into modPeekResults (fileId, errors, modIdentifier, modVersion, type, side, requiredOnClient, requiredOnServer, networkVersion, description, website, iconPath, rawAuthors, rawContributors, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
 			[$fileId, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['side'], $modInfo['requiredOnClient'], $modInfo['requiredOnServer'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['iconPath'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawDependencies']]
 		);
 

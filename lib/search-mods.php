@@ -172,15 +172,15 @@ function queryModSearch($searchParams)
 				break;
 
 			case 'tags':
-				$joinClauses .= 'JOIN ModTags t ON t.modId = m.modId AND t.tagId IN ('.implode(',', $value).')'; // @security: value must be filtered
+				$joinClauses .= 'JOIN modTags t ON t.modId = m.modId AND t.tagId IN ('.implode(',', $value).')'; // @security: value must be filtered
 				break;
 
 			case 'gameversions':
-				$joinClauses .= 'JOIN ModCompatibleGameVersionsCached mcv ON mcv.modId = m.modId AND mcv.gameVersion IN ('.implode(',', $value).')'; // @security: value must be filtered
+				$joinClauses .= 'JOIN modCompatibleGameVersionsCached mcv ON mcv.modId = m.modId AND mcv.gameVersion IN ('.implode(',', $value).')'; // @security: value must be filtered
 				break;
 
 			case 'majorversion':
-				$joinClauses .= 'JOIN ModCompatibleMajorGameVersionsCached mcmv ON mcmv.modId = m.modId AND mcmv.majorGameVersion = ?';
+				$joinClauses .= 'JOIN modCompatibleMajorGameVersionsCached mcmv ON mcmv.modId = m.modId AND mcmv.majorGameVersion = ?';
 				array_unshift($sqlParams, $value); // This needs to be in front of others because JOIN happens before WHERE.
 				break;
 
@@ -233,12 +233,12 @@ function queryModSearch($searchParams)
 			c.name AS `from`,
 			s.code AS statusCode,
 			f.userId AS following
-		FROM Mods m
-		JOIN Assets a ON a.assetId = m.assetId
-		LEFT JOIN Users c ON c.userId = a.createdByUserId
-		LEFT JOIN Status s ON s.statusId = a.statusId
-		LEFT JOIN UserFollowedMods f ON f.modId = m.modId and f.userId = $currentUserId
-		LEFT JOIN Files l ON l.fileId = m.cardLogoFileId
+		FROM mods m
+		JOIN assets a ON a.assetId = m.assetId
+		LEFT JOIN users c ON c.userId = a.createdByUserId
+		LEFT JOIN status s ON s.statusId = a.statusId
+		LEFT JOIN userFollowedMods f ON f.modId = m.modId and f.userId = $currentUserId
+		LEFT JOIN files l ON l.fileId = m.cardLogoFileId
 		$joinClauses
 		$whereClauses
 		ORDER BY $orderBy

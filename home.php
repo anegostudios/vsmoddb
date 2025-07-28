@@ -9,11 +9,11 @@ if (!empty($user)) {
 			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 			s.code AS statusCode
 		FROM
-			Assets a
-			JOIN Mods m ON m.assetId = a.assetId
-			LEFT JOIN Status s ON s.statusId = a.statusId
-			LEFT JOIN Files AS logo ON logo.fileId = m.cardLogoFileId
-			LEFT JOIN ModTeamMembers tm ON tm.modId = m.modId
+			assets a
+			JOIN mods m ON m.assetId = a.assetId
+			LEFT JOIN status s ON s.statusId = a.statusId
+			LEFT JOIN files AS logo ON logo.fileId = m.cardLogoFileId
+			LEFT JOIN modTeamMembers tm ON tm.modId = m.modId
 		WHERE
 			(a.createdByUserId = ? OR tm.userId = ?)
 		GROUP BY a.assetId
@@ -43,15 +43,15 @@ if (!empty($user)) {
 			rd.created AS releaseDate,
 			rd.version AS releaseVersion
 		FROM
-			Assets a
-			JOIN Mods m ON m.assetId = a.assetId
-			JOIN Users u ON u.userId = a.createdByUserId
-			JOIN UserFollowedMods f ON f.modId = m.modId AND f.userId = ?
-			LEFT JOIN Files AS logo ON logo.fileId = m.cardLogoFileId
-			LEFT JOIN ModReleases rd ON rd.modId = m.modId
+			assets a
+			JOIN mods m ON m.assetId = a.assetId
+			JOIN users u ON u.userId = a.createdByUserId
+			JOIN userFollowedMods f ON f.modId = m.modId AND f.userId = ?
+			LEFT JOIN files AS logo ON logo.fileId = m.cardLogoFileId
+			LEFT JOIN modReleases rd ON rd.modId = m.modId
 		WHERE
 			a.statusId = ".STATUS_RELEASED."
-			AND rd.created = (select max(created) from ModReleases r where r.modId = m.modId)
+			AND rd.created = (select max(created) from modReleases r where r.modId = m.modId)
 		ORDER BY
 			releaseDate DESC
 	", [$user['userId']]);
@@ -76,10 +76,10 @@ $latestMods = $con->getAll("
 		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 		u.name AS `from`
 	FROM
-		Assets a
-		join Mods m ON m.assetId = a.assetId
-		join Users u ON u.userId = a.createdByUserId
-		left join Files AS logo ON logo.fileId = m.cardLogoFileId
+		assets a
+		join mods m ON m.assetId = a.assetId
+		join users u ON u.userId = a.createdByUserId
+		left join files AS logo ON logo.fileId = m.cardLogoFileId
 	WHERE
 		a.statusId = ".STATUS_RELEASED."
 		AND m.created > DATE_SUB(NOW(), INTERVAL 30 DAY)
@@ -102,9 +102,9 @@ $lastestComments = $con->getAll('
 		c.commentId, c.text, c.created,
 		u.name AS username, IFNULL(u.bannedUntil >= NOW(), 0) AS isBanned
 	FROM
-		Comments c
-		join Users u ON u.userId = c.userId
-		join Assets a ON a.assetId = c.assetId
+		comments c
+		join users u ON u.userId = c.userId
+		join assets a ON a.assetId = c.assetId
 	WHERE
 		a.statusId = '.STATUS_RELEASED.'
 		AND !c.deleted

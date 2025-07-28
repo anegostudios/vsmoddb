@@ -18,7 +18,7 @@ $view->assign("searchvalues", $searchvalues);
 if (isset($searchvalues["name"])) {
 	$view->assign("rows", $con->getAll(<<<SQL
 		SELECT *, HEX(`hash`) AS `hash`
-		FROM Users
+		FROM users
 		WHERE name LIKE ?
 		LIMIT 500
 	SQL, ["%".escapeStringForLikeQuery($searchvalues['name'])."%"]));

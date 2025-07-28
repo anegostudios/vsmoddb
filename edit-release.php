@@ -13,18 +13,18 @@ $pushedErrorForCurrentFile = false; // This is here so we can push the errors ev
 if(!empty($_REQUEST['assetid'])) {
 	$existingRelease = $con->getRow(<<<SQL
 		SELECT a.*, r.*, createdBy.name as createdByUsername, lastEditedBy.name as lastEditedByUsername
-		FROM ModReleases r
-		JOIN Assets a ON a.assetId = r.assetId
-		LEFT JOIN Users createdBy ON createdBy.userId = a.createdbyuserid 
-		LEFT JOIN Users lastEditedBy ON lastEditedBy.userId = a.editedbyuserid 
+		FROM modReleases r
+		JOIN assets a ON a.assetId = r.assetId
+		LEFT JOIN users createdBy ON createdBy.userId = a.createdbyuserid 
+		LEFT JOIN users lastEditedBy ON lastEditedBy.userId = a.editedbyuserid 
 		WHERE r.assetId = ?
 	SQL, [$_REQUEST['assetid']]);
 
 	if($existingRelease) {
 		$targetMod = $con->getRow(<<<SQL
 			SELECT a.*, m.*
-			FROM Mods m
-			JOIN Assets a ON a.assetId = m.assetId
+			FROM mods m
+			JOIN assets a ON a.assetId = m.assetId
 			WHERE m.modId = ?
 		SQL, [$existingRelease['modId']]);
 	}
@@ -33,8 +33,8 @@ if(!empty($_REQUEST['assetid'])) {
 else if(!empty($_REQUEST['modid'])) {
 	$targetMod = $con->getRow(<<<SQL
 		SELECT a.*, m.*
-		FROM Mods m
-		JOIN Assets a ON a.assetId = m.assetId
+		FROM mods m
+		JOIN assets a ON a.assetId = m.assetId
 		WHERE m.modId = ?
 	SQL, [$_REQUEST['modid']]);
 }
@@ -61,8 +61,8 @@ if(!empty($_POST['save'])) {
 	if($existingRelease) {
 		$currentFiles = $con->getAll(<<<SQL
 			SELECT f.assetId, f.fileId, mpr.modIdentifier, mpr.modVersion
-			FROM Files f
-			LEFT JOIN ModPeekResult mpr ON mpr.fileId = f.fileId
+			FROM files f
+			LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
 			WHERE f.assetId = ?
 		SQL, [$existingRelease['assetId']]);
 	}
@@ -70,8 +70,8 @@ if(!empty($_POST['save'])) {
 		// hovering files
 		$currentFiles = $con->getAll(<<<SQL
 			SELECT f.assetId, f.fileId, mpr.modIdentifier, mpr.modVersion, mpr.errors
-			FROM Files f
-			LEFT JOIN ModPeekResult mpr ON mpr.fileId = f.fileId
+			FROM files f
+			LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
 			WHERE f.assetId IS NULL AND f.assetTypeId = 2 AND f.userId = ?
 		SQL, [$user['userId']]);
 
@@ -141,9 +141,9 @@ if(!empty($_POST['save'])) {
 				$sqlIgnoreExistingRelease = $existingRelease ? "r.releaseId != {$existingRelease['releaseId']} AND" : ''; // @security $existingRelease['releaseId'] comes from the database and is numeric, therefore sql inert.
 				$inUseBy = $con->getRow(<<<SQL
 					SELECT a.*, r.modId, r.version, m.assetId as modAssetId, m.urlAlias
-					FROM ModReleases r
-					JOIN Assets a ON a.assetId = r.assetId
-					JOIN Mods m ON m.modId = r.modId
+					FROM modReleases r
+					JOIN assets a ON a.assetId = r.assetId
+					JOIN mods m ON m.modId = r.modId
 					WHERE $sqlIgnoreExistingRelease r.identifier = ? AND (r.modId != ? || r.version = ?)
 					LIMIT 1
 				SQL, [$newData['identifier'], $targetMod['modId'], $newData['version']]);
@@ -229,21 +229,21 @@ else if($existingRelease && !empty($_POST['delete'])) {
 if($existingRelease) {
 	$files = $con->getAll(<<<SQL
 		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
-		FROM Files f
-		LEFT JOIN FileImageData i ON i.fileId = f.fileId
+		FROM files f
+		LEFT JOIN fileImageData i ON i.fileId = f.fileId
 		WHERE f.assetId = ?
 	SQL, [$existingRelease['assetId']]);
 
-	$compatibleGameVersions = $con->getCol('SELECT gameVersion FROM ModReleaseCompatibleGameVersions WHERE releaseId = ?', $existingRelease['releaseId']);
+	$compatibleGameVersions = $con->getCol('SELECT gameVersion FROM modReleaseCompatibleGameVersions WHERE releaseId = ?', $existingRelease['releaseId']);
 	$existingRelease['compatibleGameVersions'] = array_flip(array_map('intval', $compatibleGameVersions));
 }
 else {
 	// hovering files
 	$files = $con->getAll(<<<SQL
 		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize, mpr.modIdentifier, mpr.modVersion, mpr.errors
-		FROM Files f
-		LEFT JOIN ModPeekResult mpr ON mpr.fileId = f.fileId
-		LEFT JOIN FileImageData i ON i.fileId = f.fileId
+		FROM files f
+		LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
+		LEFT JOIN fileImageData i ON i.fileId = f.fileId
 		WHERE f.assetId IS NULL AND f.assetTypeId = 2 AND f.userId = ?
 	SQL, [$user['userId']]);
 
@@ -262,7 +262,7 @@ unset($file);
 
 
 
-$allGameVersions = $con->getAll('SELECT version FROM GameVersions ORDER BY version DESC');
+$allGameVersions = $con->getAll('SELECT version FROM gameVersions ORDER BY version DESC');
 foreach($allGameVersions as &$gameVersion) {
 	$gameVersion['version'] = intval($gameVersion['version']);
 	$gameVersion['name'] = formatSemanticVersion($gameVersion['version']);
@@ -272,8 +272,8 @@ unset($gameVersion);
 
 $assetChangelog = $existingRelease ? $con->getAll(<<<SQL
 	SELECT ch.text, ch.lastModified, u.name AS username
-	FROM Changelogs ch
-	JOIN Users u ON u.userId = ch.userId
+	FROM changelogs ch
+	JOIN users u ON u.userId = ch.userId
 	WHERE ch.assetId = ?
 	ORDER BY ch.created DESC
 	LIMIT 20

@@ -24,7 +24,7 @@ if ($save) {
 	if (!$tagId) {
 		$isNew = true;
 
-		$con->execute('INSERT INTO Tags (name, text, color, kind) VALUES (?, ?, ?, 2)', [$name, $text, $color]);
+		$con->execute('INSERT INTO tags (name, text, color, kind) VALUES (?, ?, ?, 2)', [$name, $text, $color]);
 
 		addMessage(MSG_CLASS_OK, 'Tag created.');
 
@@ -32,7 +32,7 @@ if ($save) {
 		else header("Location: /edit/tag?tagid=$tagId");
 		exit();
 	} else {
-		$con->execute('UPDATE Tags SET name = ?, text = ?, color = ? WHERE tagId = ?', [$name, $text, $color, $tagId]);
+		$con->execute('UPDATE tags SET name = ?, text = ?, color = ? WHERE tagId = ?', [$name, $text, $color, $tagId]);
 
 		addMessage(MSG_CLASS_OK, 'Tag saved.');
 
@@ -42,13 +42,13 @@ if ($save) {
 	}
 }
 else if ($delete) {
-	$con->execute('DELETE FROM Tags WHERE tagId = ?', [$tagId]);
+	$con->execute('DELETE FROM tags WHERE tagId = ?', [$tagId]);
 	header('Location: /list/tag?deleted=1');
 	exit();
 }
 
 if ($tagId) {
-	$row = $con->getRow("SELECT *, LPAD(HEX(color), 8, '0') as color FROM Tags WHERE tagId = ?", [$_REQUEST['tagid']]);
+	$row = $con->getRow("SELECT *, LPAD(HEX(color), 8, '0') as color FROM tags WHERE tagId = ?", [$_REQUEST['tagid']]);
 } else {
 	$row = ['tagId' => 0, 'name' => '', 'text' => '', 'color' => ''];
 }

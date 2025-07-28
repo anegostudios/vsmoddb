@@ -3,7 +3,7 @@
 //NOTE(Rennorb): Assume the user object exists.
 
 if(empty($urlparts)) {
-	$ids = $con->getCol('SELECT notificationId FROM Notifications WHERE !`read` AND userId = ?', [$user['userId']]);
+	$ids = $con->getCol('SELECT notificationId FROM notifications WHERE !`read` AND userId = ?', [$user['userId']]);
 	good($ids);
 }
 
@@ -20,10 +20,10 @@ switch($urlparts[0]) {
 		$foldedIds = implode(',', $ids);
 
 		// @security: Ids ($foldedIds) are knows / filtered to be integers, and therefore sql inert.
-		$idsWithoutPermission = $con->getCol("SELECT notificationId FROM Notifications WHERE notificationId IN ($foldedIds) AND userId != ?", [$user['userId']]);
+		$idsWithoutPermission = $con->getCol("SELECT notificationId FROM notifications WHERE notificationId IN ($foldedIds) AND userId != ?", [$user['userId']]);
 		if(!empty($idsWithoutPermission)) fail(403, ['reason' => 'Invalid ids provided.', 'invalid_ids' => $idsWithoutPermission]);
 
-		$con->execute("UPDATE Notifications SET `read` = 1 WHERE notificationId in ($foldedIds)");
+		$con->execute("UPDATE notifications SET `read` = 1 WHERE notificationId in ($foldedIds)");
 		good();
 
 	case 'settings':
@@ -43,7 +43,7 @@ switch($urlparts[0]) {
 					if($newFlags === false)   fail(400, ['reason' => 'Malformed new settings value.']);
 
 					$con->execute(<<<SQL
-						INSERT INTO UserFollowedMods
+						INSERT INTO userFollowedMods
 							(modId, userId, flags) VALUES (?, ?, ?)
 						ON DUPLICATE KEY
 							UPDATE flags = ?
@@ -51,7 +51,7 @@ switch($urlparts[0]) {
 					if($con->affected_rows() == 1) {
 						//NOTE(Rennorb): MariaDB / MySQL returns two rows affected on update.
 						// For this reason we are able to differentiate between update and new insert without extra queries.
-						$con->execute('UPDATE Mods SET follows = follows + 1 WHERE modId = ?', [$modId]);
+						$con->execute('UPDATE mods SET follows = follows + 1 WHERE modId = ?', [$modId]);
 					}
 
 					good();
@@ -60,9 +60,9 @@ switch($urlparts[0]) {
 				switch($urlparts[3]) {
 					case 'unfollow':
 						validateMethod('POST');
-						$con->execute('DELETE FROM UserFollowedMods WHERE modId = ? AND userId = ?', [$modId, $user['userId']]);
+						$con->execute('DELETE FROM userFollowedMods WHERE modId = ? AND userId = ?', [$modId, $user['userId']]);
 						if($con->affected_rows()) {
-							$con->execute('UPDATE Mods SET follows = follows - 1 WHERE modId = ?', [$modId]);
+							$con->execute('UPDATE mods SET follows = follows - 1 WHERE modId = ?', [$modId]);
 						}
 
 						good();

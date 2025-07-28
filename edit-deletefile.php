@@ -15,8 +15,8 @@ if (empty($_POST['fileid'])) {
 $fileId = $_POST['fileid'];
 $file = $con->getRow(<<<SQL
 	SELECT name, assetId, userId, cdnPath, hasThumbnail
-	FROM Files f
-	LEFT JOIN FileImageData d ON d.fileId = f.fileId
+	FROM files f
+	LEFT JOIN fileImageData d ON d.fileId = f.fileId
 	WHERE f.fileId = ?
 SQL, [$fileId]);
 
@@ -29,7 +29,7 @@ if (!$file) {
 $assetId = $file['assetId'];
 
 if ($assetId) {
-	$asset = $con->getRow('SELECT * FROM Assets WHERE assetId = ?', [$assetId]);
+	$asset = $con->getRow('SELECT * FROM assets WHERE assetId = ?', [$assetId]);
 	if (!canEditAsset($asset, $user)) {
 		exit(json_encode(['status' => 'error', 'errormessage' => 'No privilege to delete files from this asset. You may need to login again'])); 
 	}
@@ -42,13 +42,13 @@ if ($assetId) {
 
 splitOffExtension($file['cdnPath'], $noext, $ext);
 
-$con->Execute('UPDATE Mods SET cardLogoFileId = NULL WHERE cardLogoFileId = ?', [$fileId]);
-$con->Execute('UPDATE Mods SET embedLogoFileId = NULL WHERE embedLogoFileId = ?', [$fileId]);
-$con->Execute('DELETE FROM Files WHERE fileId = ?', [$fileId]);
+$con->Execute('UPDATE mods SET cardLogoFileId = NULL WHERE cardLogoFileId = ?', [$fileId]);
+$con->Execute('UPDATE mods SET embedLogoFileId = NULL WHERE embedLogoFileId = ?', [$fileId]);
+$con->Execute('DELETE FROM files WHERE fileId = ?', [$fileId]);
 
-$countOfFilesUsingThisCDNPath = $con->getOne('SELECT COUNT(*) FROM Files WHERE cdnPath = ?', [$file['cdnPath']]);
+$countOfFilesUsingThisCDNPath = $con->getOne('SELECT COUNT(*) FROM files WHERE cdnPath = ?', [$file['cdnPath']]);
 if($countOfFilesUsingThisCDNPath < 2) {
-$con->Execute('DELETE FROM Files WHERE cdnPath = ?', ["{$noext}_480_320.{$ext}"]); // legacy logo
+$con->Execute('DELETE FROM files WHERE cdnPath = ?', ["{$noext}_480_320.{$ext}"]); // legacy logo
 	//TODO(Rennorb) @correctness: Could try and figure out if there is a difference between a "generic error" response and "this file does not exist" and then decided on whether or not this should be an error.
 	// For now we ignore errors here, even if we fail to delete from cdn we still deleted the table entry because we otherwise block user interaction because of third party issues (no-go).
 	deleteFromCdn($file['cdnPath']);

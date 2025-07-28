@@ -26,12 +26,12 @@ $account = $response;
 $actionToken = bin2hex(openssl_random_pseudo_bytes(8));
 
 // If a user buys 2 accounts and switches emails, the below update will error due to duplicate email.
-$con->execute("UPDATE Users SET email = CONCAT(userId, '.outdated+', email) WHERE email = ? AND uid != FROM_BASE64(?)", [$account["email"], $account['uid']]);
+$con->execute("UPDATE users SET email = CONCAT(userId, '.outdated+', email) WHERE email = ? AND uid != FROM_BASE64(?)", [$account["email"], $account['uid']]);
 
-if($userId = $con->getOne('SELECT userId from Users where uid = FROM_BASE64(?)', [$account['uid']])) {
+if($userId = $con->getOne('SELECT userId from users where uid = FROM_BASE64(?)', [$account['uid']])) {
 	// update existing user
 	$con->execute(<<<SQL
-		UPDATE Users
+		UPDATE users
 		SET name = ?, email = ?, uid = FROM_BASE64(?), actionToken = UNHEX(?), sessionToken = FROM_BASE64(?), sessionValidUntil = DATE_ADD(NOW(), INTERVAL 14 DAY)
 		WHERE userId = ?
 	SQL, [$account['playername'], $account['email'], $account['uid'], $actionToken, $sessionToken, $userId]);
@@ -39,12 +39,12 @@ if($userId = $con->getOne('SELECT userId from Users where uid = FROM_BASE64(?)',
 else {
 	// new user
 	$con->execute(<<<SQL
-		INSERT INTO Users (name, email, uid, actionToken, sessionToken, sessionValidUntil, hash)
+		INSERT INTO users (name, email, uid, actionToken, sessionToken, sessionValidUntil, hash)
 		VALUES (?, ?, FROM_BASE64(?), UNHEX(?), FROM_BASE64(?), DATE_ADD(NOW(), INTERVAL 14 DAY), '\0')
 	SQL, [$account['playername'], $account['email'], $account['uid'], $actionToken, $sessionToken]);
 	//TODO(Rennorb) @perf @cleanup: try to wrangle this into one query
 	$con->execute(<<<SQL
-		UPDATE Users
+		UPDATE users
 		SET hash = UNHEX(SUBSTRING(SHA2(CONCAT(userId, created), 512), 1, 20))
 		WHERE uid = FROM_BASE64(?) AND hash = '\0'
 		LIMIT 1

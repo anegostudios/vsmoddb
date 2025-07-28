@@ -7,9 +7,9 @@ $cnt = 0;
 
 const USER_QUERY_SQL_BASE = '
 	SELECT u.*, HEX(`hash`) AS `hash`, HEX(u.actionToken) AS actionToken, r.code AS roleCode, IFNULL(u.bannedUntil >= NOW(), 0) AS isBanned, rec.reason AS banReason
-	FROM Users u
-	LEFT JOIN Roles r ON r.roleId = u.roleid
-	LEFT JOIN ModerationRecords rec ON rec.kind = ' . MODACTION_KIND_BAN . ' AND rec.targetUserId = u.userId AND rec.until = u.bannedUntil AND rec.until >= NOW()
+	FROM users u
+	LEFT JOIN roles r ON r.roleId = u.roleid
+	LEFT JOIN moderationRecords rec ON rec.kind = ' . MODACTION_KIND_BAN . ' AND rec.targetUserId = u.userId AND rec.until = u.bannedUntil AND rec.until >= NOW()
 ';
 
 // check `DEBUGUSER` first, $sessionToken could be set by mods.vintagestory.at even if we're browsing stage.mods.vintagestory.at
@@ -57,7 +57,7 @@ function getUserByHash($hash)
 	global $con;
 	return $con->getRow(<<<SQL
 		SELECT u.*, HEX(`hash`) AS `hash`, IFNULL(u.bannedUntil >= NOW(), 0) AS isBanned
-		FROM Users u
+		FROM users u
 		WHERE `hash` = UNHEX(?)
 	SQL, [$hash]);
 }
@@ -93,8 +93,8 @@ function canEditAsset($asset, $user, $includeTeam = true)
 	if ($includeTeam && $asset['assetTypeId'] === ASSETTYPE_MOD) {
 		$canEditAsTeamMember = $con->getOne(<<<SQL
 			SELECT 1 
-			FROM ModTeamMembers t 
-			JOIN Mods m ON m.modId = t.modId
+			FROM modTeamMembers t 
+			JOIN mods m ON m.modId = t.modId
 			WHERE assetId = ? AND t.userId = ? AND t.canEdit = 1
 		SQL, array($asset['assetId'], $user['userId']));
 	}
@@ -102,14 +102,14 @@ function canEditAsset($asset, $user, $includeTeam = true)
 		//NOTE(Rennorb): The second case checks if we are owner of the mod this release belongs to.
 		$canEditAsTeamMember = $con->getOne(<<<SQL
 				SELECT 1 
-				FROM ModTeamMembers t 
-				JOIN ModReleases r ON r.modId = t.modId
+				FROM modTeamMembers t 
+				JOIN modReleases r ON r.modId = t.modId
 				WHERE assetId = ? AND t.userId = ? AND t.canEdit = 1
 			union
 				SELECT 1
-				FROM Mods m
-				JOIN ModReleases r ON r.modId = m.modId AND r.assetId = ?
-				JOIN Assets a ON a.assetId = m.assetId AND a.createdByUserId = ?
+				FROM mods m
+				JOIN modReleases r ON r.modId = m.modId AND r.assetId = ?
+				JOIN assets a ON a.assetId = m.assetId AND a.createdByUserId = ?
 		SQL, array($asset['assetId'], $user['userId'], $asset['assetId'], $user['userId']));
 	}
 
@@ -149,19 +149,19 @@ function loadNotifications($loadAll)
 {
 	global $con, $view, $user;
 
-	$view->assign('notificationcount', $con->getOne('SELECT COUNT(*) FROM Notifications WHERE userId = ? AND !`read`', [$user['userId']]));
+	$view->assign('notificationcount', $con->getOne('SELECT COUNT(*) FROM notifications WHERE userId = ? AND !`read`', [$user['userId']]));
 
 	$limit = $loadAll ? '' : 'LIMIT 10';
-	$notifications = $con->getAll("SELECT * FROM Notifications WHERE userId = ? AND !`read` ORDER BY created DESC $limit", [$user['userId']]);
+	$notifications = $con->getAll("SELECT * FROM notifications WHERE userId = ? AND !`read` ORDER BY created DESC $limit", [$user['userId']]);
 
 	foreach ($notifications as &$notification) {
 		switch ($notification['kind']) {
 			case 'newrelease':
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
-					FROM Mods m
-					JOIN Assets a ON a.assetId = m.assetId
-					JOIN Users u ON u.userId = a.createdByUserId
+					FROM mods m
+					JOIN assets a ON a.assetId = m.assetId
+					JOIN users u ON u.userId = a.createdByUserId
 					WHERE m.modId = ?
 				SQL, [$notification['recordId']]);
 
@@ -171,9 +171,9 @@ function loadNotifications($loadAll)
 			case 'teaminvite':
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
-					FROM Mods m
-					JOIN Assets a ON a.assetId = m.assetId
-					JOIN Users u ON u.userId = a.createdByUserId
+					FROM mods m
+					JOIN assets a ON a.assetId = m.assetId
+					JOIN users u ON u.userId = a.createdByUserId
 					WHERE m.modId = ? 
 				SQL, [intval($notification['recordId']) & ((1 << 30) - 1)]);  // :InviteEditBit
 
@@ -183,9 +183,9 @@ function loadNotifications($loadAll)
 			case 'modownershiptransfer':
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
-					FROM Mods m
-					JOIN Assets a ON a.assetId = m.assetId
-					JOIN Users u ON u.userId = a.createdByUserId
+					FROM mods m
+					JOIN assets a ON a.assetId = m.assetId
+					JOIN users u ON u.userId = a.createdByUserId
 					WHERE m.modId = ?
 				SQL, [$notification['recordId']]);
 
@@ -195,9 +195,9 @@ function loadNotifications($loadAll)
 			case 'newcomment': case 'mentioncomment':
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
-					FROM Comments c
-					JOIN Assets a ON a.assetId = c.assetId
-					JOIN Users u ON u.userId = c.userId
+					FROM comments c
+					JOIN assets a ON a.assetId = c.assetId
+					JOIN users u ON u.userId = c.userId
 					WHERE c.commentId = ?
 				SQL, [$notification['recordId']]);
 
@@ -210,17 +210,17 @@ function loadNotifications($loadAll)
 				break;
 
 			case 'modlocked':
-				$modName = $con->getOne('SELECT name FROM Mods m JOIN Assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
+				$modName = $con->getOne('SELECT name FROM mods m JOIN assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
 				$notification['text'] = "Your mod '{$modName}' got locked by a moderator";
 				break;
 
 			case 'modunlockrequest':
-				$modName = $con->getOne('SELECT name FROM Mods m JOIN Assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
+				$modName = $con->getOne('SELECT name FROM mods m JOIN assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
 				$notification['text'] = "A review-request was issued for a mod locked by you ('{$modName}')";
 				break;
 
 			case 'modunlocked':
-				$modName = $con->getOne('SELECT name from Mods m JOIN Assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
+				$modName = $con->getOne('SELECT name from mods m JOIN assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
 				$notification['text'] = "Your mod '{$modName}' got unlocked by a moderator";
 				break;
 		}

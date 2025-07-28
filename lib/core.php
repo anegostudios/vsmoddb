@@ -40,7 +40,7 @@ $view->assign("assetserver", $config['assetserver']);
 
 
 //NOTE(Rennorb): Technically we should only count the public mods, but in reality this probably doesn't matter for production and just counting all mods makes the query simpler.
-$view->assign('totalModCount', $con->getOne('SELECT COUNT(*) from Mods'), null, true);
+$view->assign('totalModCount', $con->getOne('SELECT COUNT(*) from mods'), null, true);
 
 
 // insert db record
@@ -349,19 +349,19 @@ function logAssetChanges($changes, $assetId)
 
 	$activeChangeId = $con->getOne(<<<SQL
 		SELECT changelogId
-		FROM Changelogs
+		FROM changelogs
 		WHERE userId = ? AND assetId = ? AND lastModified >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
 		ORDER BY created DESC
 		LIMIT 1
 	SQL, [$user['userId'], $assetId]);
 
 	if ($activeChangeId) {
-		$con->execute("UPDATE Changelogs SET text = CONCAT(?, '\n\r', text) WHERE changelogId = ?",
+		$con->execute("UPDATE changelogs SET text = CONCAT(?, '\n\r', text) WHERE changelogId = ?",
 			[$changes, $activeChangeId]
 		);
 	}
 	else {
-		$con->execute('INSERT INTO Changelogs (assetId, userId, text) VALUES (?, ?, ?)',
+		$con->execute('INSERT INTO changelogs (assetId, userId, text) VALUES (?, ?, ?)',
 			[$assetId, $user["userId"], $changes]
 		);
 	}
@@ -407,7 +407,7 @@ const SQL_DATE_FORMAT = "Y-m-d H:i:s";
 function logModeratorAction($targetUserId, $moderatorUserId, $kind, $recordId, $until, $reason)
 {
 	global $con;
-	$con->Execute('INSERT INTO ModerationRecords (targetUserId, moderatorId, kind, recordId, until, reason) VALUES (?,?,?,?,?,?)',
+	$con->Execute('INSERT INTO moderationRecords (targetUserId, moderatorId, kind, recordId, until, reason) VALUES (?,?,?,?,?,?)',
 		[$targetUserId, $moderatorUserId, $kind, $recordId, $until, $reason]
 	);
 	return $con->Insert_ID();

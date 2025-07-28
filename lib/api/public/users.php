@@ -20,11 +20,11 @@ switch($urlparts[0]) {
 		// Issue here is just performance, this needs a bit more thinking.
 		$map = $con->getAssoc(<<<SQL
 			SELECT HEX(hash), name
-				FROM Users
+				FROM users
 				WHERE name = ?
 			UNION
 				SELECT HEX(hash), name
-				FROM Users
+				FROM users
 				WHERE name LIKE ?
 			LIMIT ?
 		SQL, [$search, '%'.escapeStringForLikeQuery($search).'%', $limit]);

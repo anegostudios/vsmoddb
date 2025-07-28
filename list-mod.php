@@ -32,7 +32,7 @@ $selectedParams = [
 	'side'    => $filters['side'] ?? '',
 	'text'    => htmlSpecialChars($filters['text'] ?? ''),
 	'creator' => !empty($filters['a.createdbyuserid'])
-		? [$filters['a.createdbyuserid'], $con->getOne('SELECT `name` FROM Users WHERE userId = ?', [$filters['a.createdbyuserid']])]
+		? [$filters['a.createdbyuserid'], $con->getOne('SELECT `name` FROM users WHERE userId = ?', [$filters['a.createdbyuserid']])]
 		: [0, ''],
 	'majorversion' => $filters['majorversion'] ?? '',
 	'gameversions' => !empty($filters['gameversions']) ? array_flip($filters['gameversions']) : [],
@@ -44,7 +44,7 @@ $strippedQuery = stripQueryParams(parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUE
 
 $fetchCursorJS = getNextFetchCursor($searchParams, $mods);
 
-$gameVersions = $con->getAll('SELECT `version` FROM GameVersions ORDER BY `version` desc');
+$gameVersions = $con->getAll('SELECT `version` FROM gameVersions ORDER BY `version` desc');
 $majorGameVersions = [];
 foreach($gameVersions as &$version) {
 	$version['version'] = intval($version['version']);
@@ -60,7 +60,7 @@ foreach($gameVersions as &$version) {
 }
 unset($version);
 
-$tags = $con->getAll('SELECT tagId, `name`, `text` FROM Tags ORDER BY `name`');
+$tags = $con->getAll('SELECT tagId, `name`, `text` FROM tags ORDER BY `name`');
 
 
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_MODS, null, true);

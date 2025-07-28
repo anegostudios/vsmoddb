@@ -23,8 +23,8 @@ switch($urlparts[1]) {
 
 				$modData = $con->getRow(<<<SQL
 					SELECT m.assetId, a.createdByUserId
-					FROM Mods m
-					JOIN Assets a ON a.assetId = m.assetId
+					FROM mods m
+					JOIN assets a ON a.assetId = m.assetId
 					WHERE m.modId = ?
 				SQL, [$modId]);
 				$assetId = intval($modData['assetId']);
@@ -33,9 +33,9 @@ switch($urlparts[1]) {
 				$commentHtml = trim(sanitizeHtml(file_get_contents('php://input')));
 				if(!$commentHtml)  fail(HTTP_BAD_REQUEST, ['reason' => 'Comment must not be empty.']);
 
-				$con->execute('INSERT INTO Comments (assetId, userId, text) VALUES (?, ?, ?)', [$assetId, $user['userId'], $commentHtml]);
+				$con->execute('INSERT INTO comments (assetId, userId, text) VALUES (?, ?, ?)', [$assetId, $user['userId'], $commentHtml]);
 				$commentId = $con->insert_ID();
-				$con->execute('UPDATE Mods SET comments = comments + 1 WHERE assetId = ?', [$assetId]);
+				$con->execute('UPDATE mods SET comments = comments + 1 WHERE assetId = ?', [$assetId]);
 
 				$creatorUserId = intval($modData['createdByUserId']);
 				$currentUserId = intval($user['userId']);
@@ -48,9 +48,9 @@ switch($urlparts[1]) {
 
 					// @security: $rawMatches are validated to be alphanumeric and therefore sql inert by the regex. $commentId, $currentUserId and $creatorUserId are known to be integers.
 					$con->execute(<<<SQL
-						INSERT INTO Notifications (kind, recordId, userId)
+						INSERT INTO notifications (kind, recordId, userId)
 						SELECT 'mentioncomment', $commentId, u.userId
-						FROM Users u
+						FROM users u
 						WHERE u.`hash` IN ($foldedHashes)
 							AND u.userId NOT IN ($creatorUserId, $currentUserId)
 					SQL);
@@ -60,7 +60,7 @@ switch($urlparts[1]) {
 				//TODO(Rennorb): Send notifications to all opt-in contributors, requires adding config option and table changes.
 				if($currentUserId !== $creatorUserId) { // Don't send a notification to ourself if we are the one commenting.
 					// @security: $commentId and $creatorUserId are known to be integers.
-					$con->execute("INSERT INTO Notifications (kind, recordId, userId) VALUES ('newcomment', $commentId, $creatorUserId)");
+					$con->execute("INSERT INTO notifications (kind, recordId, userId) VALUES ('newcomment', $commentId, $creatorUserId)");
 				}
 
 				logAssetChanges(['Added a new comment.'], $assetId);
@@ -89,24 +89,24 @@ switch($urlparts[1]) {
 
 		$modData = $con->getRow(<<<SQL
 			SELECT m.assetId, a.createdByUserId
-			FROM Mods m
-			JOIN Assets a ON a.assetId = m.assetId
+			FROM mods m
+			JOIN assets a ON a.assetId = m.assetId
 			WHERE m.modId = ?
 		SQL, [$modId]);
 		if(!$modData) fail(HTTP_NOT_FOUND);
 
 		$con->startTrans();
 		// @security: assetid comes from the db and is an int, therefore sql inert. 
-		$con->execute('UPDATE Assets SET statusId = '.STATUS_LOCKED.' WHERE assetId = '.$modData['assetId']);
+		$con->execute('UPDATE assets SET statusId = '.STATUS_LOCKED.' WHERE assetId = '.$modData['assetId']);
 		logAssetChanges(['Locked Mod for reason: '.$reason], $modData['assetId']);
 
 		logModeratorAction($modData['createdByUserId'], $user['userId'], MODACTION_KIND_LOCK, $modId, SQL_DATE_FOREVER, $reason);
 
 		// Just in case we have not "read" a corresponding review-request notification for the mod we are (re-)locking, mark it as read.
 		// If we don't do this we we might not get new unlock requests. :BlockedUnlockRequest
-		$con->execute("UPDATE Notifications SET `read` = 1 WHERE kind = 'modunlockrequest' AND userId = ? AND recordId = ?", [$user['userId'], $modId]);
+		$con->execute("UPDATE notifications SET `read` = 1 WHERE kind = 'modunlockrequest' AND userId = ? AND recordId = ?", [$user['userId'], $modId]);
 
-		$con->execute("INSERT INTO Notifications (userId, kind, recordId) VALUES (?, 'modlocked', ?)", [$modData['createdByUserId'], $modId]);
+		$con->execute("INSERT INTO notifications (userId, kind, recordId) VALUES (?, 'modlocked', ?)", [$modData['createdByUserId'], $modId]);
 
 		$ok = $con->completeTrans();
 		if($ok) good();

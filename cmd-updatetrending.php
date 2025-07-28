@@ -10,18 +10,18 @@ include("lib/config.php");
 include("lib/core.php");
 
 $ok = $con->execute(<<<SQL
-	UPDATE Mods m
+	UPDATE mods m
 	LEFT JOIN (
 		SELECT c.assetId, COUNT(c.commentId) AS comments
-		FROM Comments c
+		FROM comments c
 		WHERE c.created > DATE_SUB(NOW(), INTERVAL 72 HOUR)
 		GROUP BY c.assetId
 	) c1 ON c1.assetId = m.assetId
 	LEFT JOIN (
 		SELECT r.modId, COUNT(d.lastDownload) as downloads
-		FROM FileDownloadTracking d
-		JOIN Files f ON f.fileId = d.fileId
-		join ModReleases r on r.assetId = f.assetId
+		FROM fileDownloadTracking d
+		JOIN files f ON f.fileId = d.fileId
+		join modReleases r on r.assetId = f.assetId
 		WHERE d.lastDownload > DATE_SUB(NOW(), INTERVAL 72 HOUR)
 		GROUP BY r.modId
 	) f1 ON f1.modId = m.modId

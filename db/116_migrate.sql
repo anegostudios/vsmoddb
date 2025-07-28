@@ -17,7 +17,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `follow` ADD CONSTRAINT `FK_UserFolowedMods_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
-    ALTER TABLE `follow` RENAME TO `UserFollowedMods`;
+    ALTER TABLE `follow` RENAME TO `userFollowedMods`;
 END IF;
 
 IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
@@ -30,12 +30,12 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `teammember` MODIFY COLUMN `created` DATETIME NOT NULL DEFAULT NOW();
 
     DELETE t FROM `teammember` t LEFT JOIN `mod` m ON m.modid = t.modId WHERE m.modid IS NULL;
-    ALTER TABLE `teammember` ADD CONSTRAINT `FK_ModTeamMembers_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE `teammember` ADD CONSTRAINT `FK_modTeamMembers_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE;
     DELETE t FROM `teammember` t LEFT JOIN `user` u ON u.userid = t.userId WHERE u.userid IS NULL;
-    ALTER TABLE `teammember` ADD CONSTRAINT `FK_ModTeamMembers_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE `teammember` ADD CONSTRAINT `FK_modTeamMembers_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
-    ALTER TABLE `teammember` RENAME TO `ModTeamMembers`;
+    ALTER TABLE `teammember` RENAME TO `modTeamMembers`;
 END IF;
 
 IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
@@ -50,7 +50,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `release` ADD UNIQUE INDEX `assetid` (`assetid`); -- for some reason this does not yet exist, but is _required_ for performance with the tending points update
     -- ALTER TABLE `release` ADD UNIQUE INDEX `modid` (`modid`); -- already exists on the real server
 
-    ALTER TABLE `downloadip` RENAME TO `FileDownloadTracking`;
+    ALTER TABLE `downloadip` RENAME TO `fileDownloadTracking`;
 END IF;
 
 
@@ -65,9 +65,9 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 
     ALTER TABLE `notification` CHANGE COLUMN `recordid` `recordId` INT NOT NULL;
 
-    ALTER TABLE `notification` ADD CONSTRAINT `FK_Notifications_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE `notification` ADD CONSTRAINT `FK_notifications_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE;
 
-    ALTER TABLE `notification` RENAME TO `Notifications`;
+    ALTER TABLE `notification` RENAME TO `notifications`;
 END IF;
 
 IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
@@ -88,7 +88,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     UPDATE `role` SET lastmodified = created WHERE lastmodified IS NULL;
     ALTER TABLE `role` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
-    ALTER TABLE `role` RENAME TO `Roles`;
+    ALTER TABLE `role` RENAME TO `roles`;
 END IF;
 
 IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
@@ -101,7 +101,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     DELETE FROM `changelog` WHERE `userid` IS NULL;
     ALTER TABLE `changelog` CHANGE COLUMN `userid` `userId` INT NOT NULL;
     ALTER TABLE `changelog` ADD INDEX `userId` (`userId`);
-    ALTER TABLE `changelog` ADD CONSTRAINT `FK_Changelogs_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE `changelog` ADD CONSTRAINT `FK_changelogs_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE;
 
     ALTER TABLE `changelog` MODIFY COLUMN `text` TEXT NOT NULL;
 
@@ -113,7 +113,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `changelog` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
 
-    ALTER TABLE `changelog` RENAME TO `Changelogs`;
+    ALTER TABLE `changelog` RENAME TO `changelogs`;
 END IF;
 
 IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
@@ -148,7 +148,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `tag` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
 
-    ALTER TABLE `tag` RENAME TO `Tags`;
+    ALTER TABLE `tag` RENAME TO `tags`;
 END IF;
 
 IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
@@ -173,12 +173,12 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `assettag` ADD INDEX `tagId` (`tagId`);
 
     -- DELETE t FROM `assettag` t LEFT JOIN `mod` m ON m.modid = t.modId WHERE m.modid IS NULL;
-    ALTER TABLE `assettag` ADD CONSTRAINT `FK_Changelogs_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE;
-    DELETE t FROM `assettag` t LEFT JOIN `Tags` T ON T.tagId = t.tagId WHERE T.tagId IS NULL;
-    ALTER TABLE `assettag` ADD CONSTRAINT `FK_Changelogs_tagId` FOREIGN KEY (`tagId`) REFERENCES `Tags`(`tagId`) ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE `assettag` ADD CONSTRAINT `FK_modTags_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE;
+    DELETE t FROM `assettag` t LEFT JOIN `tags` T ON T.tagId = t.tagId WHERE T.tagId IS NULL;
+    ALTER TABLE `assettag` ADD CONSTRAINT `FK_modTags_tagId` FOREIGN KEY (`tagId`) REFERENCES `tags`(`tagId`) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
-    ALTER TABLE `assettag` RENAME TO `ModTags`;
+    ALTER TABLE `assettag` RENAME TO `modTags`;
 END IF;
 
 
@@ -208,12 +208,12 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 
 
     DELETE c FROM `comment` c LEFT JOIN `user` u ON u.userid = c.userId WHERE u.userid IS NULL;
-    ALTER TABLE `comment` ADD CONSTRAINT `FK_Comments_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE `comment` ADD CONSTRAINT `FK_comments_userId` FOREIGN KEY (`userId`) REFERENCES `user`(`userid`) ON UPDATE CASCADE ON DELETE CASCADE;
 
-    ALTER TABLE `comment` ADD CONSTRAINT `FK_Comments_lastModaction` FOREIGN KEY (`lastModaction`) REFERENCES `moderationrecord`(`actionid`) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ALTER TABLE `comment` ADD CONSTRAINT `FK_comments_lastModaction` FOREIGN KEY (`lastModaction`) REFERENCES `moderationrecord`(`actionid`) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
-    ALTER TABLE `comment` RENAME TO `Comments`;
+    ALTER TABLE `comment` RENAME TO `comments`;
 END IF;
 
 
@@ -281,7 +281,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `user` ADD INDEX `hash`(`hash`);
 
 
-    ALTER TABLE `user` RENAME TO `Users`;
+    ALTER TABLE `user` RENAME TO `users`;
 END IF;
 
 
@@ -296,7 +296,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `status` DROP COLUMN `created`;
     ALTER TABLE `status` DROP COLUMN `lastmodified`;
 
-    ALTER TABLE `status` RENAME TO `Status`;
+    -- ALTER TABLE `status` RENAME TO `status`;
 END IF;
 
 IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
@@ -318,13 +318,13 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `moderationrecord` ADD INDEX `recordId` (`recordId`);
 
     ALTER TABLE `moderationrecord` ADD INDEX `targetUserId`(`targetUserId`);
-    ALTER TABLE `moderationrecord` ADD CONSTRAINT `FK_ModerationRecords_targetUserId` FOREIGN KEY (`targetUserId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ALTER TABLE `moderationrecord` ADD CONSTRAINT `FK_moderationRecords_targetUserId` FOREIGN KEY (`targetUserId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
 
     ALTER TABLE `moderationrecord` ADD INDEX `moderatorid_index`(`moderatorId`);
-    ALTER TABLE `moderationrecord` ADD CONSTRAINT `FK_ModerationRecords_moderatorId` FOREIGN KEY (`moderatorId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ALTER TABLE `moderationrecord` ADD CONSTRAINT `FK_moderationRecords_moderatorId` FOREIGN KEY (`moderatorId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
-    ALTER TABLE `moderationrecord` RENAME TO `ModerationRecords`;
+    ALTER TABLE `moderationrecord` RENAME TO `moderationRecords`;
 END IF;
 
 
@@ -357,12 +357,12 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     UPDATE `release` SET lastmodified = created WHERE lastmodified IS NULL;
     ALTER TABLE `release` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created`;
 
-    ALTER TABLE `release` ADD CONSTRAINT `FK_ModReleases_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetid`) ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE `release` ADD CONSTRAINT `FK_modReleases_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetid`) ON UPDATE CASCADE ON DELETE CASCADE;
 
-    ALTER TABLE `release` ADD CONSTRAINT `FK_ModReleases_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE `release` ADD CONSTRAINT `FK_modReleases_modId` FOREIGN KEY (`modId`) REFERENCES `mod`(`modid`) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
-    ALTER TABLE `release` RENAME TO `ModReleases`;
+    ALTER TABLE `release` RENAME TO `modReleases`;
 END IF;
 
 IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
@@ -388,17 +388,17 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 
 
 
-    CREATE TABLE IF NOT EXISTS `FileImageData` (
+    CREATE TABLE IF NOT EXISTS `fileImageData` (
         `fileId`       INT   NOT NULL,
         `hasThumbnail` BOOL  NOT NULL DEFAULT 0,
         `size`         POINT     NULL,
         PRIMARY KEY (`fileId`),
-        CONSTRAINT `FK_FileImageData_fileId` FOREIGN KEY (`fileId`)  REFERENCES `file`(`fileid`) ON UPDATE CASCADE ON DELETE CASCADE
+        CONSTRAINT `FK_fileImageData_fileId` FOREIGN KEY (`fileId`)  REFERENCES `file`(`fileid`) ON UPDATE CASCADE ON DELETE CASCADE
     )
     ENGINE = InnoDB;
 
 
-    INSERT INTO FileImageData (fileId, hasThumbnail, size)
+    INSERT INTO fileImageData (fileId, hasThumbnail, size)
         SELECT fileid, hasthumbnail, imagesize
         FROM `file`
         WHERE hasthumbnail OR imagesize IS NOT NULL;
@@ -423,12 +423,12 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     UPDATE `file` SET lastmodified = created WHERE lastmodified IS NULL;
     ALTER TABLE `file` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created`;
 
-    ALTER TABLE `file` ADD CONSTRAINT `FK_Files_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetid`) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ALTER TABLE `file` ADD CONSTRAINT `FK_files_assetId` FOREIGN KEY (`assetId`) REFERENCES `asset`(`assetid`) ON UPDATE CASCADE ON DELETE RESTRICT;
 
-    ALTER TABLE `file` ADD CONSTRAINT `FK_Files_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ALTER TABLE `file` ADD CONSTRAINT `FK_files_userId` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
-    ALTER TABLE `file` RENAME TO `Files`;
+    ALTER TABLE `file` RENAME TO `files`;
 END IF;
 
 
@@ -463,12 +463,12 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     UPDATE `asset` SET lastmodified = created WHERE lastmodified IS NULL;
     ALTER TABLE `asset` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created`;
 
-    ALTER TABLE `asset` ADD CONSTRAINT `FK_Assets_createdByUserId` FOREIGN KEY (`createdByUserId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ALTER TABLE `asset` ADD CONSTRAINT `FK_assets_createdByUserId` FOREIGN KEY (`createdByUserId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
 
-    ALTER TABLE `asset` ADD CONSTRAINT `FK_Assets_editedByUserId` FOREIGN KEY (`editedByUserId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ALTER TABLE `asset` ADD CONSTRAINT `FK_assets_editedByUserId` FOREIGN KEY (`editedByUserId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
-    ALTER TABLE `asset` RENAME TO `Assets`;
+    ALTER TABLE `asset` RENAME TO `assets`;
 END IF;
 
 
@@ -513,20 +513,30 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     UPDATE `mod` SET lastmodified = created WHERE lastmodified IS NULL;
     ALTER TABLE `mod` CHANGE COLUMN `lastmodified` `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created`;
 
-    ALTER TABLE `mod` ADD CONSTRAINT `FK_Mods_assetId` FOREIGN KEY (`assetId`) REFERENCES `Assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE `mod` ADD CONSTRAINT `FK_mods_assetId` FOREIGN KEY (`assetId`) REFERENCES `assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE;
     UPDATE `mod` m 
-        LEFT JOIN Files f ON f.fileId = m.cardLogoFileId
+        LEFT JOIN files f ON f.fileId = m.cardLogoFileId
         SET m.cardLogoFileId = NULL
         WHERE f.fileId IS NULL AND m.cardLogoFileId IS NOT NULL;
-    ALTER TABLE `mod` ADD CONSTRAINT `FK_Mods_cardLogoFileId` FOREIGN KEY (`cardLogoFileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL;
+    ALTER TABLE `mod` ADD CONSTRAINT `FK_mods_cardLogoFileId` FOREIGN KEY (`cardLogoFileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL;
     UPDATE `mod` m 
-        LEFT JOIN Files f ON f.fileId = m.embedLogoFileId
+        LEFT JOIN files f ON f.fileId = m.embedLogoFileId
         SET m.embedLogoFileId = NULL
         WHERE f.fileId IS NULL AND m.embedLogoFileId IS NOT NULL;
-    ALTER TABLE `mod` ADD CONSTRAINT `FK_Mods_embedLogoFileId` FOREIGN KEY (`embedLogoFileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL;
+    ALTER TABLE `mod` ADD CONSTRAINT `FK_mods_embedLogoFileId` FOREIGN KEY (`embedLogoFileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
-    ALTER TABLE `mod` RENAME TO `Mods`;
+    ALTER TABLE `mod` RENAME TO `mods`;
+END IF;
+
+
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+ TABLE_NAME='GameVersions') ) THEN
+ ALTER TABLE `ModPeekResult` RENAME TO `modPeekResults`;
+ ALTER TABLE `GameVersions` RENAME TO `gameVersions`;
+ ALTER TABLE `ModReleaseCompatibleGameVersions` RENAME TO `modReleaseCompatibleGameVersions`;
+ ALTER TABLE `ModCompatibleGameVersionsCached` RENAME TO `modCompatibleGameVersionsCached`;
+ ALTER TABLE `ModCompatibleMajorGameVersionsCached` RENAME TO `modCompatibleMajorGameVersionsCached`;
 END IF;
 
 END $$

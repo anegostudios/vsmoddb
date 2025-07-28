@@ -7,7 +7,7 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 CREATE SCHEMA IF NOT EXISTS `moddb` DEFAULT CHARACTER SET utf8 ;
 USE `moddb` ;
 
-CREATE TABLE IF NOT EXISTS `Assets` (
+CREATE TABLE IF NOT EXISTS `assets` (
   `assetId`         INT          NOT NULL AUTO_INCREMENT,
   `createdByUserId` INT          NOT NULL,
   `editedByUserId`  INT              NULL,
@@ -15,19 +15,19 @@ CREATE TABLE IF NOT EXISTS `Assets` (
   `assetTypeId`     INT          NOT NULL,
   `name`            VARCHAR(255)     NULL,
   `text`            TEXT             NULL,
-  `tagsCached`      TEXT             NULL, -- same data as LEFT JOIN ModTags, LEFT JOIN Tags, GROUP_CONCAT(CONCAT(tag...) DELIMITER '\r\n')
+  `tagsCached`      TEXT             NULL, -- same data as LEFT JOIN modTags, LEFT JOIN tags, GROUP_CONCAT(CONCAT(tag...) DELIMITER '\r\n')
   `numSaved`        INT          NOT NULL DEFAULT 1,
   `created`         DATETIME     NOT NULL DEFAULT NOW(),
   `lastModified`    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`assetId`),
   INDEX `createdByUserId` (`createdByUserId`),
-  CONSTRAINT `FK_Assets_createdByUserId` FOREIGN KEY (`createdByUserId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT `FK_Assets_editedByUserId` FOREIGN KEY (`editedByUserId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT `FK_assets_createdByUserId` FOREIGN KEY (`createdByUserId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT `FK_assets_editedByUserId` FOREIGN KEY (`editedByUserId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
 )
 ENGINE = InnoDB;
 
 
-CREATE TABLE IF NOT EXISTS `Users` (
+CREATE TABLE IF NOT EXISTS `users` (
   `userId`            INT          NOT NULL AUTO_INCREMENT,
   `hash`              BINARY(10)   NOT NULL,
   `roleId`            INT          NOT NULL DEFAULT 3,
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS `Users` (
 ENGINE = InnoDB;
 
 
-CREATE TABLE IF NOT EXISTS `ModerationRecords` (
+CREATE TABLE IF NOT EXISTS `moderationRecords` (
   `actionId`     INT      NOT NULL AUTO_INCREMENT,
   `targetUserId` INT      NOT NULL,
   `kind`         INT      NOT NULL,
@@ -64,13 +64,13 @@ CREATE TABLE IF NOT EXISTS `ModerationRecords` (
   INDEX `id_until` (`targetUserId`, `kind`, `until`),
   INDEX `recordId` (`recordId`),
 	INDEX `moderatorid_index` (`moderatorId`),
-  FOREIGN KEY (`targetUserId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
-  FOREIGN KEY (`moderatorId`)  REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT
+  CONSTRAINT `FK_moderationRecords_targetUserId` FOREIGN KEY (`targetUserId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT `FK_moderationRecords_moderatorId` FOREIGN KEY (`moderatorId`)  REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT
 )
 ENGINE = InnoDB;
 
 
-CREATE TABLE IF NOT EXISTS `Files` (
+CREATE TABLE IF NOT EXISTS `files` (
   `fileId`       INT          NOT NULL AUTO_INCREMENT,
   `assetId`      INT              NULL, -- has to be nullable because hovering files are not initially attached to a specific asset
   `assetTypeId`  INT          NOT NULL, -- also required for hovering files
@@ -84,22 +84,22 @@ CREATE TABLE IF NOT EXISTS `Files` (
   INDEX `assetid` (`assetId`),
   INDEX `tempuploadtoken` (`userId`),
   INDEX `cdnpathidx` (`cdnPath`),  -- TOOD(Rennorb) @cleanup: Unused?
-  CONSTRAINT `FK_Files_assetId` FOREIGN KEY (`assetId`) REFERENCES `Assets`(`assetId`) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT `FK_Files_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT
+  CONSTRAINT `FK_files_assetId` FOREIGN KEY (`assetId`) REFERENCES `assets`(`assetId`) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT `FK_files_userId` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT
 )
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `FileImageData` (
+CREATE TABLE IF NOT EXISTS `fileImageData` (
   `fileId`       INT   NOT NULL,
   `hasThumbnail` BOOL  NOT NULL DEFAULT 0,
   `size`         POINT     NULL,
   PRIMARY KEY (`fileId`),
-  CONSTRAINT `FK_FileImageData_fileId` FOREIGN KEY (`fileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `FK_fileImageData_fileId` FOREIGN KEY (`fileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
 
-CREATE TABLE IF NOT EXISTS `ModPeekResult` (
+CREATE TABLE IF NOT EXISTS `modPeekResults` (
   `fileId`           INT             NOT NULL,
   `errors`           TEXT                NULL,
   `modIdentifier`    VARCHAR(255)        NULL,
@@ -116,20 +116,20 @@ CREATE TABLE IF NOT EXISTS `ModPeekResult` (
   `rawContributors`  TEXT                NULL,
   `rawDependencies`  TEXT                NULL,
   PRIMARY KEY (`fileId`),
-  CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
 -- Idea for dependencies
--- CREATE TABLE IF NOT EXISTS `ReleaseFileDependencies` (
+-- CREATE TABLE IF NOT EXISTS `releaseFileDependencies` (
 --   `fileId`               INT             NOT NULL,
 --   `dependencyIdentifier` VARCHAR(255)        NULL,
 --   `dependencyMinVersion` BIGINT UNSIGNED NOT NULL,
---   CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
+--   CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
 -- )
 -- ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `Status` (
+CREATE TABLE IF NOT EXISTS `status` (
   `statusId` INT          NOT NULL AUTO_INCREMENT,
   `code`     VARCHAR(255) NOT NULL,
   `name`     VARCHAR(255) NOT NULL,
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS `Status` (
 ENGINE = InnoDB;
 
 
-CREATE TABLE IF NOT EXISTS `Comments` (
+CREATE TABLE IF NOT EXISTS `comments` (
   `commentId`           INT       NOT NULL AUTO_INCREMENT,
   `assetId`             INT       NOT NULL,
   `userId`              INT       NOT NULL,
@@ -151,13 +151,13 @@ CREATE TABLE IF NOT EXISTS `Comments` (
   PRIMARY KEY (`commentId`),
   INDEX `assetid`(`assetId`),
   INDEX `created`(`created`), -- for the main page query that shows the latest 20 comments
-  -- CONSTRAINT `FK_Comments_assetId` FOREIGN KEY (`assetId`) REFERENCES `Assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE, -- TODO(Rennorb) @cleanup: For moderation reasons we allow comment asset references these to be dangling for now.
-  CONSTRAINT `FK_Comments_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT `FK_Comments_lastModaction` FOREIGN KEY (`lastModaction`) REFERENCES `ModerationRecords`(`actionId`) ON UPDATE CASCADE ON DELETE RESTRICT
+  -- CONSTRAINT `FK_Comments_assetId` FOREIGN KEY (`assetId`) REFERENCES `assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE, -- TODO(Rennorb) @cleanup: For moderation reasons we allow comment asset references these to be dangling for now.
+  CONSTRAINT `FK_comments_userId` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_comments_lastModaction` FOREIGN KEY (`lastModaction`) REFERENCES `moderationRecords`(`actionId`) ON UPDATE CASCADE ON DELETE RESTRICT
 )
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `Changelogs` (
+CREATE TABLE IF NOT EXISTS `changelogs` (
   `changelogId`  INT       NOT NULL AUTO_INCREMENT,
   `assetId`      INT           NULL, -- null for file deletions as of now
   `userId`       INT       NOT NULL,
@@ -167,11 +167,11 @@ CREATE TABLE IF NOT EXISTS `Changelogs` (
   PRIMARY KEY (`changelogId`),
   INDEX `assetId` (`assetId`),
   INDEX `userId` (`userId`),
-  CONSTRAINT `FK_Changelogs_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `FK_changelogs_userId` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `Tags` (
+CREATE TABLE IF NOT EXISTS `tags` (
   `tagId`        INT          NOT NULL AUTO_INCREMENT,
   `kind`         TINYINT      NOT NULL,
   `name`         VARCHAR(255) NOT NULL,
@@ -184,7 +184,7 @@ CREATE TABLE IF NOT EXISTS `Tags` (
 ENGINE = InnoDB;
 
 
-CREATE TABLE IF NOT EXISTS `Mods` (
+CREATE TABLE IF NOT EXISTS `mods` (
   `modId`                 INT          NOT NULL AUTO_INCREMENT,
   `assetId`               INT          NOT NULL,
   `urlAlias`              VARCHAR(45)      NULL,
@@ -212,24 +212,24 @@ CREATE TABLE IF NOT EXISTS `Mods` (
   INDEX `trendingpoints_id` (`trendingPoints`, `modId`),
   INDEX `lastreleased_id` (`lastReleased`, `modId`),
   INDEX `downloads_id` (`downloads`, `modId`),
-  CONSTRAINT `FK_Mods_assetId` FOREIGN KEY (`assetId`) REFERENCES `Assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT `FK_Mods_cardLogoFileId` FOREIGN KEY (`cardLogoFileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL,
-  CONSTRAINT `FK_Mods_embedLogoFileId` FOREIGN KEY (`embedLogoFileId`) REFERENCES `Files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL
+  CONSTRAINT `FK_mods_assetId` FOREIGN KEY (`assetId`) REFERENCES `assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_mods_cardLogoFileId` FOREIGN KEY (`cardLogoFileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL,
+  CONSTRAINT `FK_mods_embedLogoFileId` FOREIGN KEY (`embedLogoFileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL
 )
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `ModTags` (
+CREATE TABLE IF NOT EXISTS `modTags` (
   `modId`        INT       NOT NULL,
   `tagId`        INT       NOT NULL,
   `created`      DATETIME  NOT NULL DEFAULT NOW(),
   `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`modId`, `tagId`),
-  CONSTRAINT `FK_Changelogs_modId` FOREIGN KEY (`modId`) REFERENCES `Mods`(`modId`) ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT `FK_ModTags_tagId` FOREIGN KEY (`tagId`) REFERENCES `Tags`(`tagId`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_modTags_modId` FOREIGN KEY (`modId`) REFERENCES `mods`(`modId`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_modTags_tagId` FOREIGN KEY (`tagId`) REFERENCES `tags`(`tagId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `ModReleases` (
+CREATE TABLE IF NOT EXISTS `modReleases` (
   `releaseId`    INT             NOT NULL AUTO_INCREMENT,
   `assetId`      INT             NOT NULL,
   `modId`        INT             NOT NULL,
@@ -244,13 +244,13 @@ CREATE TABLE IF NOT EXISTS `ModReleases` (
   UNIQUE INDEX `identifier` (`modId`, `identifier`, `version`),
   UNIQUE INDEX `assetid` (`assetId`),
   INDEX `modid` (`modId`),
-  CONSTRAINT `FK_ModReleases_assetId` FOREIGN KEY (`assetId`) REFERENCES `Assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT `FK_ModReleases_modId` FOREIGN KEY (`modId`) REFERENCES `Mods`(`modId`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `FK_modReleases_assetId` FOREIGN KEY (`assetId`) REFERENCES `assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_modReleases_modId` FOREIGN KEY (`modId`) REFERENCES `mods`(`modId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
 
-CREATE TABLE IF NOT EXISTS `Roles` (
+CREATE TABLE IF NOT EXISTS `roles` (
   `roleId`       INT          NOT NULL AUTO_INCREMENT,
   `code`         VARCHAR(255) NOT NULL,
   `name`         VARCHAR(255) NOT NULL,
@@ -261,7 +261,7 @@ CREATE TABLE IF NOT EXISTS `Roles` (
 ENGINE = InnoDB;
 
 
-CREATE TABLE IF NOT EXISTS `FileDownloadTracking` (
+CREATE TABLE IF NOT EXISTS `fileDownloadTracking` (
   `ipAddress`    VARCHAR(255) NOT NULL,
   `fileId`       INT          NOT NULL,
   `lastDownload` DATETIME     NOT NULL DEFAULT NOW(),
@@ -273,7 +273,7 @@ CREATE TABLE IF NOT EXISTS `FileDownloadTracking` (
 ENGINE = InnoDB;
 
 
-CREATE TABLE IF NOT EXISTS `Notifications` (
+CREATE TABLE IF NOT EXISTS `notifications` (
   `notificationId` INT      NOT NULL AUTO_INCREMENT,
   `read`           TINYINT  NOT NULL DEFAULT 0,
   `userId`         INT      NOT NULL,
@@ -282,27 +282,27 @@ CREATE TABLE IF NOT EXISTS `Notifications` (
   `created`        DATETIME NOT NULL DEFAULT NOW(),
   PRIMARY KEY (`notificationId`),
   INDEX `userid` (`userId`),
-  CONSTRAINT `FK_Notifications_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `FK_notifications_userId` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
 
-CREATE TABLE IF NOT EXISTS `GameVersions` (
+CREATE TABLE IF NOT EXISTS `gameVersions` (
   `version` BIGINT UNSIGNED NOT NULL,   -- compiled version
   `sortIndex` INT NOT NULL, -- sequential n+1 sort order to check for sequential sequences
   PRIMARY KEY (`version`)
 )
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `ModReleaseCompatibleGameVersions` (
+CREATE TABLE IF NOT EXISTS `modReleaseCompatibleGameVersions` (
   `releaseId` INT NOT NULL,
   `gameVersion` BIGINT UNSIGNED NOT NULL, -- compiled version
   PRIMARY KEY (`releaseId`, `gameVersion`)
 )
 ENGINE = InnoDB;
 
--- same information as joining mod + rleease + ReleaseCompatGameversions, cached for searching
-CREATE TABLE IF NOT EXISTS `ModCompatibleGameVersionsCached` (
+-- same information as joining mod + release + ReleaseCompatGameVersions, cached for searching
+CREATE TABLE IF NOT EXISTS `modCompatibleGameVersionsCached` (
   `modId` INT NOT NULL,
   `gameVersion` BIGINT UNSIGNED NOT NULL, -- compiled version
   PRIMARY KEY (`modId`, `gameVersion`),
@@ -310,8 +310,8 @@ CREATE TABLE IF NOT EXISTS `ModCompatibleGameVersionsCached` (
 )
 ENGINE = InnoDB;
 
--- same information as unique floorToMajor(joining mod + rleease + ReleaseCompatGameversions), cached for searching
-CREATE TABLE IF NOT EXISTS `ModCompatibleMajorGameVersionsCached` (
+-- same information as unique floorToMajor(joining mod + release + ReleaseCompatGameVersions), cached for searching
+CREATE TABLE IF NOT EXISTS `modCompatibleMajorGameVersionsCached` (
   `modId` INT NOT NULL,
   `majorGameVersion` BIGINT UNSIGNED NOT NULL, -- compiled version
   PRIMARY KEY (`majorGameVersion`, `modId`),
@@ -320,19 +320,19 @@ CREATE TABLE IF NOT EXISTS `ModCompatibleMajorGameVersionsCached` (
 ENGINE = InnoDB;
 
 
-CREATE TABLE IF NOT EXISTS `UserFollowedMods` (
+CREATE TABLE IF NOT EXISTS `userFollowedMods` (
   `modId`   INT      NOT NULL,
   `userId`  INT      NOT NULL,
   `created` DATETIME NOT NULL DEFAULT NOW(),
   `flags`   TINYINT  NOT NULL DEFAULT 1, -- by default follow with notifications
   UNIQUE INDEX `modiduserid` (`modId`, `userId`),
   INDEX `userid` (`userId`),
-  CONSTRAINT `FK_UserFolowedMods_modId`  FOREIGN KEY (`modId`)  REFERENCES `Mods`(`modId`)   ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT `FK_UserFolowedMods_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `FK_userFolowedMods_modId`  FOREIGN KEY (`modId`)  REFERENCES `mods`(`modId`)   ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_userFolowedMods_userId` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `ModTeamMembers` (
+CREATE TABLE IF NOT EXISTS `modTeamMembers` (
   `teamMemberId` INT(11)    NOT NULL AUTO_INCREMENT,
   `userId`       INT(11)    NOT NULL,
   `modId`        INT(11)    NOT NULL,
@@ -342,8 +342,8 @@ CREATE TABLE IF NOT EXISTS `ModTeamMembers` (
   INDEX `modid_userid` (`modId`, `userId`),
   INDEX `userid` (`userId`),
   INDEX `modid` (`modId`),
-  CONSTRAINT `FK_ModTeamMembers_modId`  FOREIGN KEY (`modId`)  REFERENCES `Mods`(`modId`)   ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT `FK_ModTeamMembers_userId` FOREIGN KEY (`userId`) REFERENCES `Users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `FK_modTeamMembers_modId`  FOREIGN KEY (`modId`)  REFERENCES `mods`(`modId`)   ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_modTeamMembers_userId` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
 SET SQL_MODE=@OLD_SQL_MODE;
@@ -351,14 +351,14 @@ SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 
 START TRANSACTION;
-INSERT INTO `Status` (`statusId`, `code`, `name`) VALUES (1, 'draft', 'Draft');
-INSERT INTO `Status` (`statusId`, `code`, `name`) VALUES (2, 'published', 'Published');
-INSERT INTO `Status` (`statusId`, `code`, `name`) VALUES (4, 'locked', 'Locked');
+INSERT INTO `status` (`statusId`, `code`, `name`) VALUES (1, 'draft', 'Draft');
+INSERT INTO `status` (`statusId`, `code`, `name`) VALUES (2, 'published', 'Published');
+INSERT INTO `status` (`statusId`, `code`, `name`) VALUES (4, 'locked', 'Locked');
 COMMIT;
 
 START TRANSACTION;
-INSERT INTO `Roles` (`roleId`, `code`, `name`) VALUES (1, 'admin', 'Admin');
-INSERT INTO `Roles` (`roleId`, `code`, `name`) VALUES (2, 'moderator', 'Moderator');
-INSERT INTO `Roles` (`roleId`, `code`, `name`) VALUES (3, 'player', 'Player');
-INSERT INTO `Roles` (`roleId`, `code`, `name`) VALUES (4, 'player_nc', 'Player (commenting disabled)');
+INSERT INTO `roles` (`roleId`, `code`, `name`) VALUES (1, 'admin', 'Admin');
+INSERT INTO `roles` (`roleId`, `code`, `name`) VALUES (2, 'moderator', 'Moderator');
+INSERT INTO `roles` (`roleId`, `code`, `name`) VALUES (3, 'player', 'Player');
+INSERT INTO `roles` (`roleId`, `code`, `name`) VALUES (4, 'player_nc', 'Player (commenting disabled)');
 COMMIT;

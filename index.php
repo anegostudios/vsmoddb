@@ -84,7 +84,7 @@ switch($urlparts[0]) { // :ReservedUrlPrefixes
 		break;
 
 	default: // @security: Check for url-aliases last. Don't allow mods to overwrite urls.
-		if ($assetId = $con->getOne('select assetId from Mods where urlAlias = ?', [$urlparts[0]])) {
+		if ($assetId = $con->getOne('select assetId from mods where urlAlias = ?', [$urlparts[0]])) {
 			$urlparts = ['show', 'mod', $assetId]; // Update $urlparts for selected header highlighting in the header template.
 			include('show-mod.php');
 			exit();

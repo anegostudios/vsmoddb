@@ -23,7 +23,7 @@ $action = $urlparts[0];
 
 switch ($action) {
 	case "tags":
-		$rows = $con->getAll("select tagId, name, text, color from Tags");
+		$rows = $con->getAll("select tagId, name, text, color from tags");
 		$rows = sortTags(1, $rows);
 		$tags = array();
 		foreach ($rows as $row) {
@@ -37,7 +37,7 @@ switch ($action) {
 		break;
 		
 	case "gameversions":
-		$versions = $con->getAll('select version from GameVersions order by version');
+		$versions = $con->getAll('select version from gameVersions order by version');
 		foreach ($versions as &$version) {
 			$v = intval($version['version']);
 			$version = array(
@@ -63,9 +63,9 @@ switch ($action) {
 
 	case "authors":
 		if (isset($_GET["name"])) {
-			$rows = $con->getAll("select userId, name from Users where (banneduntil is null or banneduntil < now()) and name like ? limit 10", "%".escapeStringForLikeQuery(substr($_GET["name"], 0, 20))."%");
+			$rows = $con->getAll("select userId, name from users where (banneduntil is null or banneduntil < now()) and name like ? limit 10", "%".escapeStringForLikeQuery(substr($_GET["name"], 0, 20))."%");
 		} else {		
-			$rows = $con->getAll("select userId, name from Users");
+			$rows = $con->getAll("select userId, name from users");
 		}
 		
 		$authors = array_map(fn($row) => [
@@ -144,7 +144,7 @@ function listMod($modid)
 	global $con;
 
 	if ($modid != "" . intval($modid)) {
-		$modid = $con->getOne("select modId from ModReleases where identifier = ?", array($modid));
+		$modid = $con->getOne("select modId from modReleases where identifier = ?", array($modid));
 	}
 
 	$row = $con->getRow(<<<SQL
@@ -158,11 +158,11 @@ function listMod($modid)
 			logoFileExternal.cdnPath as logoCdnPathExternal,
 			logoFileDb.cdnPath as logoCdnPathDb
 		from 
-			Mods `mod`
-			join Assets asset on asset.assetId = `mod`.assetId
-			join Users user on user.userId = asset.createdByUserId
-			left join Files as logoFileExternal on (`mod`.embedLogoFileId = logoFileExternal.fileId)
-			left join Files as logoFileDb on (`mod`.cardLogoFileId = logoFileDb.fileId)
+			mods `mod`
+			join assets asset on asset.assetId = `mod`.assetId
+			join users user on user.userId = asset.createdByUserId
+			left join files as logoFileExternal on (`mod`.embedLogoFileId = logoFileExternal.fileId)
+			left join files as logoFileDb on (`mod`.cardLogoFileId = logoFileDb.fileId)
 		where
 			asset.statusId = 2
 			and modId = ?
@@ -175,8 +175,8 @@ function listMod($modid)
 			r.*,
 			GROUP_CONCAT(cgv.gameVersion SEPARATOR ';') as compatibleGameVersions
 		from 
-			ModReleases r 
-			left join ModReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
+			modReleases r 
+			left join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
 		where modId = ?
 		group by r.releaseId
 		order by r.created desc
@@ -184,7 +184,7 @@ function listMod($modid)
 
 	$releases = array();
 	foreach ($rrows as $release) {
-		$file = $con->getRow("select * from Files where assetId = ? limit 1", array($release['assetId']));
+		$file = $con->getRow("select * from files where assetId = ? limit 1", array($release['assetId']));
 
 		$releases[] = array(
 			"releaseid"  => intval($release['releaseId']),
@@ -209,8 +209,8 @@ function listMod($modid)
 			f.cdnPath,
 			f.created
 		from 
-			Files f
-		left join FileImageData i on i.fileId = f.fileId
+			files f
+		left join fileImageData i on i.fileId = f.fileId
 		where f.assetId = ? and f.fileId not in (?, ?)
 	SQL, array($row['assetId'], $row['cardLogoFileId'] ?? 0, $row['embedLogoFileId'] ?? 0)); /* sql cant compare against null */
 
@@ -288,7 +288,7 @@ function listMods()
 
 	if (!empty($_GET["tagids"])) {
 		foreach ($_GET["tagids"] as $tagid) {
-			$wheresql[] = "exists (select 1 from ModTags where ModTags.modId = `mod`.modId and ModTags.tagId = ?)";
+			$wheresql[] = "exists (select 1 from modTags where modTags.modId = `mod`.modId and modTags.tagId = ?)";
 			$wherevalues[] = $tagid;
 		}
 	}
@@ -299,7 +299,7 @@ function listMods()
 	}
 
 	if (!empty($_GET["gameversion"])) {
-		$wheresql[] = "exists (select 1 from ModCompatibleMajorGameVersionsCached cmv where cmv.modId = `mod`.modId and cmv.majorGameVersion = ?)";
+		$wheresql[] = "exists (select 1 from modCompatibleMajorGameVersionsCached cmv where cmv.modId = `mod`.modId and cmv.majorGameVersion = ?)";
 		$wherevalues[] = intval($_GET["gameversion"]) & VERSION_MASK_PRIMARY;
 	}
 
@@ -314,7 +314,7 @@ function listMods()
 
 	if ($gvs) {
 		$gamevers = array_map("intval", $gvs);
-		$wheresql[] = "exists (select 1 from ModCompatibleGameVersionsCached cgv where cgv.modId = `mod`.modId and cgv.gameVersion in (" . implode(",", $gamevers) . "))";
+		$wheresql[] = "exists (select 1 from modCompatibleGameVersionsCached cgv where cgv.modId = `mod`.modId and cgv.gameVersion in (" . implode(",", $gamevers) . "))";
 	}
 
 
@@ -340,11 +340,11 @@ function listMods()
 			`mod`.lastReleased,
 			`mod`.trendingPoints
 		from 
-			Mods `mod` 
-			join Assets asset on (`mod`.assetId = asset.assetId)
-			join Users user on (asset.createdByUserId = user.userId)
-			left join ModReleases r on r.modId = `mod`.modId
-			left join Files as logofileExternal on logofileExternal.fileId = mod.embedLogoFileId
+			mods `mod` 
+			join assets asset on (`mod`.assetId = asset.assetId)
+			join users user on (asset.createdByUserId = user.userId)
+			left join modReleases r on r.modId = `mod`.modId
+			left join files as logofileExternal on logofileExternal.fileId = mod.embedLogoFileId
 		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "
 		group by `mod`.modId
 		order by $orderBy $orderDirection
@@ -404,8 +404,8 @@ function listOutOfDateMods($currentModVersions) {
 			r.created,
 			r.assetId,
 			GROUP_CONCAT(cgv.gameVersion SEPARATOR ';') as compatibleGameVersions
-		from ModReleases r
-		join ModReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
+		from modReleases r
+		join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
 		where r.identifier in ($modIdStrParams)
 		group by r.releaseId
 		order by r.identifier, r.version desc
@@ -422,7 +422,7 @@ function listOutOfDateMods($currentModVersions) {
 
 		if($currentModVersions[$release['identifier']] >= $release['version'])  continue; // already has the latest version
 
-		$file = $con->getRow('select * from Files where assetId = ? limit 1', [$release['assetId']]);
+		$file = $con->getRow('select * from files where assetId = ? limit 1', [$release['assetId']]);
 		$outOfDateMods[$release['identifier']] = [
 			'releaseid'  => intval($release['releaseId']),
 			'mainfile'   => formatCdnDownloadUrl($file),

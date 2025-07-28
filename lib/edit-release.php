@@ -15,17 +15,17 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	$con->startTrans();
 
 	$con->execute(<<<SQL
-		INSERT INTO Assets (assetTypeId, numSaved, statusId, created, text, createdByUserId, editedByUserId)
+		INSERT INTO assets (assetTypeId, numSaved, statusId, created, text, createdByUserId, editedByUserId)
 		VALUES(2, 1, 2, NOW(), ?, ?, ?)
 	SQL, [$newData['text'], $user['userId'], $user['userId']]);
 	$assetId = $con->insert_ID();
 	
-	$con->execute('INSERT INTO ModReleases (modId, assetId, identifier, version) VALUES(?, ?, ?, ?)', [$mod['modId'], $assetId, $newData['identifier'] ?? NULL, $newData['version']]);
+	$con->execute('INSERT INTO modReleases (modId, assetId, identifier, version) VALUES(?, ?, ?, ?)', [$mod['modId'], $assetId, $newData['identifier'] ?? NULL, $newData['version']]);
 	$releaseId = $con->insert_ID();
 
 	// attach hovering files
 	if($file['assetId'] == 0) {
-		$con->execute('UPDATE Files SET assetId = ? WHERE fileId = ?', [$assetId, $file['fileId']]);
+		$con->execute('UPDATE files SET assetId = ? WHERE fileId = ?', [$assetId, $file['fileId']]);
 	}
 
 	$changeToLog = 'Created new release v'.formatSemanticVersion($newData['version']);
@@ -33,7 +33,7 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	if($mod['type'] === 'mod') {
 		$folded = implode(',', array_map(fn($v) => "($releaseId, $v)", $newCompatibleGameVersions));
 		// @security: Version numbers and releaseIds are numeric and therefore SQL Inert.
-		$con->execute("INSERT INTO ModReleaseCompatibleGameVersions (releaseId, gameVersion) VALUES $folded");
+		$con->execute("INSERT INTO modReleaseCompatibleGameVersions (releaseId, gameVersion) VALUES $folded");
 
 		$changeToLog .= " for {$newData['identifier']} with compatible game versions ".formatGrammaticallyCorrectEnumeration(array_map('formatSemanticVersion', $newCompatibleGameVersions));
 	}
@@ -41,12 +41,12 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	logAssetChanges([$changeToLog], $assetId);
 
 	updateGameVersionsCached($mod['modId']);
-	$con->execute('UPDATE Mods set lastReleased = NOW() WHERE modId = ?', [$mod['modId']]);
+	$con->execute('UPDATE mods set lastReleased = NOW() WHERE modId = ?', [$mod['modId']]);
 
 	$con->Execute("
-		INSERT INTO Notifications (userId, kind, recordId)
+		INSERT INTO notifications (userId, kind, recordId)
 		SELECT userId, 'newrelease', ?
-		FROM UserFollowedMods
+		FROM userFollowedMods
 		WHERE modId = ? AND flags & ".FOLLOW_FLAG_CREATE_NOTIFICATIONS."
 	", [$mod['modId'], $mod['modId']]);
 
@@ -73,7 +73,7 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 
 	$compatibleGameVersionsChange = false;
 	if($mod['type'] === 'mod') {
-		$oldCompatibleGameVersions = array_map('intval', $con->getCol('SELECT gameVersion FROM ModReleaseCompatibleGameVersions WHERE releaseId = ? ORDER BY gameVersion', [$existingRelease['releaseId']]));
+		$oldCompatibleGameVersions = array_map('intval', $con->getCol('SELECT gameVersion FROM modReleaseCompatibleGameVersions WHERE releaseId = ? ORDER BY gameVersion', [$existingRelease['releaseId']]));
 		sort($newCompatibleGameVersions); // Order the arrays the same way for the comparison.
 		$compatibleGameVersionsChange = $newCompatibleGameVersions !== $oldCompatibleGameVersions;
 	}
@@ -85,14 +85,14 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 		$con->startTrans();
 
 		if(isset($actualChanges['text'])) {
-			$con->execute('UPDATE Assets SET text = ?, editedByUserId = ? WHERE assetId = ?',
+			$con->execute('UPDATE assets SET text = ?, editedByUserId = ? WHERE assetId = ?',
 				[$actualChanges['text'], $user['userId'], $existingRelease['assetId']]
 			);
 
 			$changesToLog[] = 'Updated description.';
 		}
 		if(isset($actualChanges['identifier']) || isset($actualChanges['version'])) {
-			$con->execute('UPDATE ModReleases SET identifier = ?, version = ? WHERE releaseId = ?', [
+			$con->execute('UPDATE modReleases SET identifier = ?, version = ? WHERE releaseId = ?', [
 				$actualChanges['identifier'] ?? $existingRelease['identifier'],
 				$actualChanges['version']    ?? $existingRelease['version'],
 				$existingRelease['releaseId']],
@@ -106,9 +106,9 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 			$releaseId = intval($existingRelease['releaseId']);
 			$folded = implode(',', array_map(fn($v) => "($releaseId, $v)", $newCompatibleGameVersions));
 
-			$con->execute('DELETE FROM ModReleaseCompatibleGameVersions WHERE releaseId = ?', [$releaseId]);
+			$con->execute('DELETE FROM modReleaseCompatibleGameVersions WHERE releaseId = ?', [$releaseId]);
 			// @security: Version numbers and releaseIds are numeric and therefore SQL Inert.
-			$con->execute("INSERT INTO ModReleaseCompatibleGameVersions (releaseId, gameVersion) VALUES $folded");
+			$con->execute("INSERT INTO modReleaseCompatibleGameVersions (releaseId, gameVersion) VALUES $folded");
 
 			$removedCompat = array_values(array_diff($oldCompatibleGameVersions, $newCompatibleGameVersions));
 			$addedCompat = array_values(array_diff($newCompatibleGameVersions, $oldCompatibleGameVersions));
@@ -122,12 +122,12 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 			$changesToLog[] = $change;
 		}
 
-		$con->execute('UPDATE Assets SET numSaved = numSaved + 1, editedByUserId = ? WHERE assetId = ?', [$user['userId'], $existingRelease['assetId']]);
+		$con->execute('UPDATE assets SET numSaved = numSaved + 1, editedByUserId = ? WHERE assetId = ?', [$user['userId'], $existingRelease['assetId']]);
 
 		logAssetChanges($changesToLog, $existingRelease['assetId']);
 
 		updateGameVersionsCached($mod['modId']);
-		$con->execute('UPDATE Mods set lastReleased = NOW() WHERE modId = ?', [$mod['modId']]);
+		$con->execute('UPDATE mods set lastReleased = NOW() WHERE modId = ?', [$mod['modId']]);
 
 		$ok = $con->completeTrans();
 	}
@@ -147,18 +147,18 @@ function deleteRelease($modId, $release)
 
 	$con->startTrans();
 
-	$usedFiles = $con->getAssoc('SELECT fileId, cdnPath FROM Files WHERE assetId = ?', [$release['assetId']]);
+	$usedFiles = $con->getAssoc('SELECT fileId, cdnPath FROM files WHERE assetId = ?', [$release['assetId']]);
 	// @perf: This could be merged into less queries, but in theory a release can only have one fiel either way, so this should not matter.
 	foreach($usedFiles as $fileId => $cdnPath) {
-		if($con->getOne('SELECT COUNT(*) FROM Files WHERE cdnPath = ?', [$cdnPath]) == 1) {
+		if($con->getOne('SELECT COUNT(*) FROM files WHERE cdnPath = ?', [$cdnPath]) == 1) {
 			// Only delete abandoned files! Unlikely to not be the case for release files, but might aswell be safe.
 			deleteFromCdn($cdnPath);
 		}
-		$con->execute('DELETE FROM Files WHERE fileId = ?', [$fileId]);
+		$con->execute('DELETE FROM files WHERE fileId = ?', [$fileId]);
 	}
 
-	$con->execute('DELETE FROM ModReleases where releaseId = ?', [$release['releaseId']]);
-	$con->execute('DELETE FROM Assets where assetId = ?', [$release['assetId']]);
+	$con->execute('DELETE FROM modReleases where releaseId = ?', [$release['releaseId']]);
+	$con->execute('DELETE FROM assets where assetId = ?', [$release['assetId']]);
 
 	//TODO(Rennorb) @correctness: Remove / hide unread release notifications for deleted releases.
 	// We cannot remove notifications for deleted releases trivially like we do with comment notifications because release notifications are tracked by modid, not by releaseid.
@@ -174,9 +174,9 @@ function deleteRelease($modId, $release)
 
 	// Reset lastReleased to the last release, or the mod creation date if there is no other release.
 	$con->execute(<<<SQL
-		UPDATE Mods m
+		UPDATE mods m
 		SET lastReleased = IFNULL(
-			(SELECT r.created FROM ModReleases r WHERE r.modId = m.modId ORDER BY r.created DESC LIMIT 1),
+			(SELECT r.created FROM modReleases r WHERE r.modId = m.modId ORDER BY r.created DESC LIMIT 1),
 			m.created
 		)
 		WHERE m.modId = ?;
@@ -194,23 +194,23 @@ function updateGameVersionsCached($modId)
 
 	$con->startTrans();
 
-	$con->execute('DELETE FROM ModCompatibleGameVersionsCached WHERE modId = ?', [$modId]);
-	$con->execute('DELETE FROM ModCompatibleMajorGameVersionsCached WHERE modId = ?', [$modId]);
+	$con->execute('DELETE FROM modCompatibleGameVersionsCached WHERE modId = ?', [$modId]);
+	$con->execute('DELETE FROM modCompatibleMajorGameVersionsCached WHERE modId = ?', [$modId]);
 
 	// @security: modId is numeric and therefore SQL inert.
 	$con->execute(<<<SQL
-		INSERT INTO ModCompatibleGameVersionsCached (modId, gameVersion)
+		INSERT INTO modCompatibleGameVersionsCached (modId, gameVersion)
 		SELECT DISTINCT $modId, cgv.gameVersion
-		FROM ModReleases r
-		JOIN ModReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
+		FROM modReleases r
+		JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
 		where r.modId = $modId
 	SQL);
 
 	$con->execute(<<<SQL
-		INSERT INTO ModCompatibleMajorGameVersionsCached (modId, majorGameVersion)
+		INSERT INTO modCompatibleMajorGameVersionsCached (modId, majorGameVersion)
 		SELECT DISTINCT $modId, cgv.gameVersion & 0xffffffff00000000 -- :VERSION_MASK_PRIMARY
-		FROM ModReleases r
-		JOIN ModReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
+		FROM modReleases r
+		JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
 		where r.modId = $modId
 	SQL);
 
