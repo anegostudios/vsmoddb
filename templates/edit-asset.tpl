@@ -23,7 +23,7 @@
 		
 		<div class="editbox">
 			<label>Status</label>
-			<select name="statusid">
+			<select name="statusId">
 				{foreach from=$stati item=status}
 					<option value="{$status['statusId']}" {if $asset['statusId']==$status['statusId']}selected="selected"{/if}>{$status['name']}</option>
 				{/foreach}
@@ -125,7 +125,7 @@
 		});
 		
 	</script>	
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=37" async></script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=38" async></script>
 {/capture}
 
 {include file="footer"}

@@ -23,7 +23,7 @@ class AssetList extends AssetController {
 		global $con;
 
 		
-		$this->searchvalues = array("text" => "", "statusid" => null);
+		$this->searchvalues = array("text" => "", "statusId" => null);
 		
 		$this->loadFilters();	
 		

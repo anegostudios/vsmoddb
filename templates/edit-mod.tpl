@@ -36,7 +36,7 @@
 
 		<div class="editbox short">
 			<label><abbr title="Only mods with Status 'Published' are publicly visible">Status</abbr></label>
-			<select name="statusid"{if $asset['statusId'] == STATUS_LOCKED && !canModerate(null, $user)} disabled="true"{/if}>
+			<select name="statusId"{if $asset['statusId'] == STATUS_LOCKED && !canModerate(null, $user)} disabled="true"{/if}>
 				{foreach from=$stati item=status}
 					<option value="{$status['statusId']}"{if $asset['statusId']==$status['statusId']} selected="selected"{/if}>{$status['name']}</option>
 				{/foreach}
@@ -68,7 +68,7 @@
 
 		<div class="editbox wide">
 			<label><abbr title="If set, your mod can be reached with this custom url. Only alphabetical letters are allowed.">URL Alias</abbr></label>
-			<label for="inp-urlalias" class="prefixed-input" data-prefix="https://mods.vintagestory.at/"><input id="inp-urlalias" type="text" name="urlalias" value="{$asset['urlAlias']}" style="width: 21ch" /></label>
+			<label for="inp-urlalias" class="prefixed-input" data-prefix="https://mods.vintagestory.at/"><input id="inp-urlalias" type="text" name="urlAlias" value="{$asset['urlAlias']}" style="width: 21ch" /></label>
 		</div>
 
 		<div class="editbox flex-fill">
@@ -116,32 +116,32 @@
 		<h3 class="flex-fill">Links</h3>
 		<div class="editbox">
 			<label>Homepage or Forum Post Url</label>
-			<input type="url" name="homepageurl" value="{$asset['homepageUrl']}" />
+			<input type="url" name="homepageUrl" value="{$asset['homepageUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Trailer Video Url</label>
-			<input type="url" name="trailervideourl" value="{$asset['trailerVideoUrl']}" />
+			<input type="url" name="trailerVideoUrl" value="{$asset['trailerVideoUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Source Code Url</label>
-			<input type="url" name="sourcecodeurl" value="{$asset['sourceCodeUrl']}" />
+			<input type="url" name="sourceCodeUrl" value="{$asset['sourceCodeUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Issue tracker Url</label>
-			<input type="url" name="issuetrackerurl" value="{$asset['issueTrackerUrl']}" />
+			<input type="url" name="issueTrackerUrl" value="{$asset['issueTrackerUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Wiki Url</label>
-			<input type="url" name="wikiurl" value="{$asset['wikiUrl']}" />
+			<input type="url" name="wikiUrl" value="{$asset['wikiUrl']}" />
 		</div>
 
 		<div class="editbox">
 			<label>Donate Url</label>
-			<input type="url" name="donateurl" value="{$asset['donateUrl']}" />
+			<input type="url" name="donateUrl" value="{$asset['donateUrl']}" />
 		</div>
 
 		<h3 class="flex-fill">Additional information</h3>
@@ -157,11 +157,11 @@
 		<div class="editbox" style="align-self: baseline;">
 			<label>ModDB Logo image</label>
 			<small>The ModDB logo is selected from the 'Screenshots' and has to be 480x480 or 480x320 px. This image will be used for mod cards on the Mod DB. <span class="text-error">Images selected as logos will not be displayed in the slideshow.</span></small>
-			<select name="cardlogofileid">
+			<select name="cardLogoFileId">
 				<option value="">--- Default ---</option>
 				{foreach from=$files item=file}
 					{if $file['imageSize'] === '480x320' || $file['imageSize'] === '480x480'}
-					<option value="{$file['fileId']}" data-url="{$file['url']}"{if $asset['cardlogofileid']==$file['fileId']} selected="selected" {/if}>
+					<option value="{$file['fileId']}" data-url="{$file['url']}"{if $asset['cardLogoFileId']==$file['fileId']} selected="selected" {/if}>
 						{$file['name']} [{$file['imageSize']} px]</option>
 					{/if}
 				{/foreach}
@@ -170,11 +170,11 @@
 		<div class="editbox" style="align-self: baseline;">
 			<label>External Logo image</label>
 			<small>The external logo is selected from the 'Screenshots', has to be 480x480 or 480x320 px. This image will be used for social media embeds. If no specific logo is selected here, but a ModDB logo is selected, the upper 480x320 px of that ModDB logo will be used. <span class="text-error">Images selected as logos will not be displayed in the slideshow.</span></small>
-			<select name="embedlogofileid">
+			<select name="embedLogoFileId">
 				<option value="">--- Default (crop ModDB image) ---</option>
 				{foreach from=$files item=file}
 					{if $file['imageSize'] === '480x320' || $file['imageSize'] === '480x480'}
-					<option value="{$file['fileId']}" data-url="{$file['url']}"{if $asset['embedlogofileid']==$file['fileId']} selected="selected" {/if}>
+					<option value="{$file['fileId']}" data-url="{$file['url']}"{if $asset['embedLogoFileId']==$file['fileId']} selected="selected" {/if}>
 						{$file['name']} [{$file['imageSize']} px]</option>
 					{/if}
 				{/foreach}
@@ -260,8 +260,8 @@
 			});
 		}
 		
-		const $cardLogoSelect = $('select[name="cardlogofileid"]');
-		const $embedLogoSelect = $('select[name="embedlogofileid"]');
+		const $cardLogoSelect = $('select[name="cardLogoFileId"]');
+		const $embedLogoSelect = $('select[name="embedLogoFileId"]');
 		const cardPreviewBoxEl = document.getElementById('preview-box-card');
 		const embedPreviewBoxEl = document.getElementById('preview-box-embed');
 
@@ -362,7 +362,7 @@
 		}
 	</style>
 
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=37" async></script>
+	<script type="text/javascript" src="/web/js/edit-asset.js?version=38" async></script>
 {/capture}
 
 {include file="footer"}

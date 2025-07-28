@@ -128,7 +128,7 @@ function validateModSearchInputs(&$outParams)
 
 	global $user;
 	if(!canModerate(null, $user)) {
-		$outParams['filters']['a.statusid'] = 2;
+		$outParams['filters']['a.statusId'] = 2;
 	}
 
 	return null;

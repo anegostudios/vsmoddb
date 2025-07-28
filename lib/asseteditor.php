@@ -285,15 +285,15 @@ class AssetEditor extends AssetController
 		}
 
 
-		if ($oldstatusid != STATUS_3 && $_POST["statusid"] == STATUS_3) {
+		if ($oldstatusid != STATUS_3 && $_POST["statusId"] == STATUS_3) {
 			$assetdata["readydate"] = date("Y-m-d H:i:s"); //TODO(Rennorb) @cleanup
 		}
 		else if($oldstatusid == STATUS_LOCKED) {
 			$modId = intval($this->asset['modId']);
-			if($_POST["statusid"] != STATUS_LOCKED) {
+			if($_POST["statusId"] != STATUS_LOCKED) {
 				if(!canModerate(null, $user)) {
 					addMessage(MSG_CLASS_ERROR, "Only moderators may change the state of a locked mod.");
-					$_POST['statusid'] = STATUS_LOCKED;
+					$_POST['statusId'] = STATUS_LOCKED;
 					return 'error';
 				}
 

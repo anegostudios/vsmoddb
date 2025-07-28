@@ -12,7 +12,7 @@ class ModEditor extends AssetEditor
 
 		$this->tablename = "mods";
 		$this->namesingular = "Mod";
-		$this->nameplural = "mods";
+		$this->nameplural = "Mods";
 
 		$this->declareColumn(3, array("title" => "Homepage url", "code" => "homepageUrl", "datatype" => "url", "tablename" => "mods"));
 		$this->declareColumn(4, array("title" => "Source code url", "code" => "sourceCodeUrl", "datatype" => "url", "tablename" => "mods"));
@@ -74,9 +74,9 @@ class ModEditor extends AssetEditor
 		$logoData = $this->assetid ? $con->getRow(<<<SQL
 			SELECT fileDb.cdnPath AS pathDb, fileExternal.cdnPath AS pathExternal
 			FROM mods m
-			LEFT JOIN files AS fileDb ON fileDb.fileId = m.cardlogofileid
-			LEFT JOIN files AS fileExternal ON fileExternal.fileId = m.embedlogofileid
-			WHERE m.assetid = ?
+			LEFT JOIN files AS fileDb ON fileDb.fileId = m.cardLogoFileId
+			LEFT JOIN files AS fileExternal ON fileExternal.fileId = m.embedLogoFileId
+			WHERE m.assetId = ?
 		SQL, [$this->assetid]) : null; // @perf
 		$previewData = array_merge($this->asset, [
 			'statusCode'    => 'draft',
@@ -136,14 +136,14 @@ class ModEditor extends AssetEditor
 
 		$_POST['summary'] = substr(strip_tags($_POST['summary']), 0, 100);
 
-		$_POST['urlalias'] = preg_replace("/[^a-z]+/", "", strtolower($_POST['urlalias']));
-		if (!empty($_POST['urlalias'])) {
-			if ($con->getOne("select modId from mods where urlAlias = ? and assetId != ?", array($_POST['urlalias'], $this->assetid))) {
+		$_POST['urlAlias'] = preg_replace("/[^a-z]+/", "", strtolower($_POST['urlAlias']));
+		if (!empty($_POST['urlAlias'])) {
+			if ($con->getOne("select modId from mods where urlAlias = ? and assetId != ?", array($_POST['urlAlias'], $this->assetid))) {
 				addMessage(MSG_CLASS_ERROR, 'Not saved. This url alias is already taken. Please choose another.');
 				return 'error';
 			}
 
-			if (in_array($_POST['urlalias'], static::RESERVED_URL_PREFIXES)) {
+			if (in_array($_POST['urlAlias'], static::RESERVED_URL_PREFIXES)) {
 				addMessage(MSG_CLASS_ERROR, 'Not saved. This url alias is reserved word. Please choose another.');
 				return 'error';
 			}
@@ -151,15 +151,15 @@ class ModEditor extends AssetEditor
 
 		$oldLogoData = $con->getRow("select cardLogoFileId, embedLogoFileId from mods where assetId = ?", array($this->assetid));
 		$oldLogoFileIdDb = $oldLogoData['cardLogoFileId'] ?? null;
-		$newLogoFileIdDb = $_POST['cardlogofileid'] ?? null;
+		$newLogoFileIdDb = $_POST['cardLogoFileId'] ?? null;
 		$oldLogoFileIdExternal = $oldLogoData['embedLogoFileId'] ?? null;
-		$newLogoFileIdExternal = $_POST['embedlogofileid'] ?? null;
+		$newLogoFileIdExternal = $_POST['embedLogoFileId'] ?? null;
 
 		$logoCheck = ['status' => 'ok', 'errormessage' => ''];
 		if (!empty($newLogoFileIdDb) && $newLogoFileIdDb != $oldLogoFileIdDb) {
 			$logoCheck = $this->validateLogoImage($newLogoFileIdDb);
 			if($logoCheck['status'] === 'error') {
-				$_POST['cardlogofileid'] = $oldLogoFileIdDb;
+				$_POST['cardLogoFileId'] = $oldLogoFileIdDb;
 			}
 		}
 
@@ -170,7 +170,7 @@ class ModEditor extends AssetEditor
 				$logoCheck['status'] = 'error';
 				$logoCheck['errormessage'] .= $logoCheckExternal['errormessage'];
 
-				$_POST['embedlogofileid'] = $oldLogoFileIdExternal;
+				$_POST['embedLogoFileId'] = $oldLogoFileIdExternal;
 			}
 		}
 		else if(empty($newLogoFileIdExternal)) {
@@ -185,7 +185,7 @@ class ModEditor extends AssetEditor
 
 			if($logoCheck['status'] === 'size') { // no selected external logo but we have a db logo
 				if($logoCheck['size'] === '480x320') {
-					$_POST['embedlogofileid'] = $newLogoFileIdDb;
+					$_POST['embedLogoFileId'] = $newLogoFileIdDb;
 				}
 				else {
 					// External image can be generated form the db one for ease of use.
@@ -194,10 +194,10 @@ class ModEditor extends AssetEditor
 						$logoCheck['status'] = 'error';
 						$logoCheck['errormessage'] .= $cropResult['errormessage'];
 
-						$_POST['embedlogofileid'] = $oldLogoFileIdExternal;
+						$_POST['embedLogoFileId'] = $oldLogoFileIdExternal;
 					}
 					else {
-						$_POST['embedlogofileid'] = $cropResult['fileid'];
+						$_POST['embedLogoFileId'] = $cropResult['fileid'];
 					}
 				}
 			}
@@ -217,9 +217,9 @@ class ModEditor extends AssetEditor
 		$modid = $con->getOne("select modId from mods where assetId = ?", array($this->assetid));
 		$hasfiles = $con->getOne("select releaseId from modReleases where modId = ?", array($modid));
 		$statusreverted = false;
-		if (!$hasfiles && $_POST['statusid'] != STATUS_DRAFT && $this->asset['statusId'] != STATUS_LOCKED) {
+		if (!$hasfiles && $_POST['statusId'] != STATUS_DRAFT && $this->asset['statusId'] != STATUS_LOCKED) {
 			$statusreverted = true;
-			$_POST['statusid'] = STATUS_DRAFT;
+			$_POST['statusId'] = STATUS_DRAFT;
 		}
 
 		$tagchanges = $this->updateTags($modid);
