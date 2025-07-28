@@ -6,7 +6,7 @@ include_once $config['basepath']. 'lib/recommend-release.php';
 
 function mkRelease($version, $gameVersions)
 {
-	return ['version' => $version, 'compatibleGameVersions' => $gameVersions, 'maxCompatibleGameVersion' => max($gameVersions)];
+	return ['version' => $version, 'v' => formatSemanticVersion($version), 'compatibleGameVersions' => $gameVersions, 'maxCompatibleGameVersion' => max($gameVersions)];
 }
 
 function stable($version) { return $version << 32 | 0xffff; }
@@ -208,5 +208,29 @@ final class ReleaseRecommendationsTest extends TestCase {
 		$this->assertEquals(null, $recommended);
 		$this->assertEquals(null, $testers);
 		$this->assertEquals(stable(4), $fallback['version'], formatVersionComp(stable(4), $fallback['version']));
+	}
+
+	/** @test */
+	public function recommendLatestStableWithNewerTesters() : void
+	{
+		$allGameVersions = [ pre(5, 3), pre(5, 2), pre(5, 1), stable(4), stable(3) ];
+
+		selectDesiredVersions($allGameVersions, null, null, $highest, $maxStable, $maxUnstable);
+
+		$this->assertEquals(pre(5, 3), $maxUnstable);
+		$this->assertEquals(stable(4), $maxStable);
+
+		$releases = [
+			mkRelease(stable(4), [pre(5, 2)]),
+			mkRelease(stable(3), [pre(5, 1)]),
+			mkRelease(stable(2), [stable(3)]),
+			mkRelease(stable(1), [stable(3)]),
+		];
+
+		recommendReleases($releases, $maxStable, $maxUnstable, $recommended, $testers, $fallback);
+
+		$this->assertEquals(null, $recommended);
+		$this->assertEquals(stable(4), $testers['version'], formatVersionComp(stable(4), $testers['version']));
+		$this->assertEquals(stable(2), $fallback['version'], formatVersionComp(stable(2), $fallback['version']));
 	}
 }

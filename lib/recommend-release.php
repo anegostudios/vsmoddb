@@ -125,13 +125,14 @@ function recommendReleases($releases, $maxDesiredGameVersionStable, $maxDesiredG
 				break; // If there is a newer unstable version we already found it.
 			}
 			else {
-				// unstable version of the mod that is compatible wit the correct stable version of the game
+				// unstable version of the mod that is compatible with the correct stable version of the game
 				if(!$out_testersRelease)   $out_testersRelease = $release;
 				continue;
 			}
 		}
 		else {
-			if(in_array($maxDesiredGameVersionUnstable, $release['compatibleGameVersions'], true)) {
+			$lastCompat = last($release['compatibleGameVersions']);
+			if(isPreReleaseVersion($lastCompat) && $lastCompat <= $maxDesiredGameVersionUnstable) {
 				if(!$out_testersRelease)   $out_testersRelease = $release;
 				continue;
 			}
