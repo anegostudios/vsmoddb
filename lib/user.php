@@ -19,7 +19,7 @@ if (DEBUGUSER === 1) {
 }
 
 if ($sessionToken) {
-	$user = $con->getRow(USER_QUERY_SQL_BASE.'WHERE sessionToken = ? AND sessionValidUntil > NOW()', [$sessionToken]);
+	$user = $con->getRow(USER_QUERY_SQL_BASE.'WHERE sessionToken = FROM_BASE64(?) AND sessionValidUntil > NOW()', [$sessionToken]);
 }
 
 global $messages;
