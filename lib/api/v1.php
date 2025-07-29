@@ -432,7 +432,7 @@ function listOutOfDateMods($currentModVersions) {
 		$outOfDateMods[$release['identifier']] = [
 			'releaseid'  => intval($release['releaseId']),
 			'mainfile'   => formatCdnDownloadUrl($file),
-			'filename'   => $file['name'],
+			'filename'   => $file['name'] ?? "",
 			'fileid'     => $file['fileId'] ? intval($file['fileId']) : null,
 			'downloads'  => intval($file['downloads']),
 			'tags'       => array_map(fn($s) => formatSemanticVersion(intval($s)), explode(';', $release["compatibleGameVersions"])),
