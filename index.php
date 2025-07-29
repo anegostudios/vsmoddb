@@ -33,7 +33,7 @@ if($urlparts[0] === 'api') { // :ReservedUrlPrefixes
 		include("lib/api/v2.php");
 	}
 	else {
-		include("lib/api/v1.php");
+		include("lib/api/v1/entry.php");
 	}
 	exit();
 }
