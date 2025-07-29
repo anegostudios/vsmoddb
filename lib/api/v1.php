@@ -189,7 +189,7 @@ function listMod($modid)
 		$releases[] = array(
 			"releaseid"  => intval($release['releaseId']),
 			"mainfile"   => empty($file) ? "" : formatCdnDownloadUrl($file),
-			"filename"   => empty($file) ? 0 : $file["name"],
+			"filename"   => $file['name'] ?? '',
 			"fileid"     => isset($file['fileId']) ? intval($file['fileId']) : null,
 			"downloads"  => empty($file) ? 0 : intval($file["downloads"]),
 			"tags"       => array_map(fn($s) => formatSemanticVersion(intval($s)), explode(';', $release["compatibleGameVersions"])),
