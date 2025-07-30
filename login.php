@@ -8,10 +8,18 @@ if ($user) {
 if (!$sessionToken) {
 	if (empty($_GET['redir'])) {
 		header('Location: https://account.vintagestory.at/?loginredir=mods');
+		exit();
 	}
 }
 
-$response = sendPostData('webprofile', ['sessionkey' => $sessionToken]);
+$profileRequestContext = stream_context_create([
+	"http" => [
+		"method"  => "POST",
+		"header"  => "Content-type: application/x-www-form-urlencoded" . "\r\n",
+		"content" => http_build_query(['sessionkey' => $sessionToken]),
+	],
+]);
+$response = file_get_contents("https://{$config['authserver']}/webprofile", false, $profileRequestContext);
 $response = json_decode($response, true);
 
 
@@ -39,8 +47,8 @@ if($userId = $con->getOne('SELECT userId from users where uid = FROM_BASE64(?)',
 else {
 	// new user
 	$con->execute(<<<SQL
-		INSERT INTO users (name, email, uid, actionToken, sessionToken, sessionValidUntil, hash)
-		VALUES (?, ?, FROM_BASE64(?), UNHEX(?), FROM_BASE64(?), DATE_ADD(NOW(), INTERVAL 14 DAY), '\0')
+		INSERT INTO users (name, email, uid, actionToken, sessionToken, sessionValidUntil, hash, timezone)
+		VALUES (?, ?, FROM_BASE64(?), UNHEX(?), FROM_BASE64(?), DATE_ADD(NOW(), INTERVAL 14 DAY), '\0', '(GMT) London')
 	SQL, [$account['playername'], $account['email'], $account['uid'], $actionToken, $sessionToken]);
 	//TODO(Rennorb) @perf @cleanup: try to wrangle this into one query
 	$con->execute(<<<SQL

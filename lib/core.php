@@ -709,31 +709,6 @@ function _inflateLink($link, $wrapUnmatchedLink)
 }
 
 
-
-function sendPostData($path, $data, $remoteurl = null)
-{
-	global $config;
-
-	if ($remoteurl == null) {
-		$remoteurl = "https://" . $config["authserver"] . "/" . $path;
-	} else {
-		$remoteurl = $remoteurl . "/" . $path;
-	}
-
-	$httpopts = array(
-		"http" => array(
-			"method"  => "POST",
-			"header"  => "Content-type: application/x-www-form-urlencoded" . "\r\n",
-			"content" => http_build_query($data)
-		)
-	);
-
-	$context = stream_context_create($httpopts);
-	$result = file_get_contents($remoteurl, false, $context);
-
-	return $result;
-}
-
 /**
  * Splits of the last extension from a path, gives back the whole path without extension and the extension.
  * More light-weight than pathinfo.
