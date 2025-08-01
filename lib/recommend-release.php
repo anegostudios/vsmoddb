@@ -11,7 +11,7 @@
 			for the unstable version of the game, or
 			for the stable version of the game, if the release is a newer unstable version than the stable release (only if there is no release for the unstable game version)
 		-> recommend for testers
-		If there are not releases for for either of these, select the latest release -> latest release for an outdated version of the game
+		If there are no releases for for either of these, select the latest release -> latest release for an outdated version of the game
 
 	Examples assuming current game version = 5, and a newer unstable version = 6p also exists,
 	RV = mod release version, GV = game version required by the corresponding mod release version:
@@ -119,8 +119,9 @@ function recommendReleases($releases, $maxDesiredGameVersionStable, $maxDesiredG
 
 	$hasStableFallback = null;
 	foreach($releasesByMaxGameVersion as $release) {
+		$isPrerelease = isPreReleaseVersion($release['version']);
 		if(in_array($maxDesiredGameVersionStable, $release['compatibleGameVersions'], true)) {
-			if(!isPreReleaseVersion($release['version'])) {
+			if(!$isPrerelease) {
 				$out_recommendedRelease = $release;
 				break; // If there is a newer unstable version we already found it.
 			}
@@ -132,7 +133,7 @@ function recommendReleases($releases, $maxDesiredGameVersionStable, $maxDesiredG
 		}
 		else {
 			$lastCompat = last($release['compatibleGameVersions']);
-			if(isPreReleaseVersion($lastCompat) && $lastCompat <= $maxDesiredGameVersionUnstable) {
+			if(($isPrerelease || isPreReleaseVersion($lastCompat)) && $lastCompat <= $maxDesiredGameVersionUnstable) {
 				if(!$out_testersRelease)   $out_testersRelease = $release;
 				continue;
 			}
@@ -140,7 +141,7 @@ function recommendReleases($releases, $maxDesiredGameVersionStable, $maxDesiredG
 
 		if($hasStableFallback) continue;
 
-		if($out_testersRelease) {
+		if($out_testersRelease && !$isPrerelease) {
 			// If we have a more recent testers version we look for an older stable one as fallback,
 			// otherwise just pick the latest one as fallback.
 			foreach($release['compatibleGameVersions'] as $version) {

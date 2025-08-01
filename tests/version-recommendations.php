@@ -14,7 +14,7 @@ function pre($stable, $minor) { return ($stable << 32) | (8 << 12) | $minor; }
 
 //NOTE(Rennorb): This is not a assert wrapper to preserve the error lines in test reports.
 //TODO(Rennorb) @cleanup: Figure out how to turn this into a wrapper while keeping the correct error locations.
-function formatVersionComp($a, $b) { return formatSemanticVersion($a) . ' != '. formatSemanticVersion($b); }
+function formatVersionComp($a, $b) { return 'expected ' . formatSemanticVersion($a) . ' but got '. formatSemanticVersion($b); }
 
 use PHPUnit\Framework\TestCase;
 
@@ -232,5 +232,29 @@ final class ReleaseRecommendationsTest extends TestCase {
 		$this->assertEquals(null, $recommended);
 		$this->assertEquals(stable(4), $testers['version'], formatVersionComp(stable(4), $testers['version']));
 		$this->assertEquals(stable(2), $fallback['version'], formatVersionComp(stable(2), $fallback['version']));
+	}
+
+	/** @test */
+	public function recommendLatestStableWithNewerTesters2() : void
+	{
+		$allGameVersions = [ pre(6, 1), stable(5), stable(4), stable(3), pre(2, 1), stable(1) ];
+
+		selectDesiredVersions($allGameVersions, null, null, $highest, $maxStable, $maxUnstable);
+
+		$this->assertEquals(pre(6, 1), $maxUnstable);
+		$this->assertEquals(stable(5), $maxStable);
+
+		$releases = [
+			mkRelease(pre(4, 1), [stable(4)]),
+			mkRelease(stable(3), [stable(3)]),
+			mkRelease(stable(2), [pre(2, 1)]), // <- wrong testers rel
+			mkRelease(stable(1), [stable(1)]),
+		];
+
+		recommendReleases($releases, $maxStable, $maxUnstable, $recommended, $testers, $fallback);
+
+		$this->assertEquals(null, $recommended);
+		$this->assertEquals(pre(4, 1), $testers['version'], formatVersionComp(pre(4, 1), $testers['version']));
+		$this->assertEquals(stable(3), $fallback['version'], formatVersionComp(stable(3), $fallback['version']));
 	}
 }
