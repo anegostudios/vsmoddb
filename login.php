@@ -50,13 +50,15 @@ else {
 		INSERT INTO users (name, email, uid, actionToken, sessionToken, sessionValidUntil, hash, timezone)
 		VALUES (?, ?, FROM_BASE64(?), UNHEX(?), FROM_BASE64(?), DATE_ADD(NOW(), INTERVAL 14 DAY), '\0', '(GMT) London')
 	SQL, [$account['playername'], $account['email'], $account['uid'], $actionToken, $sessionToken]);
-	//TODO(Rennorb) @perf @cleanup: try to wrangle this into one query
+	//TODO(Rennorb) @perf @cleanup: try to wrangle this into one query.
+	// The issue here is that the expression needs hte autoincrement id column, shich is not available until the row is inserted.
+	$userId = $con->Insert_ID();
 	$con->execute(<<<SQL
 		UPDATE users
 		SET hash = UNHEX(SUBSTRING(SHA2(CONCAT(userId, created), 512), 1, 20))
-		WHERE uid = FROM_BASE64(?) AND hash = '\0'
+		WHERE userId = ?
 		LIMIT 1
-	SQL, [$account['uid']]);
+	SQL, [$userId]);
 }
 
 header('Location: /');
