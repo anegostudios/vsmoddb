@@ -101,8 +101,8 @@ if(!empty($_POST['save'])) {
 				}
 				else {
 					$currentFiles[] = [
-						'assetid'            => $assetId,
-						'fileid'             => $processedFile['fileid'],
+						'assetId'            => $assetId,
+						'fileId'             => $processedFile['fileid'],
 						'modIdentifier'      => $processedFile['modid'],
 						'modVersion'         => $processedFile['modversion'],
 					];
@@ -110,8 +110,8 @@ if(!empty($_POST['save'])) {
 			}
 			else {
 				$currentFiles[] = [
-					'assetid' => $assetId,
-					'fileid'  => $processedFile['fileid'],
+					'assetId' => $assetId,
+					'fileId'  => $processedFile['fileid'],
 				];
 			}
 		}
