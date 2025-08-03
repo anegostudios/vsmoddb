@@ -117,7 +117,7 @@ if(!empty($_POST['save'])) {
 		}
 	}
 
-	if(!$currentFiles && empty($_FILES['newfile'])) { // Release needs a file, but don't emit the message if the parsing failed.
+	if(!$currentFiles && (empty($_FILES['newfile']) || $_FILES['newfile']['error'] === 4)) { // Release needs a file, but don't emit the message if the parsing failed.
 		addMessage(MSG_CLASS_ERROR, 'Release is missing a file.');
 	}
 
