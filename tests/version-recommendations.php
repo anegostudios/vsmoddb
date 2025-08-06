@@ -317,7 +317,7 @@ final class ReleaseRecommendationsTest extends TestCase {
 	}
 
 	/** @test */
-	public function fallbackLatestWithExistringPrerelease() : void
+	public function fallbackLatestWithExistingPrerelease() : void
 	{
 		$allGameVersions = [ pre(6, 1), stable(5), stable(4), stable(3), pre(2, 1), stable(1) ];
 
@@ -338,5 +338,27 @@ final class ReleaseRecommendationsTest extends TestCase {
 		$this->assertEquals(null, $recommended);
 		$this->assertEquals(null, $testers);
 		$this->assertEquals(stable(5), $fallback['version'], formatVersionComp(stable(5), $fallback['version']));
+	}
+
+	/** @test */
+	public function recommendLatestDontSelectForTestersIfReleaseIsAlsoLatestUnstable() : void
+	{
+		$allGameVersions = [ pre(6, 1), stable(5), stable(4) ];
+
+		selectDesiredVersions($allGameVersions, null, null, $highest, $maxStable, $maxUnstable);
+
+		$this->assertEquals(pre(6, 1), $maxUnstable);
+		$this->assertEquals(stable(5), $maxStable);
+
+		$releases = [
+			mkRelease(stable(2), [stable(5), pre(6, 1)]),
+			mkRelease(stable(1), [stable(5)]),
+		];
+
+		recommendReleases($releases, $maxStable, $maxUnstable, $recommended, $testers, $fallback);
+
+		$this->assertEquals(stable(2), $recommended['version'], formatVersionComp(stable(2), $recommended['version']));
+		$this->assertEquals(null, $testers);
+		$this->assertEquals(null, $fallback);
 	}
 }
