@@ -32,9 +32,9 @@
 		6p  4.p2 -> For testers
 
 		2   2.5
-		2   3
+		2   3    -> Latest outdated
 		3   4.p1
-		3   4.p2 -> Latest outdated
+		3   4.p2 -> For testers
 
 		Assuming we came here by searching for mods for GV 2:
 		2   2.5
@@ -117,41 +117,27 @@ function recommendReleases($releases, $maxDesiredGameVersionStable, $maxDesiredG
 		| ($b['version'] > $a['version'] ? 1 : 0) // If two releases have the same maxversion, use their version to determine the order
 	));
 
-	$hasStableFallback = null;
 	foreach($releasesByMaxGameVersion as $release) {
-		$isPrerelease = isPreReleaseVersion($release['version']);
+		$isConsideredPrerelease = isPreReleaseVersion($release['version']) || isPreReleaseVersion(last($release['compatibleGameVersions']));
+
 		if(in_array($maxDesiredGameVersionStable, $release['compatibleGameVersions'], true)) {
-			if(!$isPrerelease) {
-				$out_recommendedRelease = $release;
-				break; // If there is a newer unstable version we already found it.
+			if($isConsideredPrerelease) {
+				if(!$out_testersRelease) $out_testersRelease = $release;
+				continue;
 			}
 			else {
-				// unstable version of the mod that is compatible with the correct stable version of the game
-				if(!$out_testersRelease)   $out_testersRelease = $release;
-				continue;
-			}
-		}
-		else {
-			$lastCompat = last($release['compatibleGameVersions']);
-			if(($isPrerelease || isPreReleaseVersion($lastCompat)) && $lastCompat <= $maxDesiredGameVersionUnstable) {
-				if(!$out_testersRelease)   $out_testersRelease = $release;
-				continue;
+				$out_recommendedRelease = $release;
+				return; // already found other interesting releases by now
 			}
 		}
 
-		if($hasStableFallback) continue;
-
-		if($out_testersRelease && !$isPrerelease) {
-			// If we have a more recent testers version we look for an older stable one as fallback,
-			// otherwise just pick the latest one as fallback.
-			foreach($release['compatibleGameVersions'] as $version) {
-				if(!isPreReleaseVersion($version)) {
-					$out_fallbackRelease = $release;
-					$hasStableFallback = true;
-					continue 2;
-				}
-			}
+		if(($isConsideredPrerelease) && $release['maxCompatibleGameVersion'] <= $maxDesiredGameVersionUnstable && !$out_fallbackRelease) {
+			if(!$out_testersRelease) $out_testersRelease = $release;
+			continue;
 		}
-		if(!$out_fallbackRelease) $out_fallbackRelease = $release;
+
+		if(!$out_fallbackRelease) {
+			$out_fallbackRelease = $release;
+		}
 	}
 }

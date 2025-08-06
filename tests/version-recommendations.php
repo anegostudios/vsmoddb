@@ -110,7 +110,7 @@ final class ReleaseRecommendationsTest extends TestCase {
 	}
 
 	/** @test */
-	public function recommendTestersRelease() : void
+	public function recommendLatestWithTestersPrerelease() : void
 	{
 		$allGameVersions = [ stable(4) ];
 
@@ -125,14 +125,18 @@ final class ReleaseRecommendationsTest extends TestCase {
 
 		$this->assertEquals(stable(4), $recommended['version'], formatVersionComp(stable(4), $recommended['version']));
 		$this->assertEquals(pre(5, 1), $testers['version'], formatVersionComp(pre(5, 1), $testers['version']));
+		$this->assertEquals(null, $fallback);
 	}
 
 	/** @test */
-	public function recommendLatestRelease2() : void
+	public function fallbackLatestStableWithNewerTesters() : void
 	{
 		$allGameVersions = [ pre(5, 3), pre(5, 2), pre(5, 1), stable(4), stable(3) ];
 
 		selectDesiredVersions($allGameVersions, null, null, $highest, $maxStable, $maxUnstable);
+
+		$this->assertEquals(stable(4), $maxStable, formatVersionComp(stable(4), $maxStable));
+		$this->assertEquals(pre(5, 3), $maxUnstable, formatVersionComp(pre(5, 3), $maxUnstable));
 
 		$releases = [
 			mkRelease(stable(4), [pre(5, 3)]),
@@ -149,7 +153,61 @@ final class ReleaseRecommendationsTest extends TestCase {
 	}
 
 	/** @test */
-	public function recommendLatestOutdated() : void
+	public function testersOnlyGameVersion() : void
+	{
+		$allGameVersions = [ pre(6, 1), stable(5), pre(5, 1) ];
+
+		selectDesiredVersions($allGameVersions, null, null, $highest, $maxStable, $maxUnstable);
+
+		$releases = [
+			mkRelease(stable(1), [pre(5, 1)]),
+		];
+
+		recommendReleases($releases, $maxStable, $maxUnstable, $recommended, $testers, $fallback);
+
+		$this->assertEquals(null, $recommended);
+		$this->assertEquals(stable(1), $testers['version'], formatVersionComp(stable(1), $testers['version']));
+		$this->assertEquals(null, $fallback);
+	}
+
+	/** @test */
+	public function testersOnlyReleaseVersion() : void
+	{
+		$allGameVersions = [ stable(1) ];
+
+		selectDesiredVersions($allGameVersions, null, null, $highest, $maxStable, $maxUnstable);
+
+		$releases = [
+			mkRelease(pre(0, 1), [stable(1)]),
+		];
+
+		recommendReleases($releases, $maxStable, $maxUnstable, $recommended, $testers, $fallback);
+
+		$this->assertEquals(null, $recommended);
+		$this->assertEquals(pre(0, 1), $testers['version'], formatVersionComp(pre(0, 1), $testers['version']));
+		$this->assertEquals(null, $fallback);
+	}
+
+	/** @test */
+	public function fallback() : void
+	{
+		$allGameVersions = [ stable(5), stable(4) ];
+
+		selectDesiredVersions($allGameVersions, null, null, $highest, $maxStable, $maxUnstable);
+
+		$releases = [
+			mkRelease(stable(1), [stable(4)]),
+		];
+
+		recommendReleases($releases, $maxStable, $maxUnstable, $recommended, $testers, $fallback);
+
+		$this->assertEquals(null, $recommended);
+		$this->assertEquals(null, $testers);
+		$this->assertEquals(stable(1), $fallback['version'], formatVersionComp(stable(1), $fallback['version']));
+	}
+
+	/** @test */
+	public function fallbackLatest() : void
 	{
 		$allGameVersions = [ stable(4), stable(3) ];
 
@@ -190,7 +248,7 @@ final class ReleaseRecommendationsTest extends TestCase {
 	}
 
 	/** @test */
-	public function recommendLatestTestersNotOlder() : void
+	public function fallbackIgnoreNewerTestersWhenEvenNewStableGameVersionIsPresent() : void
 	{
 		$allGameVersions = [ stable(5), pre(5, 3), pre(5, 2), pre(5, 1), stable(4), stable(3) ];
 
@@ -211,7 +269,7 @@ final class ReleaseRecommendationsTest extends TestCase {
 	}
 
 	/** @test */
-	public function recommendLatestStableWithNewerTesters() : void
+	public function fallbackLatestWithNewerTesters() : void
 	{
 		$allGameVersions = [ pre(5, 3), pre(5, 2), pre(5, 1), stable(4), stable(3) ];
 
@@ -235,7 +293,7 @@ final class ReleaseRecommendationsTest extends TestCase {
 	}
 
 	/** @test */
-	public function recommendLatestStableWithNewerTesters2() : void
+	public function fallbackLatestWithNewerTesters2() : void
 	{
 		$allGameVersions = [ pre(6, 1), stable(5), stable(4), stable(3), pre(2, 1), stable(1) ];
 
@@ -256,5 +314,29 @@ final class ReleaseRecommendationsTest extends TestCase {
 		$this->assertEquals(null, $recommended);
 		$this->assertEquals(pre(4, 1), $testers['version'], formatVersionComp(pre(4, 1), $testers['version']));
 		$this->assertEquals(stable(3), $fallback['version'], formatVersionComp(stable(3), $fallback['version']));
+	}
+
+	/** @test */
+	public function fallbackLatestWithExistringPrerelease() : void
+	{
+		$allGameVersions = [ pre(6, 1), stable(5), stable(4), stable(3), pre(2, 1), stable(1) ];
+
+		selectDesiredVersions($allGameVersions, null, null, $highest, $maxStable, $maxUnstable);
+
+		$this->assertEquals(pre(6, 1), $maxUnstable);
+		$this->assertEquals(stable(5), $maxStable);
+
+		$releases = [
+			mkRelease(stable(5), [stable(4)]),
+			mkRelease(stable(4), [stable(4)]),
+			mkRelease(stable(2), [pre(2, 1)]), // <- wrong testers rel
+			mkRelease(stable(1), [stable(1)]),
+		];
+
+		recommendReleases($releases, $maxStable, $maxUnstable, $recommended, $testers, $fallback);
+
+		$this->assertEquals(null, $recommended);
+		$this->assertEquals(null, $testers);
+		$this->assertEquals(stable(5), $fallback['version'], formatVersionComp(stable(5), $fallback['version']));
 	}
 }
