@@ -119,7 +119,7 @@ function validateModSearchInputs(&$outParams)
 
 	if(!empty($_REQUEST['cursor'])) {
 		$cursor = filter_var($_REQUEST['cursor'], FILTER_UNSAFE_RAW, FILTER_REQUIRE_ARRAY);
-		if($cursor === false || count($cursor) !== 2 || intval($cursor[1]) != $cursor[1]) {
+		if($cursor === false || count($cursor) !== 3 || intval($cursor[1]) != $cursor[1] || intval($cursor[2]) != $cursor[2]) {
 			return "Invalid cursor: '{$_REQUEST['cursor']}'.";
 		}
 		$outParams['cursor'] = $cursor;
@@ -161,14 +161,30 @@ function queryModSearch($searchParams)
 
 	$joinClauses = '';
 	$whereClauses = '';
+	$matchScoreSelect = '';
 	$sqlParams = [];
-	
+
+	$orderBy = VALID_ORDER_BY_COLUMNS[$searchParams['order'][0]][0].' '.$searchParams['order'][1];
+
 	foreach($searchParams['filters'] as $name => $value) {
 		switch($name) {
 			case 'text':
+				$v = '%'.escapeStringForLikeQuery($value).'%';
+
+				// POSITION RETURNS 0 for not found, 1based index otherwise
+				// 3 - (0 - 1) & 0b11 = 3 - (0xffffffff & 0x11) = 3 - 3 = 0   // not found case 
+				// 3 - (1 - 1) & 0b11 = 3 - (0x00000000 & 0x11) = 3 - 0 = 3   // match starts at first letter
+				// 3 - (2 - 1) & 0b11 = 3 - (0x00000001 & 0x11) = 3 - 1 = 2   // match starts later
+				$matchScoreFormular = '(3 - ((LEAST(LOCATE(LOWER(?), LOWER(a.name)), 2) - 1) & 0b11)) * 5 + (m.summary LIKE ?) * 5 + (m.descriptionSearchable LIKE ?)';
+				$matchScoreSelect = $matchScoreFormular.' as matchScore,';
+				array_unshift($sqlParams, $value, $v, $v);
+
 				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
-				$whereClauses .= '(a.name LIKE ? OR m.descriptionsearchable LIKE ? OR m.summary LIKE ?)';
-				$v = '%'.escapeStringForLikeQuery($value).'%'; $sqlParams[] = $v; $sqlParams[] = $v; $sqlParams[] = $v;
+				$whereClauses .= '(a.name LIKE ? OR m.summary LIKE ? OR m.descriptionSearchable LIKE ?)';
+				$sqlParams[] = $v; $sqlParams[] = $v; $sqlParams[] = $v;
+
+				$orderBy = 'matchScore DESC, '.$orderBy;
+
 				break;
 
 			case 'tags':
@@ -192,8 +208,6 @@ function queryModSearch($searchParams)
 		}
 	}
 
-	$orderBy = VALID_ORDER_BY_COLUMNS[$searchParams['order'][0]][0].' '.$searchParams['order'][1];
-
 	// It is somewhat important to not use offsets here. They are convenient, but also poor in performance.
 	// The better approach is to isolate indexed limits for the current query and offset based on those.
 	$limitClause = '';
@@ -210,11 +224,30 @@ function queryModSearch($searchParams)
 			// This allows us to avoid the ungodly slow LIMIT OFFSET.
 
 			$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
-			$col = VALID_ORDER_BY_COLUMNS[$searchParams['order'][0]][0];
+			$orderByCol = VALID_ORDER_BY_COLUMNS[$searchParams['order'][0]][0];
 			$comparison = $searchParams['order'][1] === 'asc' ? '>' : '<';
-			list($colCursor, $idCursor) = $searchParams['cursor'];
-			$whereClauses .= "($col $comparison ? OR ($col = ? AND m.modId $comparison $idCursor))"; // @security: value must be filtered
-			$sqlParams[] = $colCursor; $sqlParams[] = $colCursor;
+			list($colCursor, $idCursor, $score) = $searchParams['cursor'];
+
+
+			if(!empty($searchParams['filters']['text'])) {
+				$whereClauses .= <<<SQL
+					(
+						(($matchScoreFormular) < $score) OR
+						(($matchScoreFormular) <= $score AND (
+							$orderByCol $comparison ? OR
+							($orderByCol = ? AND m.modId $comparison $idCursor)
+						))
+					)
+					SQL; // @security: value must be filtered
+				$sqlParams[] = $value; $sqlParams[] = $v; $sqlParams[] = $v; // reuse $v from params loop
+				$sqlParams[] = $value; $sqlParams[] = $v; $sqlParams[] = $v; // reuse $v from params loop
+				$sqlParams[] = $colCursor; $sqlParams[] = $colCursor;
+			}
+			else {
+				$whereClauses .= "($orderByCol $comparison ? OR ($orderByCol = ? AND m.modId $comparison $idCursor))"; // @security: value must be filtered
+				$sqlParams[] = $colCursor; $sqlParams[] = $colCursor;
+			}
+
 		}
 	}
 
@@ -222,6 +255,7 @@ function queryModSearch($searchParams)
 
 	return $con->getAll("
 		SELECT DISTINCT
+			$matchScoreSelect
 			a.createdByUserId,
 			a.name,
 			a.created,
@@ -255,16 +289,15 @@ function getNextFetchCursor($searchParams, $mods)
 {
 	if(empty($mods) || !$searchParams['limit'] || count($mods) < $searchParams['limit'])  return '';
 
-	$lastMod = end($mods);
-	reset($mods);
-
+	$lastMod = last($mods);
 
 	$cursorVal = $lastMod[$searchParams['order'][0]];
 	// prevent header injection just in case
 	$cursorVal = rawurlencode($cursorVal);
 	$modId = rawurlencode($lastMod['modId']);
+	$score = rawurlencode($lastMod['matchScore']);
 
-	return "&cursor[]={$cursorVal}&cursor[]={$modId}";
+	return "&cursor[]={$cursorVal}&cursor[]={$modId}&cursor[]={$score}";
 }
 
 
