@@ -183,7 +183,7 @@ function queryModSearch($searchParams)
 				// To realize those, we combine the LOCATE expression with a bit of bit twiddling to archive an ordering of
 				// not found = 0 < found < found at the start.
 
-				// POSITION returns 0 for not found, 1 based index of the match otherwise.
+				// LOCATE returns 0 for not found, 1 based index of the match otherwise.
 
 				// The key insight here is that clamping to two, subtracting one and masking off the least two bits of the resulting -1, 0 and 1
 				// produces 0b11, 0b00, 0b01 which is exactly the inverse of the order we are looking for (0b11 > 0b01 > 0b00).
