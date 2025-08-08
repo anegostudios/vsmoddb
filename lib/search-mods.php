@@ -171,8 +171,25 @@ function queryModSearch($searchParams)
 			case 'text':
 				$v = '%'.escapeStringForLikeQuery($value).'%';
 
-				// POSITION RETURNS 0 for not found, 1based index otherwise
-				// 3 - (0 - 1) & 0b11 = 3 - (0xffffffff & 0x11) = 3 - 3 = 0   // not found case 
+				// We want to return results ordered by relevance, so we build a 'score' metric to order by.
+				// This score metric is constructed as follows:
+				//   score := 0
+				//   if search in description then score += 1
+				//   if search in summary then score += 5
+				//   if search in name then score += 10
+				//   if name starts with search then score += 5
+
+				// While the first two checks are easily done, the later two are more complicated to do efficiently.
+				// To realize those, we combine the LOCATE expression with a bit of bit twiddling to archive an ordering of
+				// not found = 0 < found < found at the start.
+
+				// POSITION returns 0 for not found, 1 based index of the match otherwise.
+
+				// The key insight here is that clamping to two, subtracting one and masking off the least two bits of the resulting -1, 0 and 1
+				// produces 0b11, 0b00, 0b01 which is exactly the inverse of the order we are looking for (0b11 > 0b01 > 0b00).
+				// This can then trivially be inverted to archive our desired priority.
+
+				// 3 - (0 - 1) & 0b11 = 3 - (0xffffffff & 0x11) = 3 - 3 = 0   // search not found
 				// 3 - (1 - 1) & 0b11 = 3 - (0x00000000 & 0x11) = 3 - 0 = 3   // match starts at first letter
 				// 3 - (2 - 1) & 0b11 = 3 - (0x00000001 & 0x11) = 3 - 1 = 2   // match starts later
 				$matchScoreFormular = '(3 - ((LEAST(LOCATE(LOWER(?), LOWER(a.name)), 2) - 1) & 0b11)) * 5 + (m.summary LIKE ?) * 5 + (m.descriptionSearchable LIKE ?)';
@@ -188,11 +205,11 @@ function queryModSearch($searchParams)
 				break;
 
 			case 'tags':
-				$joinClauses .= 'JOIN modTags t ON t.modId = m.modId AND t.tagId IN ('.implode(',', $value).')'; // @security: value must be filtered
+				$joinClauses .= 'JOIN modTags t ON t.modId = m.modId AND t.tagId IN ('.implode(',', $value).')'; // @security: $value must be sql safe (validateModSearchInputs does that)
 				break;
 
 			case 'gameversions':
-				$joinClauses .= 'JOIN modCompatibleGameVersionsCached mcv ON mcv.modId = m.modId AND mcv.gameVersion IN ('.implode(',', $value).')'; // @security: value must be filtered
+				$joinClauses .= 'JOIN modCompatibleGameVersionsCached mcv ON mcv.modId = m.modId AND mcv.gameVersion IN ('.implode(',', $value).')'; // @security: $value must be sql safe (validateModSearchInputs does that)
 				break;
 
 			case 'majorversion':
@@ -220,16 +237,19 @@ function queryModSearch($searchParams)
 			// Format a condition like
 			//   WHERE (m.downloads > 10 OR (m.downloads = 10 AND m.modId > 5))
 			// The idea here is to always order the results by some metric _AND_ the modId, so we have a unique column to follow with our cursor.
-			// This is also the reason why we add ORDER BY modId if when fetching with limits.
+			// This is also the reason why we add ORDER BY modId when fetching with limits.
 			// This allows us to avoid the ungodly slow LIMIT OFFSET.
 
-			$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+			// This was the original idea at least, but unfortunately this optimization degrades massively when we are doing a text lookup at the same time.
+			// Since that uses a calculated score metric that cannot be contained in any kind of index (because it depends on the search text), it almost inevitably forces a complete table scan.
+
 			$orderByCol = VALID_ORDER_BY_COLUMNS[$searchParams['order'][0]][0];
 			$comparison = $searchParams['order'][1] === 'asc' ? '>' : '<';
 			list($colCursor, $idCursor, $score) = $searchParams['cursor'];
 
-
+			$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
 			if(!empty($searchParams['filters']['text'])) {
+				//NOTE(Rennorb): The order of comparisons is important here, it must match the sorting order of the ORDER BY clause of the final query.
 				$whereClauses .= <<<SQL
 					(
 						(($matchScoreFormular) < $score) OR
@@ -238,13 +258,13 @@ function queryModSearch($searchParams)
 							($orderByCol = ? AND m.modId $comparison $idCursor)
 						))
 					)
-					SQL; // @security: value must be filtered
-				$sqlParams[] = $value; $sqlParams[] = $v; $sqlParams[] = $v; // reuse $v from params loop
-				$sqlParams[] = $value; $sqlParams[] = $v; $sqlParams[] = $v; // reuse $v from params loop
-				$sqlParams[] = $colCursor; $sqlParams[] = $colCursor;
+				SQL; // @security: $idCursor and $score must be sql safe (validateModSearchInputs does that)
+				$sqlParams[] = $value; $sqlParams[] = $v; $sqlParams[] = $v; // inputs for $matchScoreFormular, reuse $v from params loop
+				$sqlParams[] = $value; $sqlParams[] = $v; $sqlParams[] = $v; // inputs for $matchScoreFormular, reuse $v from params loop
+				$sqlParams[] = $colCursor; $sqlParams[] = $colCursor; // basic cursor inputs
 			}
 			else {
-				$whereClauses .= "($orderByCol $comparison ? OR ($orderByCol = ? AND m.modId $comparison $idCursor))"; // @security: value must be filtered
+				$whereClauses .= "($orderByCol $comparison ? OR ($orderByCol = ? AND m.modId $comparison $idCursor))"; // @security: $idCursor must be sql safe (validateModSearchInputs does that)
 				$sqlParams[] = $colCursor; $sqlParams[] = $colCursor;
 			}
 
