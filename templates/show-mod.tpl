@@ -88,8 +88,8 @@
 				{/if}
 			</div>
 
-			<div class="imageslideshow fotorama" data-max-width="min(800px, 100%)" data-max-height="450" data-autoplay="5000" data-nav="thumbs" data-allowfullscreen="true">
-				{if (!empty($asset['trailerVideoUrl']))}
+			<div class="imageslideshow fotorama" data-max-width="min(800px, 100%)" data-max-height="450"{if !empty($asset['trailerVideoUrl'])} data-width="800"{/if} data-autoplay="5000" data-nav="thumbs" data-allowfullscreen="true">
+				{if !empty($asset['trailerVideoUrl'])}
 					<a rel="nofollow" href="{$asset['trailerVideoUrl']}">Trailer Video</a>
 				{/if}
 				{foreach from=$files item=file}

@@ -69,7 +69,7 @@
 								<a href="{$notification['link']}">{$notification['text']}<br>{fancyDate($notification['created'])}</a>
 							{/foreach}
 							{if $notificationcount == 0}
-								<span>No new notifications, you're all caught up!</a>
+								<span>No new notifications, you're all caught up!</span>
 							{else}
 								<a href="/notification/clearall">Clear all notifications</a>
 							{/if}
