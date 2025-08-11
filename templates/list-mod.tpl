@@ -4,12 +4,12 @@
 		<input type="hidden" name="sortby" value="{$selectedParams['order'][0]}">
 		<input type="hidden" name="sortdir" value="{$selectedParams['order'][1][0]}">
 
-		<span data-label="Text">
-			<input type="text" name="text" value="{$selectedParams['text']}">
+		<span data-label="Text" title="Searches mod names, summaries and descriptions.">
+			<input type="text" name="text" value="{$selectedParams['text']}" style="width:12em;">
 		</span>
 
 		<span data-label="Side">
-			<select name="side">
+			<select name="side" style="width:10em;">
 				<option value="">Any</option>
 				<option value="both"{if $selectedParams['side'] == 'both'} selected="selected"{/if}>Both</option>
 				<option value="client"{if $selectedParams['side'] == 'client'} selected="selected"{/if}>Client side mod</option>
@@ -18,7 +18,7 @@
 		</span>
 
 		<span data-label="Tags">
-			<select style="width:300px;" name="tagids[]" multiple>
+			<select style="width:20em;" name="tagids[]" multiple>
 				{foreach from=$tags item=tag}
 					<option value="{$tag['tagId']}" title="{$tag['text']}"{if isset($selectedParams['tags'][$tag['tagId']])} selected="selected"{/if}>{$tag['name']}</option>
 				{/foreach}
@@ -26,14 +26,14 @@
 		</span>
 		
 		<span id="author-box" data-label="Author">
-			<select style="width:150px;" name="userid" data-url="/api/authors?name=\{name}" data-placeholder="Search Users">
+			<select style="width:10em;" name="userid" data-url="/api/authors?name=\{name}" data-placeholder="Search Users">
 				<option value="">-</option>
 				{if !empty($selectedParams['creator'])}<option value="{$selectedParams['creator'][0]}" selected="true">{$selectedParams['creator'][1]}</option>{/if}
 			</select>
 		</span>
 		
 		<span data-label="Game Version">
-			<select style="width:100px;" name="mv" noSearch="noSearch">
+			<select style="width:10em;" name="mv" noSearch="noSearch">
 				<option value="">Any</option>
 				{foreach from=$majorGameVersions item=version}
 					<option value="{$version['name']}"{if $selectedParams['majorversion'] === $version['version']} selected="selected"{/if}>{$version['name']}.x</option>
@@ -42,28 +42,28 @@
 		</span>
 		
 		<span data-label="Game Version Exact">
-			<select style="width:160px;" name="gv[]" multiple>
+			<select style="width:12em;" name="gv[]" multiple>
 				{foreach from=$gameVersions item=version}
 					<option value="{$version['name']}"{if isset($selectedParams['gameversions'][$version['version']])} selected="selected"{/if}>{$version['name']}</option>
 				{/foreach}
 			</select>
 		</span>
 
-		<span data-label="Type">
-			<select name="type">
+		<span data-label="Category">
+			<select name="c" style="width:10em;">
 				<option value="">Any</option>
-				<option value="m"{if $selectedParams['type'] == 'm'} selected="selected"{/if}>Game mod</option>
-				<option value="e"{if $selectedParams['type'] == 'e'} selected="selected"{/if}>External Tool</option>
-				<option value="o"{if $selectedParams['type'] == 'o'} selected="selected"{/if}>Other</option>
+				<option value="m"{if $selectedParams['category'] == 'm'} selected="selected"{/if}>Game mod</option>
+				<option value="e"{if $selectedParams['category'] == 'e'} selected="selected"{/if}>External Tool</option>
+				<option value="o"{if $selectedParams['category'] == 'o'} selected="selected"{/if}>Other</option>
 			</select>
 		</span>
 
-		<span data-label="Game Mod Kind">
-			<select name="kind">
+		<span data-label="Mod Type">
+			<select name="t" style="width:10em;">
 				<option value="">Any</option>
-				<option value="v"{if $selectedParams['kind'] == 'v'} selected="selected"{/if}>Theme Pack (purely visual) *</option>
-				<option value="d"{if $selectedParams['kind'] == 'd'} selected="selected"{/if}>Content mod *</option>
-				<option value="c"{if $selectedParams['kind'] == 'c'} selected="selected"{/if}>Custom code mod *</option>
+				<option value="v"{if $selectedParams['type'] == 'v'} selected="selected"{/if}>* Theme Pack (purely visual)</option>
+				<option value="d"{if $selectedParams['type'] == 'd'} selected="selected"{/if}>* Content mod</option>
+				<option value="c"{if $selectedParams['type'] == 'c'} selected="selected"{/if}>* Code mod</option>
 			</select>
 		</span>
 
@@ -72,8 +72,8 @@
 		</span>
 	</form>
 	
-	<p id="warn-missing-data"{if !$selectedParams['kind']}style="display: none;"{/if}>
-		<small><sup>*</sup> Older mods might not have this information available and will not show up when this filter is selected.</small>
+	<p id="warn-missing-data"{if !$selectedParams['type']}style="display: none;"{/if}>
+		<small><sup>*</sup> Mod releases from before July 1st 2025 do not have this information available and will not show up when this filter is selected.</small>
 	</p>
 	<div class="sort" style="margin-bottom: 1em;">
 		<small>
@@ -111,24 +111,24 @@
 		});
 
 		const missingDataLabelEl = document.getElementById('warn-missing-data');
-		const typeSelectEl = document.querySelector('select[name="type"]');
-		const kindSelectEl = document.querySelector('select[name="kind"]');
-		$(kindSelectEl).on('change', function(e) {
+		const categorySelectEl = document.querySelector('select[name="c"]');
+		const typeSelectEl = document.querySelector('select[name="t"]');
+		$(typeSelectEl).on('change', function(e) {
 			if(e.target.value) {
 				missingDataLabelEl.style.display = '';
-				typeSelectEl.value = 'm';
-				$(typeSelectEl).trigger('chosen:updated');
+				categorySelectEl.value = 'm';
+				$(categorySelectEl).trigger('chosen:updated');
 			}
 			else {
 				missingDataLabelEl.style.display = 'none';
 			}
 		});
 
-		$(typeSelectEl).on('change', function(e) {
+		$(categorySelectEl).on('change', function(e) {
 			if(e.target.value !== 'm') {
 				missingDataLabelEl.style.display = 'none';
-				kindSelectEl.value = '';
-				$(kindSelectEl).trigger('chosen:updated');
+				typeSelectEl.value = '';
+				$(typeSelectEl).trigger('chosen:updated');
 			}
 		});
 

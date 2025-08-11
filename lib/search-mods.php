@@ -89,23 +89,23 @@ function validateModSearchInputs(&$outParams)
 		$outParams['filters']['side'] = $rSide;
 	}
 
-	if(!empty($_REQUEST['type'])) {
-		$rType = $_REQUEST['type'];
-		if(!in_array($rType, ['m', 'e', 'o'], true)) {
+	if(!empty($_REQUEST['c'])) {
+		$rCat = $_REQUEST['c'];
+		if(!in_array($rCat, ['m', 'e', 'o'], true)) {
+			return "Invalid category: '$rCat'.";
+		}
+
+		$outParams['filters']['category'] = $rCat;
+	}
+
+	if(!empty($_REQUEST['t'])) {
+		$rType = $_REQUEST['t'];
+		if(!in_array($rType, ['v', 'd', 'c'], true)) {
 			return "Invalid type: '$rType'.";
 		}
 
 		$outParams['filters']['type'] = $rType;
-	}
-
-	if(!empty($_REQUEST['kind'])) {
-		$rKind = $_REQUEST['kind'];
-		if(!in_array($rKind, ['v', 'd', 'c'], true)) {
-			return "Invalid kind: '$rKind'.";
-		}
-
-		$outParams['filters']['kind'] = $rKind;
-		$_REQUEST['type'] = 'm'; // force the mod type to mod, since we are looking for a specific kind of mod
+		$outParams['filters']['category'] = 'm'; // force the mod type to mod, since we are looking for a specific kind of mod
 	}
 
 	if(!empty($_REQUEST['gv']) || !empty($_REQUEST['gameversions'])) {
@@ -203,7 +203,13 @@ function queryModSearch($searchParams)
 				array_unshift($sqlParams, $value); // This needs to be in front of others because JOIN happens before WHERE.
 				break;
 
-			case 'kind':
+			case 'side':
+				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+				$whereClauses .= "m.side = ?";
+				$sqlParams[] = $value;
+				break;
+
+			case 'type':
 				switch($value) {
 					case 'v': $value = 'Theme'; break;
 					case 'd': $value = 'Content'; break;
@@ -218,7 +224,7 @@ function queryModSearch($searchParams)
 				SQL; // @security: $value can only be one of the specified strings, therefore its sql inert
 				break;
 
-			case 'type':
+			case 'category':
 				$name = 'm.type';
 				switch($value) {
 					case 'm': $value = 'mod'; break;
