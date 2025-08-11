@@ -161,7 +161,7 @@ function queryModSearch($searchParams)
 
 	$joinClauses = '';
 	$whereClauses = '';
-	$matchScoreSelect = '';
+	$matchScoreSelect = '0 as matchScore,';
 	$sqlParams = [];
 
 	$orderBy = VALID_ORDER_BY_COLUMNS[$searchParams['order'][0]][0].' '.$searchParams['order'][1];
