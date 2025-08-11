@@ -34,7 +34,7 @@
 		
 		<span data-label="Game Version">
 			<select style="width:100px;" name="mv" noSearch="noSearch">
-				<option value="">-</option>
+				<option value="">Any</option>
 				{foreach from=$majorGameVersions item=version}
 					<option value="{$version['name']}"{if $selectedParams['majorversion'] === $version['version']} selected="selected"{/if}>{$version['name']}.x</option>
 				{/foreach}
@@ -49,11 +49,32 @@
 			</select>
 		</span>
 
+		<span data-label="Type">
+			<select name="type">
+				<option value="">Any</option>
+				<option value="m"{if $selectedParams['type'] == 'm'} selected="selected"{/if}>Game mod</option>
+				<option value="e"{if $selectedParams['type'] == 'e'} selected="selected"{/if}>External Tool</option>
+				<option value="o"{if $selectedParams['type'] == 'o'} selected="selected"{/if}>Other</option>
+			</select>
+		</span>
+
+		<span data-label="Game Mod Kind">
+			<select name="kind">
+				<option value="">Any</option>
+				<option value="v"{if $selectedParams['kind'] == 'v'} selected="selected"{/if}>Theme Pack (purely visual) *</option>
+				<option value="d"{if $selectedParams['kind'] == 'd'} selected="selected"{/if}>Content mod *</option>
+				<option value="c"{if $selectedParams['kind'] == 'c'} selected="selected"{/if}>Custom code mod *</option>
+			</select>
+		</span>
+
 		<span data-label="">
 			<button class="button shine" type="submit" name="">Search</button>
 		</span>
 	</form>
 	
+	<p id="warn-missing-data"{if !$selectedParams['kind']}style="display: none;"{/if}>
+		<small><sup>*</sup> Older mods might not have this information available and will not show up when this filter is selected.</small>
+	</p>
 	<div class="sort" style="margin-bottom: 1em;">
 		<small>
 		Sort by: 
@@ -86,6 +107,28 @@
 			if ($(this).parents(".template").length == 0) {
 				var ds = $(this).attr("noSearch") == 'noSearch';
 				$(this).chosen({ placeholder_text_multiple: " ", disable_search:ds, });
+			}
+		});
+
+		const missingDataLabelEl = document.getElementById('warn-missing-data');
+		const typeSelectEl = document.querySelector('select[name="type"]');
+		const kindSelectEl = document.querySelector('select[name="kind"]');
+		$(kindSelectEl).on('change', function(e) {
+			if(e.target.value) {
+				missingDataLabelEl.style.display = '';
+				typeSelectEl.value = 'm';
+				$(typeSelectEl).trigger('chosen:updated');
+			}
+			else {
+				missingDataLabelEl.style.display = 'none';
+			}
+		});
+
+		$(typeSelectEl).on('change', function(e) {
+			if(e.target.value !== 'm') {
+				missingDataLabelEl.style.display = 'none';
+				kindSelectEl.value = '';
+				$(kindSelectEl).trigger('chosen:updated');
 			}
 		});
 
