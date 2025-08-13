@@ -38,12 +38,12 @@ switch($urlparts[0]) {
 		// Do actual work:
 
 		$con->beginTrans();
-		$exists = $con->getOne('SELECT 1 FROM GameVersions WHERE version = ?', [$newVersion]);
+		$exists = $con->getOne('SELECT 1 FROM gameVersions WHERE version = ?', [$newVersion]);
 		if($exists) {
 			echo 'Version already exists.';
 		}
 		else {
-			$allVersions = array_map('intval', $con->getCol('SELECT version FROM GameVersions'));
+			$allVersions = array_map('intval', $con->getCol('SELECT version FROM gameVersions'));
 			$allVersions[] = $newVersion;
 
 			sort($allVersions); // sort ascending so the keys are in the correct order
@@ -51,7 +51,7 @@ switch($urlparts[0]) {
 
 			// @security: All keys and values are numeric and therefore SQL inert.
 			$con->execute(<<<SQL
-				INSERT INTO GameVersions (version, sortIndex)
+				INSERT INTO gameVersions (version, sortIndex)
 					VALUES $foldedValues
 				ON DUPLICATE KEY UPDATE
 					sortIndex = VALUES(sortIndex)
