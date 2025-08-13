@@ -54,7 +54,7 @@ class ModEditor extends AssetEditor
 		if ($this->assetid && canEditAsset($this->asset, $user, false)) {
 			$modId = $con->getOne('SELECT modId FROM mods WHERE assetId = ?', [$this->assetid]);
 
-			$teamMembers = $con->getAll(<<<SQL
+			$teamMembers = $con->getAll('
 					SELECT u.*, t.canEdit, 0 AS pending
 					FROM modTeamMembers t
 					JOIN users u ON u.userId = t.userId
@@ -63,8 +63,8 @@ class ModEditor extends AssetEditor
 					SELECT u.*, (n.recordId & 1 << 30) AS canEdit, 1 AS pending
 					FROM notifications n
 					JOIN users u ON u.userId = n.userId
-					WHERE n.kind = 'teaminvite' AND !n.`read` AND (n.recordId & ((1 << 30) - 1)) = ? -- :InviteEditBit
-			SQL, [$modId, $user['userId'], $modId]);
+					WHERE n.kind = '.NOTIFICATION_TEAM_INVITE.' AND !n.`read` AND (n.recordId & ((1 << 30) - 1)) = ? -- :InviteEditBit
+			', [$modId, $user['userId'], $modId]);
 
 			$view->assign('teamMembers', $teamMembers);
 
@@ -90,13 +90,13 @@ class ModEditor extends AssetEditor
 		$view->assign('mod', $previewData);
 
 		if($this->asset['statusId'] == STATUS_LOCKED) {
-			$lockInfo = $con->getRow("
+			$lockInfo = $con->getRow('
 				SELECT rec.reason, n.notificationId
 				FROM moderationRecords rec
-				LEFT JOIN notifications n ON n.kind = 'modunlockrequest' AND n.recordId = ? AND n.created >= rec.created
-				WHERE rec.kind = ".MODACTION_KIND_LOCK." AND rec.until >= NOW() AND rec.recordId = ?
+				LEFT JOIN notifications n ON n.kind = '.NOTIFICATION_MOD_UNLOCK_REQUEST.' AND n.recordId = ? AND n.created >= rec.created
+				WHERE rec.kind = '.MODACTION_KIND_LOCK.' AND rec.until >= NOW() AND rec.recordId = ?
 				ORDER BY rec.until DESC, rec.actionId DESC
-			", [$modId, $modId]);
+			', [$modId, $modId]);
 			$lockReason = htmlspecialchars($lockInfo['reason']);
 			if($lockInfo['notificationId']) {
 				$nextStepHint = !canModerate(null, $user) 
@@ -408,8 +408,8 @@ class ModEditor extends AssetEditor
 			SELECT u.userId, u.name, n.notificationId
 			FROM notifications AS n
 			JOIN users u ON u.userId = n.userId
-			WHERE n.kind = 'modownershiptransfer' AND n.recordId = ? AND !n.`read`
-		SQL, array($modId));
+			WHERE n.kind = ? AND n.recordId = ? AND !n.`read`
+		SQL, [NOTIFICATION_MOD_OWNERSHIP_TRANSFER, $modId]);
 			
 		if (empty($newOwner)) return;
 		$view->assign("ownershipTransferUser", $newOwner['name']);
@@ -449,9 +449,9 @@ class ModEditor extends AssetEditor
 			$mergedId = $modId | $editBit;
 
 			if (!array_key_exists($newMemberId, $oldMembers)) {
-				$invitation = $con->getRow("SELECT notificationId, recordId FROM notifications WHERE kind = 'teaminvite' AND !`read` AND userId = ? AND (recordId & ((1 << 30) - 1)) = ?", [$newMemberId, $modId]);
+				$invitation = $con->getRow('SELECT notificationId, recordId FROM notifications WHERE kind = '.NOTIFICATION_TEAM_INVITE.' AND !`read` AND userId = ? AND (recordId & ((1 << 30) - 1)) = ?', [$newMemberId, $modId]);
 				if(empty($invitation)) {
-					$con->execute("INSERT INTO notifications (kind, userId, recordId) VALUES ('teaminvite', ?, ?)", [$newMemberId, $mergedId]);
+					$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES ('.NOTIFICATION_TEAM_INVITE.', ?, ?)', [$newMemberId, $mergedId]);
 
 					$changes[] = "User #{$user['userId']} invited user #{$newMemberId} to join the team".($editBit ? ' with edit permissions' : '').'.';
 				}
@@ -493,7 +493,7 @@ class ModEditor extends AssetEditor
 		$newOwnerId = filter_input(INPUT_POST, 'newownerid', FILTER_VALIDATE_INT);
 		if(!$newOwnerId) return true;
 
-		$currentNewOwnerId = $con->getOne("SELECT userId FROM notifications WHERE kind = 'modownershiptransfer' AND !`read` AND recordId = ?", [$modId]);
+		$currentNewOwnerId = $con->getOne("SELECT userId FROM notifications WHERE kind = ? AND !`read` AND recordId = ?", [NOTIFICATION_MOD_OWNERSHIP_TRANSFER, $modId]);
 		if ($currentNewOwnerId) {
 			addMessage(MSG_CLASS_ERROR, 'An invitation to transfer ownership has already been sent to '.($currentNewOwnerId == $newOwnerId ? 'this user.' : 'a different user.'));
 			return false;
@@ -505,7 +505,7 @@ class ModEditor extends AssetEditor
 			return false;
 		}
 
-		$con->Execute("INSERT INTO notifications (kind, userId, recordId) VALUES ('modownershiptransfer', ?, ?)", [$newOwnerId, $modId]);
+		$con->Execute("INSERT INTO notifications (kind, userId, recordId) VALUES (?, ?, ?)", [NOTIFICATION_MOD_OWNERSHIP_TRANSFER, $newOwnerId, $modId]);
 
 		logAssetChanges(["User #{$user['userId']} initiated a ownership transfer to user #{$newOwnerId}"], $this->assetid);
 

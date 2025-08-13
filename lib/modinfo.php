@@ -17,8 +17,31 @@ function modpeek($filepath, &$modInfo)
 	$args = ['dotnet', $config['basepath'] . 'util/modpeek.dll', '-p', $filepath];
 	$modpeek = proc_open($args, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, sys_get_temp_dir());
 
-	$info  = stream_get_contents($pipes[1]);
-	$errors = stream_get_contents($pipes[2]);
+
+	//NOTE(Rennorb): php subprocesses are a mess...
+	// We had reports of random "null" errors, which are very likely a race condition between the the subprocess and the main one.
+	// We cannot call close then get_status, because close destroys the resource.
+	// We cannot rely on the exit code returned by close, because there are 5 different reasons it might be unreliable (see remarks / comments on https://www.php.net/manual/en/function.proc-close.php).
+	// So we do the thing every other framework also does... a sleep loop while polling the exit status.
+	// I think this is acceptable, because this only really triggers for file uploads which are a reasonably rare occurrence, and the sleeping should only trigger in some cases.
+	// Would still like to not have to do this, but there doesn't seem to be another way for now.
+	//NOTE(Rennorb): On windows, you cannot really test this issue, because steams are blocking (which you cannot change)
+	// and the stream_get_contents calls will only release once the process has already exited.
+	$info = ''; $errors = '';
+	do {
+		$info   .= stream_get_contents($pipes[1]);
+		$errors .= stream_get_contents($pipes[2]);
+
+		$status = proc_get_status($modpeek);
+		if($status['running'] === false) {
+			$exitcode = $status['exitcode'];
+			break;
+		}
+		usleep(10_000); // 10ms
+	} while(true);
+
+	proc_close($modpeek); // Exit process and closes pipes.
+
 
 	$modInfo = [
 		'id'               => null,
@@ -63,12 +86,7 @@ function modpeek($filepath, &$modInfo)
 		}
 	}
 
-	fclose($pipes[1]);
-	fclose($pipes[2]);
-	$status = proc_get_status($modpeek);
-	proc_close($modpeek);
-
-	return $status['exitcode'] == 0 && !$errors;
+	return $exitcode == 0 && !$errors;
 }
 
 /** Deserializes 'rawAuthors', 'rawContributors' and 'rawDependencies' into array fields 'authors', 'contributors' and 'dependencies'.

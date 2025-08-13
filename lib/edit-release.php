@@ -45,7 +45,7 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 
 	$con->Execute("
 		INSERT INTO notifications (userId, kind, recordId)
-		SELECT userId, 'newrelease', ?
+		SELECT userId, ".NOTIFICATION_NEW_RELEASE.", ?
 		FROM userFollowedMods
 		WHERE modId = ? AND flags & ".FOLLOW_FLAG_CREATE_NOTIFICATIONS."
 	", [$mod['modId'], $mod['modId']]);

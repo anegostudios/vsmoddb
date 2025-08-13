@@ -277,7 +277,7 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   `notificationId` INT      NOT NULL AUTO_INCREMENT,
   `read`           TINYINT  NOT NULL DEFAULT 0,
   `userId`         INT      NOT NULL,
-  `type`           ENUM('newcomment', 'mentioncomment', 'newrelease', 'teaminvite', 'modownershiptransfer', 'modlocked', 'modunlockrequest', 'modunlocked') NOT NULL,
+  `kind`           TINYINT  NOT NULL,
   `recordId`       INT      NOT NULL,
   `created`        DATETIME NOT NULL DEFAULT NOW(),
   PRIMARY KEY (`notificationId`),

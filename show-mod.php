@@ -274,7 +274,7 @@ function processTeamInvitation($asset, $user)
 {
 	global $con, $view;
 
-	$invite = $con->getRow("SELECT notificationId, recordId FROM notifications WHERE kind = 'teaminvite' AND !`read` AND userId = ? AND (recordId & ((1 << 30) - 1)) = ?", [$user['userId'], $asset['modId']]); // :InviteEditBit
+	$invite = $con->getRow("SELECT notificationId, recordId FROM notifications WHERE kind = ".NOTIFICATION_TEAM_INVITE." AND !`read` AND userId = ? AND (recordId & ((1 << 30) - 1)) = ?", [$user['userId'], $asset['modId']]); // :InviteEditBit
 	$pending = !empty($invite);
 	$view->assign("teaminvite", $pending);
 	if(!$pending) return;
@@ -313,7 +313,7 @@ function processOwnershipTransfer($asset, $user)
 {
 	global $con, $view;
 
-	$pendingInvitationId = $con->getOne("SELECT notificationId FROM notifications WHERE kind = 'modownershiptransfer' AND !`read` AND userId = ? AND recordId = ?", [$user['userId'], $asset['modId']]);
+	$pendingInvitationId = $con->getOne("SELECT notificationId FROM notifications WHERE kind = ? AND !`read` AND userId = ? AND recordId = ?", [NOTIFICATION_MOD_OWNERSHIP_TRANSFER, $user['userId'], $asset['modId']]);
 	$view->assign("transferownership", $pendingInvitationId);
 	if(!$pendingInvitationId) return;
 
