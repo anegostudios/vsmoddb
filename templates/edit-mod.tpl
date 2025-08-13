@@ -36,7 +36,7 @@
 
 		<div class="editbox short">
 			<label><abbr title="Only mods with Status 'Published' are publicly visible">Status</abbr></label>
-			<select name="statusId"{if $asset['statusId'] == STATUS_LOCKED && !canModerate(null, $user)} disabled="true"{/if}>
+			<select name="statusId"{if $asset['statusId'] == STATUS_LOCKED && !canModerate(null, $user)} disabled="true"{/if} noSearch="noSearch">
 				{foreach from=$stati item=status}
 					<option value="{$status['statusId']}"{if $asset['statusId']==$status['statusId']} selected="selected"{/if}>{$status['name']}</option>
 				{/foreach}
@@ -44,8 +44,8 @@
 		</div>
 
 		<div class="editbox short">
-			<label><abbr title="Only mods with type 'Game Mod' are available in the in-game mod browser">Type</abbr></label>
-			<select name="type">
+			<label><abbr title="Only mods from the category 'Game Mod' are available in the in-game mod browser">Category</abbr></label>
+			<select name="type" noSearch="noSearch">
 				{foreach from=$modtypes item=modtype}
 					<option value="{$modtype['code']}"{if $asset['type']==$modtype['code']} selected="selected"{/if}>{$modtype['name']}</option>
 				{/foreach}

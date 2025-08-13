@@ -22,6 +22,18 @@ if ($sessionToken) {
 	$user = $con->getRow(USER_QUERY_SQL_BASE.'WHERE sessionToken = FROM_BASE64(?) AND sessionValidUntil > NOW()', [$sessionToken]);
 }
 
+//TODO(Rennorb) @cleanup: Move notification loading out of the users file, it forces a strict load order.
+const NOTIFICATION_NEW_COMMENT            = 1;
+const NOTIFICATION_MENTIONED_IN_COMMENT   = 2;
+const NOTIFICATION_NEW_RELEASE            = 3;
+const NOTIFICATION_TEAM_INVITE            = 4;
+const NOTIFICATION_MOD_OWNERSHIP_TRANSFER = 5;
+const NOTIFICATION_MOD_LOCKED             = 6;
+const NOTIFICATION_MOD_UNLOCK_REQUEST     = 7;
+const NOTIFICATION_MOD_UNLOCKED           = 8;
+
+const NOTIFICATION_ONEOFF_MALFORMED_RELEASE = 64 + 0; // :LegacyMalformedModInfo
+
 global $messages;
 $messages = [];
 $view->assignRefUnfiltered('messages', $messages);
@@ -156,7 +168,7 @@ function loadNotifications($loadAll)
 
 	foreach ($notifications as &$notification) {
 		switch ($notification['kind']) {
-			case 'newrelease':
+			case NOTIFICATION_NEW_RELEASE:
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
 					FROM mods m
@@ -168,7 +180,7 @@ function loadNotifications($loadAll)
 				$notification['text'] = "{$cmt['username']} uploaded a new version of {$cmt['modName']}";
 				break;
 
-			case 'teaminvite':
+			case NOTIFICATION_TEAM_INVITE:
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
 					FROM mods m
@@ -180,7 +192,7 @@ function loadNotifications($loadAll)
 				$notification['text'] = "{$cmt['username']} invited you to join the team of {$cmt['modName']}";
 				break;
 
-			case 'modownershiptransfer':
+			case NOTIFICATION_MOD_OWNERSHIP_TRANSFER:
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
 					FROM mods m
@@ -192,7 +204,7 @@ function loadNotifications($loadAll)
 				$notification['text'] = "{$cmt['username']} offered you ownership of {$cmt['modName']}";
 				break;
 
-			case 'newcomment': case 'mentioncomment':
+			case NOTIFICATION_NEW_COMMENT: case NOTIFICATION_MENTIONED_IN_COMMENT:
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
 					FROM comments c
@@ -201,7 +213,7 @@ function loadNotifications($loadAll)
 					WHERE c.commentId = ?
 				SQL, [$notification['recordId']]);
 
-				if ($notification['kind'] === 'newcomment') {
+				if ($notification['kind'] === NOTIFICATION_NEW_COMMENT) {
 					$notification['text'] = "{$cmt['username']} commented on {$cmt['modName']}";
 				}
 				else {
@@ -209,19 +221,30 @@ function loadNotifications($loadAll)
 				}
 				break;
 
-			case 'modlocked':
+			case NOTIFICATION_MOD_LOCKED:
 				$modName = $con->getOne('SELECT name FROM mods m JOIN assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
 				$notification['text'] = "Your mod '{$modName}' got locked by a moderator";
 				break;
 
-			case 'modunlockrequest':
+			case NOTIFICATION_MOD_UNLOCK_REQUEST:
 				$modName = $con->getOne('SELECT name FROM mods m JOIN assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
 				$notification['text'] = "A review-request was issued for a mod locked by you ('{$modName}')";
 				break;
 
-			case 'modunlocked':
-				$modName = $con->getOne('SELECT name from mods m JOIN assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
+			case NOTIFICATION_MOD_UNLOCKED:
+				$modName = $con->getOne('SELECT name FROM mods m JOIN assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
 				$notification['text'] = "Your mod '{$modName}' got unlocked by a moderator";
+				break;
+
+			case NOTIFICATION_ONEOFF_MALFORMED_RELEASE:
+				$modName = $con->getOne(<<<SQL
+					SELECT name
+					FROM mods m
+					JOIN modReleases r ON r.modId = m.modId
+					JOIN assets a ON a.assetId = m.assetId
+					WHERE r.assetId = ?
+				SQL, [$notification['recordId']]);
+				$notification['text'] = "A release of your mod '$modName' contains a file that has malformed information. Please resolve this issue.";
 				break;
 		}
 		$notification['link'] = "/notification/{$notification['notificationId']}";

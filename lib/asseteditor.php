@@ -299,9 +299,9 @@ class AssetEditor extends AssetController
 
 				$createdById = intval($this->asset['createdByUserId']);
 				// @security: $modId and $createdById are known to be integers and therefore sql inert.
-				$con->execute("INSERT INTO notifications (kind, recordId, userId) values ('modunlocked', $modId, $createdById)");
+				$con->execute("INSERT INTO notifications (kind, recordId, userId) values (".NOTIFICATION_MOD_UNLOCKED.", $modId, $createdById)");
 				// Read the unlock request just in case we didn't before and only publsihed the mod again.
-				$con->execute("UPDATE notifications SET `read` = 1 WHERE kind = 'modunlockrequest' AND userId = ? AND recordId = ?", [$user['userId'], $modId]);
+				$con->execute('UPDATE notifications SET `read` = 1 WHERE kind = '.NOTIFICATION_MOD_UNLOCK_REQUEST.' AND userId = ? AND recordId = ?', [$user['userId'], $modId]);
 			}
 			else {
 				$moderatorUserId = $con->getOne('
@@ -310,9 +310,9 @@ class AssetEditor extends AssetController
 					WHERE kind = '.MODACTION_KIND_LOCK." and until >= NOW() and recordId = $modId
 				");
 				// @security: $modId and $moderatorUserId are known to be integers and therefore sql inert.
-				$requestExists = $con->getOne("SELECT 1 FROM notifications WHERE kind = 'modunlockrequest' AND !`read` AND recordId = $modId AND userId = $moderatorUserId");
+				$requestExists = $con->getOne("SELECT 1 FROM notifications WHERE kind = ".NOTIFICATION_MOD_UNLOCK_REQUEST." AND !`read` AND recordId = $modId AND userId = $moderatorUserId");
 				if(!$requestExists) { // prevent spam :BlockedUnlockRequest
-					$con->execute("INSERT INTO notifications (kind, recordId, userId) VALUES ('modunlockrequest', $modId, $moderatorUserId)");
+					$con->execute("INSERT INTO notifications (kind, recordId, userId) VALUES (".NOTIFICATION_MOD_UNLOCK_REQUEST.", $modId, $moderatorUserId)");
 				}
 			}
 		}

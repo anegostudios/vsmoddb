@@ -89,6 +89,25 @@ function validateModSearchInputs(&$outParams)
 		$outParams['filters']['side'] = $rSide;
 	}
 
+	if(!empty($_REQUEST['c'])) {
+		$rCat = $_REQUEST['c'];
+		if(!in_array($rCat, ['m', 'e', 'o'], true)) {
+			return "Invalid category: '$rCat'.";
+		}
+
+		$outParams['filters']['category'] = $rCat;
+	}
+
+	if(!empty($_REQUEST['t'])) {
+		$rType = $_REQUEST['t'];
+		if(!in_array($rType, ['v', 'd', 'c'], true)) {
+			return "Invalid type: '$rType'.";
+		}
+
+		$outParams['filters']['type'] = $rType;
+		$outParams['filters']['category'] = 'm'; // force the mod type to mod, since we are looking for a specific kind of mod
+	}
+
 	if(!empty($_REQUEST['gv']) || !empty($_REQUEST['gameversions'])) {
 		$rawGameversions = !empty($_REQUEST['gv']) ? $_REQUEST['gv'] : $_REQUEST['gameversions'];
 		$gameversions = array_filter(array_map('compileSemanticVersion', $rawGameversions));
@@ -184,6 +203,37 @@ function queryModSearch($searchParams)
 				array_unshift($sqlParams, $value); // This needs to be in front of others because JOIN happens before WHERE.
 				break;
 
+			case 'side':
+				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+				$whereClauses .= "m.side = ?";
+				$sqlParams[] = $value;
+				break;
+
+			case 'type':
+				switch($value) {
+					case 'v': $value = 'Theme'; break;
+					case 'd': $value = 'Content'; break;
+					case 'c': $value = 'Code'; break;
+					default: assert(false, "Invalid kind: $value");
+				}
+				//TODO(Rennorb) @cleanup @legacy: Old mods don't have this information set, they wont match this filter.
+				$joinClauses .= <<<SQL
+					JOIN modReleases r ON r.modId = m.modId
+					JOIN files fi ON fi.assetId = r.assetId
+					JOIN modPeekResults mpr on mpr.fileId = fi.fileId AND mpr.type = '$value'
+				SQL; // @security: $value can only be one of the specified strings, therefore its sql inert
+				break;
+
+			case 'category':
+				$name = 'm.type';
+				switch($value) {
+					case 'm': $value = 'mod'; break;
+					case 'e': $value = 'externaltool'; break;
+					case 'o': $value = 'other'; break;
+					default: assert(false, "Invalid type: $value");
+				}
+				/* fallthrough */
+
 			default:
 				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
 				$whereClauses .= "$name = ?";
@@ -241,6 +291,7 @@ function queryModSearch($searchParams)
 		LEFT JOIN files l ON l.fileId = m.cardLogoFileId
 		$joinClauses
 		$whereClauses
+		GROUP BY m.modId
 		ORDER BY $orderBy
 		$limitClause
 	", $sqlParams);

@@ -77,7 +77,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 	
 		// Mark notifications for this comment as read so they get hidden for the notified user.
 		//NOTE(Rennorb): We could also delete them completely, but i opted to just "read" them. Arbitrary decision.
-		$con->Execute("UPDATE notifications SET `read` = 1 WHERE kind IN ('mentioncomment', 'newcomment') AND recordId = ?", [$commentId]);
+		$con->Execute("UPDATE notifications SET `read` = 1 WHERE kind IN (".NOTIFICATION_MENTIONED_IN_COMMENT.", ".NOTIFICATION_NEW_COMMENT.") AND recordId = ?", [$commentId]);
 
 		good();
 

@@ -47,20 +47,20 @@ switch($urlparts[1]) {
 					// For this reason we take out any references to the mod author and ourself here (`user.userId not in ($creatorUserId, $currentUserId)`).
 
 					// @security: $rawMatches are validated to be alphanumeric and therefore sql inert by the regex. $commentId, $currentUserId and $creatorUserId are known to be integers.
-					$con->execute(<<<SQL
+					$con->execute("
 						INSERT INTO notifications (kind, recordId, userId)
-						SELECT 'mentioncomment', $commentId, u.userId
+						SELECT ".NOTIFICATION_MENTIONED_IN_COMMENT.", $commentId, u.userId
 						FROM users u
 						WHERE u.`hash` IN ($foldedHashes)
 							AND u.userId NOT IN ($creatorUserId, $currentUserId)
-					SQL);
+					");
 				}
 
 				// Send notification about the new comment to the main mod author:
 				//TODO(Rennorb): Send notifications to all opt-in contributors, requires adding config option and table changes.
 				if($currentUserId !== $creatorUserId) { // Don't send a notification to ourself if we are the one commenting.
 					// @security: $commentId and $creatorUserId are known to be integers.
-					$con->execute("INSERT INTO notifications (kind, recordId, userId) VALUES ('newcomment', $commentId, $creatorUserId)");
+					$con->execute("INSERT INTO notifications (kind, recordId, userId) VALUES (".NOTIFICATION_NEW_COMMENT.", $commentId, $creatorUserId)");
 				}
 
 				logAssetChanges(['Added a new comment.'], $assetId);
@@ -104,9 +104,9 @@ switch($urlparts[1]) {
 
 		// Just in case we have not "read" a corresponding review-request notification for the mod we are (re-)locking, mark it as read.
 		// If we don't do this we we might not get new unlock requests. :BlockedUnlockRequest
-		$con->execute("UPDATE notifications SET `read` = 1 WHERE kind = 'modunlockrequest' AND userId = ? AND recordId = ?", [$user['userId'], $modId]);
+		$con->execute('UPDATE notifications SET `read` = 1 WHERE kind = '.NOTIFICATION_MOD_UNLOCK_REQUEST.' AND userId = ? AND recordId = ?', [$user['userId'], $modId]);
 
-		$con->execute("INSERT INTO notifications (userId, kind, recordId) VALUES (?, 'modlocked', ?)", [$modData['createdByUserId'], $modId]);
+		$con->execute('INSERT INTO notifications (userId, kind, recordId) VALUES (?, '.NOTIFICATION_MOD_LOCKED.', ?)', [$modData['createdByUserId'], $modId]);
 
 		$ok = $con->completeTrans();
 		if($ok) good();
