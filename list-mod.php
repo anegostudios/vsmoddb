@@ -31,9 +31,9 @@ $selectedParams = [
 	'order'   => $searchParams['order'],
 	'side'    => $filters['side'] ?? '',
 	'text'    => htmlSpecialChars($filters['text'] ?? ''),
-	'creator' => !empty($filters['a.createdbyuserid'])
-		? [$filters['a.createdbyuserid'], $con->getOne('SELECT `name` FROM users WHERE userId = ?', [$filters['a.createdbyuserid']])]
-		: [0, ''],
+	'contributor' => !empty($filters['contributor'])
+		? [$filters['contributor'], $con->getOne('SELECT `name` FROM users WHERE `hash` = UNHEX(?)', [$filters['contributor']])]
+		: [],
 	'majorversion' => $filters['majorversion'] ?? '',
 	'gameversions' => !empty($filters['gameversions']) ? array_flip($filters['gameversions']) : [],
 	'tags'  => !empty($filters['tags']) ? array_flip($filters['tags']) : [],

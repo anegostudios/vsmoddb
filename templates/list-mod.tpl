@@ -25,10 +25,10 @@
 			</select>
 		</span>
 		
-		<span id="author-box" data-label="Author">
-			<select style="width:150px;" name="userid" data-url="/api/authors?name=\{name}" data-placeholder="Search Users">
+		<span id="contributor-box" data-label="Contributor">
+			<select style="width:10em;" name="c" data-url="/api/v2/users/by-name/\{name}?contributors-only=1" data-placeholder="Search Users">
 				<option value="">-</option>
-				{if !empty($selectedParams['creator'])}<option value="{$selectedParams['creator'][0]}" selected="true">{$selectedParams['creator'][1]}</option>{/if}
+				{if !empty($selectedParams['contributor'])}<option value="{$selectedParams['contributor'][0]}" selected="true">{$selectedParams['contributor'][1]}</option>{/if}
 			</select>
 		</span>
 		
@@ -89,15 +89,15 @@
 			}
 		});
 
-		const $authorBox = $('#author-box');
+		const $contributorBox = $('#contributor-box');
 		let waitTimeout = null, lastWaitTimeout = null;
-		$($authorBox, 'input.chosen-search-input').on('keydown', function() {
+		$($contributorBox, 'input.chosen-search-input').on('keydown', function() {
 			if(waitTimeout !== null) {
 				clearTimeout(waitTimeout);
 			}
 
 			lastWaitTimeout = waitTimeout;
-			waitTimeout = setTimeout(() => getAuthors($authorBox, lastWaitTimeout), 500);
+			waitTimeout = setTimeout(() => getAuthors($contributorBox, lastWaitTimeout), 500);
 		});
 
 		function getAuthors($box, timeoutRef) {
@@ -112,12 +112,11 @@
 			const $select = $box.find("select");
 			const url = $select.data('url').replace("{name}", searchname);
 			
-			$.get(url, function (data) {
+			$.get(url, function (authors) {
 				if(lastWaitTimeout !== timeoutRef) {
 					return
 				}
 
-				const authors = data.authors;
 				if (!authors) {
 					waitTimeout = null;
 					return;
@@ -128,16 +127,16 @@
 				$select.empty();
 				$select.append($currentSelected);
 
-				authors.forEach(function (author) {
-					if (currentUserIds != null && currentUserIds.includes(author.userid+'')) return;
+				for(const [id, name] of Object.entries(authors)) {
+					if (currentUserIds != null && currentUserIds.includes(id)) continue;
 					
-					$select.append(`<option value="${author.userid}">${author.name}</option>`);
-				});
+					$select.append(`<option value="${id}">${name}</option>`);
+				}
 
 				$select.trigger("chosen:updated");
 				$searchInput.val(searchname);
 				// Choses resets this values in the update call. We manually modify the search, so we need to set the width as well.
-				$searchInput.css("width", "145px");
+				$searchInput.css("width", "calc(10em - 7px)");
 				waitTimeout = null;
 			});
 		}

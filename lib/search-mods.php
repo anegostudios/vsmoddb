@@ -16,7 +16,7 @@ const VALID_ORDER_BY_COLUMNS = [
  *  filters:array{
  *   text?:string,
  *   tags?:int[],
- *   'a.createdbyuserid'?:int,
+ *   'contributor'?:int,
  *   'side'?:'client'|'server'|'both',
  *   gameversions?:int[]
  *  },
@@ -72,12 +72,21 @@ function validateModSearchInputs(&$outParams)
 		$outParams['filters']['tags'] = $tags;
 	}
 
-	if(!empty($_REQUEST['userid'])) {
-		$authorId = intval($_REQUEST['userid']);
-		if(!$authorId) {
+	if(!empty($_REQUEST['c'])) {
+		$contributorHash = filter_var($_REQUEST['c'], FILTER_UNSAFE_RAW | FILTER_FLAG_STRIP_LOW);
+		if($contributorHash !== $_REQUEST['c']) {
+			return "Invalid contributor hash: '{$_REQUEST['c']}'.";
+		}
+		$outParams['filters']['contributor'] = $contributorHash;
+	}
+	else if(!empty($_REQUEST['userid'])) { // @legacy
+		$contributorId = intval($_REQUEST['userid']);
+		if(!$contributorId) {
 			return "Invalid userid: '{$_REQUEST['userid']}'.";
 		}
-		$outParams['filters']['a.createdbyuserid'] = $authorId;
+		global $con;
+		$contributorHash = $con->getOne("SELECT hash FROM users WHERE userId = $contributorId"); // @security: $contributorId is known to be an integer, therefore sql inert.
+		$outParams['filters']['contributor'] = $contributorHash;
 	}
 
 	if(!empty($_REQUEST['side'])) {
@@ -162,6 +171,9 @@ function queryModSearch($searchParams)
 	$joinClauses = '';
 	$whereClauses = '';
 	$sqlParams = [];
+	// Join Params need to be inserted between previous join params and where params because JOIN happens before WHERE.
+	// This is the index in the params array where the next join param goes.
+	$joinParamsOffset = 0;
 	
 	foreach($searchParams['filters'] as $name => $value) {
 		switch($name) {
@@ -181,7 +193,19 @@ function queryModSearch($searchParams)
 
 			case 'majorversion':
 				$joinClauses .= 'JOIN modCompatibleMajorGameVersionsCached mcmv ON mcmv.modId = m.modId AND mcmv.majorGameVersion = ?';
-				array_unshift($sqlParams, $value); // This needs to be in front of others because JOIN happens before WHERE.
+				array_splice($sqlParams, $joinParamsOffset, 1, $value);
+				$joinParamsOffset++;
+				break;
+
+			case 'contributor':
+				// team members
+				$joinClauses .= 'LEFT JOIN modTeamMembers tm ON tm.modId = m.modId AND tm.userId = (SELECT userId FROM users tu WHERE tu.hash = UNHEX(?))';
+				array_splice($sqlParams, $joinParamsOffset, 1, $value);
+				$joinParamsOffset++;
+
+				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE '; // direct author
+				$whereClauses .= "(c.hash = UNHEX(?) OR tm.userId IS NOT NULL)";
+				$sqlParams[] = $value;
 				break;
 
 			default:

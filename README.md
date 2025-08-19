@@ -79,6 +79,7 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 	- Args:
 		- Path arg `{search}`
 		- `limit`: Optional result count limit between 1 and 200 inclusive. Defaults to 10.
+		- `contributors-only`: Optional filter to only return users that have contributed to at least one mod.
 	- `200`: string - string dictionary, where keys are user hashes and values are usernames.
 
 > [!IMPORTANT]  
