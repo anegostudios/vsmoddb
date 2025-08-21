@@ -29,4 +29,4 @@ END $$
 
 CALL upgrade_database__moderation() $$
 
-
+DELIMITER ;
