@@ -226,10 +226,11 @@ function queryModSearch($searchParams)
 				$matchScoreFormular = '(3 - ((LEAST(LOCATE(LOWER(?), LOWER(a.name)), 2) - 1) & 0b11)) * 5 + (m.summary LIKE ?) * 5 + (m.descriptionSearchable LIKE ?)';
 				$matchScoreSelect = $matchScoreFormular.' as matchScore,';
 				array_unshift($sqlParams, $value, $v, $v);
+				$joinParamsOffset += 3;
 
 				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
 				$whereClauses .= '(a.name LIKE ? OR m.summary LIKE ? OR m.descriptionSearchable LIKE ?)';
-				$sqlParams[] = $v; $sqlParams[] = $v; $sqlParams[] = $v;
+				array_push($sqlParams, $v, $v, $v);
 
 				$orderBy = 'matchScore DESC, '.$orderBy;
 
@@ -245,14 +246,14 @@ function queryModSearch($searchParams)
 
 			case 'majorversion':
 				$joinClauses .= 'JOIN modCompatibleMajorGameVersionsCached mcmv ON mcmv.modId = m.modId AND mcmv.majorGameVersion = ?';
-				array_splice($sqlParams, $joinParamsOffset, 1, $value);
+				array_splice($sqlParams, $joinParamsOffset, 0, $value);
 				$joinParamsOffset++;
 				break;
 
 			case 'contributor':
 				// team members
 				$joinClauses .= 'LEFT JOIN modTeamMembers tm ON tm.modId = m.modId AND tm.userId = (SELECT userId FROM users tu WHERE tu.hash = UNHEX(?))';
-				array_splice($sqlParams, $joinParamsOffset, 1, $value);
+				array_splice($sqlParams, $joinParamsOffset, 0, $value);
 				$joinParamsOffset++;
 
 				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE '; // direct author
@@ -333,13 +334,19 @@ function queryModSearch($searchParams)
 						))
 					)
 				SQL; // @security: $idCursor and $score must be sql safe (validateModSearchInputs does that)
-				$sqlParams[] = $value; $sqlParams[] = $v; $sqlParams[] = $v; // inputs for $matchScoreFormular, reuse $v from params loop
-				$sqlParams[] = $value; $sqlParams[] = $v; $sqlParams[] = $v; // inputs for $matchScoreFormular, reuse $v from params loop
-				$sqlParams[] = $colCursor; $sqlParams[] = $colCursor; // basic cursor inputs
+
+				$value = $searchParams['filters']['text'];
+				$v = '%'.escapeStringForLikeQuery($value).'%';
+
+				array_push($sqlParams,
+					$value, $v, $v, // inputs for $matchScoreFormular
+					$value, $v, $v, // inputs for $matchScoreFormular
+					$colCursor, $colCursor, // basic cursor inputs
+				);
 			}
 			else {
 				$whereClauses .= "($orderByCol $comparison ? OR ($orderByCol = ? AND m.modId $comparison $idCursor))"; // @security: $idCursor must be sql safe (validateModSearchInputs does that)
-				$sqlParams[] = $colCursor; $sqlParams[] = $colCursor;
+				array_push($sqlParams, $colCursor, $colCursor);
 			}
 
 		}
