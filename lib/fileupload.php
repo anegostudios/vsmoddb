@@ -122,7 +122,7 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 
 	if ($assetTypeId === ASSETTYPE_RELEASE) {
 		$ok = modpeek($localPath, $modInfo);
-		$con->Execute('insert into modPeekResults (fileId, errors, modIdentifier, modVersion, type, side, requiredOnClient, requiredOnServer, networkVersion, description, website, iconPath, rawAuthors, rawContributors, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+		$con->Execute('INSERT INTO modPeekResults (fileId, errors, modIdentifier, modVersion, type, side, requiredOnClient, requiredOnServer, networkVersion, description, website, iconPath, rawAuthors, rawContributors, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
 			[$fileId, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['side'], $modInfo['requiredOnClient'], $modInfo['requiredOnServer'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['iconPath'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawDependencies']]
 		);
 

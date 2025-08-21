@@ -24,7 +24,7 @@ if (empty($notification)) {
 }
 
 switch($notification['kind']) {
-	case 'newrelease':
+	case NOTIFICATION_NEW_RELEASE:
 		$con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]);
 
 		$mod = $con->getRow('SELECT assetId, urlAlias FROM mods WHERE modId = ?', [$notification['recordId']]);
@@ -35,7 +35,7 @@ switch($notification['kind']) {
 		]);
 		exit();
 
-	case "modlocked": case "modunlockrequest": case "modunlocked":
+	case NOTIFICATION_MOD_LOCKED: case NOTIFICATION_MOD_UNLOCK_REQUEST: case NOTIFICATION_MOD_UNLOCKED:
 		$con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$notification['notificationId']]);
 
 		$mod = $con->getRow('SELECT assetId, urlAlias FROM mods WHERE modId = ?', [$notification['recordId']]);
@@ -43,13 +43,13 @@ switch($notification['kind']) {
 		forceRedirect(formatModPath($mod));
 		exit();
 
-	case "teaminvite": case "modownershiptransfer":
+	case NOTIFICATION_TEAM_INVITE: case NOTIFICATION_MOD_OWNERSHIP_TRANSFER:
 		$mod = $con->getRow('SELECT assetId, urlAlias FROM mods WHERE modId = ?', [(intval($notification['recordId']) & ((1 << 30) - 1))]); // :InviteEditBit
 
 		forceRedirect(formatModPath($mod));
 		exit();
 
-	case "newcomment": case "mentioncomment":
+	case NOTIFICATION_NEW_COMMENT: case NOTIFICATION_MENTIONED_IN_COMMENT:
 		$mod = $con->getRow(<<<SQL
 			SELECT m.assetId, m.urlAlias
 			FROM mods m
@@ -63,5 +63,9 @@ switch($notification['kind']) {
 			'path'     => formatModPath($mod),
 			'fragment' => 'cmt-'.$notification['recordId'],
 		]);
+		exit();
+
+	case NOTIFICATION_ONEOFF_MALFORMED_RELEASE:
+		forceRedirect("/edit/release?assetid={$notification['recordId']}");
 		exit();
 }

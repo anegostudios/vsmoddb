@@ -72,10 +72,10 @@ function validateModSearchInputs(&$outParams)
 		$outParams['filters']['tags'] = $tags;
 	}
 
-	if(!empty($_REQUEST['c'])) {
-		$contributorHash = filter_var($_REQUEST['c'], FILTER_UNSAFE_RAW | FILTER_FLAG_STRIP_LOW);
-		if($contributorHash !== $_REQUEST['c']) {
-			return "Invalid contributor hash: '{$_REQUEST['c']}'.";
+	if(!empty($_REQUEST['a'])) {
+		$contributorHash = filter_var($_REQUEST['a'], FILTER_UNSAFE_RAW | FILTER_FLAG_STRIP_LOW);
+		if($contributorHash !== $_REQUEST['a']) {
+			return "Invalid contributor hash: '{$_REQUEST['a']}'.";
 		}
 		$outParams['filters']['contributor'] = $contributorHash;
 	}
@@ -96,6 +96,25 @@ function validateModSearchInputs(&$outParams)
 		}
 
 		$outParams['filters']['side'] = $rSide;
+	}
+
+	if(!empty($_REQUEST['c'])) {
+		$rCat = $_REQUEST['c'];
+		if(!in_array($rCat, ['m', 'e', 'o'], true)) {
+			return "Invalid category: '$rCat'.";
+		}
+
+		$outParams['filters']['category'] = $rCat;
+	}
+
+	if(!empty($_REQUEST['t'])) {
+		$rType = $_REQUEST['t'];
+		if(!in_array($rType, ['v', 'd', 'c'], true)) {
+			return "Invalid type: '$rType'.";
+		}
+
+		$outParams['filters']['type'] = $rType;
+		$outParams['filters']['category'] = 'm'; // force the mod type to mod, since we are looking for a specific kind of mod
 	}
 
 	if(!empty($_REQUEST['gv']) || !empty($_REQUEST['gameversions'])) {
@@ -208,6 +227,37 @@ function queryModSearch($searchParams)
 				$sqlParams[] = $value;
 				break;
 
+			case 'side':
+				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+				$whereClauses .= "m.side = ?";
+				$sqlParams[] = $value;
+				break;
+
+			case 'type':
+				switch($value) {
+					case 'v': $value = 'Theme'; break;
+					case 'd': $value = 'Content'; break;
+					case 'c': $value = 'Code'; break;
+					default: assert(false, "Invalid kind: $value");
+				}
+				//TODO(Rennorb) @cleanup @legacy: Old mods don't have this information set, they wont match this filter.
+				$joinClauses .= <<<SQL
+					JOIN modReleases r ON r.modId = m.modId
+					JOIN files fi ON fi.assetId = r.assetId
+					JOIN modPeekResults mpr on mpr.fileId = fi.fileId AND mpr.type = '$value'
+				SQL; // @security: $value can only be one of the specified strings, therefore its sql inert
+				break;
+
+			case 'category':
+				$name = 'm.type';
+				switch($value) {
+					case 'm': $value = 'mod'; break;
+					case 'e': $value = 'externaltool'; break;
+					case 'o': $value = 'other'; break;
+					default: assert(false, "Invalid type: $value");
+				}
+				/* fallthrough */
+
 			default:
 				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
 				$whereClauses .= "$name = ?";
@@ -265,6 +315,7 @@ function queryModSearch($searchParams)
 		LEFT JOIN files l ON l.fileId = m.cardLogoFileId
 		$joinClauses
 		$whereClauses
+		GROUP BY m.modId
 		ORDER BY $orderBy
 		$limitClause
 	", $sqlParams);

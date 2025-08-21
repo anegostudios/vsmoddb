@@ -14,9 +14,10 @@ if (empty($_POST['fileid'])) {
 
 $fileId = $_POST['fileid'];
 $file = $con->getRow(<<<SQL
-	SELECT name, assetId, userId, cdnPath, hasThumbnail
+	SELECT f.name, f.assetId, f.userId, f.cdnPath, d.hasThumbnail, a.assetTypeId
 	FROM files f
 	LEFT JOIN fileImageData d ON d.fileId = f.fileId
+	LEFT JOIN assets a ON a.assetId = f.assetId
 	WHERE f.fileId = ?
 SQL, [$fileId]);
 
@@ -38,6 +39,11 @@ if ($assetId) {
 	if ($file['userId'] != $user['userId']  && $user['roleCode'] != 'admin') {
 		exit(json_encode(['status' => 'error', 'errormessage' => 'No privilege to delete files from this asset. You may need to login again']));
 	}
+}
+
+if($assetId && $file['assetTypeId'] === ASSETTYPE_RELEASE) {
+	// Remove potential outstanding "check this file" notification. :LegacyMalformedModInfo
+	$con->Execute('UPDATE notifications SET `read` = 1 WHERE kind = ? AND recordId = ?', [NOTIFICATION_ONEOFF_MALFORMED_RELEASE, $assetId]);
 }
 
 splitOffExtension($file['cdnPath'], $noext, $ext);
