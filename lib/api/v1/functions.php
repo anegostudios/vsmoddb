@@ -33,11 +33,12 @@ function listMod($modid)
 
 	$rrows = $con->getAll(<<<SQL
 		select 
-			r.*,
+			r.*, a.text,
 			GROUP_CONCAT(cgv.gameVersion SEPARATOR ';') as compatibleGameVersions
 		from 
 			modReleases r 
-			left join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
+		join assets a on a.assetId = r.assetId
+		left join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
 		where modId = ?
 		group by r.releaseId
 		order by r.created desc
