@@ -23,14 +23,14 @@
 	<tbody>
 		{foreach from=$records item=rec}
 			<tr>
-				<td>{$rec['created']} ({fancydate($rec['created'])})</td>
+				<td>{fancydate($rec['created'])}</td>
 				{if $rec['commentId']}
 					<td><a target="_blank" href="/show/mod/{$rec['assetId']}#cmt-{$rec['commentId']}">{stringifyModactionKind($rec['kind'])}</a></td>
 				{else}
 					<td>{stringifyModactionKind($rec['kind'])}</td>
 				{/if}
 				<td>{formatDateWhichMightBeForever($rec['until'])}</td>
-				<td>{$rec['reason']}</td><td>{$rec['moderatorName']}</td>
+				<td>{$rec['reason']}</td><td>{htmlspecialchars($rec['moderatorName'])}</td>
 			</tr>
 		{/foreach}
 	</tbody>

@@ -85,7 +85,7 @@
 				<tbody>
 					{foreach from=$assetChangelog item=entry}
 						<tr>
-							<td>{str_replace("\r\n", "<br>", $entry['text'])}</td>
+							<td>{str_replace("\n\r", "<br/>", $entry['text'])}</td>
 							<td>{$entry['username']}</td>
 							<td>{fancyDate($entry['lastModified'])}</td>
 						</tr>

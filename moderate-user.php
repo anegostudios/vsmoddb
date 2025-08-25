@@ -84,6 +84,6 @@ $banReasonSuggestion = $sourceCommentId == null ? ''
 $view->assign('pagetitle', "Moderate {$shownUser['name']}");
 
 $view->assign('shownUser', $shownUser);
-$view->assign('records', $records);
+$view->assign('records', $records, null, true);
 $view->assign('banReasonSuggestion', $banReasonSuggestion);
 $view->display('moderate-user');
