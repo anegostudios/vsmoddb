@@ -80,7 +80,7 @@ if(!empty($_POST['save'])) {
 			$pushedErrorForCurrentFile = true;
 		}
 	}
-	/** @var array{'assetid':int, 'fileid':int, 'modIdentifier':string|null, 'modVersion':string|null}[] $currentFiles */
+	/** @var array{'assetId':int, 'fileId':int, 'modIdentifier':string|null, 'modVersion':string|null}[] $currentFiles */
 
 	//TODO(Rennorb) @cleanup: This exists for the case that the user used the "Browse" button instead of drag and drop, that doesn't immediately upload the file. 
 	if(!empty($_FILES['newfile']) && $_FILES['newfile']['error'] != 4) {
@@ -155,7 +155,7 @@ if(!empty($_POST['save'])) {
 					}
 					else {
 						$mid = htmlspecialchars($newData['identifier']);
-						$mpath = formatModPath(['urlAlias' => $inUseBy['urlAlias'], 'assetid' => $inUseBy['modAssetId']]);
+						$mpath = formatModPath(['urlAlias' => $inUseBy['urlAlias'], 'assetId' => $inUseBy['modAssetId']]);
 						addMessage(MSG_CLASS_ERROR, "This modid ('$mid') is already in use by another mod (<a href='$mpath' target='_blank'>link</a>).");
 					}
 				}
