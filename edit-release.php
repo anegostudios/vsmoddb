@@ -75,7 +75,7 @@ if(!empty($_POST['save'])) {
 			WHERE f.assetId IS NULL AND f.assetTypeId = 2 AND f.userId = ?
 		SQL, [$user['userId']]);
 
-		if(!empty($currentFiles[0]['errors'])) {
+		if(!empty($currentFiles[0]['errors']) && $targetMod['type'] === 'mod') {
 			addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$currentFiles[0]['errors'], true);
 			$pushedErrorForCurrentFile = true;
 		}
