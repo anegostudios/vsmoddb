@@ -12,14 +12,13 @@ if (empty($_POST['fileid'])) {
 	exit(json_encode(['status' => 'error']));
 }
 
-$fileId = $_POST['fileid'];
 $file = $con->getRow(<<<SQL
-	SELECT f.name, f.assetId, f.userId, f.cdnPath, d.hasThumbnail, a.assetTypeId
+	SELECT f.fileId, f.name, f.assetId, f.userId, f.cdnPath, d.hasThumbnail, a.assetTypeId
 	FROM files f
 	LEFT JOIN fileImageData d ON d.fileId = f.fileId
 	LEFT JOIN assets a ON a.assetId = f.assetId
 	WHERE f.fileId = ?
-SQL, [$fileId]);
+SQL, [$_POST['fileid']]);
 
 if (!$file) {
 	http_response_code(HTTP_NOT_FOUND);
@@ -41,31 +40,8 @@ if ($assetId) {
 	}
 }
 
-if($assetId && $file['assetTypeId'] === ASSETTYPE_RELEASE) {
-	// Remove potential outstanding "check this file" notification. :LegacyMalformedModInfo
-	$con->Execute('UPDATE notifications SET `read` = 1 WHERE kind = ? AND recordId = ?', [NOTIFICATION_ONEOFF_MALFORMED_RELEASE, $assetId]);
-}
+include_once $config['basepath'].'lib/file.php';
 
-splitOffExtension($file['cdnPath'], $noext, $ext);
-
-$con->Execute('UPDATE mods SET cardLogoFileId = NULL WHERE cardLogoFileId = ?', [$fileId]);
-$con->Execute('UPDATE mods SET embedLogoFileId = NULL WHERE embedLogoFileId = ?', [$fileId]);
-$con->Execute('DELETE FROM files WHERE fileId = ?', [$fileId]);
-
-$countOfFilesUsingThisCDNPath = $con->getOne('SELECT COUNT(*) FROM files WHERE cdnPath = ?', [$file['cdnPath']]);
-if($countOfFilesUsingThisCDNPath < 2) {
-$con->Execute('DELETE FROM files WHERE cdnPath = ?', ["{$noext}_480_320.{$ext}"]); // legacy logo
-	//TODO(Rennorb) @correctness: Could try and figure out if there is a difference between a "generic error" response and "this file does not exist" and then decided on whether or not this should be an error.
-	// For now we ignore errors here, even if we fail to delete from cdn we still deleted the table entry because we otherwise block user interaction because of third party issues (no-go).
-	deleteFromCdn($file['cdnPath']);
-	if($file['hasThumbnail']) deleteFromCdn("{$noext}_55_60.{$ext}"); // thumbnail
-	deleteFromCdn("{$noext}_480_320.{$ext}"); // legacy logo
-
-	logAssetChanges(["Deleted file '{$file['name']}' and underlying resources"], $assetId);
-}
-else {
-	$others = $countOfFilesUsingThisCDNPath - 1;
-	logAssetChanges(["Deleted file entry '{$file['name']}', $others other file(s) are still using the underlying resource"], $assetId);
-}
+tryDeleteFiles([$file]);
 
 exit(json_encode(['status' => 'ok']));

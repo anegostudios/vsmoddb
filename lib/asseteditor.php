@@ -138,7 +138,7 @@ class AssetEditor extends AssetController
 	{
 		global $con;
 		$con->Execute("delete from assets where assetId = ?", array($this->assetid));
-		$con->Execute("delete from `{$this->tablename}` where {$this->tablename}id=?", array($this->recordid));
+		$con->Execute("delete from `{$this->tablename}` where {$this->namesingular}id=?", array($this->recordid));
 
 		logAssetChanges(array("Deleted asset"), $this->assetid);
 

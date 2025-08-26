@@ -1,5 +1,7 @@
 <?php
 
+include_once $config['basepath'].'lib/file.php';
+
 class ModEditor extends AssetEditor
 {
 
@@ -123,9 +125,30 @@ class ModEditor extends AssetEditor
 	function delete()
 	{
 		global $con;
+		$con->startTrans();
+
+		// remove any attached files
+		$files = $con->getAll(<<<SQL
+			SELECT f.fileId, f.name, f.assetId, f.cdnPath, d.hasThumbnail, f.assetTypeId
+			FROM files f
+			LEFT JOIN fileImageData d ON d.fileId = f.fileId
+			WHERE f.assetId = ?
+		UNION
+			SELECT f.fileId, f.name, f.assetId, f.cdnPath, d.hasThumbnail, f.assetTypeId
+			FROM files f
+			LEFT JOIN fileImageData d ON d.fileId = f.fileId
+			JOIN modReleases r ON r.assetId = f.assetId AND r.modId = (SELECT modId FROM mods WHERE mods.assetId = ?)
+		SQL, [$this->assetid, $this->assetid]);
+		tryDeleteFiles($files);
+
 		$modId = $con->getOne("select modId from mods where assetId = ?", array($this->assetid));
+		$modName = $con->getOne("select name from assets where assetId = ?", array($this->assetid));
 		$con->Execute("delete from modReleases where modId = ?", array($modId));
 		parent::delete();
+
+		logAssetChanges(["Deleted mod '$modName'"], $this->assetid);
+
+		$con->completeTrans();
 	}
 
 	const RESERVED_URL_PREFIXES = ['api', 'home', 'terms', 'accountsettings', 'login', 'logout', 'edit-uploadfile', 'edit-deletefile', 'download', 'notifications', 'updateversiontags', 'notification', 'list', 'show', 'edit', 'moderate', 'cmd']; // :ReservedUrlPrefixes
