@@ -144,7 +144,8 @@ foreach ($releases as &$release) {
 		$release['compatibleGameVersionsFolded'] = foldSequentialVersionRanges($compatibleGameVersions, $compatibleGameVersionsIndices);
 	}
 	else {
-		$release['maxCompatibleGameVersion'] = 0;
+		// Set the value to "stable release", so the recommendation show it as "latest release", and not as "for testers" (because just 0 implies some kind of prerelease version).
+		$release['maxCompatibleGameVersion'] = 0x0000_0000_0000_f000;
 		$release['compatibleGameVersions'] = [];
 		$release['compatibleGameVersionsFolded'] = [];
 	}
