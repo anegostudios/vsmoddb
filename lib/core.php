@@ -200,7 +200,7 @@ function sanitizeHtml($text)
 	$key = urlencode(genToken());
 	$text = preg_replace("#<iframe( src=\"//www.youtube.com/embed/[\w-]{1,20}\" width=\"[0-9]+\" height=\"[0-9]+\" allowfullscreen=\"allowfullscreen\")></iframe>#i", "<span class=\"__embed{$key}\">\\1</span>", $text);
 	
-	$text = htmLawed($text, array('tidy' => 0, 'safe' => 1, 'elements' => '* -script -object -applet -canvas -iframe -video -audio -embed -form'));
+	$text = htmLawed($text, array('tidy' => 0, 'safe' => 1, 'elements' => '* -script -object -applet -canvas -iframe -video -audio -embed -form', 'schemes' => 'src: http, https, data'));
 
 	$text = preg_replace("#<span class=\"__embed{$key}\">(.*)</span>#i", "<iframe \\1></iframe>", $text);
 
@@ -575,7 +575,7 @@ function postprocessCommentHtml($html)
 			'#(?:<p>\s*</p>)+\s*$#', // strip empty trailing paragraphs @brittle
 		],
 		[
-			'<div class="spoiler"><div class="spoiler-toggle">Spoiler!</div><div class="spoiler-text" style="display: none;">\1</div></div>',
+			'<div class="spoiler"><div class="spoiler-toggle">Spoiler!</div><div style="display: none;">\1</div></div>',
 			'',
 			'',
 		],

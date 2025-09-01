@@ -1,0 +1,3 @@
+UPDATE comments
+SET text = REPLACE(text, 'data:image', 'denied:data:image')
+WHERE text LIKE '%denied:data:image%';

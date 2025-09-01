@@ -994,12 +994,12 @@ button.moderator::before {
 
 /* spoiler toggles TODO(Rennorb): @cleanup */
 
-.spoiler-toggle:not(.expanded) + .spoiler-text {
+.spoiler-toggle:not(.expanded) ~ * {
 	display: none;
 }
 
 
-.spoiler.crash-report code {
+.spoiler.crash-report pre {
 	display: block;
 	padding: .25em;
 	overflow-x: auto;

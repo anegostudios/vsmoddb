@@ -61,6 +61,7 @@ var tinymceSettingsCmt = {
 	relative_urls:false,
 	remove_script_host:false,
 	tinycomments_mode: 'embedded',
+	paste_data_images: true,
 	content_css: tinymceSettings.content_css,
 	setup: function(editor) {
 		tinymceSettings.setup(editor);
@@ -81,18 +82,22 @@ var tinymceSettingsCmt = {
 		const text = args.content;
 		if(!text) return;
 
+		args.content = text.trim().replaceAll('\r\n', '\n'); // fix windows double line endings...
+
 		if(couldBeCrashReport(text)) {
 			if(confirm('Whoa there, looks like you pasted a crash report.\nShould we wrap that for you, so its easier to read for the Modder?\n\nPressing "cancel" (or the equivalent in your language) will paste the text as-is.')) {
 				wrapNextPaste = 2;
 			}
 		}
-		else if(text.length >= 1000) {
+		else if(text.length >= 1000 && !text.includes('base64,')) {
 			if(confirm('Whoa there, looks like you pasted a lot of text at once.\nShould we wrap that for you, so its easier to read for the Modder?\n\nPressing "cancel" (or the equivalent in your language) will paste the text as-is.')) {
 				wrapNextPaste = 1;
 			}
 		}
 	},
 	paste_postprocess: function(editor, args) {
+		trimLeadingEmptyLines(args.node)
+		timeLeadingEmptyLines(args.node)
 		if(wrapNextPaste) {
 			const spoiler = wrapAsSpoilerForTMCE(args.node.childNodes, wrapNextPaste === 2);
 			args.node.replaceChildren(spoiler);
@@ -147,9 +152,15 @@ function wrapAsSpoilerForTMCE(nodes, isCrashReport) {
 	toggleEl.setAttribute('contenteditable', 'true')
 	toggleEl.innerText = isCrashReport ? 'Crash Report' : 'Spoiler';
 
-	const textEl = document.createElement(isCrashReport ? 'code' : 'div');
+	const textEl = document.createElement(isCrashReport ? 'pre' : 'div');
 	textEl.classList.add('spoiler-text');
 	textEl.setAttribute('contenteditable', 'true')
+	for(const node of nodes) {
+		if(node.style) {
+			node.style.whiteSpace = ''; // strip whitespace-pre in inner pastes
+			node.font = '';
+		}
+	}
 	textEl.append(...nodes)
 
 	const wrapEl = document.createElement('div');
@@ -157,9 +168,43 @@ function wrapAsSpoilerForTMCE(nodes, isCrashReport) {
 	if(isCrashReport) wrapEl.classList.add('crash-report');
 	wrapEl.setAttribute('contenteditable', 'false')
 	wrapEl.append(toggleEl, textEl);
+
 	return wrapEl;
 }
 
+function trimLeadingEmptyLines(element)
+{
+	let firstChild = element.firstElementChild;
+	while(firstChild) {
+		if(firstChild.nodeName === 'BR') {
+			firstChild.remove();
+		}
+		else if(["P", "DIV"].includes(firstChild.nodeName) && !firstChild.textContent) {
+			firstChild.remove();
+		}
+		else {
+			element = firstChild;
+		}
+		firstChild = element.firstElementChild;
+	}
+}
+
+function timeLeadingEmptyLines(element)
+{
+	let lastChild = element.lastElementChild;
+	while(lastChild) {
+		if(lastChild.nodeName === 'BR') {
+			lastChild.remove();
+		}
+		else if(["P", "DIV"].includes(lastChild.nodeName) && !lastChild.textContent) {
+			lastChild.remove();
+		}
+		else {
+			element = lastChild;
+		}
+		lastChild = element.lastElementChild;
+	}
+}
 
 function createEditor($elem, settings) {
 	if (!settings) settings = tinymceSettings;
