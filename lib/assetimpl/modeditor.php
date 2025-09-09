@@ -139,7 +139,7 @@ class ModEditor extends AssetEditor
 			LEFT JOIN fileImageData d ON d.fileId = f.fileId
 			JOIN modReleases r ON r.assetId = f.assetId AND r.modId = (SELECT modId FROM mods WHERE mods.assetId = ?)
 		SQL, [$this->assetid, $this->assetid]);
-		tryDeleteFiles($files);
+		if($files) tryDeleteFiles($files);
 
 		$modId = $con->getOne("select modId from mods where assetId = ?", array($this->assetid));
 		$modName = $con->getOne("select name from assets where assetId = ?", array($this->assetid));
