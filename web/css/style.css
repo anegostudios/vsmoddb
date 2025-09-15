@@ -128,7 +128,7 @@ small {
 }
 
 code {
-	white-space: pre;
+	font-family: 'Courier New', Courier, monospace;
 }
 
 /* generic classes */
@@ -998,8 +998,10 @@ button.moderator::before {
 	display: none;
 }
 
-
-.spoiler.crash-report pre {
+.spoiler.crash-report .spoiler-toggle ~ * {
+	font-family: 'Courier New', Courier, monospace;
+}
+.spoiler.crash-report .spoiler-toggle.expanded ~ * {
 	display: block;
 	padding: .25em;
 	overflow-x: auto;

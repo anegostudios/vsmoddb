@@ -4,27 +4,29 @@ initialized = false;
 $(document).ready(function () {
 
 	$("a[href='#ordernewestfirst']").click(function () {
-		var result = $('.comments > div').sort(function (a, b) {
+		const container = document.getElementsByClassName('comments')[0];
 
-			var contentA = parseInt($(a).attr('data-timestamp'));
-			var contentB = parseInt($(b).attr('data-timestamp'));
-			return (contentA < contentB) ? 1 : (contentA > contentB) ? -1 : 0;
-		});
+		const sorted = Array.from(container.children).sort(function (a, b) {
+			var dt = parseInt(b.dataset.timestamp) - parseInt(a.dataset.timestamp);
+			return dt < 0 ? -1 : dt > 0 ? 1 : 0;
+		})
 
-		$('.comments').html(result);
+		container.replaceChildren(...sorted);
+
 		$.cookie("commentsort", "newestfirst", { expires: 365 });
-
 		return false;
 	});
 
 	$("a[href='#orderoldestfirst']").click(function () {
-		var result = $('.comments > div').sort(function (a, b) {
-			var contentA = parseInt($(a).attr('data-timestamp'));
-			var contentB = parseInt($(b).attr('data-timestamp'));
-			return (contentA < contentB) ? -1 : (contentA > contentB) ? 1 : 0;
-		});
+		const container = document.getElementsByClassName('comments')[0];
 
-		$('.comments').html(result);
+		const sorted = Array.from(container.children).sort(function (a, b) {
+			var dt = parseInt(a.dataset.timestamp) - parseInt(b.dataset.timestamp);
+			return dt < 0 ? -1 : dt > 0 ? 1 : 0;
+		})
+
+		container.replaceChildren(...sorted);
+
 		$.cookie("commentsort", "oldestfirst", { expires: 365 });
 		return false;
 	});

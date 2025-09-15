@@ -278,7 +278,7 @@
 			});
 		});
 	</script>
-	<script type="text/javascript" src="/web/js/comments.js?version=13" async></script>
+	<script type="text/javascript" src="/web/js/comments.js?version=14" async></script>
 {/capture}
 
 {include file="footer"}
