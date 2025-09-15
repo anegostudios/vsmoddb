@@ -71,8 +71,7 @@
 
 	<footer>
 		<ul class="no-mark">
-			<li style="flex-basis: 100%; text-align: center;">Currently hosting {$totalModCount} Mods</li>
-			<li>Copyright © 2021-2025 Anego Studios</li>
+			<li>Copyright © 2021-2025 Anego Studios | Currently hosting <b>{$totalModCount} Mods</b></li>
 			<li><a href="https://www.vintagestory.at/impressum.html/">Impressum</a></li>
 			<li><a href="https://github.com/anegostudios/vsmoddb#vs-mod-db-api-docs">Json Api</a></li>
 			<li><a rel="terms-of-service" href="/terms">Terms of use</a></li>

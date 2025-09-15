@@ -1329,6 +1329,7 @@ a.add:before {
 
 footer {
 	margin-top: 1em;
+	margin-bottom: 1em;
 }
 footer>ul {
 	display: flex;
