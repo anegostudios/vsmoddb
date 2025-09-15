@@ -71,8 +71,13 @@ small {
 	font-size: .8em;
 }
 
+pre {
+	overflow-x: auto;
+}
+
 code {
-	white-space: pre;
+	word-wrap: break-word;
+	font-family: 'Courier New', Courier, monospace;
 }
 
 /* generic classes */
@@ -96,7 +101,8 @@ code {
 
 /**/
 
-.spoiler.crash-report code {
+.spoiler.crash-report .spoiler-toggle ~ * {
+	font-family: 'Courier New', Courier, monospace;
 	display: block;
 	padding: .25em;
 	overflow-x: auto;

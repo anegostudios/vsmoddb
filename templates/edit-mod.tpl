@@ -1,6 +1,6 @@
-{include file="header"}
+{include file="header" hclass="innercontent with-buttons-bottom"}
 
-<div class="edit-asset edit-mod">
+<div class="edit-asset" style="padding: 1em 1em 0 1em">
 
 	<h2>
 		<span>
@@ -15,12 +15,6 @@
 			<span>Add new Mod</span>
 		{/if}
 	</h2>
-
-	{if canModerate(null, $user)}
-	<div style="float: right;">
-		<button class="button large shine moderator" style="height:unset;" onclick="lockModDlg(this)">Lock Mod...</button>
-	</div>
-	{/if}
 
 	<form method="post" name="deleteform">
 		<input type="hidden" name="at" value="{$user['actionToken']}">
@@ -226,19 +220,21 @@
 			</div>
 		{/if}
 </div>
-{include file="edit-asset-files-template.tpl"}
 
-<p style="clear:both"><br/></p>
+<div class="buttons">
+	<a class="button large submit shine" href="javascript:submitForm(0)">{if $asset['statusId'] != STATUS_LOCKED || canModerate(null, $user)}Save{else}Request Review{/if}</a>
 
-<a class="button large submit shine" href="javascript:submitForm(0)">{if $asset['statusId'] != STATUS_LOCKED || canModerate(null, $user)}Save{else}Request Review{/if}</a>
+	{if canModerate(null, $user)}
+		<button class="button large shine moderator" style="height:unset; " onclick="lockModDlg(this)">Lock Mod...</button>
+	{/if}
 
-{if $asset['assetId'] && canDeleteAsset($asset, $user)}
-	<span style="float:right;">
-		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete Mod</a>
-	</span>
-{/if}
+	{if $asset['assetId'] && canDeleteAsset($asset, $user)}
+		<a class="button large btndelete shine" style="margin-left: auto;" href="javascript:submitDelete()">Delete Mod</a>
+	{/if}
+</div>
 
 {capture name="footerjs"}
+	{include file="edit-asset-files-template.tpl"}
 	<script type="text/javascript">
 		const targetModId = {$asset['modId'] ?? 0};
 		function lockModDlg(btnEl) {

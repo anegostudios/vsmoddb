@@ -1,36 +1,29 @@
-{capture name="head"}
-<meta content="{strip_tags($bio)}" property="og:description" />
-{/capture}
+{include file="header" hclass=""}
 
-{include file="header"}
-
-<div class="edit-asset">
-
-	<h2>
+<form method="post" class="edit-asset with-buttons-bottom innercontent" autocomplete="off">
+	<h2 style="padding: 1rem 1rem 0 1rem">
 		<span>
 			<a href="/show/user/{$userHash}">Profile</a>
 		</span> / 
 		<span>Edit</span>
 	</h2>
 
-<form method="post" autocomplete="off" class="flex-list">
-	<div class="editbox flex-fill">
-		<label>Bio</label>
-		<textarea name="bio" class="editor" data-editorname="bio">{$bio}</textarea>
+	<div style="width: 100%; padding: 0 1em">
+		<div class="editbox" style="width: 100%; min-height: 400px;">
+			<label>Bio</label>
+			<textarea name="bio" class="editor" data-editorname="bio">{$bio}</textarea>
+		</div>
 	</div>
 
-	<div>
-		<input type="submit" name="save" value="Save changes">
+	<div class="buttons">
+		<button type="submit" name="save" class="button large submit shine" value="Save changes">Save changes</button>
 	</div>
 </form>
 
-</div>
-
 {capture name="footerjs"}
 	<script type="text/javascript">
-		$(document).ready(function());
+		$(document).ready(function() { createEditor($("textarea.editor"), tinymceSettingsCmt); });
 	</script>
-	<script type="text/javascript" src="/web/js/edit-profile.js" async></script>
 {/capture}
 
 {include file="footer"}

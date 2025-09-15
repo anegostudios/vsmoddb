@@ -27,7 +27,7 @@
 			{/foreach}
 			
 			{if !empty($formupload)}
-				<div class="editbox wide" style="width: 46ch;">
+				<div class="editbox file-upload">
 					<label>Upload new file (or drag and drop, max file size: {round($maxFileUploadSize / MB, 1)} MB)</label>
 					<input type="file" name="newfile" style="height: unset; padding: .25em;">
 				</div>

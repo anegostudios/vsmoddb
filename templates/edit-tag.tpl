@@ -1,22 +1,12 @@
-{include file="header"}
+{include file="header" hclass="innercontent with-buttons-bottom"}
 
-<div class="edit">
-
-	{if $row['tagId']}
-		<h2>
-			<span>
-				<a href="/list/tag">Tags</a>
-			</span> / 
-			<span>{$row["name"]}</span>
-		</h2>	
-	{else}
-		<h2>
-			<span>
-				<a href="/list/tag">Tags</a>
-			</span> / 
-			<span>Add new Tag</span>
-		</h2>
-	{/if}
+<div class="edit-asset" style="padding: 1em 1em 0 1em;">
+	<h2>
+		<span>
+			<a href="/list/tag">Tags</a>
+		</span> / 
+		<span>{$row['tagId'] ? $row["name"] : 'Add new Tag'}</span>
+	</h2>	
 
 	<form method="post" name="deleteform">
 		<input type="hidden" name="at" value="{$user['actionToken']}">
@@ -45,15 +35,14 @@
 	</form>
 </div>
 
-{capture name="buttons"}
+<div class="buttons">
 	<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
 	<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
 	
 	{if $row['tagId']}
-		<div style="height: 1em"></div>
-		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete Tag</a>
+		<a class="button large btndelete shine" style="margin-left: auto;" href="javascript:submitDelete()">Delete Tag</a>
 	{/if}
-{/capture}
+</buttons>
 
 {capture name="footerjs"}
 <script type="text/javascript" src="/web/js/jQueryColorPicker.min.js"></script>

@@ -103,4 +103,4 @@
 
 		<div id="message-container">{foreach from=$messages item=message}<div class="{$message['class']}">{$message['html']}{if !contains($message['class'], 'permanent')}<span class="dismiss"></span>{/if}</div>{/foreach}</div>
 
-		<main class="innercontent">
+		<main class="{$hclass ?? 'innercontent padded'}">

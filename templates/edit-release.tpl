@@ -1,6 +1,6 @@
-{include file="header"}
+{include file="header" hclass="innercontent with-buttons-bottom"}
 
-<div class="edit-asset edit-release">
+<div class="edit-asset edit-release" style="padding: 1em 1em 0 1em">
 
 	<h2>
 		<span>
@@ -66,52 +66,53 @@
 
 		<h3 class="flex-fill">Files {if $release['assetId']}<small>(changes apply immediately!)</small>{/if}{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}<span style="float:right; font-size:70%;">(<a href="/download?assetid={$release['assetId']}">download all as zip</a>)</span>{/if}</h3>
 
-		{include file="edit-asset-files.tpl" formupload="1"}
-		
-		</form>
+		{include file="edit-asset-files.tpl" formupload="1"}	
+	</form>
 
-		{if $release['assetId']} 
-			<p><br></p>
-			<h3 style="margin-bottom:.5em;">Change log</h3>
-			{if $assetChangelog}
-				<table class="stdtable" style="width:100%;">
-				<thead>
+	{if $release['assetId']} 
+		<p><br></p>
+		<h3 style="margin-bottom:.5em;">Change log</h3>
+		{if $assetChangelog}
+			<table class="stdtable" style="width:100%;">
+			<thead>
+				<tr>
+					<th>Changes</th>
+					<th style="width:15ch;">User</th>
+					<th style="width:15ch;">Date</th>
+				</tr>
+			</thead>
+			<tbody>
+				{foreach from=$assetChangelog item=entry}
 					<tr>
-						<th>Changes</th>
-						<th style="width:15ch;">User</th>
-						<th style="width:15ch;">Date</th>
+						<td>{str_replace("\n\r", "<br/>", $entry['text'])}</td>
+						<td>{$entry['username']}</td>
+						<td>{fancyDate($entry['lastModified'])}</td>
 					</tr>
-				</thead>
-				<tbody>
-					{foreach from=$assetChangelog item=entry}
-						<tr>
-							<td>{str_replace("\n\r", "<br/>", $entry['text'])}</td>
-							<td>{$entry['username']}</td>
-							<td>{fancyDate($entry['lastModified'])}</td>
-						</tr>
-					{/foreach}
-					</tbody>
-				{else}
-					<p><i>No activity found.</i></p>
-				{/if}
-			</table>
-		{/if}
+				{/foreach}
+				</tbody>
+			{else}
+				<p><i>No activity found.</i></p>
+			{/if}
+		</table>
+	{/if}
 </div>
 
-{include file="edit-asset-files-template.tpl"}
-
-{capture name="buttons"}
+<div class="buttons">
 	<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
 	<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
-	
+
 	{if $release['assetId']}
-		<div style="height: 1em"></div>
-		<a class="button large btndelete shine" href="javascript:submitDelete()">Delete Release</a>
+		<a class="button large btndelete shine" style="margin-left: auto;" href="javascript:submitDelete()">Delete Release</a>
+	{else}
+		<div class="flex-spacer not-mobile"></div>
 	{/if}
-{/capture}
+</div>
+
+
 
 
 {capture name="footerjs"}
+{include file="edit-asset-files-template.tpl"}
 <script type="text/javascript">	
 	modtype='{$mod["type"]}';
 	assetid = {$release['assetId']};

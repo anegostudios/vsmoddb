@@ -1,6 +1,6 @@
 <?php
 
-//NOTE8Rennorb): The documentation for ModDependencies specified that the version marks the 'minimum version' of the dependency!
+//NOTE(Rennorb): The documentation for ModDependencies specified that the version marks the 'minimum version' of the dependency!
 // https://github.com/anegostudios/vsapi/blob/master/Common/API/ModDependency.cs
 // The modinfo array therefore contains dependencies with version 0 for instances where the version was not specified or set to '*'.
 // :ModDependenciesSpecifyMinVersion

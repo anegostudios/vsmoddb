@@ -128,7 +128,12 @@ small {
 	font-size: .8em;
 }
 
+pre {
+	overflow-x: auto;
+}
+
 code {
+	word-wrap: break-word;
 	font-family: 'Courier New', Courier, monospace;
 }
 
@@ -152,6 +157,10 @@ code {
 }
 
 .template { display: none !important; } /* @cleanup replace with actual templates*/
+
+@media (max-width: 450px) {
+	.not-mobile { display: none; }
+}
 
 /* generic labeling */
 
@@ -567,17 +576,16 @@ body.opaque-desc .mod .moddesc {
 	margin-right: calc(1em - (100vw - 100%)); /* remove scrollbar */
 }
 
-
+.padded {
+	padding: 1em;
+}
 
 .innercontent {
 	position: relative;
-	padding: 1em;
 	background-color: var(--color-content-bg);
-	min-height: calc(100vh - 75px - 5em);
+	--content-min-h: 100vh - 80px - 6em;
+	min-height: calc(var(--content-min-h));
 }
-
-
-
 
 .mod-draft, .mod-locked {
 	position: relative;
@@ -1003,6 +1011,34 @@ button.moderator::before {
 	padding: 0 .25em;
 }
 
+/* button row on the bottom */
+
+.with-buttons-bottom {
+	display: flex;
+	flex-direction: column;
+}
+
+.with-buttons-bottom>.buttons {
+	position: sticky;
+	z-index: 99;
+	bottom: 0;
+
+	display: flex;
+	gap: 1em;
+	justify-content: space-between;
+	flex-wrap: wrap;
+
+	margin-top: 1em;
+	padding: 1em;
+	border-top: solid 1px var(--color-border);
+	background-color: var(--color-content-bg);
+}
+
+.with-buttons-bottom>.buttons>* {
+	min-height: 3em;
+	align-content: center;
+}
+
 /* spoiler toggles TODO(Rennorb): @cleanup */
 
 .spoiler-toggle:not(.expanded) ~ * {
@@ -1031,6 +1067,7 @@ button.moderator::before {
 
 .editbox.short { width: 15ch; }
 .editbox.wide { width: 45ch; }
+.editbox.file-upload { width: 46ch; }
 
 .editbox.mandatory {
 	color: #790202;
@@ -1045,6 +1082,12 @@ button.moderator::before {
 .editbox input,
 .editbox select {
 	width: 100%;
+}
+
+@media (max-width: 450px) {
+	.editbox, .editbox.wide, .editbox.short, .editbox.file-upload {
+		width: 100%;
+	}
 }
 
 
@@ -1232,6 +1275,19 @@ p:last-child {
 	color: var(--color-text-inv);
 }
 
+/* sticky top bar on tiny */
+.tox-tinymce, .tox-editor-container {
+	overflow: visible !important;
+}
+.tox .tox-menubar, .tox .tox-toolbar {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+}
+.tox .tox-toolbar {
+	top: 39px;
+	border-bottom: 1px solid #ccc;
+}
 
 
 .tox .tox-edit-area__iframe {

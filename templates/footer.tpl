@@ -11,7 +11,7 @@
 	<script type="text/javascript" src="/web/js/ays-beforeunload-shim.js"></script>
 	<script type="text/javascript" src="/web/js/jquery.cookie.js"></script>
 
-	<script type="text/javascript" src="/web/js/wysiwyg.js?version=38"></script>
+	<script type="text/javascript" src="/web/js/wysiwyg.js?version=39"></script>
 	<script type="text/javascript" src="/web/js/tinymce/tinymce.min.js"></script>
 
 	<script type="text/javascript" src="/web/js/jquery.filedrop.js?v=2"></script>
@@ -71,7 +71,7 @@
 
 	<footer>
 		<ul class="no-mark">
-			<li>Copyright © 2021-2025 Anego Studios | Currently hosting <b>{$totalModCount} Mods</b></li>
+			<li style="text-align: center;">Copyright © 2021-2025 Anego Studios | <span style="white-space: nowrap;">Currently hosting <b>{$totalModCount} Mods</b></span></li>
 			<li><a href="https://www.vintagestory.at/impressum.html/">Impressum</a></li>
 			<li><a href="https://github.com/anegostudios/vsmoddb#vs-mod-db-api-docs">Json Api</a></li>
 			<li><a rel="terms-of-service" href="/terms">Terms of use</a></li>
