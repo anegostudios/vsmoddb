@@ -174,7 +174,7 @@ function wrapAsSpoilerForTMCE(nodes, isCrashReport) {
 
 function trimLeadingEmptyLines(element)
 {
-	let firstChild = element.firstElementChild;
+	let firstChild = element.firstChild;
 	while(firstChild) {
 		if(firstChild.nodeName === 'BR') {
 			firstChild.remove();
@@ -185,13 +185,13 @@ function trimLeadingEmptyLines(element)
 		else {
 			element = firstChild;
 		}
-		firstChild = element.firstElementChild;
+		firstChild = element.firstChild;
 	}
 }
 
 function timeLeadingEmptyLines(element)
 {
-	let lastChild = element.lastElementChild;
+	let lastChild = element.lastChild;
 	while(lastChild) {
 		if(lastChild.nodeName === 'BR') {
 			lastChild.remove();
@@ -202,7 +202,7 @@ function timeLeadingEmptyLines(element)
 		else {
 			element = lastChild;
 		}
-		lastChild = element.lastElementChild;
+		lastChild = element.lastChild;
 	}
 }
 
