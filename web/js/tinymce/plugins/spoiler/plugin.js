@@ -11,7 +11,7 @@ License: LGPL <http://www.gnu.org/licenses/lgpl-3.0.en.html>
 tinymce.PluginManager.add('spoiler', function(editor, url)
 {
   var $ = editor.$;
-  editor.contentCSS.push(url + '/css/spoiler.css');
+  editor.contentCSS.push(url + '/css/spoiler.css?v=2');
   var spoilerCaption = editor.getParam('spoiler_caption', 'Spoiler!');
 
   if (tinymce.majorVersion == 5)

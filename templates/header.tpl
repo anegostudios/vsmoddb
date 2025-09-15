@@ -20,7 +20,7 @@
 	<link href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/js/chosen/chosen.min.css" rel="stylesheet" type="text/css">
 	<link href="/web/css/datepicker.min.css" rel="stylesheet" type="text/css">
-	<link href="/web/js/tinymce/plugins/spoiler/css/spoiler.css" rel="stylesheet" type="text/css">
+	<link href="/web/js/tinymce/plugins/spoiler/css/spoiler.css?v=2" rel="stylesheet" type="text/css">
 
 	<link href="/web/js/tinymce/skins/ui/oxide/skin.mobile.min.css" as="style">
 	<link href="/web/js/tinymce/skins/ui/oxide/content.mobile.min.css" as="style">
@@ -30,7 +30,7 @@
 	<link href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
 	<link href="/web/css/editor_content.css?ver=4" as="style">
 
-	<link href="/web/css/style.css?version=85" rel="stylesheet" type="text/css">
+	<link href="/web/css/style.css?version=86" rel="stylesheet" type="text/css">
 
 	{if isset($assetserver) && startsWith($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
 

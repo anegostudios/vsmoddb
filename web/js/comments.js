@@ -153,6 +153,12 @@ $(document).ready(function () {
 				addMessage(MSG_CLASS_ERROR, 'Failed to submit comment' + (d.reason ? (': '+d.reason) : '.'), true)
 			});
 	})
+
+	if(document.location.hash.split('-')[0] === '#cmt') {
+		const el = document.getElementById(document.location.hash.substring(1));
+		el.classList.add('highlight');
+		setTimeout(() => el.classList.remove('highlight'), 2000); // remove so sorting doesn't re-trigger the highlight.
+	}
 });
 
 

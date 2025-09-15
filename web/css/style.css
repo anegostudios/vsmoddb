@@ -36,6 +36,7 @@ code:focus-visible {
 	--color-link-active: #608CBE;
 	--c-mod-bg: 0 0% 100%;
 	--color-mod-bg: hsl(var(--c-mod-bg));
+	--color-highlight: hsl(45, 51%, 54%);
 
 	--color-flair-author: #535c88;
 	--color-flair-moderator: #2a6b6f;
@@ -186,6 +187,16 @@ code {
 
 .ribbon-tr.d2 {
 	--d: 3.5em;
+}
+
+/* generic highlight */
+
+@keyframes highlight {
+	30% { background-color: var(--color-highlight); }
+}
+
+.highlight {
+	animation: 2s alternate ease-out highlight;
 }
 
 
