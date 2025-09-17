@@ -215,7 +215,7 @@ Folder contains a Dev Container configuration file. Reopen folder to develop in 
 Simply click reopen in container, and it should start building the devcontainer and starting the mysql database aswell.
 
 Now edit the [config.php](lib/config.php) to match the settings in the [dockerdocker-compose.yml](.devcontainer/docker-compose.yml) for the db `MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD`
-and add `127.0.0.1	stage.mods.vintagestory.at`  to your hosts file on your local machine.
+and add `127.0.0.1	mods.vintagestory.stage`  to your hosts file on your local machine.
 
 To deploy the database to the mysql instance run the [tables.sql](db/tables.sql) script against the database. You can use MySQL WOrkbench or any other mysql tool. When connecting from your local machine use localhost and 3306 (default) port to connect.
 
@@ -226,12 +226,13 @@ Requirements:
 - [Docker](https://www.docker.com/)
 
 Steps:
-- add `127.0.0.1 stage.mods.vintagestory.at` to your hosts file
+- add `127.0.0.1 mods.vintagestory.stage` to your hosts file (this has to be a different domain from `vintagestory.at`, because that domain uses HSTS and so a self signed cert will not be deemed acceptable by browsers)
 - run `docker compose up -d` inside [docker/](docker)
 - edit [config.php](lib/config.php) to match the settings in [dockerdocker-compose.yml](docker/docker-compose.yml)
 
 Result:
-- [http://stage.mods.vintagestory.at/](http://stage.mods.vintagestory.at/)
+- [https://mods.vintagestory.stage/](https://mods.vintagestory.stage/)
+	- Since we are using ssl now you will need to add an exception for `https://mods.vintagestory.stage` to your browser to view the page.
 - [Adminer instance](http://localhost:8080)
 - mysql 3306 is exposed
 

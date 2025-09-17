@@ -15,6 +15,13 @@ RUN docker-php-ext-install mysqli pdo pdo_mysql gd
 # enable apache rewrite module
 RUN a2enmod rewrite
 
+# copy in local cert and enable ssl
+COPY ./dev.ssl.pem /etc/ssl/certs/ssl-cert-snakeoil.pem
+COPY ./dev.ssl.key /etc/ssl/private/ssl-cert-snakeoil.key
+RUN a2enmod ssl  && \
+    a2dissite 000-default && \
+    a2ensite default-ssl
+
 RUN usermod -u ${UID} www-data \
     && groupmod -g ${GID} www-data
 

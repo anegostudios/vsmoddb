@@ -6,8 +6,9 @@ services:
       args:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
+    hostname: mods.vintagestory.stage
     ports:
-      - "80:80"
+      - "443:443"
     volumes:
       - ..:/var/www/html
       - ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro

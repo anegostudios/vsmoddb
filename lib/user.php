@@ -12,7 +12,7 @@ const USER_QUERY_SQL_BASE = '
 	LEFT JOIN moderationRecords rec ON rec.kind = ' . MODACTION_KIND_BAN . ' AND rec.targetUserId = u.userId AND rec.until = u.bannedUntil AND rec.until >= NOW()
 ';
 
-// check `DEBUGUSER` first, $sessionToken could be set by mods.vintagestory.at even if we're browsing stage.mods.vintagestory.at
+// check `DEBUGUSER` first, $sessionToken could be set by mods.vintagestory.at even if we're browsing mods.vintagestory.stage
 if (DEBUGUSER === 1) {
 	$userId = intval($_GET['showas'] ?? 0) ?: 1; // append ?showas=<id> to view the page as a different user
 	$user = $con->getRow(USER_QUERY_SQL_BASE.'WHERE u.userId = ?', [$userId]);

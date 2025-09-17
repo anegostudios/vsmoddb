@@ -2,7 +2,7 @@
 
 $config = [];
 $config["basepath"] = dirname(__DIR__).'/';
-$_SERVER["SERVER_NAME"] = "stage.mods.vintagestory.at";
+$_SERVER["SERVER_NAME"] = "mods.vintagestory.stage";
 $_SERVER["REQUEST_URI"] = "/";
 define("DEBUG", 1);
 define("TESTING", 1);

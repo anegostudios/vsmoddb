@@ -7,8 +7,8 @@ $config["authserver"] = "auth.vintagestory.at";
 // Have a look at lib/cdn/bunny.php for relevant CDN config options.
 
 // If you want to set up a local installation, I recommend
-// adding "127.0.0.1	stage.mods.vintagestory.at"  to your hosts file
-if (strstr($_SERVER["SERVER_NAME"], "stage.mods.vintagestory.at")) {
+// adding "127.0.0.1	mods.vintagestory.stage"  to your hosts file
+if (strstr($_SERVER["SERVER_NAME"], "mods.vintagestory.stage")) {
 	$filepath = $config["basepath"] . "lib/config.dev.php";
 	if (file_exists($filepath)) {
 		include($filepath);
