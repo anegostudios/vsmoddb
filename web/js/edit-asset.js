@@ -1,18 +1,8 @@
-var wait = false;
 var uploading = 0;
 
 $(document).ready(function () {
 	createEditor($("textarea.editor"), tinymceSettings);
-	
-	$(document).on("keydown", "#teammembers-box input.chosen-search-input", function(e) {
-		if (wait) return;
-		
-		wait = true;
-		setTimeout(() => {
-			getAuthors($("#teammembers-box"));
-		}, 1000);
-	});
-	
+
 	const $editPermsSelect = $('#teameditors-box select');
 	$("#teammembers-box select").on('change', function(e, ex) {
 		if(ex.selected) {
@@ -25,49 +15,6 @@ $(document).ready(function () {
 		}
 		$editPermsSelect.trigger("chosen:updated");
 	});
-
-	function getAuthors($box) {
-		const $searchInput = $box.find(".chosen-search-input");
-		const searchname = $searchInput.val();
-		
-		if (!searchname) {
-			wait = false;
-			return;
-		}
-		
-		const $select = $box.find("select");
-		const url = $select.data('url').replace("{name}", searchname);
-		const ownerId = $select.data('ownerid'); 
-		
-		$.get(url, function (data) {
-			const authors = data.authors;
-
-			if (!authors) {
-				wait = false;
-				return;
-			}
-			
-			const currentUserIds = $select.val();
-			const $currentSelected = $select.children(":selected");
-			$select.empty();
-			$select.append($currentSelected);
-
-			authors.forEach(function (author) {
-				if (author.userid == ownerId) return;
-				if (currentUserIds != null && currentUserIds.includes(author.userid+'')) return;
-				
-				$select.append(`<option value="${author.userid}">${author.name}</option>`);
-			});
-
-			const searchname = $searchInput.val(); // cannot use the old value, it will be outdated by now
-			$select.trigger("chosen:updated");
-			$searchInput.val(searchname);
-			// Choses resets this values in the update call. We manually modify the search, so we need to set the width as well.
-			$searchInput.css("width", "150px");
-			wait = false;
-		});
-	}
-	
 
 	$(document).on("click", ".file .delete", function () {
 		const $self = $(this);

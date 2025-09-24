@@ -102,6 +102,7 @@
 		No mods found :(
 	{/if}
 
+	<script type="text/javascript" src="/web/js/user-search.js"></script>
 	<script type="text/javascript">
 		$("select").each(function() {
 			if ($(this).parents(".template").length == 0) {
@@ -132,59 +133,8 @@
 			}
 		});
 
-		const $contributorBox = $('#contributor-box');
-		let waitTimeout = null, lastWaitTimeout = null;
-		$($contributorBox, 'input.chosen-search-input').on('keydown', function() {
-			if(waitTimeout !== null) {
-				clearTimeout(waitTimeout);
-			}
+		$(() => attachUserSearchHandler(document.getElementById('contributor-box')));
 
-			lastWaitTimeout = waitTimeout;
-			waitTimeout = setTimeout(() => getAuthors($contributorBox, lastWaitTimeout), 500);
-		});
-
-		function getAuthors($box, timeoutRef) {
-			const $searchInput = $box.find(".chosen-search-input");
-			const searchname = $searchInput.val();
-			
-			if (!searchname) {
-				waitTimeout = null;
-				return;
-			}
-			
-			const $select = $box.find("select");
-			const url = $select.data('url').replace("{name}", searchname);
-			
-			$.get(url, function (authors) {
-				if(lastWaitTimeout !== timeoutRef) {
-					return
-				}
-
-				if (!authors) {
-					waitTimeout = null;
-					return;
-				}
-				
-				const currentUserIds = $select.val();
-				const $currentSelected = $select.children(":selected");
-				$select.empty();
-				$select.append($currentSelected);
-
-				for(const [id, name] of Object.entries(authors)) {
-					if (currentUserIds != null && currentUserIds.includes(id)) continue;
-					
-					$select.append(`<option value="${id}">${name}</option>`);
-				}
-
-				$select.trigger("chosen:updated");
-				$searchInput.val(searchname);
-				// Choses resets this values in the update call. We manually modify the search, so we need to set the width as well.
-				$searchInput.css("width", "calc(10em - 7px)");
-				waitTimeout = null;
-			});
-		}
-
-		
 		let fetchCursor = '{$fetchCursorJS}';
 		const scrollTrigger = document.getElementById('scroll-trigger');
 		if(scrollTrigger) {

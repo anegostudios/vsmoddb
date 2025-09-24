@@ -85,10 +85,10 @@
 			<div id="teammembers-box" class="editbox wide pending-markers">
 				<label>Team Members</label>
 				<select name="teammemberids[]" multiple data-placeholder="Search Users"
-					data-url="/api/authors?name=\{name}" data-ownerid="{$asset['createdByUserId']}">
+					data-url="/api/v2/users/by-name/\{name}" data-ownerid="{$asset['createdByUserId']}">
 					{if !empty($teamMembers)}
 						{foreach from=$teamMembers item=teamMember}
-							<option selected class="maybe-accepted{if !$teamMember['pending']} accepted{/if}" value="{$teamMember['userId']}" title="{$teamMember['name']}">{$teamMember['name']}</option>
+							<option selected class="maybe-accepted{if !$teamMember['pending']} accepted{/if}" value="{$teamMember['hash']}" title="{$teamMember['name']}">{$teamMember['name']}</option>
 						{/foreach}
 					{/if}
 				</select>
@@ -98,7 +98,7 @@
 				<label>Team Members with edit permissions</label>
 				<select name="teammembereditids[]" multiple data-placeholder="Search Members">
 					{foreach from=$teamMembers item=teamMember}
-						<option {if $teamMember['canEdit']}selected{/if} class="maybe-accepted{if !$teamMember['pending']} accepted{/if}" value="{$teamMember['userId']}" title="{$teamMember['name']}">{$teamMember['name']}</option>
+						<option {if $teamMember['canEdit']}selected{/if} class="maybe-accepted{if !$teamMember['pending']} accepted{/if}" value="{$teamMember['hash']}" title="{$teamMember['name']}">{$teamMember['name']}</option>
 					{/foreach}
 				</select>
 			</div>
@@ -235,7 +235,10 @@
 
 {capture name="footerjs"}
 	{include file="edit-asset-files-template.tpl"}
+	<script type="text/javascript" src="/web/js/user-search.js"></script>
 	<script type="text/javascript">
+		$(() => attachUserSearchHandler(document.getElementById('teammembers-box')));
+
 		const targetModId = {$asset['modId'] ?? 0};
 		function lockModDlg(btnEl) {
 			const message = prompt("Locking a mod will disable automatic downloads for the duration.\nPlease provide a reason for locking this mod.\nThis reason will be displayed to the mod author and logged. The reason message should contain information on how the author can get their mod to be unlocked again.");

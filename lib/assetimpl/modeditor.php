@@ -57,12 +57,12 @@ class ModEditor extends AssetEditor
 			$modId = $con->getOne('SELECT modId FROM mods WHERE assetId = ?', [$this->assetid]);
 
 			$teamMembers = $con->getAll('
-					SELECT u.*, t.canEdit, 0 AS pending
+					SELECT u.*, HEX(u.hash) AS hash, t.canEdit, 0 AS pending
 					FROM modTeamMembers t
 					JOIN users u ON u.userId = t.userId
 					WHERE t.modId = ? AND u.userId != ?
 				UNION
-					SELECT u.*, (n.recordId & 1 << 30) AS canEdit, 1 AS pending
+					SELECT u.*, HEX(u.hash) AS hash, (n.recordId & 1 << 30) AS canEdit, 1 AS pending
 					FROM notifications n
 					JOIN users u ON u.userId = n.userId
 					WHERE n.kind = '.NOTIFICATION_TEAM_INVITE.' AND !n.`read` AND (n.recordId & ((1 << 30) - 1)) = ? -- :InviteEditBit
@@ -454,21 +454,23 @@ class ModEditor extends AssetEditor
 	{
 		global $con, $user;
 
-		$newMemberIds = filter_input(INPUT_POST, 'teammemberids', FILTER_VALIDATE_INT, FILTER_FORCE_ARRAY) ?? [];
+		$newMemberHashes = filter_input(INPUT_POST, 'teammemberids', FILTER_UNSAFE_RAW, FILTER_FORCE_ARRAY | FILTER_FLAG_STRIP_LOW) ?? [];
+		$placeholders = implode(',', array_fill(0, count($newMemberHashes), '?'));
+		$newMembers = $con->getAssoc("SELECT HEX(hash) AS hash, userId FROM users where HEX(users.hash) IN ($placeholders)", $newMemberHashes);
 
-		$newEditorMemberIds = filter_input(INPUT_POST, 'teammembereditids', FILTER_VALIDATE_INT, FILTER_FORCE_ARRAY) ?? [];
-		$newEditorMemberIds = array_flip($newEditorMemberIds);
+		$newEditorMemberHashes = filter_input(INPUT_POST, 'teammembereditids', FILTER_UNSAFE_RAW, FILTER_FORCE_ARRAY | FILTER_FLAG_STRIP_LOW) ?? [];
+		$newEditorMemberHashes = array_flip($newEditorMemberHashes);
 
-		$oldMembers = $con->getAll('SELECT userId, canEdit, teamMemberId FROM modTeamMembers WHERE modId = ?', [$modId]);
+		$oldMembers = $con->getAll('SELECT HEX(u.hash) AS hash, t.userId, t.canEdit, t.teamMemberId FROM modTeamMembers t JOIN users u ON u.userId = t.userId WHERE t.modId = ?', [$modId]);
 		$oldMembers = array_combine(array_column($oldMembers, 'userId'), $oldMembers);
 
 		$changes = array();
 
-		foreach ($newMemberIds as $newMemberId) {
-			//NOTE(Rennorb) @hack: We use the hightes possible bit (#31) to indicate that this invitation should resolve with editor permissions.
-			// We do this to simplitfy the teammebers table, as there currently is not complex permission system and we would otherwise need several more columns to keep track of this.
+		foreach ($newMembers as $newMemberHash => $newMemberId) {
+			//NOTE(Rennorb) @hack: We use the highest possible bit (#31) to indicate that this invitation should resolve with editor permissions.
+			// We do this to simplify the teammebers table, as there currently is not complex permission system and we would otherwise need several more columns to keep track of this.
 			// :InviteEditBit
-			$editBit = array_key_exists($newMemberId, $newEditorMemberIds) ? 1 << 30 : 0;
+			$editBit = array_key_exists($newMemberHash, $newEditorMemberHashes) ? 1 << 30 : 0;
 			$mergedId = $modId | $editBit;
 
 			if (!array_key_exists($newMemberId, $oldMembers)) {
