@@ -79,7 +79,7 @@
 			{include file="edit-asset-`$entrycode`.tpl"}
 		{/if}
 
-		{if canEditAsset($asset, $user, false)}
+		{if $canEditTeamMembers = canEditAsset($asset, $user, false)}
 			<h3 class="flex-fill">Team members</h3>
 
 			<div id="teammembers-box" class="editbox wide pending-markers">
@@ -235,9 +235,9 @@
 
 {capture name="footerjs"}
 	{include file="edit-asset-files-template.tpl"}
-	<script type="text/javascript" src="/web/js/user-search.js"></script>
+	{if $canEditTeamMembers}<script type="text/javascript" src="/web/js/user-search.js"></script>{/if}
 	<script type="text/javascript">
-		$(() => attachUserSearchHandler(document.getElementById('teammembers-box')));
+		{if $canEditTeamMembers}$(() => attachUserSearchHandler(document.getElementById('teammembers-box')));{/if}
 
 		const targetModId = {$asset['modId'] ?? 0};
 		function lockModDlg(btnEl) {
