@@ -455,8 +455,13 @@ class ModEditor extends AssetEditor
 		global $con, $user;
 
 		$newMemberHashes = filter_input(INPUT_POST, 'teammemberids', FILTER_UNSAFE_RAW, FILTER_FORCE_ARRAY | FILTER_FLAG_STRIP_LOW) ?? [];
-		$placeholders = implode(',', array_fill(0, count($newMemberHashes), '?'));
-		$newMembers = $con->getAssoc("SELECT HEX(hash) AS hash, userId FROM users where HEX(users.hash) IN ($placeholders)", $newMemberHashes);
+		if(empty($newMemberHashes)) {
+			$newMembers = [];
+		}
+		else{
+			$placeholders = implode(',', array_fill(0, count($newMemberHashes), '?'));
+			$newMembers = $con->getAssoc("SELECT HEX(hash) AS hash, userId FROM users where HEX(users.hash) IN ($placeholders)", $newMemberHashes);
+		}
 
 		$newEditorMemberHashes = filter_input(INPUT_POST, 'teammembereditids', FILTER_UNSAFE_RAW, FILTER_FORCE_ARRAY | FILTER_FLAG_STRIP_LOW) ?? [];
 		$newEditorMemberHashes = array_flip($newEditorMemberHashes);
