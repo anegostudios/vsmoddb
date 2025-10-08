@@ -148,7 +148,7 @@ function deleteRelease($modId, $release)
 	$con->startTrans();
 
 	$usedFiles = $con->getAssoc('SELECT fileId, cdnPath FROM files WHERE assetId = ?', [$release['assetId']]);
-	// @perf: This could be merged into less queries, but in theory a release can only have one fiel either way, so this should not matter.
+	// @perf: This could be merged into less queries, but in theory a release can only have one file either way, so this should not matter.
 	foreach($usedFiles as $fileId => $cdnPath) {
 		if($con->getOne('SELECT COUNT(*) FROM files WHERE cdnPath = ?', [$cdnPath]) == 1) {
 			// Only delete abandoned files! Unlikely to not be the case for release files, but might aswell be safe.
