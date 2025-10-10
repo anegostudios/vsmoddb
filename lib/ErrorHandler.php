@@ -122,7 +122,9 @@ class ErrorHandler {
 			}
 
 			if(!headers_sent()) {
-				http_response_code(intval($code) ?: 500);
+				$response_code = intval($code);
+				if($response_code < 100 || $response_code > 599) $response_code = 500;
+				http_response_code($response_code);
 			}
 
 			?>
@@ -153,7 +155,9 @@ class ErrorHandler {
 		}
 
 		if(!headers_sent()) {
-			http_response_code(isset($code) ? (intval($code) ?: 500) : 500);
+			$response_code = intval($code);
+			if($response_code < 100 || $response_code > 599) $response_code = 500;
+			http_response_code($response_code);
 		}
 
 		?>
