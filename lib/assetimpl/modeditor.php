@@ -159,7 +159,7 @@ class ModEditor extends AssetEditor
 
 		$_POST['summary'] = substr(strip_tags($_POST['summary']), 0, 100);
 
-		$_POST['urlAlias'] = preg_replace("/[^a-z]+/", "", strtolower($_POST['urlAlias']));
+		$_POST['urlAlias'] = preg_replace("/[^0-9a-z]+/", "", strtolower($_POST['urlAlias']));
 		if (!empty($_POST['urlAlias'])) {
 			if ($con->getOne("select modId from mods where urlAlias = ? and assetId != ?", array($_POST['urlAlias'], $this->assetid))) {
 				addMessage(MSG_CLASS_ERROR, 'Not saved. This url alias is already taken. Please choose another.');
