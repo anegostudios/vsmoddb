@@ -136,7 +136,7 @@
 						{else}<strong>Recommended download:</strong><br>
 						{/if}
 
-						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseStable['file'])}">{$recommendedReleaseStable['file']['name']}</a>
+						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseStable['file'])}">{htmlspecialchars($recommendedReleaseStable['file']['name'])}</a>
 						{if !empty($recommendedReleaseStable['identifier']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseStable}{/if}
 						{if $recommendedReleaseUnstable}<br>{/if}
 					{elseif $fallbackRelease}
@@ -146,7 +146,7 @@
 						{else}<strong>Latest release:</strong><br>
 						{/if}
 
-						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($fallbackRelease['file'])}">{$fallbackRelease['file']['name']}</a>
+						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($fallbackRelease['file'])}">{htmlspecialchars($fallbackRelease['file']['name'])}</a>
 						{if !empty($fallbackRelease['identifier']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$fallbackRelease}{/if}
 						{if $recommendedReleaseUnstable}<br>{/if}
 					{/if}
@@ -155,7 +155,7 @@
 						{else}<strong>For testers:</strong><br>
 						{/if}
 
-						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseUnstable['file'])}">{$recommendedReleaseUnstable['file']['name']}</a>
+						<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($recommendedReleaseUnstable['file'])}">{htmlspecialchars($recommendedReleaseUnstable['file']['name'])}</a>
 						{if !empty($recommendedReleaseUnstable['identifier']) && $shouldShowOneClickInstall}&nbsp;{include file="button-one-click-install" release=$recommendedReleaseUnstable}{/if}
 					{/if}
 				</p>
@@ -208,7 +208,7 @@
 							<td>{if !empty($release['file'])}{intval($release['file']['downloads'])}{/if}</td>
 							<td>{fancyDate($release['created'])}</td>
 							<td>{if $release['text']}<label for="cl-trigger-{$release['assetId']}" class="button square cl-trigger">Show</label>{else}Empty{/if}</td>
-							<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{$release['file']['name']}</a>{/if}</td>
+							<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{htmlspecialchars($release['file']['name'])}</a>{/if}</td>
 							{if $shouldShowOneClickInstall}<td>{if !empty($release['identifier'])}{include file="button-one-click-install"}{/if}</td>{/if}
 						</tr>
 						{if $release['text']}
