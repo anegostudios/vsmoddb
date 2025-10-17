@@ -314,7 +314,7 @@ function processOwnershipTransfer($asset, $user)
 {
 	global $con, $view;
 
-	$pendingInvitationId = $con->getOne("SELECT notificationId FROM notifications WHERE kind = ? AND !`read` AND userId = ? AND recordId = ?", [NOTIFICATION_MOD_OWNERSHIP_TRANSFER, $user['userId'], $asset['modId']]);
+	$pendingInvitationId = $con->getOne("SELECT notificationId FROM notifications WHERE kind = ? AND !`read` AND userId = ? AND recordId = ?", [NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST, $user['userId'], $asset['modId']]);
 	$view->assign("transferownership", $pendingInvitationId);
 	if(!$pendingInvitationId) return;
 
@@ -324,6 +324,7 @@ function processOwnershipTransfer($asset, $user)
 	switch ($_GET['acceptownershiptransfer']) {
 		case 1:
 			$con->startTrans();
+
 			$oldOwnerData = $con->getRow('SELECT createdByUserId, created FROM assets WHERE assetId = ?', [$asset['assetId']]); // @perf
 			// swap owner and teammember that accepted in the teammembers table
 			$con->execute(<<<SQL
@@ -340,10 +341,13 @@ function processOwnershipTransfer($asset, $user)
 			SQL, [$asset['modId'], $user['userId']]);
 
 			$con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$pendingInvitationId]);
-			$ok = $con->completeTrans();
-			if($ok) {
-				logAssetChanges(['Ownership migrated to '.$user['name']], $asset['assetId']);
-			}
+			// Send notification to the original author:
+			// Use the 32nd bit of the modId to indicate success :PackedTransferSuccess
+			$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES ('.NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED.', ?, ?) ', [$oldOwnerData['createdByUserId'], $asset['modId'] | (1 << 31)]);
+
+			logAssetChanges(['Ownership migrated to '.$user['name']], $asset['assetId']);
+
+			$con->completeTrans();
 
 			$url = parse_url($_SERVER['REQUEST_URI']);
 			$url['query'] = stripQueryParam($url['query'], 'acceptownershiptransfer');
@@ -351,9 +355,18 @@ function processOwnershipTransfer($asset, $user)
 			exit();
 
 		case 0:
+			$con->startTrans();
+
+			$oldOwner = $con->getOne('SELECT createdByUserId FROM assets WHERE assetId = ?', [$asset['assetId']]); // @perf
+
 			$con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$pendingInvitationId]);
 
+			// Send notification to the original author:
+			$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES ('.NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED.', ?, ?) ', [$oldOwner, $asset['modId'] | (0 << 31)]); // :PackedTransferSuccess
+
 			logAssetChanges(['Ownership migration rejected by '.$user['name']], $asset['assetId']);
+
+			$con->completeTrans();
 
 			$url = parse_url($_SERVER['REQUEST_URI']);
 			$url['query'] = stripQueryParam($url['query'], 'acceptownershiptransfer');

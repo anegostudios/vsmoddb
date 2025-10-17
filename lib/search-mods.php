@@ -64,7 +64,7 @@ function validateModSearchInputs(&$outParams)
 	}
 
 	if(!empty($_REQUEST['tagids'])) {
-		$tags = filter_var($_REQUEST['tagids'], FILTER_VALIDATE_INT, FILTER_FORCE_ARRAY);
+		$tags = forceArrayOfInts($_REQUEST['tagids']);
 		if($tags === false) {
 			$f = print_r($_REQUEST['tagids'], true);
 			return "Invalid tagids: $f.";

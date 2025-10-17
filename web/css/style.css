@@ -137,6 +137,22 @@ code {
 	font-family: 'Courier New', Courier, monospace;
 }
 
+/* broken images */
+img { /* chrome */
+	font-style: italic;
+	text-align: center;
+}
+img::before { /* ff */
+	display: block;
+	height: 100%;
+	inset: 0;
+	text-align: center;
+	border: 1px red dashed;
+	white-space: pre-wrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
 /* generic classes */
 .whitetext { color: var(--color-text-inv); }
 

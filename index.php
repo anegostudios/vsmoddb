@@ -79,18 +79,12 @@ switch($urlparts[0]) { // :ReservedUrlPrefixes
 			exit();
 		}
 
-		$filename = $urlparts[0].'.php';
-		if (file_exists($filename)) {
-			$assettype = $urlparts[1];
-			include($filename);
-			exit();
-		}
-
+		// If we get here its 404 not found. Ignore the aliases, these prefixes are reserved.
 		break;
 
 	default: // @security: Check for url-aliases last. Don't allow mods to overwrite urls.
 		if ($assetId = $con->getOne('select assetId from mods where urlAlias = ?', [$urlparts[0]])) {
-			$urlparts = ['show', 'mod', $assetId]; // Update $urlparts for selected header highlighting in the header template.
+			$urlparts = ['show', 'mod', $assetId]; // Update $urlparts to supply the correct assetId to the handler.
 			include('show-mod.php');
 			exit();
 		}

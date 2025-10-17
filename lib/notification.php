@@ -43,10 +43,22 @@ switch($notification['kind']) {
 		forceRedirect(formatModPath($mod));
 		exit();
 
-	case NOTIFICATION_TEAM_INVITE: case NOTIFICATION_MOD_OWNERSHIP_TRANSFER:
+	case NOTIFICATION_TEAM_INVITE: case NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST:
 		$mod = $con->getRow('SELECT assetId, urlAlias FROM mods WHERE modId = ?', [(intval($notification['recordId']) & ((1 << 30) - 1))]); // :InviteEditBit
 
 		forceRedirect(formatModPath($mod));
+		exit();
+
+	case NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED:
+		$assetId = $con->getOne('SELECT assetId FROM mods WHERE modId = ?', [(intval($notification['recordId']) & ((1 << 31) - 1))]); // :PackedTransferSuccess
+
+		$con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]);
+
+		forceRedirect([
+			'path'     => '/edit/mod/',
+			'query'    => 'assetid='.$assetId,
+			'fragment' => 'ownership-transfer',
+		]);
 		exit();
 
 	case NOTIFICATION_NEW_COMMENT: case NOTIFICATION_MENTIONED_IN_COMMENT:

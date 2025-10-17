@@ -15,14 +15,8 @@ include($config["basepath"] . "lib/tags.php");
 include($config["basepath"] . "lib/3rdparty/adodb5/adodb-exceptions.inc.php");
 include($config["basepath"] . "lib/3rdparty/adodb5/adodb.inc.php");
 
-include($config["basepath"] . "lib/assetcontroller.php");
-include($config["basepath"] . "lib/assetlist.php");
-include($config["basepath"] . "lib/asseteditor.php");
 include($config["basepath"] . "lib/fileupload.php");
 include($config["basepath"] . "lib/version.php");
-
-
-include($config["basepath"] . "lib/assetimpl/modeditor.php");
 
 //mysqli_report(MYSQLI_REPORT_ERROR);
 $con = createADOConnection($config);
@@ -182,6 +176,55 @@ function isNumber($val)
 function isUrl($url)
 {
 	return strlen(filter_var($url, FILTER_VALIDATE_URL));
+}
+
+/**
+ *  When filter_input doesn't quite do what you need it to.
+ * 
+ * @param int $type One of <b>INPUT_GET</b>, <b>INPUT_POST</b>
+ * @param string $varName
+ * @return array<int>|false|null  false if element cannot be converted, null if key is missing in given input. Cannot be false if $filterInsteadOfFail is set.
+ */
+function getInputArrayOfInts($type, $varName, $filterInsteadOfFail = false)
+{
+	$input = ($type === INPUT_GET ? $_GET : $_POST);
+	if(!array_key_exists($varName, $input)) return null;
+	return forceArrayOfInts($input[$varName], $filterInsteadOfFail);
+}
+
+/**
+ *  When filter_var doesn't quite do what you need it to.
+ * 
+ * @param int|string|array<int|string> $var
+ * @return array<int>|false
+ */
+function forceArrayOfInts($var, $filterInsteadOfFail = false)
+{
+	if(is_int($var))   return [$var];
+	else if(is_string($var)) {
+		$var = trim($var);
+		if(is_numeric($var))  return [intval($var)];
+	}
+	else if(is_array($var)) {
+		$mapped = [];
+		foreach($var as $el) {
+			if(is_int($el)) {
+				$mapped[] = $el;
+				continue;
+			}
+			else if(is_string($el)) {
+				$el = trim($el);
+				if(is_numeric($el)) {
+					$mapped[] = intval($el);
+					continue;
+				}
+			}
+			// neither int not numeric string
+			if(!$filterInsteadOfFail) return false;
+		}
+		return $mapped;
+	}
+	return $filterInsteadOfFail ? [] : false;
 }
 
 function last($array)

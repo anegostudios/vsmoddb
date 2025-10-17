@@ -27,10 +27,11 @@ const NOTIFICATION_NEW_COMMENT            = 1;
 const NOTIFICATION_MENTIONED_IN_COMMENT   = 2;
 const NOTIFICATION_NEW_RELEASE            = 3;
 const NOTIFICATION_TEAM_INVITE            = 4;
-const NOTIFICATION_MOD_OWNERSHIP_TRANSFER = 5;
+const NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST = 5;
 const NOTIFICATION_MOD_LOCKED             = 6;
 const NOTIFICATION_MOD_UNLOCK_REQUEST     = 7;
 const NOTIFICATION_MOD_UNLOCKED           = 8;
+const NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED = 10;
 
 const NOTIFICATION_ONEOFF_MALFORMED_RELEASE = 64 + 0; // :LegacyMalformedModInfo
 
@@ -90,7 +91,7 @@ function addMessage($class, $html, $escapeMessage = false)
 }
 
 /**
- * @param array $asset
+ * @param array{assetTypeId: int, assetId: int, createdByUserId: int} $asset
  * @param array $user
  * @param bool  $includeTeam
  * @return bool
@@ -101,7 +102,7 @@ function canEditAsset($asset, $user, $includeTeam = true)
 
 	$canEditAsTeamMember = false;
 
-	// @cleanup: cursed hackery, breaking the point of the oop asseteditor
+	//TODO(Rennorb) @cleanup: Probably just split this into two versions, one for releases, one for mods.
 	if ($includeTeam && $asset['assetTypeId'] === ASSETTYPE_MOD) {
 		$canEditAsTeamMember = $con->getOne(<<<SQL
 			SELECT 1 
@@ -192,7 +193,7 @@ function loadNotifications($loadAll)
 				$notification['text'] = "{$cmt['username']} invited you to join the team of {$cmt['modName']}";
 				break;
 
-			case NOTIFICATION_MOD_OWNERSHIP_TRANSFER:
+			case NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST:
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
 					FROM mods m
@@ -202,6 +203,22 @@ function loadNotifications($loadAll)
 				SQL, [$notification['recordId']]);
 
 				$notification['text'] = "{$cmt['username']} offered you ownership of {$cmt['modName']}";
+				break;
+
+			case NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED:
+				$modId = intval($notification['recordId']) & ((1 << 31) - 1);  // :PackedTransferSuccess
+				$cmt = $con->getRow(<<<SQL
+					SELECT a.name AS modName, u.name AS username
+					FROM mods m
+					JOIN assets a ON a.assetId = m.assetId
+					JOIN (SELECT userId FROM notifications n WHERE kind = ? AND (n.recordId & ((1 << 30) - 1)) = ? ORDER BY created DESC LIMIT 1) ogn ON 1 = 1 -- :InviteEditBit
+					JOIN users u ON u.userId = ogn.userId
+					WHERE m.modId = ?
+				SQL, [NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST, $modId, $modId]);
+
+				$verb = $notification['recordId'] & (1 << 31) ? 'accepted' : 'rejected'; // :PackedTransferSuccess
+
+				$notification['text'] = "{$cmt['username']} has $verb your ownership transfer of {$cmt['modName']}";
 				break;
 
 			case NOTIFICATION_NEW_COMMENT: case NOTIFICATION_MENTIONED_IN_COMMENT:
