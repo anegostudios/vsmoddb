@@ -19,7 +19,7 @@
 								<ul>
 									{foreach from=$sponsorableUserData['mods'] item=mod}
 									<li>
-										<a href="{$mod['path']}"><h4><img src="{$mod['logoUrl'] ?? '/web/img/mod-default.png'}"> <span>{$mod['name']}</span></h4></a>
+										<a href="{$mod['path']}"><h4><img src="{$mod['logoUrl'] ?? '/web/img/mod-default.png'}" loading="lazy"> <span>{$mod['name']}</span></h4></a>
 										<div class="matches">{$mod['matchHtml']}</div>
 									</li>
 									{/foreach}

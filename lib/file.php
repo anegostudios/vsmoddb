@@ -1,13 +1,18 @@
 <?php
 
 /**
- * Try to delete a file. This will check if the file happens to still be used somewhere, and issue a deletion if its not.
+ * Try to delete a set of file. This will check if the file happens to still be used somewhere, and issue a deletion if its not.
  * 
  * @param array{fileId: int, assetId: int, assetTypeId: int, name: string, cdnPath: string, hasThumbnail: bool}[] $files - @security: must be sql safe. Will not validate ownership.
  */
 function tryDeleteFiles($files)
 {
+	//TODO(Rennorb) @refactor: Split this into two parts.
+	// This operation usually happens as part of a larger delete, so in that case we want to do all the database stuff first, and only delete files form the cdn at a later point when all database operations are finished.
+	// Right now we might delete things from the cdn, then roll back our database deletion because of an error.
 	global $con;
+
+	if(!$files) return;
 
 	$ids = array_map(fn($file) => intval($file['fileId']), $files);
 	$idsFolded = '('.implode(',', $ids).')';
@@ -47,3 +52,20 @@ function tryDeleteFiles($files)
 
 	$con->completeTrans();
 }
+
+/**
+ * @param int $userId
+ * @param int $assetType
+ * @return array
+ */
+function getHoveringFilesOfUser($userId, $assetType)
+{
+	global $con;
+	return $con->getAll(<<<SQL
+		SELECT f.*, i.hasThumbnail, concat(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
+		FROM files f
+		LEFT JOIN fileImageData i ON i.fileId = f.fileId
+		WHERE f.assetId IS NULL AND f.assetTypeId = ? AND f.userId = ?
+	SQL, [$assetType, $userId]);
+}
+

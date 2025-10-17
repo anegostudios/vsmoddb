@@ -14,7 +14,7 @@ switch($urlparts[0]) {
 	case 'clear':
 		validateMethod('POST');
 		$ids = isset($_POST['ids']) && is_string($_POST['ids']) ? explode(',', $_POST['ids']) : ($_POST['ids'] ?? null);
-		$ids = filter_var($ids, FILTER_VALIDATE_INT, FILTER_FORCE_ARRAY);
+		$ids = forceArrayOfInts($ids, true);
 		if(empty($ids)) fail(400, ['reason' => 'No valid ids provided.']);
 		
 		$foldedIds = implode(',', $ids);
