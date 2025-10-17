@@ -149,7 +149,7 @@ CREATE TABLE IF NOT EXISTS `comments` (
   `created`             DATETIME  NOT NULL DEFAULT NOW(),
   `lastModified`        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`commentId`),
-  INDEX `assetid`(`assetId`),
+  INDEX `assetid`(`assetId`), -- :NoCommentAssetFK
   INDEX `created`(`created`), -- for the main page query that shows the latest 20 comments
   -- CONSTRAINT `FK_Comments_assetId` FOREIGN KEY (`assetId`) REFERENCES `assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE, -- TODO(Rennorb) @cleanup: For moderation reasons we allow comment asset references these to be dangling for now.
   CONSTRAINT `FK_comments_userId` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE,

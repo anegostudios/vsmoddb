@@ -214,8 +214,7 @@ function createEditor($elem, settings) {
 			this.id = "editor" + Math.floor(Math.random() * 10000);
 		}
 		settings.selector = "#" + this.id;
-		settings.auto_focus = this.id;
-		
+
 		tinyMCE.init(settings);
 	});
 }

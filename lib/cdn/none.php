@@ -64,8 +64,8 @@ function formatCdnUrl($file, $filenamePostfix = '') {
 
 	// Evil hackery to test for the case where we use this internally to feed get_file_contents, where we cannot just pass a url fragment.
 	$trace = debug_backtrace(0, 2);
-	$caller = $trace[1]['function'];
-	if($caller === 'cropLogoImageAndUploadToCDN' || $caller === 'migrateImageSizes') {
+	$caller = $trace[0]['file'];
+	if(endsWith($caller, 'edit-mod.php')) {
 		global $config;
 		return $config['basepath'].'files/'.substr($url, 8 /* /cdnfile */);
 	}

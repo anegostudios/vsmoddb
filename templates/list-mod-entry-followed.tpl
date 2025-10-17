@@ -1,6 +1,6 @@
 <div class="mod {$mod['statusCode']}{if $mod['hasLegacyLogo']} legacy{/if}">
 	<a href="{$mod['dbPath']}">
-		<img src="{empty($mod['logoCdnPath']) ? '/web/img/mod-default.png' : formatCdnUrlFromCdnPath($mod['logoCdnPath'])}" loading="lazy">
+		<img src="{empty($mod['logoCdnPath']) ? '/web/img/mod-default.png' : formatCdnUrlFromCdnPath($mod['logoCdnPath'])}" alt="Mod Thumbnail" loading="lazy">
 	</a>
 	
 	<div class="moddesc">
