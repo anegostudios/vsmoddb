@@ -32,7 +32,7 @@
 <h3>Accessibility Settings</h3>
 <p><small>Changes apply immediately and are saved per device.</small></p>
 <label for="ch-a-opaque"><label class="toggle" for="ch-a-opaque"><input id="ch-a-opaque" type="checkbox" autocomplete="off" /></label> <abbr title="Turns the semi-transparent backgrounds of mod-card descriptions fully opaque.">Opaque mod-card descriptions</abbr></label>
-<script>{
+<script nonce="{$cspNonce}" type="text/javascript">{
 	const cb = document.getElementById('ch-a-opaque');
 	try {
 		cb.checked = +window.localStorage.getItem('opaque-desc');
@@ -63,7 +63,7 @@
 	<span>You don't follow any mods</span>
 {/if}
 
-<style>
+<style nonce="{$cspNonce}">
 	#followed-mods-settings {
 		background-color: hsl(var(--c-accent) 86%);
 		padding: .25rem;
@@ -78,7 +78,7 @@
 </style>
 
 {capture name="footerjs"}
-	<script type="text/javascript">
+	<script nonce="{$cspNonce}" type="text/javascript">
 		const fms = document.getElementById('followed-mods-settings');
 		if(fms) fms.addEventListener('change', e => {
 			const trEl = e.target.parentElement.parentElement.parentElement;

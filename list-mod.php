@@ -64,6 +64,7 @@ unset($version);
 
 $tags = $con->getAll('SELECT tagId, `name`, `text` FROM tags ORDER BY `name`');
 
+cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/list/mod {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/");
 
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_MODS, null, true);
 $view->assign('selectedParams', $selectedParams, null, true);

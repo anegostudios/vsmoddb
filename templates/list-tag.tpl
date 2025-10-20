@@ -49,10 +49,10 @@
 
 {capture name="buttons"}
 	<a class="button large shine" href="/edit/tag">New Tag</a>
-	<button class="button large shine" onclick="addVersionPrompt()">Manually Add Version</button>
+	<button class="button large shine" onclick="addVersionPrompt()" nonce="{$cspNonce}">Manually Add Version</button>
 {/capture}
 
-<script type="text/javascript">
+<script nonce="{$cspNonce}" type="text/javascript">
 	function addVersionPrompt() {
 		let newVerStr = prompt('Specify the game version to add. The new version string must match our semver derivate\n (/^\\d+.\\d+.\\d+.(-(dev|pre|rc).\\d+)?$/).');
 		if(!newVerStr || !(newVerStr = newVerStr.trim())) return;

@@ -620,6 +620,14 @@ unset($file);
 	$mod['comments']      = 123456;
 }
 
+cspPushAllowedInlineHandlerHash('sha256-nTlTeikEEupAQmSPlHWFcoJvMdPCIBu+Zu+G64E7uC4='); // javascript:submitForm(0)
+cspPushAllowedInlineHandlerHash('sha256-iZTADKfoVhVNv/quyi56oSsO/O7oJoTdYUJQvZ4IfY0='); // lockModDlg(this)
+$fs = "{$_SERVER['HTTP_HOST']}/edit-deletefile {$_SERVER['HTTP_HOST']}/edit-uploadfile {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/";
+if(canModerate(null, $user) && $mod['modId']) {
+	$fs .= " {$_SERVER['HTTP_HOST']}/api/v2/mods/{$mod['modId']}/lock";
+}
+cspReplaceAllowedFetchSources($fs);
+cspAllowTinyMceFull();
 
 $screenshotsDisclaimer = '';
 //NOTE(Rennorb): Mobile doesn't really have working drag and drop, nor does it make sense on non-pointer devices (TVs or consoles).

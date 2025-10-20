@@ -95,7 +95,8 @@ $(document).ready(function () {
 		const $editor = $("textarea", $form);
 		createEditor($editor, tinymceSettingsCmt);
 
-		$("button[name='save']", $form).click(function() {
+		$("button[name='save']", $form).click(function(e) {
+			e.preventDefault();
 			var content = getEditorContents($editor);
 			//TODO(Rennorb): optimistic update
 

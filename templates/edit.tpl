@@ -40,7 +40,7 @@
 	{/if}
 {/capture}
 
-<script type="text/javascript">
+<script nonce="{$cspNonce}" type="text/javascript">
 
 	function submitForm(returntolist) {
 		$('form[name=form1]').trigger('reinitialize.areYouSure');

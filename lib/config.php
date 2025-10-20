@@ -20,6 +20,7 @@ if (strstr($_SERVER["SERVER_NAME"], "mods.vintagestory.stage")) {
 		$config["databaseuser"] = "vsmoddb";
 		$config["databasepassword"] = "vsmoddb";
 	}
+	$config['noncesalt'] = 'xzy';
 
 	if (!defined("DEBUG")) define("DEBUG", 1);
 	if (!defined("DEBUGUSER")) define("DEBUGUSER", 1);

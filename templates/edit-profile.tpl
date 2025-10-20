@@ -21,7 +21,7 @@
 </form>
 
 {capture name="footerjs"}
-	<script type="text/javascript">
+	<script nonce="{$cspNonce}" type="text/javascript">
 		$(document).ready(function() { createEditor($("textarea.editor"), tinymceSettingsCmt); });
 	</script>
 {/capture}

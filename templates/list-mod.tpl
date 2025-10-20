@@ -102,8 +102,8 @@
 		No mods found :(
 	{/if}
 
-	<script type="text/javascript" src="/web/js/user-search.js"></script>
-	<script type="text/javascript">
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/user-search.js"></script>
+	<script nonce="{$cspNonce}" type="text/javascript">
 		$("select").each(function() {
 			if ($(this).parents(".template").length == 0) {
 				var ds = $(this).attr("noSearch") == 'noSearch';

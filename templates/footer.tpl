@@ -7,23 +7,18 @@
 		</main>
 	</div>
 
-	<script type="text/javascript" src="/web/js/jquery.are-you-sure.js"></script>
-	<script type="text/javascript" src="/web/js/ays-beforeunload-shim.js"></script>
-	<script type="text/javascript" src="/web/js/jquery.cookie.js"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.are-you-sure.js"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/ays-beforeunload-shim.js"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.cookie.js"></script>
 
-	<script type="text/javascript" src="/web/js/wysiwyg.js?version=40"></script>
-	<script type="text/javascript" src="/web/js/tinymce/tinymce.min.js"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/wysiwyg.js?version=40"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/tinymce/tinymce.min.js"></script>
 
-	<script type="text/javascript" src="/web/js/jquery.filedrop.js?v=2"></script>
-	<script type="text/javascript" src="/web/js/datepicker.min.js"></script>
-	<script type="text/javascript" src="/web/js/i18n/datepicker.en.js"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.filedrop.js?v=2"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/datepicker.min.js"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/i18n/datepicker.en.js"></script>
 
-	<script type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
-
-	<link  href="https://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.css" rel="stylesheet">
-	<script src="/web/js/fotorama.js"></script>
-
-	<script type="text/javascript">
+	<script nonce="{$cspNonce}" type="text/javascript">
 		assetid = {$asset['assetId'] ?? 0};
 		assettypeid = {$asset['assetTypeId'] ?? 0};
 		actiontoken = "{$user['actionToken'] ?? ''}";

@@ -119,13 +119,14 @@
 {/capture}
 
 {capture name="footerjs"}
-	<script type="text/javascript">
+	<script nonce="{$cspNonce}" type="text/javascript">
 		$(document).ready(function() {
 			$('form[name=commentformtemplate]').areYouSure();
 		});
 		
 	</script>	
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=39" async></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=39" async></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 
 {include file="footer"}

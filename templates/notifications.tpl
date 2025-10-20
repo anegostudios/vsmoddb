@@ -19,7 +19,7 @@
 {/if}
 
 {capture name="footerjs"}
-	<script type="text/javascript">
+	<script nonce="{$cspNonce}" type="text/javascript">
 		const $list = $('#notifications-list');
 		const $clearSelected = $('#clear-selected');
 

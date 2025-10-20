@@ -113,7 +113,7 @@
 
 {capture name="footerjs"}
 {include file="edit-asset-files-template.tpl"}
-<script type="text/javascript">	
+<script nonce="{$cspNonce}" type="text/javascript">	
 	modtype='{$mod["type"]}';
 	assetid = {$release['assetId']};
 	assettypeid = 2;
@@ -134,8 +134,8 @@
 		$('form[name=commentformtemplate]').areYouSure();
 	});
 </script>
-<script type="text/javascript" src="/web/js/edit-asset.js?version=39" async></script>
-
+<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=39" async></script>
+<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 
 

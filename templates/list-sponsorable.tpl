@@ -35,7 +35,7 @@
 	{/if}
 </div>
 
-<style>
+<style nonce="{$cspNonce}">
 	#sponsorable-list details {
 		display: block;
 	}

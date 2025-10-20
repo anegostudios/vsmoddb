@@ -2,7 +2,12 @@
 
 if ($user['roleCode'] != 'admin') showErrorPage(HTTP_FORBIDDEN);
 
-$view->assign("columns", array(array("cssclassname" => "", "code" => "name", "title" => "Name"), array("cssclassname" => "", "code" => "color", "title" => "Color", "datatype" => "color")));
+cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/api/v2/game-versions {$_SERVER['HTTP_HOST']}/api/v2/game-versions/"); //NOTE(Rennorb): Yes. The CSP api genuinely requires both to be specified here.
+cspPushAllowedInlineHandlerHash('sha256-ACiiR9Pq4vOFtqhzTGFgHTXHnUnOEGCMCKPo/Hys5tE='); // addVersionPrompt()
+cspPushAllowedInlineHandlerHash('sha256-OV/BCQXzN5T2ARKxgGtnfxHIee+D1qxtNG9wGGJf0Iw='); // clickDelete(event)
+
+$view->assign("columns", array(array("cssclassname" => "", "code" => "name", "title" => "Name"), array("cssclassname" => "", "code" => "color", "title" => "Color", "datatype" => "colo
+r")));
 $view->assign("entrycode", "tag");
 $view->assign("entryplural", "Tags");
 $view->assign("entrysingular", "Tag");
