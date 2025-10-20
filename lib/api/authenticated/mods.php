@@ -33,7 +33,19 @@ switch($urlparts[1]) {
 				$commentHtml = trim(sanitizeHtml(file_get_contents('php://input')));
 				if(!$commentHtml)  fail(HTTP_BAD_REQUEST, ['reason' => 'Comment must not be empty.']);
 
-				$con->execute('INSERT INTO comments (assetId, userId, text) VALUES (?, ?, ?)', [$assetId, $user['userId'], $commentHtml]);
+				$con->beginTrans();
+
+				try {
+					$con->execute('INSERT INTO comments (assetId, userId, text) VALUES (?, ?, ?)', [$assetId, $user['userId'], $commentHtml]);
+				} catch(ADODB_Exception $ex) {
+					if($ex->getCode() === 1406) {
+						$sizeKb = floor(strlen($commentHtml) / 1024);
+						$reason = "Excessive size ({$sizeKb}KB).";
+						if(contains($commentHtml, 'src="data:image')) $reason .= " Directly pasted images must be rather small. If you need a large image upload it to an external site and link to that.";
+						fail(HTTP_BAD_REQUEST, ['reason' => $reason]);
+					}
+					else throw $ex;
+				}
 				$commentId = $con->insert_ID();
 				$con->execute('UPDATE mods SET comments = comments + 1 WHERE assetId = ?', [$assetId]);
 
@@ -56,14 +68,17 @@ switch($urlparts[1]) {
 					");
 				}
 
+				logAssetChanges(['Added a new comment.'], $assetId);
+
+				$con->completeTrans();
+
 				// Send notification about the new comment to the main mod author:
 				//TODO(Rennorb): Send notifications to all opt-in contributors, requires adding config option and table changes.
+				//NOTE(Rennorb): Not within the transaction. In case this fails for whatever reason we don't want to rewind the comment submission just because the notification didn't go.
 				if($currentUserId !== $creatorUserId) { // Don't send a notification to ourself if we are the one commenting.
 					// @security: $commentId and $creatorUserId are known to be integers.
 					$con->execute("INSERT INTO notifications (kind, recordId, userId) VALUES (".NOTIFICATION_NEW_COMMENT.", $commentId, $creatorUserId)");
 				}
-
-				logAssetChanges(['Added a new comment.'], $assetId);
 
 				header('Location: #cmt-'.$commentId, true, HTTP_CREATED);
 				exit(postprocessCommentHtml($commentHtml));
