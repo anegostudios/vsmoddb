@@ -235,8 +235,8 @@
 
 {capture name="footerjs"}
 	{include file="edit-asset-files-template.tpl"}
-	{if $canEditTeamMembers}<script type="text/javascript" src="/web/js/user-search.js"></script>{/if}
-	<script type="text/javascript">
+	{if $canEditTeamMembers}<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/user-search.js"></script>{/if}
+	<script nonce="{$cspNonce}" type="text/javascript">
 		{if $canEditTeamMembers}$(() => attachUserSearchHandler(document.getElementById('teammembers-box')));{/if}
 
 		const targetModId = {$asset['modId'] ?? 0};
@@ -347,7 +347,7 @@
 			removeOpt($embedLogoSelect, embedPreviewBoxEl);
 		}
 	</script>
-	<style>
+	<style nonce="{$cspNonce}">
 		#preview-box-embed>div {
 			background-color: var(--color-content-bg);
 			padding: .25em;
@@ -361,7 +361,8 @@
 		}
 	</style>
 
-	<script type="text/javascript" src="/web/js/edit-asset.js?version=38" async></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=38" async></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 
 {include file="footer"}

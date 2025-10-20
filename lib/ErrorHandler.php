@@ -125,6 +125,8 @@ class ErrorHandler {
 				$response_code = intval($code);
 				if($response_code < 100 || $response_code > 599) $response_code = 500;
 				http_response_code($response_code);
+
+				if(function_exists('_cspEmitHeader')) _cspEmitHeader();
 			}
 
 			?>
@@ -144,6 +146,7 @@ class ErrorHandler {
 			ob_end_flush();
 		}
 
+		$code = null;
 		if (empty($codename)) {
 			$code = $e->getCode();
 
@@ -158,6 +161,8 @@ class ErrorHandler {
 			$response_code = intval($code);
 			if($response_code < 100 || $response_code > 599) $response_code = 500;
 			http_response_code($response_code);
+
+			if(function_exists('_cspEmitHeader')) _cspEmitHeader();
 		}
 
 		?>

@@ -38,6 +38,8 @@ if($urlparts[0] === 'api') { // :ReservedUrlPrefixes
 	exit();
 }
 
+include("lib/csp.php");
+
 //TODO(Rennorb) @cleanup @perf: Move view initialization here, after api branch.
 $view->assign('headerHighlight', null, null, true);
 

@@ -597,4 +597,18 @@ class ModEditor extends AssetEditor
 
 		return $changes;
 	}
+
+	function display()
+	{
+		global $user;
+		cspPushAllowedInlineHandlerHash('sha256-nTlTeikEEupAQmSPlHWFcoJvMdPCIBu+Zu+G64E7uC4='); // javascript:submitForm(0)
+		cspPushAllowedInlineHandlerHash('sha256-iZTADKfoVhVNv/quyi56oSsO/O7oJoTdYUJQvZ4IfY0='); // lockModDlg(this)
+		$fs = "{$_SERVER['HTTP_HOST']}/edit-deletefile {$_SERVER['HTTP_HOST']}/edit-uploadfile {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/";
+		if(canModerate(null, $user) && $this->assetid) {
+			$fs .= " {$_SERVER['HTTP_HOST']}/api/v2/mods/{$this->asset['modId']}/lock";
+		}
+		cspReplaceAllowedFetchSources($fs);
+		cspAllowTinyMceFull();
+		parent::display();
+	}
 }

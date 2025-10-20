@@ -21,6 +21,8 @@ $followedMods = $con->getAll('
 ', [$user['userId']]);
 
 
+cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/api/v2/notifications/settings/followed-mods/");
+
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_CURRENT_USER, null, true);
 $view->assign('followedMods', $followedMods);
 $view->assign('timezones', array_keys($timezones));

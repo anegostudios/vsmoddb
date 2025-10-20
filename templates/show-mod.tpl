@@ -80,7 +80,7 @@
 
 	<div class="tab-container">
 		<div class="tab-content description">
-			<script>if(location.hash !== '#tab-files') document.getElementById('tab-description').checked = true;</script>
+			<script nonce="{$cspNonce}">if(location.hash !== '#tab-files') document.getElementById('tab-description').checked = true;</script>
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
 					<a class="button large shine strikethrough-when-banned" href="/edit/mod/?assetid={$asset['assetId']}">Edit</a>&nbsp;
@@ -167,7 +167,7 @@
 		</div>
 
 		<div class="tab-content files">
-			<script>if(location.hash === '#tab-files') document.getElementById('tab-files').checked = true;</script>
+			<script nonce="{$cspNonce}">if(location.hash === '#tab-files') document.getElementById('tab-files').checked = true;</script>
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
 					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modId']}">Add release</a>
@@ -228,7 +228,7 @@
 			</table>
 			</div>
 
-			<script type="text/javascript">
+			<script nonce="{$cspNonce}" type="text/javascript">
 			{
 				const table = document.getElementsByClassName('release-table')[0];
 				table.addEventListener('change', e => {
@@ -248,7 +248,7 @@
 {include file="comments"}
 
 {capture name="footerjs"}
-	<script type="text/javascript">
+	<script nonce="{$cspNonce}" type="text/javascript">
 		modid = {$asset['modId']};
 
 		$(document).ready(function() {
@@ -278,7 +278,10 @@
 			});
 		});
 	</script>
-	<script type="text/javascript" src="/web/js/comments.js?version=14" async></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/comments.js?version=14" async></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
+	<link nonce="{$cspNonce}" href="https://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.css" rel="stylesheet">
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/fotorama.js"></script>
 {/capture}
 
 {include file="footer"}

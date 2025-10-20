@@ -45,8 +45,8 @@
 </buttons>
 
 {capture name="footerjs"}
-<script type="text/javascript" src="/web/js/jQueryColorPicker.min.js"></script>
-<script type="text/javascript">
+<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jQueryColorPicker.min.js"></script>
+<script nonce="{$cspNonce}" type="text/javascript">
 
 	function submitForm(returntolist) {
 		$('form[name=form1]').trigger('reinitialize.areYouSure');

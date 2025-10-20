@@ -50,8 +50,11 @@ else if ($delete) {
 if ($tagId) {
 	$row = $con->getRow("SELECT *, LPAD(HEX(color), 8, '0') as color FROM tags WHERE tagId = ?", [$_REQUEST['tagid']]);
 } else {
-	$row = ['tagId' => 0, 'name' => '', 'text' => '', 'color' => ''];
+	$row = ['tagId' => 0, 'name' => '', 'text' => '', 'color' => '000000'];
 }
+
+cspPushAllowedInlineHandlerHash('sha256-nTlTeikEEupAQmSPlHWFcoJvMdPCIBu+Zu+G64E7uC4='); // javascript:submitForm(0)
+cspPushAllowedInlineHandlerHash('sha256-XKuSPEJjbu3T+mAY9wlP6dgYQ4xJL1rP4m3GrDwZ68c='); // javascript:submitForm(1)
 
 $view->assign('row', $row);
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_ADMIN_TOOLS, null, true);

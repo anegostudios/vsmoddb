@@ -66,6 +66,7 @@ class View {
 
 
 	function display($viewfilename) {
+		if(!headers_sent()) _cspEmitHeader();
 		$this->load($viewfilename);
 	}
 	

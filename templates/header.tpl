@@ -13,34 +13,34 @@
 	<meta name="msapplication-TileColor" content="#da532c">
 	<meta name="theme-color" content="#ffffff">
 
-	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+	<link nonce="{$cspNonce}" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" type="text/css">
 
-	<link href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
-	<link href="/web/css/dialog.css" rel="stylesheet" type="text/css">
-	<link href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">
-	<link href="/web/js/chosen/chosen.min.css" rel="stylesheet" type="text/css">
-	<link href="/web/css/datepicker.min.css" rel="stylesheet" type="text/css">
-	<link href="/web/js/tinymce/plugins/spoiler/css/spoiler.css?v=2" rel="stylesheet" type="text/css">
+	<link nonce="{$cspNonce}" href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
+	<link nonce="{$cspNonce}" href="/web/css/dialog.css" rel="stylesheet" type="text/css">
+	<link nonce="{$cspNonce}" href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">
+	<link nonce="{$cspNonce}" href="/web/js/chosen/chosen.min.css" rel="stylesheet" type="text/css">
+	<link nonce="{$cspNonce}" href="/web/css/datepicker.min.css" rel="stylesheet" type="text/css">
+	<link nonce="{$cspNonce}" href="/web/js/tinymce/plugins/spoiler/css/spoiler.css?v=2" rel="stylesheet" type="text/css">
 
-	<link href="/web/js/tinymce/skins/ui/oxide/skin.mobile.min.css" as="style">
-	<link href="/web/js/tinymce/skins/ui/oxide/content.mobile.min.css" as="style">
-	<link href="/web/js/tinymce/skins/ui/oxide/fonts/tinymce-mobile.woff?8x92w3" as="font">
+	<link nonce="{$cspNonce}" href="/web/js/tinymce/skins/ui/oxide/skin.mobile.min.css" as="style">
+	<link nonce="{$cspNonce}" href="/web/js/tinymce/skins/ui/oxide/content.mobile.min.css" as="style">
+	<link nonce="{$cspNonce}" href="/web/js/tinymce/skins/ui/oxide/fonts/tinymce-mobile.woff?8x92w3" as="font">
 
-	<link href="/web/js/tinymce/skins/ui/oxide/skin.min.css" as="style">
-	<link href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
-	<link href="/web/css/editor_content.css?ver=4" as="style">
+	<link nonce="{$cspNonce}" href="/web/js/tinymce/skins/ui/oxide/skin.min.css" as="style">
+	<link nonce="{$cspNonce}" href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
+	<link nonce="{$cspNonce}" href="/web/css/editor_content.css?ver=4" as="style">
 
-	<link href="/web/css/style.css?version=86" rel="stylesheet" type="text/css">
+	<link nonce="{$cspNonce}" href="/web/css/style.css?version=86" rel="stylesheet" type="text/css">
 
 	{if isset($assetserver) && startsWith($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
 
-	<script type="text/javascript" src="/web/js/jquery-1.11.1.min.js"></script>
-	<script type="text/javascript" src="/web/js/chosen/chosen.jquery.min.js?v=3"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery-1.11.1.min.js"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/chosen/chosen.jquery.min.js?v=3"></script>
 	{if isset($head)}{$head}{/if}
 </head>
 
 <body{if !empty($user) && $user['isBanned']} class="banned"{/if}>
-	<script>try\{if(+window.localStorage.getItem('opaque-desc'))document.body.classList.add('opaque-desc')}catch\{}</script>
+	<script nonce="{$cspNonce}">try\{if(+window.localStorage.getItem('opaque-desc'))document.body.classList.add('opaque-desc')}catch\{}</script>
 	<a name="top"></a>
 	
 	<div class="content">

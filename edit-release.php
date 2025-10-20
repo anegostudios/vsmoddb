@@ -304,6 +304,12 @@ else {
 
 $maxFileUploadSize = min($maxFileUploadSize, UPLOAD_LIMITS[ASSETTYPE_RELEASE]['individualSize']);
 
+cspAllowTinyMceFull();
+cspPushAllowedInlineHandlerHash('sha256-nTlTeikEEupAQmSPlHWFcoJvMdPCIBu+Zu+G64E7uC4='); // javascript:submitForm(0)
+cspPushAllowedInlineHandlerHash('sha256-XKuSPEJjbu3T+mAY9wlP6dgYQ4xJL1rP4m3GrDwZ68c='); // javascript:submitForm(1)
+cspPushAllowedInlineHandlerHash('sha256-HAn3sRp/DKqkhccjWmi+mt2NzQCTHLzeSlhZ0T2cDuY='); // javascript:submitDelete()
+cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/edit-deletefile {$_SERVER['HTTP_HOST']}/edit-uploadfile");
+
 $view->assign('allGameVersions', $allGameVersions);
 
 $view->assign('mod', $targetMod);

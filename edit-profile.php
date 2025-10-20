@@ -23,6 +23,8 @@ if (!empty($_POST['save'])) {
 	addMessage(MSG_CLASS_ERROR, 'Internal Server Error.');
 }
 
+cspAllowTinyMceComment();
+
 if($shownUser['userId'] == $user['userId']) $view->assign('headerHighlight', HEADER_HIGHLIGHT_CURRENT_USER, null, true);
 $view->assign('userHash', $userHash);
 $view->assign('bio', $shownUser['bio']);
