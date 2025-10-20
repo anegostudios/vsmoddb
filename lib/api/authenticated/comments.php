@@ -24,7 +24,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 		$commentHtml = trim(sanitizeHtml(file_get_contents('php://input')));
 		if(!$commentHtml)  fail(HTTP_BAD_REQUEST, ['reason' => 'Comment must not be empty.']);
 
-		$con->beginTrans();
+		$con->startTrans();
 
 		try {
 			if($wasModAction) {

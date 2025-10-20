@@ -37,7 +37,7 @@ switch($urlparts[0]) {
 
 		// Do actual work:
 
-		$con->beginTrans();
+		$con->startTrans();
 		$exists = $con->getOne('SELECT 1 FROM gameVersions WHERE version = ?', [$newVersion]);
 		if($exists) {
 			echo 'Version already exists.';
@@ -59,9 +59,7 @@ switch($urlparts[0]) {
 
 			echo 'Version inserted.';
 		}
-		//NOTE(Rennorb): Cannot use smart transactions here for whatever reason, 
-		// it always rolls back even though no individual statement fails.
-		$con->commitTrans();
+		$con->completeTrans();
 
 		exit();
 
