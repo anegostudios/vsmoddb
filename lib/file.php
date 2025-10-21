@@ -66,6 +66,7 @@ function getHoveringFilesOfUser($userId, $assetType)
 		FROM files f
 		LEFT JOIN fileImageData i ON i.fileId = f.fileId
 		WHERE f.assetId IS NULL AND f.assetTypeId = ? AND f.userId = ?
+		ORDER BY f.`order`
 	SQL, [$assetType, $userId]);
 }
 

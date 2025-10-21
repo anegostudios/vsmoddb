@@ -37,7 +37,7 @@ $teamMembers = $con->getAll(<<<SQL
 SQL, [$asset['modId']]);
 $view->assign('teamMembers', $teamMembers);
 
-$files = $con->getAll('SELECT * FROM files WHERE assetId = ? AND fileId NOT IN (?, ?)', 
+$files = $con->getAll('SELECT * FROM files WHERE assetId = ? AND fileId NOT IN (?, ?) ORDER BY `order`', 
 	[$assetId, $asset['cardLogoFileId'] ?? 0, $asset['embedLogoFileId'] ?? 0]);  /* sql cant compare against null */
 
 //NOTE(Rennorb): There was a time where we rescaled images for logos. We no longer do that, but in ~140 cases there are still two images for the logo: the actual logo image, and the original one that was uploaded.

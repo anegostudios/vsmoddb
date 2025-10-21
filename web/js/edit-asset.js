@@ -132,7 +132,7 @@ $(document).ready(function () {
 				$("img", $elem).attr("src", response.thumbnailfilepath).show();
 			}
 
-			$("input", $elem).val(response.fileid);
+			$("input", $elem).attr('name', 'fileIds[]').val(response.fileid);
 			$(".uploadprogress", $elem).hide();
 			$elem.append("<a href=\"#\" class=\"delete\" data-fileid=\"" + response.fileid + "\"></a>");
 			$(".uploaddate", $elem).text(response.uploaddate);
@@ -173,7 +173,32 @@ $(document).ready(function () {
 		}
 	});
 
+	for(const container of document.getElementsByClassName('reorderable'))
+		makeReorderable(container)
 });
+
+function makeReorderable(containerEl)
+{
+	let movingEl;
+	const dragStart = (e) => {
+		e.dataTransfer.effectAllowed = 'move';
+		e.dataTransfer.setData('text/plain', null);
+		movingEl = e.currentTarget;
+	};
+	const dragOver = (e) => {
+		if(!movingEl || e.currentTarget.parentNode !== movingEl.parentNode) return;
+		const p = movingEl.parentNode;
+		const i = Array.prototype.indexOf.call(p.children, e.currentTarget);
+		const j = Array.prototype.indexOf.call(p.children, movingEl);
+		p.insertBefore(movingEl, i < j ? e.currentTarget : e.currentTarget.nextSibling);
+	};
+	
+	for(const item of containerEl.children) {
+		if(item.classList.contains('immovable')) return;
+		item.addEventListener('dragover', dragOver);
+		item.addEventListener('dragstart', dragStart);
+	}
+}
 
 
 function submitForm(returntolist) {

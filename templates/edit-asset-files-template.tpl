@@ -1,5 +1,5 @@
 <div class="file template">
-	<input type="hidden" name="fileids[]" value="" />
+	<input type="hidden" />
 	<a href="#">
 		<div class="fi">
 			<div class="fi-content"></div>

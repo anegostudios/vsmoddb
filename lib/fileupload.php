@@ -71,7 +71,7 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 	$cdnBasePath = generateCdnFileBasenameWithPath($user['userId'], $localPath, $filebasename);
 	$cdnFilePath = "{$cdnBasePath}.{$ext}";
 
-	$data = array("name" => $file['name'], "cdnPath" => $cdnFilePath, "assetTypeId" => $assetTypeId, "userId" => $user['userId']);
+	$data = array("name" => $file['name'], "cdnPath" => $cdnFilePath, "assetTypeId" => $assetTypeId, "userId" => $user['userId'], "order" => $quantityfiles);
 	if($parentAssetId) $data["assetId"] = $parentAssetId;
 
 	$acceptedImage = false;
@@ -99,9 +99,9 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 		return array("status" => "error", "errormessage" => 'CDN Error: '.$uploadresult['error']);
 	}
 
-	$foldedKeys = implode(', ', array_keys($data));
+	$foldedKeys = implode('`, `', array_keys($data));
 	$placeholders = substr(str_repeat(',?', count($data)), 1);
-	$con->execute("INSERT INTO files ($foldedKeys) VALUES ($placeholders)", array_values($data));
+	$con->execute("INSERT INTO files (`$foldedKeys`) VALUES ($placeholders)", array_values($data));
 	$fileId = $con->Insert_ID();
 	if($acceptedImage) {
 		// :BrokenSqlPointType

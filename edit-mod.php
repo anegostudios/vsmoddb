@@ -52,11 +52,12 @@ if(isset($_GET['assetid'])) {
 		$currentlyBeingTransferredTo = modCurrentlyBeingTransferredTo($mod['modId']);
 	}
 
-	$files = $con->getAll(<<<SQL
+	$filesInOrder = $con->getAll(<<<SQL
 		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
 		FROM files f
 		LEFT JOIN fileImageData i ON i.fileId = f.fileId
 		WHERE assetId = ?
+		ORDER BY `order` ASC
 	SQL, [$mod['assetId']]);
 }
 else { // New mod
@@ -85,7 +86,7 @@ else { // New mod
 	];
 	$canEditAsOwner = true;
 	$currentlyBeingTransferredTo = [];
-	$files = getHoveringFilesOfUser($user['userId'], ASSETTYPE_MOD);
+	$filesInOrder = getHoveringFilesOfUser($user['userId'], ASSETTYPE_MOD);
 }
 
 $stati = [
@@ -259,6 +260,34 @@ else if(!empty($_POST['save'])) {
 		$newEditorMemberHashes = [];
 	}
 
+	$fileOrder = getInputArrayOfInts(INPUT_POST, 'fileIds');
+	if($fileOrder) do {
+		if(count($fileOrder) !== count($filesInOrder)) {
+			addMessage(MSG_CLASS_ERROR, "Error trying to set image order, mismatch between client and server.");
+			break;
+		}
+
+		// Validate that the image ids supplied for ordering actually belong to this mod:
+		$filtered = [];
+		foreach($fileOrder as $i => $fileId) {
+			foreach($filesInOrder as &$file) {
+				if($file['fileId'] == $fileId) {
+					$file['order'] = intval($i);
+					$filtered[] = $fileId;
+					break;
+				}
+			}
+			unset($file);
+		}
+
+		if(count($filtered) !== count($fileOrder)) {
+			addMessage(MSG_CLASS_ERROR, "Error trying to set image order, mismatch between client and server.");
+			break;
+		}
+
+		usort($filesInOrder, fn($f1, $f2) => $f1['order'] - $f2['order']);
+	} while(0);
+
 
 	// Images:
 	$mod['cardLogoFileId']  = intval($_POST['cardLogoFileId'])  ?: null;
@@ -269,7 +298,7 @@ else if(!empty($_POST['save'])) {
 	$foundDbImage = !$mod['cardLogoFileId'];
 	$foundExternalImage = !$mod['embedLogoFileId'];
 	$dbImage = [];
-	foreach($files as $file) {
+	foreach($filesInOrder as $file) {
 		if($file['fileId'] === $mod['cardLogoFileId']) {
 			$foundDbImage = true;
 
@@ -382,8 +411,8 @@ else if(!empty($_POST['save'])) {
 		$con->startTrans();
 
 		$con->execute(
-			'INSERT INTO files (assetId, assetTypeId, userId, name, cdnPath) VALUES (?, ?, ?, ?, ?)',
-			[$dbImage['assetId'], ASSETTYPE_MOD, $dbImage['userId'], $croppedFilename, $cdnPath]
+			'INSERT INTO files (assetId, assetTypeId, userId, name, cdnPath, `order`) VALUES (?, ?, ?, ?, ?, ?)',
+			[$dbImage['assetId'], ASSETTYPE_MOD, $dbImage['userId'], $croppedFilename, $cdnPath, count($filesInOrder)]
 		);
 		$fileId = $con->Insert_ID();
 		$con->execute('INSERT INTO fileImageData (fileId, hasThumbnail, size) VALUES (?, 1, POINT(480, 320))', [$fileId]);
@@ -443,14 +472,14 @@ if(isset($_POST['revokenewownership'])) {
 else if(!empty($_POST['save'])) {
 	if(count($messages /* global */) === $oldMsgCount) { // no errors occurred
 		if($mod['modId']) {
-			updateMod($oldModData, $mod, $newMembers, $newEditorMemberHashes);
+			updateMod($oldModData, $mod, $filesInOrder, $newMembers, $newEditorMemberHashes);
 
 			setcookie('saved', $saveCookie);
 			forceRedirectAfterPOST();
 			exit();
 		}
 		else {
-			$assetId = createNewMod($mod, $files, $newMembers, $newEditorMemberHashes);
+			$assetId = createNewMod($mod, $filesInOrder, $newMembers, $newEditorMemberHashes);
 
 			setcookie('saved', $saveCookie);
 			forceRedirect('/edit/mod/?assetid='.$assetId);
@@ -537,7 +566,7 @@ if($mod['statusId'] == STATUS_LOCKED) {
 	if($nextStepHint) addMessage(MSG_CLASS_OK.' permanent', $nextStepHint);
 }
 
-foreach ($files as &$file) {
+foreach ($filesInOrder as &$file) {
 	$file['created'] = date('M jS Y, H:i:s', strtotime($file['created']));
 
 	$file['ext'] = pathinfo($file['name'], PATHINFO_EXTENSION);
@@ -555,7 +584,7 @@ unset($file);
 	// This should be a relatively sparse process, and therefore not overwhelm the server.
 	// In the future we can run a derivate of this function to clean up any remaining files, potentially using the still existing backup files on the drive from before we used a CDN.
 
-	foreach($files as &$file) {
+	foreach($filesInOrder as &$file) {
 		if($file['imageSize'] === null) {
 			$localpath = tempnam(sys_get_temp_dir(), '');
 			$originalfile = @file_get_contents(formatCdnUrl($file));
@@ -603,6 +632,6 @@ $view->assign('mod', $mod);
 $view->assign('asset', ['assetId' => $mod['assetId'], 'assetTypeId' => ASSETTYPE_MOD], null, true); //TODO(Rennorb) @cleanup: only here for the footer js / file upload code
 $view->assign('teamMembers', $teamMembers);
 if($canEditAsOwner && $currentlyBeingTransferredTo)  $view->assign("ownershipTransferUser", $currentlyBeingTransferredTo['name']);
-$view->assign('files', $files);
+$view->assign('files', $filesInOrder);
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_SUBMIT_MOD, null, true);
 $view->display('edit-mod');

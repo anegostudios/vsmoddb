@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS `files` (
   `downloads`    INT          NOT NULL DEFAULT 0,
   `name`         VARCHAR(255)     NULL,
   `cdnPath`      VARCHAR(255)     NULL,
+  `order`        TINYINT      NOT NULL,
   `created`      DATETIME     NOT NULL DEFAULT NOW(),
   `lastModified` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`fileId`),

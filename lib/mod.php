@@ -9,7 +9,7 @@ const RESERVED_URL_PREFIXES = ['api', 'home', 'terms', 'accountsettings', 'login
  * @param array<string, 1> $newEditorMemberHashes
  * @return int createdAssetId or zero on failure
  */
-function createNewMod($mod, $files, $newMembers, $newEditorMemberHashes)
+function createNewMod($mod, $filesInOrder, $newMembers, $newEditorMemberHashes)
 {
 	global $con, $user;
 
@@ -35,12 +35,10 @@ function createNewMod($mod, $files, $newMembers, $newEditorMemberHashes)
 	$modId = intval($con->Insert_ID());
 	logAssetChanges(["Created mod '{$mod['name']}'"], $assetId);
 
-	if(!empty($files)) {
-		// Attach hovering files to this mod. Needs to be done for new mods, as it cannot happen during upload because at that point the asset doesn't yet exist to have files attached to it.
-		// Not that the attaching should happen during upload in the first place...
-		$foldedIds = implode(',', array_map(fn($f) => intval($f['fileId']), $files));
-		// @security: $foledIds is numeric, therefore sql inert. $assetId is obtained from the database river and numeric, therefore sql inert.
-		$con->execute("UPDATE files SET assetId = $assetId WHERE fileId in ($foldedIds)");
+	// Attach hovering files to this mod. Needs to be done for new mods, as it cannot happen during upload because at that point the asset doesn't yet exist to have files attached to it.
+	// Not that the attaching should happen during upload in the first place...
+	foreach($filesInOrder as $i => $file) {
+		$con->execute("UPDATE files SET assetId = ?, `order` = ? WHERE fileId = ?", [$assetId, $i, $file['fielId']]);
 	}
 
 	$tagsChangelog = updateModTags($modId, [], array_keys($mod['tags'])); // @perf: This could use a simpler path
@@ -57,7 +55,7 @@ function createNewMod($mod, $files, $newMembers, $newEditorMemberHashes)
  * @param array<string, int> $newMembers
  * @param array<string, 1> $newEditorMemberHashes
  */
-function updateMod($oldModData, $mod, $newMembers, $newEditorMemberHashes)
+function updateMod($oldModData, $mod, $filesInOrder, $newMembers, $newEditorMemberHashes)
 {
 	global $con, $user;
 
@@ -106,6 +104,10 @@ function updateMod($oldModData, $mod, $newMembers, $newEditorMemberHashes)
 
 	$tagsChangelog = updateModTags($mod['modId'], $oldModData['tags'], array_keys($mod['tags']));
 	logAssetChanges($tagsChangelog, $mod['assetId']);
+
+	foreach($filesInOrder as $i => $file) {
+		$con->execute("UPDATE files SET `order` = ? WHERE fileId = ?", [$i, $file['fileId']]);
+	}
 	
 	if(canEditAsset($oldModData, $user, false)) {
 		updateModTeamMembers($mod, $newMembers, $newEditorMemberHashes);
@@ -247,7 +249,7 @@ function deleteMod($mod)
 	$con->startTrans();
 
 	// Remove any attached files:
-	$files = $con->getAll(<<<SQL
+	$filesInOrder = $con->getAll(<<<SQL
 		SELECT f.fileId, f.name, f.assetId, f.cdnPath, d.hasThumbnail, f.assetTypeId
 		FROM files f
 		LEFT JOIN fileImageData d ON d.fileId = f.fileId
@@ -258,7 +260,7 @@ function deleteMod($mod)
 		LEFT JOIN fileImageData d ON d.fileId = f.fileId
 		JOIN modReleases r ON r.assetId = f.assetId AND r.modId = $modId
 	SQL);
-	tryDeleteFiles($files);
+	tryDeleteFiles($filesInOrder);
 
 	$con->execute("DELETE FROM modCompatibleGameVersionsCached WHERE modId = $modId");
 	$con->execute("DELETE FROM modCompatibleMajorGameVersionsCached WHERE modId = $modId");
