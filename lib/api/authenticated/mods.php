@@ -33,20 +33,19 @@ switch($urlparts[1]) {
 				$commentHtml = trim(sanitizeHtml(file_get_contents('php://input')));
 				if(!$commentHtml)  fail(HTTP_BAD_REQUEST, ['reason' => 'Comment must not be empty.']);
 
+				$textLen = strlen($commentHtml);
+				if($textLen > 65535) { // TEXT column max length in comments.text
+					$sizeKb = floor($textLen / 1024);
+					$reason = "Excessive size ({$sizeKb}KB).";
+					if(contains($commentHtml, 'src="data:image')) $reason .= " You cannot paste large images directly. If you need a large image, upload it to an external site and link to that.";
+					fail(HTTP_BAD_REQUEST, ['reason' => $reason]);
+				}
+
 				$con->startTrans();
 
-				try {
-					$con->execute('INSERT INTO comments (assetId, userId, text) VALUES (?, ?, ?)', [$assetId, $user['userId'], $commentHtml]);
-				} catch(ADODB_Exception $ex) {
-					if($ex->getCode() === 1406) {
-						$sizeKb = floor(strlen($commentHtml) / 1024);
-						$reason = "Excessive size ({$sizeKb}KB).";
-						if(contains($commentHtml, 'src="data:image')) $reason .= " Directly pasted images must be rather small. If you need a large image upload it to an external site and link to that.";
-						fail(HTTP_BAD_REQUEST, ['reason' => $reason]);
-					}
-					else throw $ex;
-				}
+				$con->execute('INSERT INTO comments (assetId, userId, text) VALUES (?, ?, ?)', [$assetId, $user['userId'], $commentHtml]);
 				$commentId = $con->insert_ID();
+
 				$con->execute('UPDATE mods SET comments = comments + 1 WHERE assetId = ?', [$assetId]);
 
 				$creatorUserId = intval($modData['createdByUserId']);

@@ -93,7 +93,7 @@ $stati = [
 	STATUS_RELEASED  => 'Published',
 	//STATUS_LOCKED    => 'Locked',
 ];
-if(canModerate(null, $user) || $mod['statusId'] == STATUS_LOCKED) $stati[STATUS_LOCKED] = 'Locked';
+if($mod['statusId'] == STATUS_LOCKED) $stati[STATUS_LOCKED] = 'Locked';
 
 $modTypes = [
 	'mod'          => 'Game mod',
@@ -195,33 +195,41 @@ else if(!empty($_POST['save'])) {
 		}
 	}
 
-	$mod['text'] = sanitizeHtml($_POST['text']); // TODO(Rennorb) @cleanup: strip whitespace ?
 	//TODO(Rennorb) @ux: Feedback
+	$mod['text'] = trim(sanitizeHtml($_POST['text']));
+
+	$textLen = strlen($mod['text']);
+	if($textLen > 65535) { // TEXT column max length in assets.text
+		$sizeKb = floor($textLen / 1024);
+		$reason = "Excessive size ({$sizeKb}KB).";
+		if(contains($mod['text'], 'src="data:image')) $reason .= " You cannot paste large images directly. If you need a large image, upload it to an external site and link to that.";
+		addMessage(MSG_CLASS_ERROR, $reason);
+	}
 
 	// We don't want to revert the urls here, that would be rather inconvenient.
 	$url = $mod['homepageUrl'] = trim($_POST['homepageUrl']);
 	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
-		addMessage(MSG_CLASS_WARN, 'Hompage Url is not valid.');
+		addMessage(MSG_CLASS_ERROR, 'Hompage Url is not valid.');
 
 	$url = $mod['sourceCodeUrl'] = trim($_POST['sourceCodeUrl']);
 	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
-		addMessage(MSG_CLASS_WARN, 'Source Code Url is not valid.');
+		addMessage(MSG_CLASS_ERROR, 'Source Code Url is not valid.');
 
 	$url = $mod['trailerVideoUrl'] = trim($_POST['trailerVideoUrl']);
 	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
-		addMessage(MSG_CLASS_WARN, 'Trailer Video Url is not valid.');
+		addMessage(MSG_CLASS_ERROR, 'Trailer Video Url is not valid.');
 
 	$url = $mod['issueTrackerUrl'] = trim($_POST['issueTrackerUrl']);
 	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
-		addMessage(MSG_CLASS_WARN, 'Issue Tracker Url is not valid.');
+		addMessage(MSG_CLASS_ERROR, 'Issue Tracker Url is not valid.');
 
 	$url = $mod['wikiUrl'] = trim($_POST['wikiUrl']);
 	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
-		addMessage(MSG_CLASS_WARN, 'Wiki Url is not valid.');
+		addMessage(MSG_CLASS_ERROR, 'Wiki Url is not valid.');
 
 	$url = $mod['donateUrl'] = trim($_POST['donateUrl']);
 	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
-		addMessage(MSG_CLASS_WARN, 'Donate Url is not valid.');
+		addMessage(MSG_CLASS_ERROR, 'Donate Url is not valid.');
 
 
 	// Team Members:

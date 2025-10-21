@@ -24,30 +24,28 @@ switch($_SERVER['REQUEST_METHOD']) {
 		$commentHtml = trim(sanitizeHtml(file_get_contents('php://input')));
 		if(!$commentHtml)  fail(HTTP_BAD_REQUEST, ['reason' => 'Comment must not be empty.']);
 
+		$textLen = strlen($commentHtml);
+		if($textLen > 65535) { // TEXT column max length in comments.text
+			$sizeKb = floor($textLen / 1024);
+			$reason = "Excessive size ({$sizeKb}KB).";
+			if(contains($commentHtml, 'src="data:image')) $reason .= " You cannot paste large images directly. If you need a large image, upload it to an external site and link to that.";
+			fail(HTTP_BAD_REQUEST, ['reason' => $reason]);
+		}
+
 		$con->startTrans();
 
-		try {
-			if($wasModAction) {
-				$changelog = "Modified someone elses comment ({$comment['text']}) => ($commentHtml)";
+		if($wasModAction) {
+			$changelog = "Modified someone elses comment ({$comment['text']}) => ($commentHtml)";
 
-				//TODO(Rennorb): Diff the strings and add the diff to the log.
-				$lastModAction = logModeratorAction($comment['userId'], $user['userId'], MODACTION_KIND_EDIT, $commentId, SQL_DATE_FOREVER, null);
+			//TODO(Rennorb): Diff the strings and add the diff to the log.
+			$lastModAction = logModeratorAction($comment['userId'], $user['userId'], MODACTION_KIND_EDIT, $commentId, SQL_DATE_FOREVER, null);
 
-				$con->execute('UPDATE comments SET text = ?, lastModaction = ?, contentLastModified = NOW() WHERE commentId = ?', [$commentHtml, $lastModAction, $commentId]);
-			}
-			else {
-				$changelog = "Modified their comment ({$comment['text']}) => ($commentHtml).";
+			$con->execute('UPDATE comments SET text = ?, lastModaction = ?, contentLastModified = NOW() WHERE commentId = ?', [$commentHtml, $lastModAction, $commentId]);
+		}
+		else {
+			$changelog = "Modified their comment ({$comment['text']}) => ($commentHtml).";
 
-				$con->execute('UPDATE comments SET text = ?, contentLastModified = NOW() WHERE commentId = ?', [$commentHtml, $commentId]);
-			}
-		} catch(ADODB_Exception $ex) {
-			if($ex->getCode() === 1406) {
-				$sizeKb = floor(strlen($commentHtml) / 1024);
-				$reason = "Excessive size ({$sizeKb}KB).";
-				if(contains($commentHtml, 'src="data:image')) $reason .= " Directly pasted images must be rather small. If you need a large image upload it to an external site and link to that.";
-				fail(HTTP_BAD_REQUEST, ['reason' => $reason]);
-			}
-			else throw $ex;
+			$con->execute('UPDATE comments SET text = ?, contentLastModified = NOW() WHERE commentId = ?', [$commentHtml, $commentId]);
 		}
 
 		logAssetChanges([$changelog], $comment['assetId']);
