@@ -184,10 +184,11 @@ else if(!empty($_POST['save'])) {
 		$mod['urlAlias'] = substr($mod['urlAlias'], 0, 45);
 		$wasChanged = true;
 	}
+	if($mod['urlAlias'] === '') $mod['urlAlias'] = null;
 	if(!$wasChanged && in_array($mod['urlAlias'], RESERVED_URL_PREFIXES)) {
 		addMessage(MSG_CLASS_ERROR, 'This url alias is reserved word. Please choose another.');
 	}
-	else if(!$wasChanged) {
+	else if(!$wasChanged && $mod['urlAlias']) {
 		$collidingMod = $con->getOne('SELECT urlAlias FROM mods WHERE urlAlias = ? and modId != ?', [$mod['urlAlias'], $mod['modId']]);
 		if($collidingMod) {
 			// @security: urlAlias must only contain alphanumeric characters, so its safe to output.

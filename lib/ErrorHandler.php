@@ -144,6 +144,7 @@ class ErrorHandler {
 			ob_end_flush();
 		}
 
+		$code = 500;
 		if (empty($codename)) {
 			$code = $e->getCode();
 
