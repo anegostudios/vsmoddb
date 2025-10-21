@@ -70,7 +70,8 @@ switch($urlparts[1]) {
 
 				logAssetChanges(['Added a new comment.'], $assetId);
 
-				$con->completeTrans();
+				$ok = $con->completeTrans();
+				if(!$ok)  fail(HTTP_INTERNAL_ERROR, ['reason' => 'Database error.']);
 
 				// Send notification about the new comment to the main mod author:
 				//TODO(Rennorb): Send notifications to all opt-in contributors, requires adding config option and table changes.
