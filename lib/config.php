@@ -3,8 +3,6 @@ global $config;
 
 $config["authserver"] = "auth.vintagestory.at";
 
-define("READONLY", false);
-
 // For local development purposes create lib/config.dev.php and put your config in there. That file is automatically ignored by version control.
 // Have a look at lib/cdn/bunny.php for relevant CDN config options.
 
@@ -45,3 +43,5 @@ if (strstr($_SERVER["SERVER_NAME"], "mods.vintagestory.stage")) {
 	if (!defined("MOD_SEARCH_INITIAL_RESULTS")) define("MOD_SEARCH_INITIAL_RESULTS", 200);
 	if (!defined("MOD_SEARCH_PAGE_SIZE")) define("MOD_SEARCH_PAGE_SIZE", 200);
 }
+
+if(!defined("READONLY")) define("READONLY", false);
