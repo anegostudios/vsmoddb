@@ -1,4 +1,5 @@
 <?php
+if(READONLY) showReadonlyPage();
 
 $userToken = $urlparts[2] ?? null;
 if(empty($userToken)) showErrorPage(HTTP_BAD_REQUEST, 'Missing usertoken.');

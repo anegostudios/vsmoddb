@@ -35,6 +35,18 @@ function validateContentType($allowedType)
 	}
 }
 
+if(READONLY) {
+	switch($_SERVER['REQUEST_METHOD']) {
+		case 'GET': case 'HEAD': case 'OPTIONS': /* ok */
+			break;
+
+		default:
+			header('Retry-After: 1800' /* 30min */, true, HTTP_SERVICE_UNAVAILABLE);
+			header('Content-Type: application/json');
+			exit('{"reason": "We are currently in readonly mode."}');
+	}
+}
+
 if (empty($urlparts)) {
 	fail(HTTP_NOT_FOUND);
 }

@@ -1,4 +1,5 @@
 <?php
+if(READONLY) showReadonlyPage();
 
 include_once $config['basepath'].'lib/mod.php';
 

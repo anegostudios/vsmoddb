@@ -1,4 +1,6 @@
 <?php
+if(READONLY) showReadonlyPage();
+
 if (empty($user)) {
 	header('Location: /login');
 	exit();

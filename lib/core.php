@@ -881,6 +881,21 @@ function showErrorPage($errorCode, $reason = '', $goBugRennorb = null, $rawReaso
 	exit();
 }
 
+/** Terminates execution. */
+function showReadonlyPage()
+{
+	global $view;
+
+	header('Retry-After: 1800', true, HTTP_SERVICE_UNAVAILABLE); // 30 min
+
+	$view->assign('headerHighlight', null, null, true);
+	$view->assign('goBugRennorb', false, null, true);
+	$view->assign('statusMessage', "Service Unavailable", null, true);
+	$view->assign('reason', "We are currently in readonly mode.", null, true);
+	$view->display('error');
+	exit();
+}
+
 
 const FOLLOW_FLAG_CREATE_NOTIFICATIONS = 1 << 0;
 //const FOLLOW_FLAG_SEND_MAIL          = 1 << 1; // @unused, for later mail sending feature

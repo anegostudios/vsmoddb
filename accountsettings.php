@@ -1,4 +1,6 @@
 <?php
+if (READONLY)  showReadonlyPage();
+
 if (empty($user)) showErrorPage(HTTP_UNAUTHORIZED);
 
 if (!empty($_POST['save'])) {

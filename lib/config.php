@@ -3,6 +3,8 @@ global $config;
 
 $config["authserver"] = "auth.vintagestory.at";
 
+define("READONLY", false);
+
 // For local development purposes create lib/config.dev.php and put your config in there. That file is automatically ignored by version control.
 // Have a look at lib/cdn/bunny.php for relevant CDN config options.
 

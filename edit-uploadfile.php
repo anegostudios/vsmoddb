@@ -1,4 +1,9 @@
 <?php
+if (READONLY) {
+	http_response_code(HTTP_SERVICE_UNAVAILABLE);
+	exit('{"status": "error", "errormessage": "We are currently in readonly mode."}');
+}
+
 if (empty($user)) {
 	header('Location: /login');
 	exit();

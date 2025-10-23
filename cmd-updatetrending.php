@@ -8,6 +8,10 @@ $_SERVER["REQUEST_URI"] = "";
 define("DEBUG", 1);
 include("lib/config.php");
 include("lib/core.php");
+if(READONLY) {
+	http_response_code(HTTP_SERVICE_UNAVAILABLE);
+	exit();
+}
 
 $ok = $con->execute(<<<SQL
 	UPDATE mods m

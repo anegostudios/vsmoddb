@@ -289,6 +289,8 @@ function processTeamInvitation($asset, $user)
 
 	if (!isset($_GET['acceptteaminvite'])) return;
 
+	if(READONLY) showReadonlyPage();
+
 	switch ($_GET['acceptteaminvite']) {
 		case 1:
 			$canEdit = (intval($invite['recordId']) & (1 << 30)) ? 1 : 0; // :InviteEditBit
@@ -326,6 +328,8 @@ function processOwnershipTransfer($asset, $user)
 
 
 	if(!isset($_GET['acceptownershiptransfer'])) return;
+
+	if(READONLY) showReadonlyPage();
 
 	switch ($_GET['acceptownershiptransfer']) {
 		case 1:

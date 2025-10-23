@@ -9,24 +9,26 @@ if($fileId === 0) showErrorPage(HTTP_BAD_REQUEST, 'Missing fileid.');
 $file = $con->getRow('SELECT * FROM files WHERE fileId = ?', [$fileId]);
 if (!$file) showErrorPage(HTTP_NOT_FOUND, 'File not found.');
 
-// do download tracking
-$identifier = [$fileId, $_SERVER['REMOTE_ADDR']];
+if(!READONLY) {
+	// do download tracking
+	$identifier = [$fileId, $_SERVER['REMOTE_ADDR']];
 
-$lastDownload = $con->getOne('SELECT lastDownload FROM fileDownloadTracking WHERE fileId = ? AND ipAddress = ?', $identifier);
+	$lastDownload = $con->getOne('SELECT lastDownload FROM fileDownloadTracking WHERE fileId = ? AND ipAddress = ?', $identifier);
 
-$countAsSeparateDownload = false;
-if (!$lastDownload) {
-	$countAsSeparateDownload = true;
-	$con->execute('INSERT INTO fileDownloadTracking (fileId, ipAddress) VALUES (?, ?)', $identifier);
-} else if (strtotime($lastDownload) - time() > 24*3600) {
-	$countAsSeparateDownload = true;
-	//TODO(Rennorb) @correctness: This does not produce the correct result for trending points.
-	$con->execute('UPDATE fileDownloadTracking SET lastDownload = NOW() WHERE fileId = ? and ipAddress = ?', $identifier);
-}
+	$countAsSeparateDownload = false;
+	if (!$lastDownload) {
+		$countAsSeparateDownload = true;
+		$con->execute('INSERT INTO fileDownloadTracking (fileId, ipAddress) VALUES (?, ?)', $identifier);
+	} else if (strtotime($lastDownload) - time() > 24*3600) {
+		$countAsSeparateDownload = true;
+		//TODO(Rennorb) @correctness: This does not produce the correct result for trending points.
+		$con->execute('UPDATE fileDownloadTracking SET lastDownload = NOW() WHERE fileId = ? and ipAddress = ?', $identifier);
+	}
 
-if ($countAsSeparateDownload) {
-	$con->execute('UPDATE files SET downloads = downloads + 1 WHERE fileId = ?', [$fileId]);
-	$con->execute('UPDATE mods  SET downloads = downloads + 1 WHERE modId = (SELECT r.modId FROM modReleases r WHERE r.assetId = ?)', [$file['assetId']]);
+	if ($countAsSeparateDownload) {
+		$con->execute('UPDATE files SET downloads = downloads + 1 WHERE fileId = ?', [$fileId]);
+		$con->execute('UPDATE mods  SET downloads = downloads + 1 WHERE modId = (SELECT r.modId FROM modReleases r WHERE r.assetId = ?)', [$file['assetId']]);
+	}
 }
 
 
