@@ -99,7 +99,7 @@
 			</div>
 		{/if}
 
-		<h3 class="flex-fill">Screenshots <small>(drag to reorder{if $mod['modId']}, upload / delete changes apply immediately!{/if})</small><span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$mod['assetId']}">download all as zip</a>{/if})</span></h3>
+		<h3 class="flex-fill">Screenshots {$screenshotsDisclaimer}<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$mod['assetId']}">download all as zip</a>{/if})</span></h3>
 		{include file="edit-asset-files.tpl"}
 
 		<h3 class="flex-fill">Links</h3>

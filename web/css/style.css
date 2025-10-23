@@ -1291,6 +1291,12 @@ p:last-child {
 	color: var(--color-text-inv);
 }
 
+/* fix tiny mobile sizing */
+.tinymce-mobile-outer-container {
+  height: max-content !important;
+	max-height: 400px;
+}
+
 /* sticky top bar on tiny */
 .tox-tinymce, .tox-editor-container {
 	overflow: visible !important;

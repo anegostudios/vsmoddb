@@ -910,3 +910,15 @@ const STATUS_LOCKED = 4;
 
 include($config["basepath"] . "lib/upload-limits.php");
 $view->assignRefUnfiltered('maxFileUploadSize', $maxFileUploadSize);
+
+/** @return bool */
+function isTouchPlatform()
+{
+	return preg_match('/i(?:phone|pod|pad)|android|blackberry|mobile/i', $_SERVER['HTTP_USER_AGENT']);
+}
+
+/** @return bool */
+function isTVPlatform()
+{
+	return preg_match('/webos|apple(?:tv| tv)|aft|roku|smart(?:tv|-tv| tv)/i', $_SERVER['HTTP_USER_AGENT']);
+}

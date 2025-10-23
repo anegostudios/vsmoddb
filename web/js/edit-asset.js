@@ -181,9 +181,9 @@ function makeReorderable(containerEl)
 {
 	let movingEl;
 	const dragStart = (e) => {
-		e.dataTransfer.effectAllowed = 'move';
-		e.dataTransfer.setData('text/plain', null);
 		movingEl = e.currentTarget;
+		e.dataTransfer.effectAllowed = 'move';
+		e.dataTransfer.setDragImage(e.currentTarget, e.offsetX, e.offsetY);
 	};
 	const dragOver = (e) => {
 		if(!movingEl || e.currentTarget.parentNode !== movingEl.parentNode) return;
@@ -197,6 +197,7 @@ function makeReorderable(containerEl)
 		if(item.classList.contains('immovable')) return;
 		item.addEventListener('dragover', dragOver);
 		item.addEventListener('dragstart', dragStart);
+		item.draggable = true;
 	}
 }
 
