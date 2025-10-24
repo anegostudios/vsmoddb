@@ -623,7 +623,7 @@ unset($file);
 $screenshotsDisclaimer = '';
 //NOTE(Rennorb): Mobile doesn't really have working drag and drop, nor does it make sense on non-pointer devices (TVs or consoles).
 // The js still gets attached, but we don't put the hint here so users don't get confused if it doesn't work.
-if(!isTVPlatform() && !isTouchPlatform()) $screenshotsDisclaimer .= 'touch to reorder';
+if(!isTVPlatform() && !isTouchPlatform()) $screenshotsDisclaimer .= 'drag to reorder';
 if($mod['modId']) { if($screenshotsDisclaimer) $screenshotsDisclaimer .= ', '; $screenshotsDisclaimer .= 'upload / delete changes apply immediately!'; }
 if($screenshotsDisclaimer) $screenshotsDisclaimer = "<small>($screenshotsDisclaimer)</small>";
 $view->assign('screenshotsDisclaimer', $screenshotsDisclaimer, null, true);
