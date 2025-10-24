@@ -155,7 +155,8 @@ else if(!empty($_POST['save'])) {
 	}
 
 	$tags = getInputArrayOfInts(INPUT_POST, 'tagids');
-	if(!$tags) {
+	if($tags === null) { $tags = []; }
+	if($tags === false) {
 		addMessage(MSG_CLASS_WARN, "The new mod tags contain invalid tags.");
 	}
 	else {
