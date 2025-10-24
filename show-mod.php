@@ -232,7 +232,7 @@ if (!empty($user)) {
 }
 
 cspAllowTinyMceComment();
-cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/api/v2/mods/{$asset['modId']}/ {$_SERVER['HTTP_HOST']}/api/v2/comments/ {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/"); // create / edit comments, tag search
+cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/api/v2/mods/{$asset['modId']}/ {$_SERVER['HTTP_HOST']}/api/v2/comments/ {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/ {$_SERVER['HTTP_HOST']}/api/v2/notifications/settings/followed-mods/{$asset['modId']} {$_SERVER['HTTP_HOST']}/api/v2/notifications/settings/followed-mods/{$asset['modId']}/unfollow"); // create / edit comments, tag search, following //TODO(Rennorb): cleanup follow url
 cspPushAllowedInlineHandlerHash('sha256-ro1cG9y3w13M1KSgaV9WpZDq3jSUi/S0hNEJ9yw3Uw4='); // location.hash = 'tab-description'
 cspPushAllowedInlineHandlerHash('sha256-94NvHZFeRkm6w/lzsqG4nAxFmD5kBzGoK6eIsReP3v4='); // location.hash = 'tab-files'
 cspAllowFotorama();
