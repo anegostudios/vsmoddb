@@ -14,7 +14,7 @@
 {include file="header" pagetitle="`$asset['name']` - "}
 
 {if $transferownership}
-	<div class="teaminvite">
+	<div class="teaminvite overlay-when-readonly">
     <span>You have been invited to become the owner of this modification.</span>
     <div class="buttons">
         <a title="Accept Ownership" class="button submit" href="?acceptownershiptransfer=1">Accept</a>
@@ -22,7 +22,7 @@
     </div>
 	</div>
 {elseif $teaminvite}
-	<div class="teaminvite">
+	<div class="teaminvite overlay-when-readonly">
 		<span>You have been invited to join the team of this mod</span>
 		<div class="buttons">
 			<a title="Click here to join to the team of this mod" class="button submit"
@@ -83,8 +83,8 @@
 			<script nonce="{$cspNonce}">if(location.hash !== '#tab-files') document.getElementById('tab-description').checked = true;</script>
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
-					<a class="button large shine strikethrough-when-banned" href="/edit/mod/?assetid={$asset['assetId']}">Edit</a>&nbsp;
-					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modId']}">Add release</a>
+					<a class="button large shine strikethrough-when-banned strikethrough-when-readonly" href="/edit/mod/?assetid={$asset['assetId']}">Edit</a>&nbsp;
+					<a class="button large shine strikethrough-when-banned strikethrough-when-readonly" href="/edit/release/?modid={$asset['modId']}">Add release</a>
 				{/if}
 			</div>
 
@@ -170,7 +170,7 @@
 			<script nonce="{$cspNonce}">if(location.hash === '#tab-files') document.getElementById('tab-files').checked = true;</script>
 			<div style="float: right; margin-bottom: 1em;">
 				{if isset($user) && canEditAsset($asset, $user)}
-					<a class="button large shine strikethrough-when-banned" href="/edit/release/?modid={$asset['modId']}">Add release</a>
+					<a class="button large shine strikethrough-when-banned strikethrough-when-readonly" href="/edit/release/?modid={$asset['modId']}">Add release</a>
 				{/if}
 			</div>
 

@@ -30,7 +30,7 @@
 	<link nonce="{$cspNonce}" href="/web/js/tinymce/skins/ui/oxide/content.min.css" as="style">
 	<link nonce="{$cspNonce}" href="/web/css/editor_content.css?ver=4" as="style">
 
-	<link nonce="{$cspNonce}" href="/web/css/style.css?version=87" rel="stylesheet" type="text/css">
+	<link nonce="{$cspNonce}" href="/web/css/style.css?version=88" rel="stylesheet" type="text/css">
 
 	{if isset($assetserver) && startsWith($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
 
@@ -39,7 +39,7 @@
 	{if isset($head)}{$head}{/if}
 </head>
 
-<body{if !empty($user) && $user['isBanned']} class="banned"{/if}>
+<body class="{if READONLY}readonly{/if}{if !empty($user) && $user['isBanned']} banned{/if}">
 	<script nonce="{$cspNonce}">try\{if(+window.localStorage.getItem('opaque-desc'))document.body.classList.add('opaque-desc')}catch\{}</script>
 	<a name="top"></a>
 	
@@ -50,7 +50,7 @@
 			<a href="/home"{if $headerHighlight === HEADER_HIGHLIGHT_HOME} class="active"{/if}>Home</a>
 			<a href="/list/mod"{if $headerHighlight === HEADER_HIGHLIGHT_MODS} class="active"{/if}>All Mods</a>
 			{if (!empty($user))}
-				<a href="/edit/mod"{if $headerHighlight === HEADER_HIGHLIGHT_SUBMIT_MOD} class="active"{/if}><img src="/web/img/upload.png"><span>Submit a mod</span></a>
+				<a href="/edit/mod" class="strikethrough-when-banned strikethrough-when-readonly{if $headerHighlight === HEADER_HIGHLIGHT_SUBMIT_MOD} active{/if}"><img src="/web/img/upload.png"><span>Submit a mod</span></a>
 			{/if}
 			<span class="flex-spacer" style="max-width: 6em; flex-grow: .5"></span>
 			<a class="external" href="https://wiki.vintagestory.at/Troubleshooting_Mods" target="_blank">Mod Troubleshooting</a>

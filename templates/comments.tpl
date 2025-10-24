@@ -2,7 +2,7 @@
 			<h3><a name="comments"></a>{count($comments)} Comments <span style="font-size:70%">(<a href="#orderoldestfirst">oldest first</a> | <a href="#ordernewestfirst">newest first</a>)</span></h3>
 			<div class="comments">
 				{if !empty($user)}
-				<div class="comment comment-editor editbox overlay-when-banned" style="clear:both; display:none;">
+				<div class="comment comment-editor editbox overlay-when-banned overlay-when-readonly" style="clear:both; display:none;">
 					<div class="title">
 						{$user['name']}, 0 seconds ago
 					</div>
@@ -24,12 +24,12 @@
 								{if !empty($user)}
 										{if $comment["userId"] == $user["userId"]}
 											{if !$comment['deleted']}
-												<span class="buttonlinks strikethrough-when-banned">(<a href="#editcomment" data-commentid="{$comment['commentId']}">edit comment</a> <a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a>)</span>
+												<span class="buttonlinks strikethrough-when-banned strikethrough-when-readonly">(<a href="#editcomment" data-commentid="{$comment['commentId']}">edit comment</a> <a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a>)</span>
 											{/if}
 										{elseif canModerate($comment['userId'], $user) && !($comment["userId"] == $user["userId"])}
-												<span class="buttonlinks strikethrough-when-banned">({if !$comment['deleted']}<a href="#editcomment" data-commentid="{$comment['commentId']}">edit comment</a> <a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a> {/if}<a href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}">moderate user</a>)</span>
+												<span class="buttonlinks strikethrough-when-banned strikethrough-when-readonly">({if !$comment['deleted']}<a href="#editcomment" data-commentid="{$comment['commentId']}">edit comment</a> <a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a> {/if}<a href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}">moderate user</a>)</span>
 										{elseif $asset['createdByUserId'] == $user['userId'] && !$comment['deleted']}
-												<span class="buttonlinks strikethrough-when-banned">(<a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a>)</span>
+												<span class="buttonlinks strikethrough-when-banned strikethrough-when-readonly">(<a href="#deletecomment" data-commentid="{$comment['commentId']}">delete</a>)</span>
 										{/if}
 								{/if}
 						</div>
