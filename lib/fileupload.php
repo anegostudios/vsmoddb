@@ -126,6 +126,9 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 			[$fileId, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['side'], $modInfo['requiredOnClient'], $modInfo['requiredOnServer'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['iconPath'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawDependencies']]
 		);
 
+		$minCompat = findMinCompatibleGameVersion($modInfo['rawDependencies']);
+		if($minCompat !== null) $data['gameversiondep'] = $minCompat;
+
 		// array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:int}
 		if($ok) {
 			$data['modparse']   = 'ok';

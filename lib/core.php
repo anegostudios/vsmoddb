@@ -109,7 +109,7 @@ function contains($string, $part)
 }
 
 /** Splits a string at a separator, but at most once.
- * If the separator is not found the left string contains thw whole input, and the right string is empty.
+ * If the separator is not found the left string contains the whole input, and the right string is empty.
  * @param string $string
  * @param string $separator
  * @param string &$out_left

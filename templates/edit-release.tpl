@@ -119,13 +119,41 @@
 	assettypeid = 2;
 	
 	if (modtype === 'mod') {
-		function onUploadFinished(file) {
-			if (file.modparse == "error") {
+		function onUploadFinished(file) \{
+			if (file.modparse == "error") \{
 				addMessage(MSG_CLASS_ERROR, 'Failed to parse mod information from this file: '+file.parsemsg, true);
-			} else {
+			} else \{
 				$("input[name='modidstr']").val(file.modid);
 				$("input[name='modversion']").val(file.modversion);
+				if(file.gameversiondep) \{
+					const versionSelect = document.querySelector("select[name='cgvs[]']");
+					versionSelect.value = '';
+					for(const opt of versionSelect.children) \{
+						if(compileSemanticVersion(opt.value) >= file.gameversiondep)  opt.selected = true;
+						else break;
+					}
+					$(versionSelect).trigger("chosen:updated");
+				}
 			}
+		}
+
+		function compileSemanticVersion(versionStr) {
+			const matches = /^(\d+)\.(\d+)\.(\d+)(?:-(dev|pre|rc)\.(\d+))?$/.exec(versionStr); // @perf
+			if(!matches) return false;
+			let compliedSuffix = 0xffffn; // non pre-release sorts after pre-release
+			if(matches[5]) {
+				switch(matches[4]) {
+					case 'dev': compliedSuffix =  4n << 12n; break;
+					case 'pre': compliedSuffix =  8n << 12n; break;
+					case 'rc' : compliedSuffix = 12n << 12n; break;
+					default: return false;
+				}
+				compliedSuffix |= BigInt(matches[5]) & 0x0fffn;
+			}
+			return ((BigInt(matches[1]) & 0xffffn) << 48n)
+					| ((BigInt(matches[2]) & 0xffffn) << 32n)
+					| ((BigInt(matches[3]) & 0xffffn) << 16n)
+					| compliedSuffix;
 		}
 	}
 	

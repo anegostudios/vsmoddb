@@ -250,7 +250,7 @@ if($existingRelease) {
 else {
 	// hovering files
 	$files = $con->getAll(<<<SQL
-		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize, mpr.modIdentifier, mpr.modVersion, mpr.errors
+		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize, mpr.modIdentifier, mpr.modVersion, mpr.rawDependencies, mpr.errors
 		FROM files f
 		LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
 		LEFT JOIN fileImageData i ON i.fileId = f.fileId
@@ -300,8 +300,18 @@ if(!$existingRelease) {
 	];
 
 	if($targetMod['type'] === 'mod') {
+		// Pre-select values from hovering file:
 		$existingRelease['identifier'] = $files ? $files[0]['modIdentifier'] : '';
 		$existingRelease['version']    = $files ? formatSemanticVersion(intval($files[0]['modVersion'])) : '';
+
+		if(!$existingRelease['compatibleGameVersions'] && $files && ($minCompat = findMinCompatibleGameVersion($files[0]['rawDependencies'])) && $minCompat !== null) {
+			$detectedCompat = [];
+			foreach($allGameVersions as $version) { // Order is descending, so the filter is trivial.
+				if($version['version'] >= $minCompat) $detectedCompat[] = $version['version'];
+				else break;
+			}
+			$existingRelease['compatibleGameVersions'] = array_flip($detectedCompat);
+		}
 	}
 	else {
 		$existingRelease['identifier'] = '';

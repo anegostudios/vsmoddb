@@ -114,3 +114,19 @@ function deserializeModInfoArrayFields(&$modInfo)
 	}
 	$modInfo['dependencies'] = $deps;
 }
+
+
+/**
+ * @param string $rawDependencies
+ * @return int|null
+ */
+function findMinCompatibleGameVersion($rawDependencies)
+{
+	foreach(explode(', ', $rawDependencies) as $dep) {
+		splitOnce($dep, '@', $target, $version);
+		if($target === 'game' && $version !== '') {
+			return compileSemanticVersion($version);
+		}
+	}
+	return null;
+}
