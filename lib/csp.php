@@ -13,8 +13,8 @@ $_csp = [
 	// Allow all images served from us or any http(s) domain, as well as inlined data images. Effectively all images.
 	'img-src' => "'self' http: data:",
 	'manifest-src' => "'self'",
-	// Allow data i-frames for tinymce preview 
-	'frame-src' => 'data:',
+	// Allow data i-frames for tinymce preview and youtube (very specific, www.youtube.com is the only one allowed by the filters)
+	'frame-src' => "data: www.youtube.com/embed/",
 	// Explicitly allow boxicons font(s) from unpkg
 	'font-src' => "unpkg.com/boxicons@2.1.4/fonts/",
 ];
@@ -73,7 +73,7 @@ function cspAllowFotorama()
 	global $_csp;
 	// Fotorama uses insertRule, which is blocked by unsafe-inline rules
 	//TODO(Rennorb): Replace fotorama. its literally a few lines of css.
-	$_csp['style-src-elem'] = "self https: 'unsafe-inline' 'unsafe-eval'";
+	$_csp['style-src-elem'] = "'self' https: 'unsafe-inline' 'unsafe-eval'";
 }
 
 function _cspEmitHeader()
