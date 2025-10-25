@@ -71,7 +71,7 @@
 							{if $notificationcount == 0}
 								<span>No new notifications, you're all caught up!</span>
 							{else}
-								<a href="/notification/clearall">Clear all notifications</a>
+								<a href="/notification/clearall" class="strikethrough-when-readonly">Clear all notifications</a>
 							{/if}
 						{/if}
 					</nav>
@@ -92,12 +92,12 @@
 					<span>{$user['name']}</span>
 					<nav>
 						<a href="/show/user/{$user['hash']}">Profile</a>
-						<a href="/accountsettings">Settings</a>
-						<a href="/logout?at={$user['actionToken']}">Logout</a>
+						<a href="/accountsettings" class="strikethrough-when-readonly">Settings</a>
+						<a href="/logout?at={$user['actionToken']}" class="strikethrough-when-readonly">Logout</a>
 					</nav>
 				</span>
 			{else}
-				<a href="/login"><img src="/web/img/login.png"><span>Log in</span></a>
+				<a href="/login" class="strikethrough-when-readonly"><img src="/web/img/login.png"><span>Log in</span></a>
 			{/if}
 		</nav>
 

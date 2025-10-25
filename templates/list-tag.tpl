@@ -37,7 +37,7 @@
 			{foreach from=$gameVersionStrings item=gvStr}
 				<tr>
 					<td>{$gvStr}</td>
-					<td><button class="button btndelete">X</button></td>
+					<td><button class="button btndelete strikethrough-when-readonly">X</button></td>
 				</tr>
 			{/foreach}
 		{else}
@@ -48,8 +48,8 @@
 
 
 {capture name="buttons"}
-	<a class="button large shine" href="/edit/tag">New Tag</a>
-	<button class="button large shine" onclick="addVersionPrompt()" nonce="{$cspNonce}">Manually Add Version</button>
+	<a class="button large shine strikethrough-when-readonly" href="/edit/tag">New Tag</a>
+	<button class="button large shine strikethrough-when-readonly" onclick="addVersionPrompt()" nonce="{$cspNonce}">Manually Add Version</button>
 {/capture}
 
 <script nonce="{$cspNonce}" type="text/javascript">
