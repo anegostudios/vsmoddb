@@ -14,7 +14,7 @@ $_csp = [
 	'img-src' => "'self' http: data:",
 	'manifest-src' => "'self'",
 	// Allow data i-frames for tinymce preview and youtube (very specific, www.youtube.com is the only one allowed by the filters)
-	'frame-src' => "data: www.youtube.com/embed/",
+	'frame-src' => "data: www.youtube.com/embed/ www.youtube-nocookie.com/embed/",
 	// Explicitly allow boxicons font(s) from unpkg
 	'font-src' => "unpkg.com/boxicons@2.1.4/fonts/",
 ];

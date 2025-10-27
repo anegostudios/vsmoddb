@@ -240,14 +240,57 @@ function sanitizeHtml($text)
 	// Extremely rudimentary check to not ingest expanded spoilers after editing a comment, but good enough for that case.
 	$text = str_replace('class="spoiler-toggle expanded"', 'class="spoiler-toggle"', $text);
 
-	$key = urlencode(genToken());
-	$text = preg_replace("#<iframe( src=\"//www.youtube.com/embed/[\w-]{1,20}\" width=\"[0-9]+\" height=\"[0-9]+\" allowfullscreen=\"allowfullscreen\")></iframe>#i", "<span class=\"__embed{$key}\">\\1</span>", $text);
-	
-	$text = htmLawed($text, array('tidy' => 0, 'safe' => 1, 'elements' => '* -script -object -applet -canvas -iframe -video -audio -embed -form', 'schemes' => 'src: http, https, data'));
-
-	$text = preg_replace("#<span class=\"__embed{$key}\">(.*)</span>#i", "<iframe \\1></iframe>", $text);
+	$text = htmLawed($text, array('tidy' => 0, 'safe' => 1, 'elements' => '* -script -object -applet -canvas +iframe -video -audio -embed -form', 'schemes' => 'src: http, https, data', 'hook_tag' => "_htmLawed_sanitize_node"));
 
 	return $text;
+}
+
+// TinyMCE media embed:
+// <iframe src="//www.youtube.com/embed/AmQV7QwjCac" width="560" height="315" allowfullscreen="allowfullscreen"></iframe>"
+
+// YouTube "share as embed":
+// <iframe width="560" height="315" src="https://www.youtube.com/embed/AmQV7QwjCac?si=iJaNM5nzTf4s7FHX" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+/**
+ * @param string $element_name
+ * @param array<string, string>|0 $attributes  zero in case of closing tag
+ * @return string post-filter html according to the tag. Must produce opening / closing tags according to the attributes param.
+ */
+function _htmLawed_sanitize_node($elementName, $attributes = 0) {
+	// Taken from htmlLawed.
+	static $emptyElements = array('area'=>1, 'br'=>1, 'col'=>1, 'command'=>1, 'embed'=>1, 'hr'=>1, 'img'=>1, 'input'=>1, 'isindex'=>1, 'keygen'=>1, 'link'=>1, 'meta'=>1, 'param'=>1, 'source'=>1, 'track'=>1, 'wbr'=>1); // Empty ele
+
+	static $removeNextClosing = false;
+	if($attributes === 0) {
+		if($removeNextClosing) {
+			$removeNextClosing = false;
+			return '';
+		}
+		else {
+			return "</$elementName>";
+		}
+	}
+
+	switch($elementName) {
+		case 'iframe': {
+			if(empty($attributes['src']) || !preg_match('#//(?:www.)?youtube(?:-nocookie)?.com/embed#i', $attributes['src'])) {
+				$removeNextClosing = true;
+				return '';
+			}
+
+			static $allowedKeys = ['src'=>1, 'width'=>1, 'height'=>1, 'allowfullscreen'=>1, 'allow'=>1];
+			$attributes = array_intersect_key($attributes, $allowedKeys);
+			// Strip unnecessary params from url and turn it into a no-cookie link:
+			$attributes['src'] = '//www.youtube-nocookie.com'.parse_url($attributes['src'], PHP_URL_PATH);
+			// Strip autoplay and other telemetry gunk:
+			$attributes['allow'] = 'encrypted-media; picture-in-picture; web-share; clipboard-write';
+		}
+	}
+
+	// Reconstruct the tag. Taken form htmlLawed.
+	$foldedAttrs = '';
+	foreach($attributes as $k => $v) { $foldedAttrs .= " {$k}=\"{$v}\""; }
+	return "<{$elementName}{$foldedAttrs}". (isset($emptyElements[$elementName]) ? ' /' : ''). '>';
 }
 
 
