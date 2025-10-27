@@ -465,8 +465,12 @@ else if(!empty($_POST["delete"])) {
 if(isset($_POST['revokenewownership'])) {
 	if(count($messages /* global */) === $oldMsgCount) { // no errors occurred
 		revokeModOwnershipTransfer($mod['assetId'], $currentlyBeingTransferredTo['notificationId']);
-		
-		setcookie('saved', SAVE_MSG_TRANSFER_REVOKED);
+
+		//NOTE(Rennorb): This cannot just use the current path, as saving a new mod will go from 
+		// /edit/mod  to /edit/mod/?assetid=xyz . In that case the cookie would not be deleted after showing the message, as 
+		// the paths don't match, and would subsequently be shown on every other edit page, where it would also not be deleted.
+		// Therefor we set the path to teh whole server, allowing it to be properly cleared after display in all cases. :GlobalSavedCookie
+		setcookie('saved', SAVE_MSG_TRANSFER_REVOKED, 0, '/');
 		forceRedirectAfterPOST();
 		exit();
 	}
@@ -476,14 +480,14 @@ else if(!empty($_POST['save'])) {
 		if($mod['modId']) {
 			updateMod($oldModData, $mod, $filesInOrder, $newMembers, $newEditorMemberHashes);
 
-			setcookie('saved', $saveCookie);
+			setcookie('saved', $saveCookie, 0, '/'); // :GlobalSavedCookie
 			forceRedirectAfterPOST();
 			exit();
 		}
 		else {
 			$assetId = createNewMod($mod, $filesInOrder, $newMembers, $newEditorMemberHashes);
 
-			setcookie('saved', $saveCookie);
+			setcookie('saved', $saveCookie, 0, '/'); // :GlobalSavedCookie
 			forceRedirect('/edit/mod/?assetid='.$assetId);
 			exit();
 		}
@@ -512,26 +516,26 @@ switch($_COOKIE['saved'] ?? '') {
 			addMessage(MSG_CLASS_OK, "Saved!");
 		}
 
-		setcookie('saved', ''); // clear message cookie
+		setcookie('saved', '', 0, '/'); // clear message cookie  // :GlobalSavedCookie
 	} break;
 
 	case SAVE_MSG_REVERTED: {
 		$dbPath = formatModPath($mod);
 		addMessage(MSG_CLASS_WARN, "Changes saved, but your mod remains hidden as a 'Draft'.</br>To make your mod public you need to first create at least one <a href='{$dbPath}#tab-files'>release</a>.");
 
-		setcookie('saved', ''); // clear message cookie
+		setcookie('saved', '', 0, '/'); // clear message cookie  // :GlobalSavedCookie
 	}; break;
 
 	case SAVE_MSG_TRANSFER_INITIATED: {
 		addMessage(MSG_CLASS_OK, "Saved. Ownership transfer has also been initiated, the new owner may now accept or reject your offer.");
 
-		setcookie('saved', ''); // clear message cookie
+		setcookie('saved', '', 0, '/'); // clear message cookie  // :GlobalSavedCookie
 	}; break;
 
 	case SAVE_MSG_TRANSFER_REVOKED: {
 		addMessage(MSG_CLASS_OK, "Ownership transfer successfully revoked.");
 
-		setcookie('saved', ''); // clear message cookie
+		setcookie('saved', '', 0, '/'); // clear message cookie  // :GlobalSavedCookie
 	}; break;
 }
 
