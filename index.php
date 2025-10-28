@@ -57,6 +57,7 @@ switch($urlparts[0]) { // :ReservedUrlPrefixes
 	case 'download':
 	case 'notifications':
 	case 'updateversiontags':
+	case 'dependencies':
 		include($urlparts[0].'.php');
 		exit();
 	
