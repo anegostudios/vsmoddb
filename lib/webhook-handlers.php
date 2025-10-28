@@ -17,7 +17,7 @@ switch($urlparts[0]) {
 			exit();
 		}
 
-		if(READONLY) {
+		if(DB_READONLY) {
 			header('Retry-After: 1800', true, HTTP_SERVICE_UNAVAILABLE);
 			echo 'We are currently in readonly mode.';
 			exit();

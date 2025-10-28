@@ -9,7 +9,7 @@ if($fileId === 0) showErrorPage(HTTP_BAD_REQUEST, 'Missing fileid.');
 $file = $con->getRow('SELECT * FROM files WHERE fileId = ?', [$fileId]);
 if (!$file) showErrorPage(HTTP_NOT_FOUND, 'File not found.');
 
-if(!READONLY) {
+if(!DB_READONLY) {
 	// do download tracking
 	$identifier = [$fileId, $_SERVER['REMOTE_ADDR']];
 

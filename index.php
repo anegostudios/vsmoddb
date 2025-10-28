@@ -42,7 +42,7 @@ include("lib/csp.php");
 
 //TODO(Rennorb) @cleanup @perf: Move view initialization here, after api branch.
 $view->assign('headerHighlight', null, null, true);
-if(READONLY) addMessage(MSG_CLASS_OK.' permanent', 'We are currently in readonly mode. All editing is disabled, but you can still browse and download.');
+if(DB_READONLY) addMessage(MSG_CLASS_OK.' permanent', 'We are currently in readonly mode. All editing is disabled, but you can still browse and download.');
 
 
 switch($urlparts[0]) { // :ReservedUrlPrefixes

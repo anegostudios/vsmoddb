@@ -1,5 +1,5 @@
 <?php
-if(READONLY) showReadonlyPage();
+if(DB_READONLY) showReadonlyPage();
 
 $userHash = $urlparts[2] ?? null;
 if(empty($userHash)) showErrorPage(HTTP_BAD_REQUEST, 'Missing user hash.');

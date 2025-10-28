@@ -1,5 +1,5 @@
 <?php
-if(READONLY) showReadonlyPage();
+if(DB_READONLY) showReadonlyPage();
 
 if (empty($user)) {
 	header('Location: /login');

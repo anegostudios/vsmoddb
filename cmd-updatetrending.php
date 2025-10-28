@@ -8,7 +8,7 @@ $_SERVER["REQUEST_URI"] = "";
 define("DEBUG", 1);
 include("lib/config.php");
 include("lib/core.php");
-if(READONLY) {
+if(DB_READONLY) {
 	http_response_code(HTTP_SERVICE_UNAVAILABLE);
 	exit();
 }

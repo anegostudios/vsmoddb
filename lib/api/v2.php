@@ -35,7 +35,7 @@ function validateContentType($allowedType)
 	}
 }
 
-if(READONLY) {
+if(DB_READONLY) {
 	switch($_SERVER['REQUEST_METHOD']) {
 		case 'GET': case 'HEAD': case 'OPTIONS': /* ok */
 			break;

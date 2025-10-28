@@ -11,7 +11,7 @@ if (empty($user)) {
 }
 
 if ($urlparts[1] == 'clearall') {
-	if (READONLY) showReadonlyPage();
+	if (DB_READONLY) showReadonlyPage();
 	$con->Execute('UPDATE notifications SET `read` = 1 WHERE userId = ?', [$user['userId']]);
 	goBackOrRootFallback();
 	exit();
@@ -26,7 +26,7 @@ if (empty($notification)) {
 
 switch($notification['kind']) {
 	case NOTIFICATION_NEW_RELEASE:
-		if (!READONLY) $con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]);
+		if (!DB_READONLY) $con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]);
 
 		$mod = $con->getRow('SELECT assetId, urlAlias FROM mods WHERE modId = ?', [$notification['recordId']]);
 
@@ -37,7 +37,7 @@ switch($notification['kind']) {
 		exit();
 
 	case NOTIFICATION_MOD_LOCKED: case NOTIFICATION_MOD_UNLOCK_REQUEST: case NOTIFICATION_MOD_UNLOCKED:
-		if (!READONLY) $con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$notification['notificationId']]);
+		if (!DB_READONLY) $con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$notification['notificationId']]);
 
 		$mod = $con->getRow('SELECT assetId, urlAlias FROM mods WHERE modId = ?', [$notification['recordId']]);
 
@@ -53,7 +53,7 @@ switch($notification['kind']) {
 	case NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED:
 		$assetId = $con->getOne('SELECT assetId FROM mods WHERE modId = ?', [(intval($notification['recordId']) & ((1 << 31) - 1))]); // :PackedTransferSuccess
 
-		if (!READONLY) $con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]);
+		if (!DB_READONLY) $con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]);
 
 		forceRedirect([
 			'path'     => '/edit/mod/',
@@ -70,7 +70,7 @@ switch($notification['kind']) {
 			WHERE c.commentId = ?
 		SQL, [$notification['recordId']]);
 
-		if (!READONLY) $con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]); // TODO @setting
+		if (!DB_READONLY) $con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]); // TODO @setting
 
 		forceRedirect([
 			'path'     => formatModPath($mod),

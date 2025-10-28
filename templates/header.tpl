@@ -39,7 +39,7 @@
 	{if isset($head)}{$head}{/if}
 </head>
 
-<body class="{if READONLY}readonly{/if}{if !empty($user) && $user['isBanned']} banned{/if}">
+<body class="{if DB_READONLY}readonly{/if}{if !empty($user) && $user['isBanned']} banned{/if}">
 	<script nonce="{$cspNonce}">try\{if(+window.localStorage.getItem('opaque-desc'))document.body.classList.add('opaque-desc')}catch\{}</script>
 	<a name="top"></a>
 	

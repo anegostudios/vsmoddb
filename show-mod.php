@@ -289,7 +289,7 @@ function processTeamInvitation($asset, $user)
 
 	if (!isset($_GET['acceptteaminvite'])) return;
 
-	if(READONLY) showReadonlyPage();
+	if(DB_READONLY) showReadonlyPage();
 
 	switch ($_GET['acceptteaminvite']) {
 		case 1:
@@ -329,7 +329,7 @@ function processOwnershipTransfer($asset, $user)
 
 	if(!isset($_GET['acceptownershiptransfer'])) return;
 
-	if(READONLY) showReadonlyPage();
+	if(DB_READONLY) showReadonlyPage();
 
 	switch ($_GET['acceptownershiptransfer']) {
 		case 1:

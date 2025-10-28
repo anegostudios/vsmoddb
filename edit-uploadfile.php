@@ -1,5 +1,5 @@
 <?php
-if (READONLY) {
+if (DB_READONLY) {
 	http_response_code(HTTP_SERVICE_UNAVAILABLE);
 	exit('{"status": "error", "errormessage": "We are currently in readonly mode."}');
 }

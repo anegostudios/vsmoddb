@@ -44,4 +44,4 @@ if (strstr($_SERVER["SERVER_NAME"], "mods.vintagestory.stage")) {
 	if (!defined("MOD_SEARCH_PAGE_SIZE")) define("MOD_SEARCH_PAGE_SIZE", 200);
 }
 
-if(!defined("READONLY")) define("READONLY", false);
+if(!defined("DB_READONLY")) define("DB_READONLY", false);

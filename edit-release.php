@@ -1,5 +1,5 @@
 <?php
-if(READONLY) showReadonlyPage();
+if(DB_READONLY) showReadonlyPage();
 
 if (empty($user))   showErrorPage(HTTP_UNAUTHORIZED);
 if ($user['isBanned'])  showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
