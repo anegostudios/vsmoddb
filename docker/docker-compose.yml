@@ -14,7 +14,7 @@ services:
       - ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
 
   db:
-    image: mariadb:10.2.38
+    image: mariadb:11.8.3
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
