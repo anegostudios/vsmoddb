@@ -11,8 +11,8 @@ define('DEBUG', 1);
 include($config["basepath"]."lib/config.php");
 include($config["basepath"]."lib/core.php");
 
-
-$con->execute("SET NAMES 'utf8mb4'");
+$con->execute("SET character_set_results = 'latin1'"); // we want to read as latin1
+$con->execute("SET character_set_client = 'utf8mb4'"); // but write back as utf8mb4
 
 {
 	echo 'Table assets: ';
@@ -25,9 +25,7 @@ $con->execute("SET NAMES 'utf8mb4'");
 
 	$con->execute('LOCK TABLES `assets` WRITE');
 
-	$con->execute("SET CHARACTER SET latin1");
 	$rows = $con->execute('SELECT name, text, assetId FROM assets');
-	$con->execute("SET CHARACTER SET utf8mb4");
 
 	$con->startTrans();
 
@@ -40,17 +38,17 @@ $con->execute("SET NAMES 'utf8mb4'");
 	}
 
 	echo 'Clearing og table... ';
-	$con->execute('UPDATE assets JOIN _conv_assets c on assets.assetId = c.assetId SET assets.name = NULL, assets.text = NULL'); // clear to make the conversion faster
+	$con->execute('UPDATE assets INNER JOIN _conv_assets c on assets.assetId = c.assetId SET assets.name = NULL, assets.text = NULL'); // clear to make the conversion faster
 	echo 'Changing character set on og table... ';
 	$con->execute('ALTER TABLE assets MODIFY `name` VARCHAR(255) CHARACTER SET utf8mb4 NULL');
 	$con->execute('ALTER TABLE assets MODIFY `text` TEXT         CHARACTER SET utf8mb4 NULL');
 
 	echo 'Moving converted data back to og table... ';
-	$rows = $con->execute('SELECT * FROM _conv_assets');
-	$preparedInsert = $con->prepare('UPDATE assets SET name = ?, text = ? WHERE assetId = ?');
-	foreach($rows as $row) {
-		$con->execute($preparedInsert, [ $row['name'], $row['text'], $row['assetId'] ]);
-	}
+	$con->execute(<<<SQL
+		UPDATE assets a
+		INNER JOIN _conv_assets c ON c.assetId = a.assetId
+		SET a.name = c.name, a.text = c.text
+	SQL);
 
 	$con->execute('UNLOCK TABLES');
 
@@ -68,9 +66,7 @@ $con->execute("SET NAMES 'utf8mb4'");
 
 	$con->execute('LOCK TABLES `comments` WRITE');
 
-	$con->execute("SET CHARACTER SET latin1");
 	$rows = $con->execute('SELECT text, commentId FROM comments');
-	$con->execute("SET CHARACTER SET utf8mb4");
 
 	$con->startTrans();
 
@@ -83,17 +79,17 @@ $con->execute("SET NAMES 'utf8mb4'");
 	}
 
 	echo 'Clearing og table... ';
-	$con->execute("UPDATE comments JOIN _conv_comments c on comments.commentId = c.commentId SET comments.text = ''"); // clear to make the conversion faster
+	$con->execute("UPDATE comments INNER JOIN _conv_comments c on comments.commentId = c.commentId SET comments.text = ''"); // clear to make the conversion faster
 	echo 'Changing character set on og table... ';
 	$con->execute('ALTER TABLE comments MODIFY `text` TEXT         CHARACTER SET utf8mb4 NOT NULL');
 
 	echo 'Moving converted data back to og table... ';
-	$rows = $con->execute('SELECT * FROM _conv_comments');
-	$preparedInsert = $con->prepare('UPDATE comments SET text = ? WHERE commentId = ?');
-	foreach($rows as $row) {
-		$con->execute($preparedInsert, [ $row['text'], $row['commentId'] ]);
-	}
-
+	$con->execute(<<<SQL
+		UPDATE comments a
+		INNER JOIN _conv_comments c ON c.commentId = a.commentId
+		SET a.text = c.text
+	SQL);
+	
 	$con->execute('UNLOCK TABLES');
 
 	$con->completeTrans();
@@ -113,9 +109,7 @@ $con->execute("SET NAMES 'utf8mb4'");
 
 	$con->execute('LOCK TABLES `modPeekResults` WRITE');
 
-	$con->execute("SET CHARACTER SET latin1");
 	$rows = $con->execute('SELECT errors, description, rawAuthors, rawContributors, fileId FROM modPeekResults');
-	$con->execute("SET CHARACTER SET utf8mb4");
 
 	$con->startTrans();
 
@@ -128,7 +122,7 @@ $con->execute("SET NAMES 'utf8mb4'");
 	}
 
 	echo 'Clearing og table... ';
-	$con->execute('UPDATE modPeekResults JOIN _conv_modPeekResults c on modPeekResults.fileId = c.fileId SET modPeekResults.errors = NULL, modPeekResults.description = NULL, modPeekResults.rawAuthors = NULL, modPeekResults.rawContributors = NULL'); // clear to make the conversion faster
+	$con->execute('UPDATE modPeekResults INNER JOIN _conv_modPeekResults c on modPeekResults.fileId = c.fileId SET modPeekResults.errors = NULL, modPeekResults.description = NULL, modPeekResults.rawAuthors = NULL, modPeekResults.rawContributors = NULL'); // clear to make the conversion faster
 	echo 'Changing character set on og table... ';
 	$con->execute('ALTER TABLE modPeekResults MODIFY `errors`          TEXT CHARACTER SET utf8mb4 NULL');
 	$con->execute('ALTER TABLE modPeekResults MODIFY `description`     TEXT CHARACTER SET utf8mb4 NULL');
@@ -136,11 +130,11 @@ $con->execute("SET NAMES 'utf8mb4'");
 	$con->execute('ALTER TABLE modPeekResults MODIFY `rawContributors` TEXT CHARACTER SET utf8mb4 NULL');
 
 	echo 'Moving converted data back to og table... ';
-	$rows = $con->execute('SELECT * FROM _conv_modPeekResults');
-	$preparedInsert = $con->prepare('UPDATE modPeekResults SET errors = ?, description = ?, rawAuthors = ?, rawContributors = ? WHERE fileId = ?');
-	foreach($rows as $row) {
-		$con->execute($preparedInsert, [  $row['errors'], $row['description'], $row['rawAuthors'], $row['rawContributors'], $row['fileId'] ]);
-	}
+	$con->execute(<<<SQL
+		UPDATE modPeekResults a
+		INNER JOIN _conv_modPeekResults c ON c.fileId = a.fileId
+		SET a.errors = c.errors, a.description = c.description, a.rawAuthors = c.rawAuthors, a.rawContributors = c.rawContributors
+	SQL);
 
 	$con->execute('UNLOCK TABLES');
 
@@ -158,9 +152,7 @@ $con->execute("SET NAMES 'utf8mb4'");
 
 	$con->execute('LOCK TABLES `mods` WRITE');
 
-	$con->execute("SET CHARACTER SET latin1");
 	$rows = $con->execute('SELECT summary, modId FROM mods');
-	$con->execute("SET CHARACTER SET utf8mb4");
 
 	$con->startTrans();
 
@@ -173,16 +165,16 @@ $con->execute("SET NAMES 'utf8mb4'");
 	}
 
 	echo 'Clearing og table... ';
-	$con->execute("UPDATE mods JOIN _conv_mods c on mods.modId = c.modId SET mods.summary = ''"); // clear to make the conversion faster
+	$con->execute("UPDATE mods INNER JOIN _conv_mods c on mods.modId = c.modId SET mods.summary = ''"); // clear to make the conversion faster
 	echo 'Changing character set on og table... ';
 	$con->execute('ALTER TABLE mods MODIFY `summary` VARCHAR(100) CHARACTER SET utf8mb4 NOT NULL');
 
 	echo 'Moving converted data back to og table... ';
-	$rows = $con->execute('SELECT * FROM _conv_mods');
-	$preparedInsert = $con->prepare('UPDATE mods SET summary = ? WHERE modId = ?');
-	foreach($rows as $row) {
-		$con->execute($preparedInsert, [ $row['summary'], $row['modId'] ]);
-	}
+	$con->execute(<<<SQL
+		UPDATE mods a
+		INNER JOIN _conv_mods c ON c.modId = a.modId
+		SET a.summary = c.summary
+	SQL);
 
 	$con->execute('UNLOCK TABLES');
 
@@ -200,9 +192,7 @@ $con->execute("SET NAMES 'utf8mb4'");
 
 	$con->execute('LOCK TABLES `users` WRITE');
 
-	$con->execute("SET CHARACTER SET latin1");
 	$rows = $con->execute('SELECT bio, userId FROM users');
-	$con->execute("SET CHARACTER SET utf8mb4");
 
 	$con->startTrans();
 
@@ -215,16 +205,16 @@ $con->execute("SET NAMES 'utf8mb4'");
 	}
 
 	echo 'Clearing og table... ';
-	$con->execute("UPDATE users JOIN _conv_users c on users.userId = c.userId SET users.bio = NULL"); // clear to make the conversion faster
+	$con->execute("UPDATE users INNER JOIN _conv_users c on users.userId = c.userId SET users.bio = NULL"); // clear to make the conversion faster
 	echo 'Changing character set on og table... ';
 	$con->execute('ALTER TABLE users MODIFY `bio` TEXT CHARACTER SET utf8mb4 NULL');
 
 	echo 'Moving converted data back to og table... ';
-	$rows = $con->execute('SELECT * FROM _conv_users');
-	$preparedInsert = $con->prepare('UPDATE users SET bio = ? WHERE userId = ?');
-	foreach($rows as $row) {
-		$con->execute($preparedInsert, [ $row['bio'], $row['userId'] ]);
-	}
+	$con->execute(<<<SQL
+		UPDATE users a
+		INNER JOIN _conv_users c ON c.userId = a.userId
+		SET a.bio = c.bio
+	SQL);
 
 	$con->execute('UNLOCK TABLES');
 
