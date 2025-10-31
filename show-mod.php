@@ -237,6 +237,8 @@ cspPushAllowedInlineHandlerHash('sha256-ro1cG9y3w13M1KSgaV9WpZDq3jSUi/S0hNEJ9yw3
 cspPushAllowedInlineHandlerHash('sha256-94NvHZFeRkm6w/lzsqG4nAxFmD5kBzGoK6eIsReP3v4='); // location.hash = 'tab-files'
 cspAllowFotorama();
 
+$view->assign('pagetitle', "{$asset['name']} - ");
+
 $view->display("show-mod");
 
 /** Fold several sequential version tags, e.g. 1.2.3, 1.2.4, 1.2.5 into '1.2.3 - 1.2.5' with a description containing the original versions.

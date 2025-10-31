@@ -8,10 +8,10 @@
 {else}
 <meta content="{$asset['logoUrl']}" property="og:image" />
 {/if}
-<meta content="#91A357" data-react-helmet="true" name="theme-color" />
+<meta content="#91A357" name="theme-color" />
 {/capture}
 
-{include file="header" pagetitle="`$asset['name']` - "}
+{include file="header"}
 
 {if $transferownership}
 	<div class="teaminvite overlay-when-readonly">

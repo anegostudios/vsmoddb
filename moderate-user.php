@@ -82,7 +82,7 @@ $sourceCommentId = $_GET['source-comment'] ?? null;
 $banReasonSuggestion = $sourceCommentId == null ? ''
 	: 'Offensive comment: '.strip_tags($con->getOne('SELECT text FROM comments WHERE commentId = ?', [$sourceCommentId]));
 
-$view->assign('pagetitle', "Moderate {$shownUser['name']}");
+$view->assign('pagetitle', "Moderate {$shownUser['name']} - ");
 
 $view->assign('shownUser', $shownUser);
 $view->assign('records', $records, null, true);
