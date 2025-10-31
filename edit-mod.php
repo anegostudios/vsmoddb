@@ -497,7 +497,7 @@ else if(!empty($_POST['save'])) {
 	}
 }
 else if(!empty($_POST['delete'])) {
-	deleteMod($mod['modId']);
+	deleteMod($mod);
 	forceRedirect('/list/mod?deleted=1');
 	exit();
 }
@@ -626,6 +626,7 @@ unset($file);
 }
 
 cspPushAllowedInlineHandlerHash('sha256-nTlTeikEEupAQmSPlHWFcoJvMdPCIBu+Zu+G64E7uC4='); // javascript:submitForm(0)
+cspPushAllowedInlineHandlerHash('sha256-HAn3sRp/DKqkhccjWmi+mt2NzQCTHLzeSlhZ0T2cDuY='); // javascript:submitDelete()
 cspPushAllowedInlineHandlerHash('sha256-iZTADKfoVhVNv/quyi56oSsO/O7oJoTdYUJQvZ4IfY0='); // lockModDlg(this)
 $fs = "{$_SERVER['HTTP_HOST']}/edit-deletefile {$_SERVER['HTTP_HOST']}/edit-uploadfile {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/";
 if(canModerate(null, $user) && $mod['modId']) {
