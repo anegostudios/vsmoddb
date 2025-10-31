@@ -1,4 +1,16 @@
 services:
+  gateway:
+    image: nginx:1.26.3
+    hostname: mods.vintagestory.stage
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ..:/var/www/moddb:ro
+      - ./moddb.conf:/etc/nginx/conf.d/moddb.conf:ro
+      - ./dev.ssl.pem:/etc/ssl/certs/ssl-cert-snakeoil.pem:ro
+      - ./dev.ssl.key:/etc/ssl/private/ssl-cert-snakeoil.key:ro
+
   php:
     build:
       context: .
@@ -6,12 +18,9 @@ services:
       args:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
-    hostname: mods.vintagestory.stage
-    ports:
-      - "443:443"
     volumes:
-      - ..:/var/www/html
-      - ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
+      - ..:/var/www/moddb
+      - ./www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
 
   db:
     image: mariadb:11.8.3
