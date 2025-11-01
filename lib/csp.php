@@ -11,7 +11,7 @@ $_csp = [
 	// Allow inline styles, as well as ones generated from js.
 	'style-src-attr' => "'unsafe-inline' 'unsafe-eval'",
 	// Allow all images served from us or any http(s) domain, as well as inlined data images. Effectively all images.
-	'img-src' => "'self' http: data:",
+	'img-src' => "'self' http: data: blob:",
 	'manifest-src' => "'self'",
 	// Allow data i-frames for tinymce preview and youtube (very specific, www.youtube.com is the only one allowed by the filters)
 	'frame-src' => "data: www.youtube.com/embed/ www.youtube-nocookie.com/embed/",
