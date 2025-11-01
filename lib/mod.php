@@ -38,7 +38,7 @@ function createNewMod($mod, $filesInOrder, $newMembers, $newEditorMemberHashes)
 	// Attach hovering files to this mod. Needs to be done for new mods, as it cannot happen during upload because at that point the asset doesn't yet exist to have files attached to it.
 	// Not that the attaching should happen during upload in the first place...
 	foreach($filesInOrder as $i => $file) {
-		$con->execute("UPDATE files SET assetId = ?, `order` = ? WHERE fileId = ?", [$assetId, $i, $file['fielId']]);
+		$con->execute("UPDATE files SET assetId = ?, `order` = ? WHERE fileId = ?", [$assetId, $i, $file['fileId']]);
 	}
 
 	$tagsChangelog = updateModTags($modId, [], array_keys($mod['tags'])); // @perf: This could use a simpler path

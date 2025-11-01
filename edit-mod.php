@@ -195,7 +195,7 @@ else if(!empty($_POST['save'])) {
 		$collidingMod = $con->getOne('SELECT urlAlias FROM mods WHERE urlAlias = ? and modId != ?', [$mod['urlAlias'], $mod['modId']]);
 		if($collidingMod) {
 			// @security: urlAlias must only contain alphanumeric characters, so its safe to output.
-			addMessage(MSG_CLASS_ERROR, "Not saved. This url alias is <a href='/{$collidingMod['urlAlias']}' target='_blank'>already taken</a>. Please choose another.");
+			addMessage(MSG_CLASS_ERROR, "Not saved. This url alias is <a href='/{$collidingMod}' target='_blank'>already taken</a>. Please choose another.");
 		}
 	}
 
