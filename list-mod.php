@@ -39,6 +39,7 @@ $selectedParams = [
 	'majorversion' => $filters['majorversion'] ?? '',
 	'gameversions' => !empty($filters['gameversions']) ? array_flip($filters['gameversions']) : [],
 	'tags'  => !empty($filters['tags']) ? array_flip($filters['tags']) : [],
+	'stati' => !empty($filters['stati']) ? array_flip($filters['stati']) : [],
 ];
 unset($filters);
 

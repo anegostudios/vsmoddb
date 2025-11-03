@@ -181,13 +181,17 @@ function isUrl($url)
 /**
  *  When filter_input doesn't quite do what you need it to.
  * 
- * @param int $type One of <b>INPUT_GET</b>, <b>INPUT_POST</b>
+ * @param int $type One of <b>INPUT_GET</b>, <b>INPUT_POST</b> or <b>INPUT_REQUEST</b>
  * @param string $varName
  * @return array<int>|false|null  false if element cannot be converted, null if key is missing in given input. Cannot be false if $filterInsteadOfFail is set.
  */
 function getInputArrayOfInts($type, $varName, $filterInsteadOfFail = false)
 {
-	$input = ($type === INPUT_GET ? $_GET : $_POST);
+	switch($type) {
+		case INPUT_GET:     $input = $_GET;     break;
+		case INPUT_POST:    $input = $_POST;    break;
+		case INPUT_REQUEST: $input = $_REQUEST; break;
+	}
 	if(!array_key_exists($varName, $input)) return null;
 	return forceArrayOfInts($input[$varName], $filterInsteadOfFail);
 }
@@ -968,6 +972,8 @@ const STATUS_RELEASED = 2;
 const STATUS_3 = 3;
 const STATUS_LOCKED = 4;
 
+
+if(!defined('INPUT_REQUEST')) define('INPUT_REQUEST', 99);
 
 include($config["basepath"] . "lib/upload-limits.php");
 $view->assignRefUnfiltered('maxFileUploadSize', $maxFileUploadSize);

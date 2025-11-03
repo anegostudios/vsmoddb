@@ -67,12 +67,23 @@
 			</select>
 		</span>
 
+		{if canModerate(null, $user)}
+		<span data-label="[Moderator] Status">
+			<select name="stati[]" multiple="true" noSearch="noSearch" style="width:14em;">
+				<option value="1"{if isset($selectedParams['stati'][1])} selected="selected"{/if}>Draft</option>
+				<option value="2"{if isset($selectedParams['stati'][2])} selected="selected"{/if}>Released</option>
+				<option value="3"{if isset($selectedParams['stati'][3])} selected="selected"{/if}>Status3</option>
+				<option value="4"{if isset($selectedParams['stati'][4])} selected="selected"{/if}>Locked</option>
+			</select>
+		</span>
+		{/if}
+
 		<span data-label="">
 			<button class="button shine" type="submit" name="">Search</button>
 		</span>
 	</form>
 	
-	<p id="warn-missing-data"{if !$selectedParams['type']}style="display: none;"{/if}>
+	<p id="warn-missing-data"{if !$selectedParams['type']} style="display: none;"{/if}>
 		<small><sup>*</sup> Mod releases from before July 1st 2025 do not have this information available and will not show up when this filter is selected. This data will become available in the future.</small>
 	</p>
 	<div class="sort" style="margin-bottom: 1em;">

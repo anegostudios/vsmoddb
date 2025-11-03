@@ -18,7 +18,8 @@ const VALID_ORDER_BY_COLUMNS = [
  *   tags?:int[],
  *   'contributor'?:int,
  *   'side'?:'client'|'server'|'both',
- *   gameversions?:int[]
+ *   gameversions?:int[],
+ *   stati?:int[],
  *  },
  *  limit:int,
  *  cursor:array{0:mixed, 1:int}
@@ -155,8 +156,16 @@ function validateModSearchInputs(&$outParams)
 	
 
 	global $user;
-	if(!canModerate(null, $user)) {
-		$outParams['filters']['a.statusId'] = 2;
+	if(canModerate(null, $user)) {
+		$s = getInputArrayOfInts(INPUT_REQUEST, 'stati');
+		if($s === false) {
+			return "Invalid stati: {$_REQUEST['stati']}";
+		}
+
+		if($s !== null) $outParams['filters']['stati'] = $s;
+	}
+	else {
+		$outParams['filters']['stati'] = [STATUS_RELEASED];
 	}
 
 	return null;
@@ -279,7 +288,14 @@ function queryModSearch($searchParams)
 					JOIN modReleases r ON r.modId = m.modId
 					JOIN files fi ON fi.assetId = r.assetId
 					JOIN modPeekResults mpr on mpr.fileId = fi.fileId AND mpr.type = '$value'
-				SQL; // @security: $value can only be one of the specified strings, therefore its sql inert
+				SQL; // @security: $value can only be one of the specified strings, therefore its sql inert.
+				break;
+
+			case 'stati':
+				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+				$foldedIds = implode(',', array_map('intval', $value));
+				// @security: $foldedIds only contains numbers, and is therefore sql inert.
+				$whereClauses .= "a.statusId IN ($foldedIds)";
 				break;
 
 			case 'category':
