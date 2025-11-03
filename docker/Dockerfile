@@ -27,3 +27,5 @@ RUN dotnet_version=8.0.17 \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
 
 ENV DOTNET_VERSION=8.0.17
+
+WORKDIR /var/www/moddb/

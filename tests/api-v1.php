@@ -24,7 +24,7 @@ function isStringOrNull($val) {
 
 function apiGet($endpoint, $queryParams = [])
 {
-	global $urlparts, /* used in the api handler */ $con;
+	global $urlparts, /* used in the api handler */ $con, $config;
 	$urlparts = is_array($endpoint) ? $endpoint : [$endpoint];
 
 	foreach($queryParams as $k => $v) {

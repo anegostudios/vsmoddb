@@ -383,7 +383,7 @@ final class ReleaseRecommendationsTest extends TestCase {
 
 		recommendReleases($releases, $maxStable, $maxUnstable, $recommended, $testers, $fallback);
 
-		$this->assertEquals(null, $recommended['version']);
+		$this->assertEquals(null, $recommended);
 		$this->assertEquals(pre(2, 2), $testers['version'], formatVersionComp(pre(2, 2), $testers['version']));
 		$this->assertEquals(stable(1), $fallback['version'], formatVersionComp(stable(1), $fallback['version']));
 	}

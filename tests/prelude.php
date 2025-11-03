@@ -1,5 +1,6 @@
 <?php
 
+global $config;
 $config = [];
 $config["basepath"] = dirname(__DIR__).'/';
 $_SERVER["SERVER_NAME"] = "mods.vintagestory.stage";
