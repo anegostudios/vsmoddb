@@ -198,7 +198,7 @@ CREATE TABLE IF NOT EXISTS `mods` (
   `wikiUrl`               VARCHAR(255)     NULL,
   `donateUrl`             VARCHAR(255)     NULL,
   `summary`               VARCHAR(100) CHARACTER SET utf8mb4 NOT NULL,
-  `descriptionSearchable` TEXT             NULL, -- No fulltext index for now, we didnt have one before. Might want to look into that at some point
+  `descriptionSearchable` TEXT CHARACTER SET utf8mb4 NULL, -- No fulltext index for now, we didnt have one before. Might want to look into that at some point
   `downloads`             INT          NOT NULL DEFAULT 0,
   `follows`               INT          NOT NULL DEFAULT 0,
   `trendingPoints`        INT          NOT NULL DEFAULT 0,

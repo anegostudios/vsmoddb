@@ -1,7 +1,7 @@
 <?php
 
 // This might require excessive amounts of memory
-// use `php -d memory_limit=8G db/121_migrate.php` 
+// use `php -d memory_limit=8G db/121_migrate.php`
 
 $config = [];
 $config["basepath"] = dirname(__DIR__).'/';

@@ -308,7 +308,7 @@ function createADOConnection($config, $persistent = true)
 	}
 
 	$con->execute("SET CHARACTER SET utf8mb4");
-	$con->execute("SET NAMES 'utf8mb4'");
+	$con->execute("SET NAMES utf8mb4");
 
 	//TODO(Rennorb) @correctness: This is supposed to allow usage of POINT(x, y) in inserts, but those still fail with
 	// "Cannot get geometry object from data you send to the GEOMETRY field"
