@@ -222,6 +222,9 @@ else if(!empty($_POST['save'])) {
 	$url = $mod['trailerVideoUrl'] = trim($_POST['trailerVideoUrl']);
 	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
 		addMessage(MSG_CLASS_ERROR, 'Trailer Video Url is not valid.');
+	else if ($url !== '') {
+		$mod['trailerVideoUrl'] = preg_replace('#//(?:www\.)youtube\.com#', '//www.youtube-nocookie.com', $url, 1);
+	}
 
 	$url = $mod['issueTrackerUrl'] = trim($_POST['issueTrackerUrl']);
 	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)

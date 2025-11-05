@@ -1,0 +1,4 @@
+USE `moddb`;
+
+UPDATE mods
+SET trailerVideoUrl = REGEXP_REPLACE(trailerVideoUrl, '//(?:www\.)youtube\.com', '//www.youtube-nocookie.com');

@@ -277,7 +277,7 @@ function _htmLawed_sanitize_node($elementName, $attributes = 0) {
 
 	switch($elementName) {
 		case 'iframe': {
-			if(empty($attributes['src']) || !preg_match('#//(?:www.)?youtube(?:-nocookie)?.com/embed#i', $attributes['src'])) {
+			if(empty($attributes['src']) || !preg_match('#//(?:www\.)?youtube(?:-nocookie)?\.com/embed#i', $attributes['src'])) {
 				$removeNextClosing = true;
 				return '';
 			}
