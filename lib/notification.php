@@ -51,7 +51,7 @@ switch($notification['kind']) {
 		exit();
 
 	case NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED:
-		$assetId = $con->getOne('SELECT assetId FROM mods WHERE modId = ?', [(intval($notification['recordId']) & ((1 << 31) - 1))]); // :PackedTransferSuccess
+		$assetId = $con->getOne('SELECT assetId FROM mods WHERE modId = ?', [(intval($notification['recordId']) & ((1 << 30) - 1))]); // :PackedTransferSuccess
 
 		if (!DB_READONLY) $con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]);
 

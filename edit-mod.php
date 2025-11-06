@@ -43,7 +43,7 @@ if(isset($_GET['assetid'])) {
 			JOIN users u ON u.userId = t.userId
 			WHERE t.modId = ? AND u.userId != ?
 		UNION
-			SELECT u.*, HEX(u.hash) AS hash, (n.recordId & 1 << 30) AS canEdit, 1 AS pending
+			SELECT u.*, HEX(u.hash) AS hash, (n.recordId & (1 << 30)) AS canEdit, 1 AS pending
 			FROM notifications n
 			JOIN users u ON u.userId = n.userId
 			WHERE n.kind = '.NOTIFICATION_TEAM_INVITE.' AND !n.`read` AND (n.recordId & ((1 << 30) - 1)) = ? -- :InviteEditBit

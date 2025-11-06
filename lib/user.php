@@ -206,7 +206,7 @@ function loadNotifications($loadAll)
 				break;
 
 			case NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED:
-				$modId = intval($notification['recordId']) & ((1 << 31) - 1);  // :PackedTransferSuccess
+				$modId = intval($notification['recordId']) & ((1 << 30) - 1);  // :PackedTransferSuccess
 				$cmt = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
 					FROM mods m
@@ -216,7 +216,7 @@ function loadNotifications($loadAll)
 					WHERE m.modId = ?
 				SQL, [NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST, $modId, $modId]);
 
-				$verb = $notification['recordId'] & (1 << 31) ? 'accepted' : 'rejected'; // :PackedTransferSuccess
+				$verb = $notification['recordId'] & (1 << 30) ? 'accepted' : 'rejected'; // :PackedTransferSuccess
 
 				$notification['text'] = "{$cmt['username']} has $verb your ownership transfer of {$cmt['modName']}";
 				break;

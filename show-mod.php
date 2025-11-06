@@ -354,8 +354,8 @@ function processOwnershipTransfer($asset, $user)
 
 			$con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$pendingInvitationId]);
 			// Send notification to the original author:
-			// Use the 32nd bit of the modId to indicate success :PackedTransferSuccess
-			$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES ('.NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED.', ?, ?) ', [$oldOwnerData['createdByUserId'], $asset['modId'] | (1 << 31)]);
+			// Use the 31st bit of the modId to indicate success :PackedTransferSuccess
+			$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES ('.NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED.', ?, ?) ', [$oldOwnerData['createdByUserId'], $asset['modId'] | (1 << 30)]);
 
 			logAssetChanges(['Ownership migrated to '.$user['name']], $asset['assetId']);
 
@@ -374,7 +374,7 @@ function processOwnershipTransfer($asset, $user)
 			$con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$pendingInvitationId]);
 
 			// Send notification to the original author:
-			$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES ('.NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED.', ?, ?) ', [$oldOwner, $asset['modId'] | (0 << 31)]); // :PackedTransferSuccess
+			$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES ('.NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED.', ?, ?) ', [$oldOwner, $asset['modId'] | (0 << 30)]); // :PackedTransferSuccess
 
 			logAssetChanges(['Ownership migration rejected by '.$user['name']], $asset['assetId']);
 

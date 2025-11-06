@@ -283,7 +283,7 @@ function deleteMod($mod)
 		) OR (
 			kind IN (".NOTIFICATION_TEAM_INVITE.','.NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST.") AND (recordId & ((1 << 30) - 1)) = $modId -- :InviteEditBit
 		) OR (
-			kind = ".NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED." AND (recordId & ((1 << 31) - 1)) = $modId -- :PackedTransferSuccess
+			kind = ".NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED." AND (recordId & ((1 << 30) - 1)) = $modId -- :PackedTransferSuccess
 		) OR (
 			kind IN (".NOTIFICATION_ONEOFF_MALFORMED_RELEASE.") AND recordId = $assetId
 		)
