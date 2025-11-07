@@ -236,7 +236,7 @@
 
 		const targetModId = {$mod['modId'] ?? 0};
 		function lockModDlg(btnEl) {
-			const message = prompt("Locking a mod will disable automatic downloads for the duration.\nPlease provide a reason for locking this mod.\nThis reason will be displayed to the mod author and logged. The reason message should contain information on how the author can get their mod to be unlocked again.");
+			const message = prompt("Locking a mod will disable automatic downloads for the duration and cannot be lifted by a normal contributor.\nPlease provide a reason for locking this mod.\nThis reason will be displayed to the mod author and logged. The reason message should contain information on how the author can get their mod to be unlocked again.");
 
 			if(!message) return;
 
