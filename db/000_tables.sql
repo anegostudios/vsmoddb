@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS `mods` (
   `trendingPoints`        INT          NOT NULL DEFAULT 0,
   `comments`              INT          NOT NULL DEFAULT 0,
   `side`                  ENUM('client', 'server', 'both') NULL,
-  `type`                  ENUM('mod', 'externaltool', 'other') NULL DEFAULT 'mod',
+  `type`                  TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `lastReleased`          DATETIME         NULL,
   `created`               DATETIME     NOT NULL DEFAULT NOW(),
   `lastModified`          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

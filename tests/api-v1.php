@@ -137,7 +137,7 @@ final class ApiV1Test extends TestCase {
 	/** @test */
 	public function mod() : void
 	{
-		$data = apiGet(['mod', '2']);
+		$data = apiGet(['mod', '10']);
 		$this->assertFalse($data->fail);
 		$this->assertEquals('200', $data->data['statuscode']);
 

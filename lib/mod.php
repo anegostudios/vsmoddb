@@ -25,12 +25,12 @@ function createNewMod($mod, $filesInOrder, $newMembers, $newEditorMemberHashes)
 		INSERT INTO mods
 			(assetId, urlAlias, cardLogoFileId, embedLogoFileId, 
 			homepageUrl, sourceCodeUrl, trailerVideoUrl, issueTrackerUrl, wikiUrl, donateUrl,
-			summary, descriptionSearchable, side, `type`)
+			summary, descriptionSearchable, side, category)
 		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 	SQL, [
 		$assetId, $mod['urlAlias'], $mod['cardLogoFileId'], $mod['embedLogoFileId'],
 		$mod['homepageUrl'], $mod['sourceCodeUrl'], $mod['trailerVideoUrl'], $mod['issueTrackerUrl'], $mod['wikiUrl'], $mod['donateUrl'],
-		$mod['summary'], textContent($mod['text']), $mod['side'], $mod['type']
+		$mod['summary'], textContent($mod['text']), $mod['side'], $mod['category']
 	]);
 	$modId = intval($con->Insert_ID());
 	logAssetChanges(["Created mod '{$mod['name']}'"], $assetId);
@@ -69,12 +69,12 @@ function updateMod($oldModData, $mod, $filesInOrder, $newMembers, $newEditorMemb
 		UPDATE mods
 		SET urlAlias = ?, cardLogoFileId = ?, embedLogoFileId = ?, 
 			homepageUrl = ?, sourceCodeUrl = ?, trailerVideoUrl = ?, issueTrackerUrl = ?, wikiUrl = ?, donateUrl = ?,
-			summary = ?, descriptionSearchable = ?, side = ?, `type` = ?
+			summary = ?, descriptionSearchable = ?, side = ?, category = ?
 		WHERE modId = ?
 	SQL, [
 		$mod['urlAlias'], $mod['cardLogoFileId'], $mod['embedLogoFileId'],
 		$mod['homepageUrl'], $mod['sourceCodeUrl'], $mod['trailerVideoUrl'], $mod['issueTrackerUrl'], $mod['wikiUrl'], $mod['donateUrl'],
-		$mod['summary'], textContent($mod['text']), $mod['side'], $mod['type'],
+		$mod['summary'], textContent($mod['text']), $mod['side'], $mod['category'],
 		$mod['modId']
 	]);
 	logAssetChanges(["Modified mod '{$mod['name']}'"], $mod['assetId']);

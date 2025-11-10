@@ -17,7 +17,7 @@ if(isset($_GET['assetid'])) {
 
 	// @security: $assetId is known to be an integer and therefore sql inert.
 	$mod = $con->getRow(<<<SQL
-		SELECT m.modId, m.assetId, a.name, m.urlAlias, m.summary, a.text, a.statusId, m.type, m.side, a.createdByUserId,
+		SELECT m.modId, m.assetId, a.name, m.urlAlias, m.summary, a.text, a.statusId, m.category, m.side, a.createdByUserId,
 			m.homepageUrl, m.sourceCodeUrl, m.trailerVideoUrl, m.issueTrackerUrl, m.wikiUrl, m.donateUrl, m.created,
 			m.cardLogoFileId, fileDb.cdnPath AS logoCdnPath,
 			m.embedLogoFileId, fileExternal.cdnPath AS logoCdnPathExternal
@@ -68,7 +68,7 @@ else { // New mod
 		'modId'           => 0,
 		'assetTypeId'     => ASSETTYPE_MOD,
 		'statusId'        => STATUS_DRAFT,
-		'type'            => 'mod',
+		'category'        => CATEGORY_GAME_MOD,
 		'side'            => 'both',
 		'name'            => '',
 		'summary'         => '',
@@ -97,10 +97,11 @@ $stati = [
 ];
 if($mod['statusId'] == STATUS_LOCKED) $stati[STATUS_LOCKED] = 'Locked';
 
-$modTypes = [
-	'mod'          => 'Game mod',
-	'externaltool' => 'External tool',
-	'other'        => 'Other',
+$modCategories = [
+	CATEGORY_GAME_MOD      => 'Game Mod',
+	CATEGORY_SERVER_TWEAK  => 'Server-Specific Tweak',
+	CATEGORY_EXTERNAL_TOOL => 'External Tool',
+	CATEGORY_OTHER         => 'Other',
 ];
 
 $modSidedness = [
@@ -143,16 +144,16 @@ else if(!empty($_POST['save'])) {
 		}
 	}
 
-	$mod['type'] = $_POST['type'];
-	if(!in_array($mod['type'], array_keys($modTypes), true)) {
-		addMessage(MSG_CLASS_WARN, "The new mod type is not valid and has been reset.");
-		$mod['type'] = $oldModData['type'];
+	$mod['category'] = intval($_POST['category']);
+	if(!in_array($mod['category'], array_keys($modCategories), true)) {
+		addMessage(MSG_CLASS_WARN, "The new mod category is not valid and has been reset.");
+		$mod['category'] = $oldModData['category'];
 	}
 
 	$mod['side'] = $_POST['side'];
 	if(!in_array($mod['side'], array_keys($modSidedness), true)) {
 		addMessage(MSG_CLASS_WARN, "The new mod side is not valid and has been reset.");
-		$mod['type'] = $oldModData['side'];
+		$mod['side'] = $oldModData['side'];
 	}
 
 	$tags = getInputArrayOfInts(INPUT_POST, 'tagids');
@@ -647,7 +648,7 @@ if($screenshotsDisclaimer) $screenshotsDisclaimer = "<small>($screenshotsDisclai
 $view->assign('screenshotsDisclaimer', $screenshotsDisclaimer, null, true);
 
 
-$view->assign('modTypes', $modTypes, null, true);
+$view->assign('modCategories', $modCategories, null, true);
 $view->assign('modSidedness', $modSidedness, null, true);
 $view->assign('stati', $stati, null, true);
 

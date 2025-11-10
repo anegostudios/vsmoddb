@@ -77,7 +77,7 @@ if(!empty($_POST['save'])) {
 			WHERE f.assetId IS NULL AND f.assetTypeId = 2 AND f.userId = ?
 		SQL, [$user['userId']]);
 
-		if(!empty($currentFiles[0]['errors']) && $targetMod['type'] === 'mod') {
+		if(!empty($currentFiles[0]['errors']) && ($targetMod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
 			addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$currentFiles[0]['errors'], true);
 			$pushedErrorForCurrentFile = true;
 		}
@@ -96,7 +96,7 @@ if(!empty($_POST['save'])) {
 			if($processedFile['status'] === 'error') {
 				addMessage(MSG_CLASS_ERROR, 'Failed to process uploaded file: '.$processedFile['errormessage'], true);
 			}
-			else if($targetMod['type'] === 'mod') {
+			else if(($targetMod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
 				if($processedFile['modparse'] === 'error') {
 					addMessage(MSG_CLASS_ERROR, 'Failed to parse modinfo: '.$processedFile['parsemsg'], true);
 					$pushedErrorForCurrentFile = true;
@@ -138,7 +138,7 @@ if(!empty($_POST['save'])) {
 
 	$newCompatibleGameVersions = null;
 
-	if($targetMod['type'] === 'mod') {
+	if(($targetMod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
 		// Mods take modid and version from the attached file. We no longer allow manual entry.
 		if($currentFiles) {
 			$newData['identifier'] = $currentFiles[0]['modIdentifier'];
@@ -299,7 +299,7 @@ if(!$existingRelease) {
 		'compatibleGameVersions' => empty($_POST['cgvs']) ? [] : array_flip(array_filter(array_map('compileSemanticVersion', $_POST['cgvs']))),
 	];
 
-	if($targetMod['type'] === 'mod') {
+	if(($targetMod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
 		// Pre-select values from hovering file:
 		$existingRelease['identifier'] = $files ? $files[0]['modIdentifier'] : '';
 		$existingRelease['version']    = $files ? formatSemanticVersion(intval($files[0]['modVersion'])) : '';
@@ -333,6 +333,7 @@ cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/edit-deletefile {$_SERVER
 $view->assign('allGameVersions', $allGameVersions);
 
 $view->assign('mod', $targetMod);
+$view->assign('doFileValidation', ($targetMod["category"] & CATEGORY__MASK) === CATEGORY_GAME_MOD, null, false);
 $view->assign('release', $existingRelease);
 $view->assign('files', $files);
 

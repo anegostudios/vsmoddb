@@ -2,7 +2,7 @@
 
 /**
  * @security: Does not perform validation!
- * @param array{modId:int, type:'mod'|'tool'|'other'} $mod The mod the release is to be associated with.
+ * @param array{modId:int, type:int} $mod The mod the release is to be associated with.
  * @param array{text:string, identifier?:string, version:int} $newData
  * @param int[] $newCompatibleGameVersions
  * @param array{assetId:int, fileId:int} $file
@@ -30,7 +30,7 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 
 	$changeToLog = 'Created new release v'.formatSemanticVersion($newData['version']);
 
-	if($mod['type'] === 'mod') {
+	if(($mod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
 		$folded = implode(',', array_map(fn($v) => "($releaseId, $v)", $newCompatibleGameVersions));
 		// @security: Version numbers and releaseIds are numeric and therefore SQL Inert.
 		$con->execute("INSERT INTO modReleaseCompatibleGameVersions (releaseId, gameVersion) VALUES $folded");
@@ -55,7 +55,7 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 
 /**
  * @security: Does not perform validation!
- * @param array{modId:int, type:'mod'|'tool'|'other'} $mod The mod the release is to be associated with.
+ * @param array{modId:int, type:int} $mod The mod the release is to be associated with.
  * @param array{releaseId:int, assetId:int, text:string, identifier:string|null, version:int} $existingRelease
  * @param array{text:string, identifier?:string, version:int} $newData
  * @param int[] $newCompatibleGameVersions
@@ -72,7 +72,7 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 	}
 
 	$compatibleGameVersionsChange = false;
-	if($mod['type'] === 'mod') {
+	if(($mod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
 		$oldCompatibleGameVersions = array_map('intval', $con->getCol('SELECT gameVersion FROM modReleaseCompatibleGameVersions WHERE releaseId = ? ORDER BY gameVersion', [$existingRelease['releaseId']]));
 		sort($newCompatibleGameVersions); // Order the arrays the same way for the comparison.
 		$compatibleGameVersionsChange = $newCompatibleGameVersions !== $oldCompatibleGameVersions;

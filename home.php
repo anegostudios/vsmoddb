@@ -81,7 +81,7 @@ $latestMods = $con->getAll("
 		join users u ON u.userId = a.createdByUserId
 		left join files AS logo ON logo.fileId = m.cardLogoFileId
 	WHERE
-		a.statusId = ".STATUS_RELEASED."
+		a.statusId = ".STATUS_RELEASED." AND m.category != ".CATEGORY_SERVER_TWEAK."
 		AND m.created > DATE_SUB(NOW(), INTERVAL 30 DAY)
 	ORDER BY
 		a.created DESC

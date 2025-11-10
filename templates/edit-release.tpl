@@ -25,7 +25,7 @@
 		<input type="hidden" name="numsaved" value="{$release['numSaved']}">
 		<input type="hidden" name="saveandback" value="0">
 		
-		{if $mod['type'] === 'mod'}
+		{if ($mod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD}
 			<div class="editbox">
 				<label>Compatible with game versions</label>
 				<select name="cgvs[]" class="required" multiple>
@@ -114,11 +114,10 @@
 {capture name="footerjs"}
 {include file="edit-asset-files-template.tpl"}
 <script nonce="{$cspNonce}" type="text/javascript">	
-	modtype='{$mod["type"]}';
 	assetid = {$release['assetId']};
 	assettypeid = 2;
 	
-	if (modtype === 'mod') {
+	{if $doFileValidation} {
 		function onUploadFinished(file) \{
 			if (file.modparse == "error") \{
 				addMessage(MSG_CLASS_ERROR, 'Failed to parse mod information from this file: '+file.parsemsg, true);
@@ -155,7 +154,7 @@
 					| ((BigInt(matches[3]) & 0xffffn) << 16n)
 					| compliedSuffix;
 		}
-	}
+	} {/if}
 	
 	
 	$(document).ready(function() {

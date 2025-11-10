@@ -101,11 +101,14 @@ function validateModSearchInputs(&$outParams)
 
 	if(!empty($_REQUEST['c'])) {
 		$rCat = $_REQUEST['c'];
-		if(!in_array($rCat, ['m', 'e', 'o'], true)) {
+		if(!in_array($rCat, ['m', 's', 'e', 'o'], true)) {
 			return "Invalid category: '$rCat'.";
 		}
 
 		$outParams['filters']['category'] = $rCat;
+	}
+	else {
+		$outParams['filters']['category'] = 'a'; // default to no server tweaks
 	}
 
 	if(!empty($_REQUEST['t'])) {
@@ -299,12 +302,17 @@ function queryModSearch($searchParams)
 				break;
 
 			case 'category':
-				$name = 'm.type';
 				switch($value) {
-					case 'm': $value = 'mod'; break;
-					case 'e': $value = 'externaltool'; break;
-					case 'o': $value = 'other'; break;
-					default: assert(false, "Invalid type: $value");
+					case 'a':
+						$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+						$whereClauses .= 'm.category != '.CATEGORY_SERVER_TWEAK;
+						break 2;
+
+					case 'm': $value = CATEGORY_GAME_MOD; break;
+					case 's': $value = CATEGORY_SERVER_TWEAK; break;
+					case 'e': $value = CATEGORY_EXTERNAL_TOOL; break;
+					case 'o': $value = CATEGORY_OTHER; break;
+					default: assert(false, "Invalid category: $value");
 				}
 				/* fallthrough */
 

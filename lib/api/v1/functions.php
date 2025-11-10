@@ -109,7 +109,7 @@ function listMod($modid)
 		"trendingpoints"  => intval($row['trendingPoints']),
 		"comments"        => intval($row['comments']),
 		"side"            => $row['side'],
-		"type"            => $row['type'],
+		"type"            => mapCategoryToType($row['category']),
 		"created"         => $row['created'],
 		"lastreleased"    => $row['lastReleased'],
 		//NOTE(Rennorb): This field updates on download number changes and is therefore pretty much useless.
@@ -194,7 +194,7 @@ function listMods()
 			asset.assetId, 
 			`mod`.modId, 
 			`mod`.side,
-			`mod`.type,
+			`mod`.category,
 			`mod`.urlAlias,
 			asset.name,
 			logofileExternal.cdnPath as logoCdnpathExternal,
@@ -237,7 +237,7 @@ function listMods()
 			"author"         => $row['author'],
 			"urlalias"       => $row['urlAlias'],
 			"side"           => $row['side'],
-			"type"           => $row['type'],
+			"type"           => mapCategoryToType($row['category']),
 			"logo"           => $row['logoCdnpathExternal'] ? formatCdnUrlFromCdnPath($row['logoCdnpathExternal']) : null,
 			"tags"           => $tags,
 			"lastreleased"   => $row['lastReleased']
@@ -245,6 +245,22 @@ function listMods()
 	}
 
 	good(array("statuscode" => 200, "mods" => $mods));
+}
+
+/** @legacy: MAps new category ids to old type names
+ * @param int $category
+ * @return string
+ */
+function mapCategoryToType($category)
+{
+	switch($category) {
+		case CATEGORY_EXTERNAL_TOOL: return 'externaltool';
+		case CATEGORY_OTHER: return 'other';
+		case CATEGORY_GAME_MOD:
+		case CATEGORY_SERVER_TWEAK: // Keep it as 'mod' for now, would have been used that way before.
+		default:
+			return 'mod';
+	}
 }
 
 function unwrapTagNames($tagsCached)

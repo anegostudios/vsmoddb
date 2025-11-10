@@ -38,9 +38,9 @@
 
 		<div class="editbox short">
 			<label><abbr title="Only mods from the category 'Game Mod' are available in the in-game mod browser">Category</abbr></label>
-			<select name="type" noSearch="noSearch">
-				{foreach from=$modTypes item=name key=type}
-					<option value="{$type}"{if $mod['type'] === $type} selected="selected"{/if}>{$name}</option>
+			<select name="category" noSearch="noSearch">
+				{foreach from=$modCategories item=name key=category}
+					<option value="{$category}"{if $mod['category'] == $category} selected="selected"{/if}>{$name}</option>
 				{/foreach}
 			</select>
 		</div>

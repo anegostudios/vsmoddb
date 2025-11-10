@@ -50,20 +50,21 @@
 		</span>
 
 		<span data-label="Category">
-			<select name="c" style="width:10em;">
-				<option value="">Any</option>
-				<option value="m"{if $selectedParams['category'] == 'm'} selected="selected"{/if}>Game mod</option>
-				<option value="e"{if $selectedParams['category'] == 'e'} selected="selected"{/if}>External Tool</option>
-				<option value="o"{if $selectedParams['category'] == 'o'} selected="selected"{/if}>Other</option>
+			<select name="c" style="width:14em;">
+				<option value="">Any (no Server-Tweaks)</option>
+				<option value="m"{if $selectedParams['category'] === 'm'} selected="selected"{/if}>Game Mod</option>
+				<option value="s"{if $selectedParams['category'] === 's'} selected="selected"{/if}>Server-Specific Tweak</option>
+				<option value="e"{if $selectedParams['category'] === 'e'} selected="selected"{/if}>External Tool</option>
+				<option value="o"{if $selectedParams['category'] === 'o'} selected="selected"{/if}>Other</option>
 			</select>
 		</span>
 
 		<span data-label="Mod Type">
 			<select name="t" style="width:10em;">
 				<option value="">Any</option>
-				<option value="v"{if $selectedParams['type'] == 'v'} selected="selected"{/if}>* Theme Pack (purely visual)</option>
-				<option value="d"{if $selectedParams['type'] == 'd'} selected="selected"{/if}>* Content mod</option>
-				<option value="c"{if $selectedParams['type'] == 'c'} selected="selected"{/if}>* Code mod</option>
+				<option value="v"{if $selectedParams['type'] === 'v'} selected="selected"{/if}>* Theme Pack (purely visual)</option>
+				<option value="d"{if $selectedParams['type'] === 'd'} selected="selected"{/if}>* Content Mod</option>
+				<option value="c"{if $selectedParams['type'] === 'c'} selected="selected"{/if}>* Code Mod</option>
 			</select>
 		</span>
 
