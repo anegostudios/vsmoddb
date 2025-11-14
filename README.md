@@ -240,6 +240,18 @@ Note: the mysql container is set up to automatically execute the provided [DB st
 
 Note: in staging environments you can append `?showas=<id>` to any url to load the page the user with that id. This can be used debugging and testing role related features. 
 
+## Compiling styles
+We are now using [Sass](https://sass-lang.com/), mostly just to combine multiple stylesheets into one and minify them.
+
+You can either download the standalone version of sass for your os, or install it globally into the [node package manager](https://www.npmjs.com/) via `npm install -g sass`. 
+
+To compile the styles into one file run the command for your method of installation:
+- standalone: `sass --style=compressed --update web/_sass/_style.scss:web/css/style.css`
+- npm: `npx sass --style=compressed --update web/_sass/_style.scss:web/css/style.css` (simply prepend `npx`)
+
+If you add the `-w` argument to this command, sass will continue running after the first compile instead of terminating, and watch for changes to the soruce files, which will trigger a automatic recompile.
+
+
 
 # Testing
 I've recently started adding tests for some components of the ModDB. For now they are based on php unit and require quite specific arguments to run.

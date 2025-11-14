@@ -1,0 +1,70 @@
+.tree {
+	--spacing: 1.25em;
+	--knob-size: .75em;
+	line-height: var(--spacing);
+	padding-left: var(--spacing);
+
+	ul {
+		list-style: none;
+		margin-left: calc(var(--spacing) * -1);
+	}
+
+	li {
+		padding-left: calc(2 * var(--spacing));
+		border-left: 2px solid #ddd;
+		position: relative;
+		margin: 0;
+
+		&:last-child {
+			border-color: transparent;
+		}
+
+		&::before {
+			content: '';
+			display: block;
+			position: absolute;
+			top: calc(var(--spacing) / -2);
+			width: calc(var(--spacing) + 2px);
+			height: calc(var(--spacing) + 1px);
+			border: solid #ddd;
+			border-width: 0 0 2px 2px;
+			left: -2px;
+		}
+	}
+
+	summary {
+		display: block;
+		cursor: pointer;
+
+		&::marker,
+		&::-webkit-details-marker {
+			display: none;
+		}
+		&:focus {
+			outline: none;
+		}
+		&:focus-visible {
+			outline: solid 1px #000;
+		}
+
+		&::before {
+			content: '+';
+			line-height: var(--knob-size);
+			text-align: center;
+			display: block;
+			position: absolute;
+			border-radius: 50%;
+			width: var(--knob-size);
+			height: var(--knob-size);
+			left: calc(var(--spacing) - var(--knob-size) / 2 + 1px);
+			top: calc(var(--spacing) / 2 - var(--knob-size) / 2 + 2px);
+			background-color: #ddd;
+			z-index: 1;
+		}
+	}
+	
+	details[open]>summary::before {
+		content: '-';
+		line-height: calc(var(--knob-size) / 1.25);
+	}
+}

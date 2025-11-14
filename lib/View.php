@@ -53,12 +53,12 @@ class View {
 	
 	
 	function escape($value) {
-		if (is_array($value)) {
+		if (is_array($value) || is_object($value)) {
 			foreach ($value as &$singular) {
 				$singular = $this->escape($singular);
 			}
 		}
-		if (is_string($value)) {
+		else if (is_string($value)) {
 			$value = htmlspecialchars($value);
 		}
 		return $value;
@@ -124,7 +124,7 @@ class View {
 				if (preg_match("/^foreach\s+/i", $match)) {
 					$match = preg_replace_callback("/
 						foreach\s+
-						from=(\\$[\w\d\"_'\[\]]+)\s+
+						from=(\\$[\w\d\"_'\[\]\->]+)\s+
 						item=(\w+)
 						(\s+key=(\w+))?
 					/x", function($matches) {
@@ -157,7 +157,7 @@ class View {
 					$unsets = "";
 					
 					if (isset($includematches[2])) {
-						preg_match_all("/\s+(\w+)=((?|\"[^\"]*\"|'[^']*')|(\\$[\w\d\"_'\[\]]+))/", $includematches[2], $variablematches, PREG_SET_ORDER);
+						preg_match_all("/\s+(\w+)=((?|\"[^\"]*\"|'[^']*')|(\\$[\w\d\"_'\[\]\\->]+))/", $includematches[2], $variablematches, PREG_SET_ORDER);
 						foreach ($variablematches as $variablematch) {
 							$name = $variablematch[1];
 							$value = $variablematch[2];
@@ -165,7 +165,7 @@ class View {
 							
 							$value = preg_replace("/`\\$([^`]+)`/", "{\$\\1}", $value);
 						
-							$variables .= "\$view->assign(\"{$name}\",  ".$value."); ";
+							$variables .= "\$view->assign(\"{$name}\",  ".$value.", null, true); ";
 							$unsets .= "\$view->unsetVar(\"{$name}\"); ";
 						}
 					}
