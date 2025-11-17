@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS `changelogs` (
   `changelogId`  INT       NOT NULL AUTO_INCREMENT,
   `assetId`      INT           NULL, -- null for file deletions as of now
   `userId`       INT       NOT NULL,
-  `text`         TEXT      NOT NULL,
+  `text`         TEXT CHARACTER SET utf8mb4 NOT NULL,
   `created`      DATETIME  NOT NULL DEFAULT NOW(),
   `lastModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`changelogId`),
