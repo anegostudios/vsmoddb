@@ -117,18 +117,18 @@ CREATE TABLE IF NOT EXISTS `modPeekResults` (
   `rawContributors`  TEXT CHARACTER SET utf8mb4 NULL,
   `rawDependencies`  TEXT                NULL,
   PRIMARY KEY (`fileId`),
-  CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT `FK_modPeekResults_fileId` FOREIGN KEY (`fileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 
--- Idea for dependencies
--- CREATE TABLE IF NOT EXISTS `releaseFileDependencies` (
---   `fileId`               INT             NOT NULL,
---   `dependencyIdentifier` VARCHAR(255)        NULL,
---   `dependencyMinVersion` BIGINT UNSIGNED NOT NULL,
---   CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
--- )
--- ENGINE = InnoDB;
+CREATE TABLE IF NOT EXISTS `modReleaseFileDependencies` (
+  `fileId`     INT             NOT NULL,
+  `identifier` VARCHAR(255)        NULL,
+  `minVersion` BIGINT UNSIGNED NOT NULL,
+  UNIQUE INDEX (`fileId`, `identifier`),
+  CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
+)
+ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS `status` (
   `statusId` INT          NOT NULL AUTO_INCREMENT,
