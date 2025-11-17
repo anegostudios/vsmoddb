@@ -49,15 +49,16 @@
 			</select>
 		</span>
 
+		{if $selectedParams['category'] !== 's'}
 		<span data-label="Category">
 			<select name="c" style="width:14em;">
-				<option value="">Any (no Server-Tweaks)</option>
+				<option value="">Any</option>
 				<option value="m"{if $selectedParams['category'] === 'm'} selected="selected"{/if}>Game Mod</option>
-				<option value="s"{if $selectedParams['category'] === 's'} selected="selected"{/if}>Server-Specific Tweak</option>
 				<option value="e"{if $selectedParams['category'] === 'e'} selected="selected"{/if}>External Tool</option>
 				<option value="o"{if $selectedParams['category'] === 'o'} selected="selected"{/if}>Other</option>
 			</select>
 		</span>
+		{/if}
 
 		<span data-label="Mod Type">
 			<select name="t" style="width:10em;">
