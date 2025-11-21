@@ -126,6 +126,13 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 			[$fileId, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['side'], $modInfo['requiredOnClient'], $modInfo['requiredOnServer'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['iconPath'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawDependencies']]
 		);
 
+		$preparedInsert = $con->prepare('INSERT INTO modReleaseFileDependencies (fileId, identifier, minVersion) VALUES (?, ?, ?)');
+		foreach(explode(', ', $modInfo['rawDependencies']) as $dep) {
+			splitOnce($dep, '@', $depIdent, $depVer);
+			$depVer = $depVer === '' ? 0 : compileSemanticVersion($depVer);
+			$con->execute($preparedInsert, [ $fileId, $depIdent, $depVer ]);
+		}
+
 		$minCompat = findMinCompatibleGameVersion($modInfo['rawDependencies']);
 		if($minCompat !== null) $data['gameversiondep'] = $minCompat;
 
