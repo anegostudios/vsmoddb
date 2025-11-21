@@ -997,3 +997,9 @@ function isTVPlatform()
 {
 	return preg_match('/webos|apple(?:tv| tv)|aft|roku|smart(?:tv|-tv| tv)/i', $_SERVER['HTTP_USER_AGENT']);
 }
+
+/** @return bool */
+function isOneClickInstallPlatform()
+{
+	return !preg_match('/macintosh|mac os x|mac_powerpc|iphone|ipod|ipad|android|blackberry|webos|mobile/i', $_SERVER['HTTP_USER_AGENT']);
+}

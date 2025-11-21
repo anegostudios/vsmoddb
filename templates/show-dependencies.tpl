@@ -30,14 +30,14 @@
 
 				<div style="overflow-x: auto">
 					<table class="stdtable deps-table">
-						<thead><tr><th>Mod</th><th>Release</th><th>Download</th><th><abbr title="Requires game version v1.18.0-rc.1 or later, currently not supported on MacOS.">1-Click Install*</abbr></th></tr></thead>
+						<thead><tr><th>Mod</th><th>Release</th><th>Download</th>{if $shouldShowOneClickInstall}<th><abbr title="Requires game version v1.18.0-rc.1 or later, currently not supported on MacOS.">1-Click Install*</abbr></th>{/if}</tr></thead>
 						<tbody>
 							{foreach from=$context->resolutions item=resolution key=identifier}
 								<tr>
 									<td>{if $resolution->modName}{htmlspecialchars($resolution->modName)}{else}[{$identifier}]{/if}</td>
 									<td>{formatSemanticVersion($resolution->version)}</td>
-									<td>{if $resolution->link}<div><a class="button square ico-button mod-dl" href="{$resolution->link}">{htmlspecialchars($resolution->fileName)}</a><a class="button square ico-button deps" target="_blank" href="/show/dependencies/{$resolution->releaseId}"></a></div>{/if}</td>
-									<td>{if $resolution->oneclick}{include file="button-one-click-install" release=$resolution->oneclick}{/if}</td>
+									<td>{if $resolution->link}<div><a class="button square ico-button mod-dl" href="{$resolution->link}">{htmlspecialchars($resolution->fileName)}</a><a class="button square ico-button deps" target="_blank" href="/show/dependencies/{$resolution->releaseId}"></a></div>{else}<i style="color: var(--color-input-r)">{$resolution->error}</i>{/if}</td>
+									{if $shouldShowOneClickInstall}<td>{if $resolution->oneclick}{include file="button-one-click-install" release=$resolution->oneclick}{/if}</td>{/if}
 								</tr>
 							{/foreach}
 						</tbody>

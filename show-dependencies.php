@@ -171,6 +171,7 @@ ksort($context->resolutions, SORT_STRING);
 cspPushAllowedInlineHandlerHash('sha256-Hzjw+jaMvglkCU/moLRBe/kljnMPTdxVYaD5oRgBvdY=');
 cspPushAllowedInlineHandlerHash('sha256-3VMmL6Xy+VuUuduxZEdfXcpxMTaQp1R4ltGbj+W0AQw=');
 
+$view->assign('shouldShowOneClickInstall', isOneClickInstallPlatform(), null, true);
 $view->assign('rootRelease', $rootRelease, null, true);
 $view->assign('context', $context, null, true);
 $view->display('show-dependencies');
