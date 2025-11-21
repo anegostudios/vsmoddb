@@ -192,10 +192,14 @@ class View {
 
 
 
-				// {assign var="name" value=$val} or assign var='name' value=$val}
+				// {assign var="name" value=$val} or {assign var='name' value=$val}
 				if (preg_match("/^assign\s+var=(?|\"([^\"]*)\"|'([^']*)')\s+value=(.+)/i", $match, $assignmatch)) {
-					
 					return "<?php \$view->assign(\"{$assignmatch[1]}\", \${$assignmatch[1]} = {$assignmatch[2]});  ?>";
+				}
+
+				// {assign var=$name value=$val}
+				if (preg_match('/^assign\s+var=(\$[\w0-9_\->\[\]\'"]+)\s+value=(.+)/i', $match, $assignmatch)) {
+					return "<?php {$assignmatch[1]} = {$assignmatch[2]}; ?>";
 				}
 				
 				// {$testi}

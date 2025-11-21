@@ -50,4 +50,19 @@
 	{/if}
 </div>
 
+<script nonce="{$cspNonce}" type="text/javascript"> {
+	const tree = document.getElementsByClassName('tree')[0];
+	tree.addEventListener('click', e => {
+		if(e.target.nodeName !== 'A') return;
+		const href = e.target.getAttribute('href');
+		if(!href.startsWith('#dep')) return;
+
+		const target = document.getElementById(href.substring(1));
+		if(!target) return;
+
+		target.classList.add('highlight');
+		setTimeout(() => target.classList.remove('highlight'), 2000);
+	});
+}</script>
+
 {include file="footer"}

@@ -47,6 +47,8 @@ class Resolution {
 		public string|null $error = null,
 
 		public $oneclick = null,
+
+		public $printed = false, // Used to prevent recursive printing
 	) { }
 }
 
