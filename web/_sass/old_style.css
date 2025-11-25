@@ -677,10 +677,10 @@ body.opaque-desc .mod .moddesc {
 	border-bottom-style: dashed;
 }
 
-/* hardcoded so we can put the further out and highlight the buttons aswell */
-.tab-trigger#tab-description:checked ~ .tab-container>.tab-content.description { display: unset; }
+/* hardcoded so we can put the triggers further out and highlight the buttons aswell */
+.tab-trigger#tab-description:not(:checked) ~ .tab-container>.tab-content.description { display: none; }
 .tab-trigger#tab-description:checked ~ .tabs>li:first-child { background-color: hsl(var(--c-input-btn) 90%); }
-.tab-trigger#tab-files:checked ~ .tab-container>.tab-content.files { display: unset; }
+.tab-trigger#tab-files:not(:checked) ~ .tab-container>.tab-content.files { display: none; }
 .tab-trigger#tab-files:checked ~ .tabs>li:nth-child(2) { background-color: hsl(var(--c-input-btn) 90%); }
 
 td {
