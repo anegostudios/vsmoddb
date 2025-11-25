@@ -40,7 +40,7 @@ class Resolution {
 		public int|null $version = null,
 		public array|null $children = null,
 		public string|null $link = null,
-		public string|null $modName = null,
+		public array|null $mod = null,
 		public string|null $fileName = null,
 		public int|null $releaseId = null,
 
@@ -123,17 +123,18 @@ function processPendingResolutions(Context $context) {
 	//TODO(Rennorb) @hammer @perf: construct a query that is able to fetch all the missing dependencies in one call.
 	// This is the only reason I separated this from the other function in the first place, but right now I am not able to come up with a good query for that.
 	foreach($pendingResolutions as $identifier => $resolution) {
+		// @security: minVersion is numeric and therefore sql inert.
+		$versionSearchSql = $resolution->minVersion === 0 ? '' : 'AND r.version >= '.$resolution->minVersion.' ORDER BY r.version DESC';
 		$resolvingRelease = $con->getRow(<<<SQL
-			SELECT ma.name as `modName`, r.releaseId, f.fileId, f.name, r.version, mpr.errors IS NOT NULL AS hasErrors, mpr.rawDependencies
+			SELECT m.modId, ma.name as `modName`, r.releaseId, f.fileId, f.name, r.version, mpr.errors IS NOT NULL AS hasErrors, mpr.rawDependencies
 			FROM modReleases r
 			JOIN mods m ON m.modId = r.modId
 			JOIN assets ma ON ma.assetId = m.assetId
 			JOIN files f ON f.assetId = r.assetId
 			JOIN modPeekResults mpr ON mpr.fileId = f.fileId
-			WHERE r.identifier = ? AND r.version >= ?
-			ORDER BY r.version DESC
+			WHERE r.identifier = ? $versionSearchSql
 			LIMIT 1
-		SQL, [$identifier, $resolution->minVersion]);
+		SQL, [$identifier]);
 
 		if(!$resolvingRelease) {
 			$resolution->error = "Failed to find release that resolves this dependency.";
@@ -141,7 +142,7 @@ function processPendingResolutions(Context $context) {
 		}
 
 		$resolution->version = $resolvingRelease['version'];
-		$resolution->modName = $resolvingRelease['modName'];
+		$resolution->mod = ['id' => $resolvingRelease['modId'], 'name' => $resolvingRelease['modName']];
 		$resolution->fileName = $resolvingRelease['name'];
 		$resolution->link = formatDownloadTrackingUrl($resolvingRelease);
 		$resolution->releaseId = $resolvingRelease['releaseId'];
@@ -168,8 +169,52 @@ foreach($context->resolutions as $identifier => $resolution) { //TODO(Rennorb) @
 
 ksort($context->resolutions, SORT_STRING);
 
-cspPushAllowedInlineHandlerHash('sha256-Hzjw+jaMvglkCU/moLRBe/kljnMPTdxVYaD5oRgBvdY=');
-cspPushAllowedInlineHandlerHash('sha256-3VMmL6Xy+VuUuduxZEdfXcpxMTaQp1R4ltGbj+W0AQw=');
+// Prepare data for mod cards
+{
+	$directChildResolutions = [];
+	foreach($context->treeRoot->resolution->children as $directChild) {
+		if(($res = $directChild->resolution) && $res->mod) {
+			$directChildResolutions[$res->mod['id']] = $res;
+		}
+	}
+	if(count($directChildResolutions)) {
+		$foldedIds = implode(',', array_keys($directChildResolutions));
+		$currentUserId = intval($user['userId']);
+		// @security: $foldedIds and $currentUserId are numeric and therefore sql inert.
+		$mods = $con->execute("
+			SELECT
+				a.created,
+				a.tagsCached,
+				m.modId, m.assetId, m.urlAlias, m.downloads, m.comments, m.summary,
+				l.cdnPath AS logoCdnPath,
+				l.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
+				s.code AS statusCode,
+				f.userId AS following
+			FROM mods m
+			JOIN assets a ON a.assetId = m.assetId
+			LEFT JOIN status s ON s.statusId = a.statusId
+			LEFT JOIN userFollowedMods f ON f.modId = m.modId and f.userId = $currentUserId
+			LEFT JOIN files l ON l.fileId = m.cardLogoFileId
+			WHERE m.modId IN ($foldedIds)
+		");
+
+		foreach($mods as $mod) {
+			$res = $directChildResolutions[$mod['modId']];
+
+			$mod['name'] = $res->mod['name'];
+			$mod['dbPath'] = formatModPath($mod);
+			$mod['tags'] = unwrapCachedTags($mod['tagsCached']);
+			unset($mod['tagsCached']); // @perf for the template engine
+
+			$res->mod = $mod;
+		}
+	}
+}
+
+
+cspPushAllowedInlineHandlerHash('sha256-Hzjw+jaMvglkCU/moLRBe/kljnMPTdxVYaD5oRgBvdY='); // location.hash='tab-tree'
+cspPushAllowedInlineHandlerHash('sha256-3VMmL6Xy+VuUuduxZEdfXcpxMTaQp1R4ltGbj+W0AQw='); // location.hash='tab-list'
+cspPushAllowedInlineHandlerHash('sha256-Cd19gmOOkQ90cXDxMkUPq46x0bELegro6PpxG9/bQ3U='); // location.hash='tab-direct'
 
 $view->assign('shouldShowOneClickInstall', isOneClickInstallPlatform(), null, true);
 $view->assign('rootRelease', $rootRelease, null, true);

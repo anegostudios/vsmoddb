@@ -49,13 +49,12 @@ ul.tabs {
 
 .tab-trigger {
 	display: none;
-
-	&:checked + .tab-content {
-		display: unset;
-	}
 }
 
 .tab-content {
 	padding: 1em 0;
-	display: none;
+
+	@at-root .tab-trigger:not(:checked) + & {
+		display: none;
+	}
 }
