@@ -90,7 +90,7 @@ switch($urlparts[1]) {
 
 	case 'lock':
 		if($_SERVER['REQUEST_METHOD'] != 'POST') {
-			header('Allow: GET, PUT');
+			header('Allow: POST');
 			fail(HTTP_WRONG_METHOD);
 		}
 
@@ -126,4 +126,57 @@ switch($urlparts[1]) {
 		$ok = $con->completeTrans();
 		if($ok) good();
 		else fail(HTTP_INTERNAL_ERROR, ['error' => 'Internal database error.']);
+
+	case 'releases':
+		if(count($urlparts) !== 3)   fail(HTTP_BAD_REQUEST);
+
+		switch($urlparts[2]) {
+			case 'upload-limit':
+				switch($_SERVER['REQUEST_METHOD']) {
+					case 'GET':
+						validateUserNotBanned();
+						validateActionTokenAPI();
+						if(!canModerate(null, $user)) fail(HTTP_FORBIDDEN);
+
+						//NOTE(Rennorb): Can't use getOne here because there would be no difference between 'not found' and 'no overwrite'.
+						$modData = $con->getRow('SELECT uploadLimitOverwrite FROM mods WHERE modId = ?', [$modId]);
+						if(!$modData) fail(HTTP_NOT_FOUND);
+
+						good($modData['uploadLimitOverwrite']);
+
+					case 'PUT':
+						list($_POST, $_) = request_parse_body();
+						if($_POST['at'] && empty($_REQUEST['at'])) $_REQUEST['at'] = $_POST['at'];
+
+						validateUserNotBanned();
+						validateActionTokenAPI();
+						if(!canModerate(null, $user)) fail(HTTP_FORBIDDEN);
+
+						if(empty($_POST['limit'])) $newLimit = null;
+						else {
+							$newLimit = intval($_POST['limit']);
+							if($newLimit != $_POST['limit']) fail(HTTP_BAD_REQUEST, ['reason' => 'Malformed limit.']);
+							if($newLimit > parseMaxUploadSizeFromIni()) fail(HTTP_BAD_REQUEST, ['reason' => 'The new limit is above the current server limit.']);
+						}
+
+						//NOTE(Rennorb): Can't use getOne here because there would be no difference between 'not found' and 'no overwrite'.
+						$con->execute('UPDATE mods SET uploadLimitOverwrite = ? WHERE modId = ?', [$newLimit, $modId]);
+						if(!$con->affected_rows()) {
+							//TODO(Rennorb) @cleanup: Combine into one call.
+							// Setting it to the same value does not return a affected row, but should still succeed.
+							if($con->getOne('SELECT 1 FROM mods WHERE modId = ?', [$modId])) good();
+
+							fail(HTTP_NOT_FOUND);
+						}
+
+						good();
+
+					default:
+						header('Allow: GET, PUT');
+						fail(HTTP_WRONG_METHOD);
+				}
+
+			default:
+				fail(HTTP_BAD_REQUEST);
+		}
 }

@@ -55,6 +55,13 @@
 			msgContainer.append(msgEl);
 		}
 
+		function formatByteSize(size) {
+			if(size > 1073741824) return (size / 1073741824).toFixed(2) + ' GB';
+			if(size > 1048576) return (size / 1048576).toFixed(2) + ' MB';
+			if(size > 1024) return (size / 1024).toFixed(2) + ' KB';
+			return size + ' B';
+		}
+
 		msgContainer.addEventListener('click', function(e) {
 			let t = e.target;
 			if(!t || !t.classList.contains('dismiss')) return;

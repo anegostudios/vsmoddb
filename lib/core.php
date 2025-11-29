@@ -29,6 +29,18 @@ const KB = 1024;
 const MB = 1024 * KB;
 const GB = 1024 * MB;
 
+/** Format 1024 as 1KB, with two significant digits after the dot.
+ * @param int $size
+ * @return string
+ */
+function formatByteSize($size)
+{
+	if($size > 1024 * 1024 * 1024) return round((float)$size / (1024 * 1024 * 1024), 2).' GB';
+	if($size > 1024 * 1024) return round((float)$size / (1024 * 1024), 2).' MB';
+	if($size > 1024) return round((float)$size / 1024, 2).' KB';
+	return $size.' B';
+}
+
 
 $view->assign("assetserver", $config['assetserver']);
 
@@ -36,45 +48,6 @@ $view->assign("assetserver", $config['assetserver']);
 //NOTE(Rennorb): Technically we should only count the public mods, but in reality this probably doesn't matter for production and just counting all mods makes the query simpler.
 $view->assign('totalModCount', $con->getOne('SELECT COUNT(*) from mods'), null, true);
 
-
-// insert db record
-function insert($tablename)
-{
-	global $con;
-
-	$con->Execute("insert into `{$tablename}` (created) values (now())");
-
-	return $con->Insert_ID();
-}
-
-// update db record
-function update($tablename, $recordid, $data)
-{
-	global $con;
-
-	$columnnames = array();
-	$values = array();
-	foreach ($data as $columnname => $value) {
-		array_push($columnnames, "`{$columnname}`= ?");
-		array_push($values, $data[$columnname]);
-	}
-
-	$updatessql = "
-			update `{$tablename}` set " . join(", ", $columnnames) . " where {$tablename}Id = ?";
-
-	return $con->Execute($updatessql, array_merge(
-		$values,
-		array($recordid)
-	));
-}
-
-// delete db record
-function delete($tablename, $recordid)
-{
-	global $con;
-
-	$con->Execute("delete from `{$tablename}` where `{$tablename}id` = ?", array($recordid));
-}
 
 
 
@@ -984,7 +957,6 @@ const STATUS_LOCKED = 4;
 if(!defined('INPUT_REQUEST')) define('INPUT_REQUEST', 99);
 
 include($config["basepath"] . "lib/upload-limits.php");
-$view->assignRefUnfiltered('maxFileUploadSize', $maxFileUploadSize);
 
 /** @return bool */
 function isTouchPlatform()

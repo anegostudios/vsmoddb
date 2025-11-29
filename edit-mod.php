@@ -20,7 +20,8 @@ if(isset($_GET['assetid'])) {
 		SELECT m.modId, m.assetId, a.name, m.urlAlias, m.summary, a.text, a.statusId, m.category, m.side, a.createdByUserId,
 			m.homepageUrl, m.sourceCodeUrl, m.trailerVideoUrl, m.issueTrackerUrl, m.wikiUrl, m.donateUrl, m.created,
 			m.cardLogoFileId, fileDb.cdnPath AS logoCdnPath,
-			m.embedLogoFileId, fileExternal.cdnPath AS logoCdnPathExternal
+			m.embedLogoFileId, fileExternal.cdnPath AS logoCdnPathExternal,
+			m.uploadLimitOverwrite
 		FROM mods m
 		JOIN assets a ON a.assetId = m.assetId
 		LEFT JOIN files AS fileDb ON fileDb.fileId = m.cardLogoFileId
@@ -84,6 +85,7 @@ else { // New mod
 		'cardLogoFileId'  => null,
 		'embedLogoFileId' => null,
 		'tags'            => [],
+		'uploadLimitOverwrite' => null,
 	];
 	$canEditAsOwner = true;
 	$currentlyBeingTransferredTo = [];
@@ -632,9 +634,10 @@ unset($file);
 cspPushAllowedInlineHandlerHash('sha256-nTlTeikEEupAQmSPlHWFcoJvMdPCIBu+Zu+G64E7uC4='); // javascript:submitForm(0)
 cspPushAllowedInlineHandlerHash('sha256-HAn3sRp/DKqkhccjWmi+mt2NzQCTHLzeSlhZ0T2cDuY='); // javascript:submitDelete()
 cspPushAllowedInlineHandlerHash('sha256-gm6HYxb4KKRA00NNRahEknJJISDZhG84Ufzc3V9kavo='); // lockModDlg(this); return false;
+cspPushAllowedInlineHandlerHash('sha256-pPW2xHtSs5JcxvsK0Ea5c0vZ+6wqwo4IfpaUv24cHuo='); // releaseSizeLimitDlg(this); return false;
 $fs = "{$_SERVER['HTTP_HOST']}/edit-deletefile {$_SERVER['HTTP_HOST']}/edit-uploadfile {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/";
 if(canModerate(null, $user) && $mod['modId']) {
-	$fs .= " {$_SERVER['HTTP_HOST']}/api/v2/mods/{$mod['modId']}/lock";
+	$fs .= " {$_SERVER['HTTP_HOST']}/api/v2/mods/{$mod['modId']}/lock {$_SERVER['HTTP_HOST']}/api/v2/mods/{$mod['modId']}/releases/upload-limit";
 }
 cspReplaceAllowedFetchSources($fs);
 cspAllowTinyMceFull();
@@ -646,6 +649,20 @@ if(!isTVPlatform() && !isTouchPlatform()) $screenshotsDisclaimer .= 'drag to reo
 if($mod['modId']) { if($screenshotsDisclaimer) $screenshotsDisclaimer .= ', '; $screenshotsDisclaimer .= 'upload / delete changes apply immediately!'; }
 if($screenshotsDisclaimer) $screenshotsDisclaimer = "<small>($screenshotsDisclaimer)</small>";
 $view->assign('screenshotsDisclaimer', $screenshotsDisclaimer, null, true);
+
+
+$maxFileUploadSize = parseMaxUploadSizeFromIni();
+$view->assign('maxUploadLimit', $maxFileUploadSize, null, true);
+
+$defaultReleaseUploadLimit = min($maxFileUploadSize, UPLOAD_LIMITS[ASSETTYPE_RELEASE]['individualSize']);
+$view->assign('defaultReleaseUploadLimit', $defaultReleaseUploadLimit, null, true);
+
+$currentReleaseUploadOverwrite = $mod['uploadLimitOverwrite'];
+$view->assign('currentReleaseUploadOverwrite', $currentReleaseUploadOverwrite, null, true);
+
+// Limit for mod images:
+$uploadSizeLimit = min($maxFileUploadSize, UPLOAD_LIMITS[ASSETTYPE_MOD]['individualSize']);
+$view->assign('uploadSizeLimit', $uploadSizeLimit, null, true);
 
 
 $view->assign('modCategories', $modCategories, null, true);

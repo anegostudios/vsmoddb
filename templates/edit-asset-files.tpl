@@ -29,7 +29,7 @@
 	
 	{if !empty($formupload)}
 		<li class="editbox file-upload immovable">
-			<label>Upload new file (or drag and drop, max file size: {round($maxFileUploadSize / MB, 1)} MB)</label>
+			<label>Upload new file (or drag and drop, max file size: {formatByteSize($uploadSizeLimit)})</label>
 			<input type="file" name="newfile" style="height: unset; padding: .25em;">
 		</li>
 	{/if}

@@ -89,27 +89,42 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 
 ### /api/v2/mods/{modid}/releases
 - `get`: Path arg `{modid}`
-	- `404`: Not implemented
+	- `400`: Not implemented
 
 ### /api/v2/mods/{modid}/releases/all
 - `get`: Path arg `{modid}`
-	- `404`: Not implemented
+	- `400`: Not implemented
 
 ### /api/v2/mods/{modid}/releases/{releaseid}
 - `get`
 	- Args:
 		- Path arg `{modid}`
 		- Path arg `{releaseid}`
-	- `404`: Not implemented
+	- `400`: Not implemented
 - `post` `auth` `at`
 	- Args:
 		- Path arg `{modid}`
 		- Path arg `{releaseid}`
-	- `404`: Not implemented
+	- `400`: Not implemented
 
 ### /api/v2/mods/{modid}/releases/new `auth` `at`
 - `put`: Path arg `{modid}`
-	- `404`: Not implemented
+	- `400`: Not implemented
+
+### /api/v2/mods/{modid}/releases/upload-limit `auth` `at`
+- `get`:
+	-	Args:
+		- Path arg `{modid}`
+	- `400`: Invalid action token.
+	- `404`: Target mod does not exist.
+	- `200`: Returns numeric limit or empty if there isn't one besides the default.
+- `put`:
+	-	Args:
+		- Path arg `{modid}`
+		- Post arg `limit`: Numeric limit or empty to indicate a reset to default.
+	- `400`: Invalid action token or malformed request.
+	- `404`: Target mod does not exist.
+	- `200`: Limit was successfully updated.
 
 ### /api/v2/mods/{modid}/comments
 - `get`: Path arg `{modid}`

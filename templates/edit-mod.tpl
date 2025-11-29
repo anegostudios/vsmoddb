@@ -176,7 +176,7 @@
 			{include file="list-mod-entry"}
 		</div>
 		<div id="preview-box-embed" class="editbox" style="width: calc(300px + .5em); align-self: baseline;" data-fid="{$mod['embedLogoFileId']}">
-			<label><label><abbr title="Every platform uses this data differently, this is just an example of what it might look like.">External Preview</abbr></label></label>
+			<label><abbr title="Every platform uses this data differently, this is just an example of what it might look like.">External Preview</abbr></label>
 			<div>
 				<h4>{$mod['name']}</h4>
 				<div><small>Description...</small></div>
@@ -214,17 +214,19 @@
 
 			</div>
 		{/if}
+	</form>
 </div>
 
 <div class="buttons">
 	<a class="button large submit shine" href="javascript:submitForm(0)">{if $mod['statusId'] != STATUS_LOCKED || canModerate(null, $user)}Save{else}Request Review{/if}</a>
 
 	{if canModerate(null, $user) && $mod['modId']}
-		<button class="button large shine moderator" style="height:unset; " onclick="lockModDlg(this); return false;">Lock Mod...</button>
+		<button class="button large shine moderator" style="height:unset;" onclick="lockModDlg(this); return false;">Lock Mod...</button>
+		<button class="button large shine moderator" style="height:unset;padding-left:.5em;padding-right:.5em;" onclick="releaseSizeLimitDlg(this); return false;">Set Custom Release Size Limit...</button>
 	{/if}
 
 	{if $mod['assetId'] && canDeleteAsset($mod, $user)}
-		<a class="button large btndelete shine" style="margin-left: auto;" href="javascript:submitDelete()">Delete Mod</a>
+		<a class="button large btndelete shine" style="margin-left:auto;" href="javascript:submitDelete()">Delete Mod</a>
 	{/if}
 </div>
 
@@ -238,7 +240,7 @@
 		function lockModDlg(btnEl) {
 			const message = prompt("Locking a mod will disable automatic downloads for the duration and cannot be lifted by a normal contributor.\nPlease provide a reason for locking this mod.\nThis reason will be displayed to the mod author and logged. The reason message should contain information on how the author can get their mod to be unlocked again.");
 
-			if(!message) return;
+			if(!message) { btnEl.disabled = false; return; }
 
 			btnEl.disabled = true;
 
@@ -251,6 +253,59 @@
 			.done(() => {
 				addMessage(MSG_CLASS_OK, 'Mod Locked.');
 				window.location.reload();
+			});
+		}
+
+		let currentReleaseUploadOverwrite = {$currentReleaseUploadOverwrite ?? 'null'};
+		function releaseSizeLimitDlg(btnEl) \{
+			const defaultReleaseUploadLimit = {$defaultReleaseUploadLimit};
+			const maxUploadLimit = {$maxUploadLimit};
+
+			function parseByteSize(string) {
+				const match = /(\d+(?:\.\d*)?)\s*([kKmMgG]?[bB])?/i.exec(string);
+				if(!match) return null;
+
+				let scale = 1;
+				switch((match[2] || '').toUpperCase()) {
+					case 'GB': scale *= 1024;
+					case 'MB': scale *= 1024;
+					case 'KB': scale *= 1024;
+					default:
+						return Math.floor(parseFloat(match[1]) * scale)
+				}
+			}
+
+			let newLimitStr = prompt(`Set a custom size limit for release files for this mod.\nOnly do this to reasonable limits and when given a good reason.\nMost mods do not need this to be adjusted.\n\n- Deafult Upload Limit: $\{formatByteSize(defaultReleaseUploadLimit)}\n- Current Limit: $\{currentReleaseUploadOverwrite === null ? '[Default]' : formatByteSize(currentReleaseUploadOverwrite)}\n- Max Limit: $\{formatByteSize(maxUploadLimit)}\n- Keep in mind that 1000 is not 1KB.\n- Set to 'default' to reset to default.\n\nNew Limit:`);
+
+			if(!newLimitStr || !(newLimitStr = newLimitStr.trim())) { btnEl.disabled = false; return; }
+
+			let newLimit;
+			
+			if(newLimitStr.toLowerCase() === 'default') {
+				newLimit = null;
+			}
+			else {
+				newLimit = parseByteSize(newLimitStr);
+				if(newLimit === null) {
+					alert(`Failed to parse new limit from '$\{newLimitStr}'.\nThe input should look like '64MB', '67108864' or 'default'`);
+					btnEl.disabled = false; return;
+				}
+				if(newLimit > maxUploadLimit) {
+					alert(`$\{formatByteSize(newLimit)} is to high for current server settings. The current maximum possible is $\{formatByteSize(maxUploadLimit)}.`);
+					btnEl.disabled = false; return;
+				}
+			}
+
+			$.ajax({ method: 'PUT', url: '/api/v2/mods/'+targetModId+'/releases/upload-limit', data: { 'limit': newLimit, 'at': actiontoken }})
+			.fail(jqXHR => {
+				btnEl.disabled = false;
+				const d = JSON.parse(jqXHR.responseText);
+				addMessage(MSG_CLASS_ERROR, 'Failed to set release upload limit for this mod' + (d.reason ? (': '+d.reason) : '.'), true)
+			})
+			.done(() => {
+				currentReleaseUploadOverwrite = newLimit;
+				btnEl.disabled = false;
+				addMessage(MSG_CLASS_OK, `Release upload limit for this mod changed to $\{formatByteSize(newLimit === null ? defaultReleaseUploadLimit : newLimit)}.`);
 			});
 		}
 		
@@ -371,7 +426,7 @@
 		}
 	</style>
 
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=39" async></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=40" async></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 

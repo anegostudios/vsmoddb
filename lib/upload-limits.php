@@ -40,10 +40,6 @@ function parseIniSize($size) {
 }
 
 
-// may later on be modified by asset specific overrides
-global $maxFileUploadSize;
-$maxFileUploadSize = parseMaxUploadSizeFromIni();
-
 const UPLOAD_LIMITS = [
 	ASSETTYPE_MOD => [
 		'allowedTypes'    => ['png', 'jpg', 'gif'],

@@ -91,7 +91,7 @@ if(!empty($_POST['save'])) {
 		}
 		else {
 			$assetId = $existingRelease['assetId'] ?? 0;
-			$processedFile = processFileUpload($_FILES['newfile'], 2, $assetId);
+			$processedFile = processFileUpload($_FILES['newfile'], ASSETTYPE_RELEASE, $assetId, $targetMod['modId']);
 
 			if($processedFile['status'] === 'error') {
 				addMessage(MSG_CLASS_ERROR, 'Failed to process uploaded file: '.$processedFile['errormessage'], true);
@@ -322,7 +322,10 @@ else {
 	$existingRelease['version'] = formatSemanticVersion(intval($existingRelease['version']));
 }
 
-$maxFileUploadSize = min($maxFileUploadSize, UPLOAD_LIMITS[ASSETTYPE_RELEASE]['individualSize']);
+$maxUploadSizeLimit = parseMaxUploadSizeFromIni();
+$uploadSizeLimitOfThisMod = $targetMod['uploadLimitOverwrite'] !== null ? $targetMod['uploadLimitOverwrite'] : UPLOAD_LIMITS[ASSETTYPE_RELEASE]['individualSize'];
+$view->assign('uploadSizeLimit', min($maxUploadSizeLimit, $uploadSizeLimitOfThisMod), null, true);
+
 
 cspAllowTinyMceFull();
 cspPushAllowedInlineHandlerHash('sha256-nTlTeikEEupAQmSPlHWFcoJvMdPCIBu+Zu+G64E7uC4='); // javascript:submitForm(0)
@@ -335,6 +338,7 @@ $view->assign('allGameVersions', $allGameVersions);
 $view->assign('mod', $targetMod);
 $view->assign('doFileValidation', ($targetMod["category"] & CATEGORY__MASK) === CATEGORY_GAME_MOD, null, false);
 $view->assign('release', $existingRelease);
+$view->assign('asset', ['assetId' => $existingRelease['assetId'], 'assetTypeId' => ASSETTYPE_RELEASE], null, true); //TODO(Rennorb) @cleanup: only here for the footer js / file upload code
 $view->assign('files', $files);
 
 $view->assign('assetChangelog', $assetChangelog);

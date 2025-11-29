@@ -6,12 +6,13 @@ include_once $config['basepath'] . 'lib/modinfo.php';
  * @param array $file
  * @param int   $assetTypeId
  * @param int   $parentAssetId
+ * @param int   $parentModId
  * @return array{status:'error', errormessage:string}|(
  *   array{status:'ok', fileid:int, thumbnailfilepath:string, filename:string, uploaddate:string, releaseid?:int}
  *  &(array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:int})
  * )
  */
-function processFileUpload($file, $assetTypeId, $parentAssetId) {
+function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 	global $con, $user;
 	
 	switch($file['error']) {
@@ -33,8 +34,27 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 
 	$limits = UPLOAD_LIMITS[$assetTypeId];
 
-	if ($parentAssetId) {
-		$asset = $con->getRow("select * from assets where assetId = ?", array($parentAssetId));
+	if($assetTypeId === ASSETTYPE_RELEASE) { // adding / editing mod releases
+		$mod = $con->getRow(<<<SQL
+			SELECT a.assetTypeId, a.assetId, a.createdByUserId, m.uploadLimitOverwrite
+			FROM mods m
+			JOIN assets a ON a.assetId = m.assetId
+			WHERE m.modId = ?
+		SQL, [$parentModId]);
+
+		if (!$mod) {
+			return array("status" => "error", "errormessage" => 'Asset does not exist (anymore)'); 
+		}
+
+		if (!canEditAsset($mod, $user)) {
+			return array("status" => "error", "errormessage" => 'Missing permissions to upload files to this asset. You may need to login again'); 
+		}
+
+		if($mod['uploadLimitOverwrite'] !== null) $limits['individualSize'] = $mod['uploadLimitOverwrite'];
+	}
+
+	if ($parentAssetId) { // Editing existing releases or adding mod images
+		$asset = $con->getRow("select assetTypeId, assetId, createdByUserId from assets where assetId = ?", array($parentAssetId));
 		
 		if (!$asset) {
 			return array("status" => "error", "errormessage" => 'Asset does not exist (anymore)'); 
@@ -46,7 +66,7 @@ function processFileUpload($file, $assetTypeId, $parentAssetId) {
 	}
 	
 	if ($file['size'] > $limits['individualSize']) {
-		return array("status" => "error", "errormessage" => 'File too large! Limit is ' . ($limits['individualSize'] / KB) . " KB");
+		return array("status" => "error", "errormessage" => 'File too large! Limit is ' . formatByteSize($limits['individualSize']));
 	}
 
 	splitOffExtension($file["name"], $filebasename, $ext);

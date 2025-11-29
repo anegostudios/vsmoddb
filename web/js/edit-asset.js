@@ -45,7 +45,8 @@ $(document).ready(function () {
 		data: {
 			upload: 1,
 			assetid: assetid,
-			assettypeid: assettypeid
+			assettypeid: assettypeid,
+			modId: modId || 0,
 		},
 		error: function (err, file) {
 			switch (err) {

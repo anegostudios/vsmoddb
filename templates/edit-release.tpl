@@ -113,10 +113,9 @@
 
 {capture name="footerjs"}
 {include file="edit-asset-files-template.tpl"}
-<script nonce="{$cspNonce}" type="text/javascript">	
-	assetid = {$release['assetId']};
-	assettypeid = 2;
-	
+<script nonce="{$cspNonce}" type="text/javascript">
+	var modId = {$mod['modId']};
+
 	{if $doFileValidation} {
 		function onUploadFinished(file) \{
 			if (file.modparse == "error") \{
@@ -161,7 +160,7 @@
 		$('form[name=commentformtemplate]').areYouSure();
 	});
 </script>
-<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=39" async></script>
+<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=40" async></script>
 <script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 
