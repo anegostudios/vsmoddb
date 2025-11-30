@@ -159,17 +159,18 @@ switch($urlparts[1]) {
 							if($newLimit > parseMaxUploadSizeFromIni()) fail(HTTP_BAD_REQUEST, ['reason' => 'The new limit is above the current server limit.']);
 						}
 
-						//NOTE(Rennorb): Can't use getOne here because there would be no difference between 'not found' and 'no overwrite'.
+						$con->startTrans();
+
+						$assetId = $con->getOne('SELECT assetId FROM mods WHERE modId = ?', [$modId]);
+						if(!$assetId) fail(HTTP_NOT_FOUND);
+
 						$con->execute('UPDATE mods SET uploadLimitOverwrite = ? WHERE modId = ?', [$newLimit, $modId]);
-						if(!$con->affected_rows()) {
-							//TODO(Rennorb) @cleanup: Combine into one call.
-							// Setting it to the same value does not return a affected row, but should still succeed.
-							if($con->getOne('SELECT 1 FROM mods WHERE modId = ?', [$modId])) good();
 
-							fail(HTTP_NOT_FOUND);
-						}
+						logAssetChanges(['User #'.$user['userId'].' changed release upload limit to '.formatByteSize($newLimit)], $assetId);
 
-						good();
+						$ok = $con->completeTrans();
+						if($ok) good();
+						else fail(HTTP_INTERNAL_ERROR, ['error' => 'Internal database error.']);
 
 					default:
 						header('Allow: GET, PUT');
