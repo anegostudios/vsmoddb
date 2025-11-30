@@ -275,7 +275,7 @@
 				}
 			}
 
-			let newLimitStr = prompt(`Set a custom size limit for release files for this mod.\nOnly do this to reasonable limits and when given a good reason.\nMost mods do not need this to be adjusted.\n\n- Deafult Upload Limit: $\{formatByteSize(defaultReleaseUploadLimit)}\n- Current Limit: $\{currentReleaseUploadOverwrite === null ? '[Default]' : formatByteSize(currentReleaseUploadOverwrite)}\n- Max Limit: $\{formatByteSize(maxUploadLimit)}\n- Keep in mind that 1000 is not 1KB.\n- Set to 'default' to reset to default.\n\nNew Limit:`);
+			let newLimitStr = prompt(`Set a custom size limit for release files for this mod.\nOnly do this to reasonable limits and when given a good reason.\nMost mods do not need this to be adjusted.\n\n- Deafult Upload Limit: $\{formatByteSize(defaultReleaseUploadLimit)}\n- Current Limit: $\{currentReleaseUploadOverwrite === null ? '[Default]' : formatByteSize(currentReleaseUploadOverwrite)}\n- Max Limit: $\{formatByteSize(maxUploadLimit)}\n- Keep in mind that 1000 is not 1KB.\n- Set to 'default' to reset to default.\n\nNew Limit (raw number or suffixed, e.g. '5.7MB'):`);
 
 			if(!newLimitStr || !(newLimitStr = newLimitStr.trim())) { btnEl.disabled = false; return; }
 
