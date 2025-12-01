@@ -236,7 +236,7 @@
 	<script nonce="{$cspNonce}" type="text/javascript">
 		{if $canEditTeamMembers}$(() => attachUserSearchHandler(document.getElementById('teammembers-box')));{/if}
 
-		const targetModId = {$mod['modId'] ?? 0};
+		const modId = {$mod['modId'] ?? 0};
 		function lockModDlg(btnEl) {
 			const message = prompt("Locking a mod will disable automatic downloads for the duration and cannot be lifted by a normal contributor.\nPlease provide a reason for locking this mod.\nThis reason will be displayed to the mod author and logged. The reason message should contain information on how the author can get their mod to be unlocked again.");
 
@@ -244,7 +244,7 @@
 
 			btnEl.disabled = true;
 
-			$.post('/api/v2/mods/'+targetModId+'/lock', { 'reason': message, 'at': actiontoken })
+			$.post('/api/v2/mods/'+modId+'/lock', { 'reason': message, 'at': actiontoken })
 			.fail(jqXHR => {
 				btnEl.disabled = false;
 				const d = JSON.parse(jqXHR.responseText);
@@ -296,7 +296,7 @@
 				}
 			}
 
-			$.ajax({ method: 'PUT', url: '/api/v2/mods/'+targetModId+'/releases/upload-limit', data: { 'limit': newLimit, 'at': actiontoken }})
+			$.ajax({ method: 'PUT', url: '/api/v2/mods/'+modId+'/releases/upload-limit', data: { 'limit': newLimit, 'at': actiontoken }})
 			.fail(jqXHR => {
 				btnEl.disabled = false;
 				const d = JSON.parse(jqXHR.responseText);
