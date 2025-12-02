@@ -1,0 +1,76 @@
+@mixin file-dl-with-deps-wrapper {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	gap: .25em;
+
+	&>:first-child {
+		flex-grow: 1;
+	}
+}
+
+.release-table {
+	min-width: 900px;
+
+	/* download count */
+	&.gv tr>td:nth-child(3),
+	&.no-gv tr>td:nth-child(2) { text-align: right; }
+	/* release date */
+	&.gv tr>td:nth-child(4),
+	&.no-gv tr>td:nth-child(3) { text-wrap: nowrap; }
+	/* changelog button */
+	&.gv tr>td:nth-child(5),
+	&.no-gv tr>td:nth-child(4) { text-align: center; }
+
+	tr:not(.collapsable)>td:nth-last-child(n+4) {
+		padding-left: .25em;
+		padding-right: .25em;
+	}
+
+	&.gv tr>td:nth-child(n+5)>*,
+	&.no-gv tr>td:nth-child(n+4)>* {
+		@include file-dl-with-deps-wrapper;
+	}
+}
+
+.deps-table>tbody td:nth-child(3)>*{
+	@include file-dl-with-deps-wrapper;
+}
+
+/* release changelogs (animated collapse wrapper) */
+.collapsable {
+	&>input {
+		display: none;
+		overflow-y: hidden;
+	}
+
+	&>div {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows .5s ease-out;
+	}
+
+	&>input:checked + div {
+		grid-template-rows: 1fr;
+	}
+
+	&>div>* {
+		overflow-y: hidden;
+	}
+
+	@media (max-width: 767px) { /* @perf */
+		&.cl-changelog {
+			position: absolute;
+			z-index: 99;
+			background-color: var(--color-content-bg);
+			margin: 0 -.5em;
+			max-width: calc(100vw - 3em);
+		}
+	}
+}
+
+
+.release-changelog {
+	padding: .25em;
+}

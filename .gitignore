@@ -11,3 +11,4 @@ db/backup.sql
 lib/config.db.priv.php
 lib/config.dev.php
 *.cache
+*.css.map

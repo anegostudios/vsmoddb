@@ -1,0 +1,15 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+input:focus,
+input:active,
+.chosen-container-active .chosen-choices {
+	outline: none; /*UA reset*/
+}
+
+code:focus-visible {
+	outline: none;
+}
