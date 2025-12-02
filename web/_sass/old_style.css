@@ -654,10 +654,6 @@ body.opaque-desc .mod .moddesc {
 .stdtable tbody tr:nth-child(even) { background-color: rgba(255, 248, 234, 0.9); }
 .stdtable tbody tr:hover { background-color:#ddd; }
 
-.stdtable tr.latest td {
-	font-weight:bold;
-}
-
 .bg-error   { background-color: #F6D2CA; }
 .bg-success { background-color: #E1F6CA; }
 .bg-warning { background-color: #F6F1CA; }

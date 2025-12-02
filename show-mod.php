@@ -223,7 +223,7 @@ $view->assign("asset", $asset);
 $oneClickInstallWorks = !preg_match('/macintosh|mac os x|mac_powerpc|iphone|ipod|ipad|android|blackberry|webos|mobile/i', $_SERVER['HTTP_USER_AGENT']);
 $view->assign("shouldShowOneClickInstall", $oneClickInstallWorks && ($asset['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD, null, false);
 $view->assign("shouldListCompatibleGameVersion", ($asset['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD, null, false);
-$view->assign("changelogColspan", 5 + (($asset['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD ? ($oneClickInstallWorks ? 2 : 1) : 0), null, false);
+$view->assign("changelogColspan", 5 + (($asset['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD ? ($oneClickInstallWorks ? 3 : 2) : 0), null, false);
 $view->assign("isFollowing", empty($user) ? 0 : $con->getOne('SELECT modId FROM userFollowedMods WHERE modId = ? AND userId = ?', [$asset['modId'], $user['userId']]));
 
 if (!empty($user)) {

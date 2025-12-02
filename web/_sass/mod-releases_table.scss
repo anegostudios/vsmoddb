@@ -1,41 +1,48 @@
-@mixin file-dl-with-deps-wrapper {
-	width: 100%;
-	display: flex;
-	flex-direction: row;
-	flex-wrap: nowrap;
-	gap: .25em;
-
-	&>:first-child {
-		flex-grow: 1;
-	}
-}
-
+// If this is a mod the table has the "for came version column
+// Mod Version | (For Game Version) | Downloads | Released | Changelog | Download | (1 click Installer)
 .release-table {
 	min-width: 900px;
+	// center if it doesn't fill the width
+	margin-left: auto;
+	margin-right: auto;
 
+	td:not(.collapsable) { text-align: center; }
+
+	&.gv tr>td:nth-child(3) .tag { text-wrap: nowrap; }
 	/* download count */
-	&.gv tr>td:nth-child(3),
+	&.gv tr>td:nth-child(4),
 	&.no-gv tr>td:nth-child(2) { text-align: right; }
 	/* release date */
-	&.gv tr>td:nth-child(4),
+	&.gv tr>td:nth-child(5),
 	&.no-gv tr>td:nth-child(3) { text-wrap: nowrap; }
 	/* changelog button */
-	&.gv tr>td:nth-child(5),
-	&.no-gv tr>td:nth-child(4) { text-align: center; }
+	&.gv tr>td:nth-child(6),
+	&.no-gv tr>td:nth-child(4) {
+		&>* { width: 100%; text-align: center; }
+	}
+	/* download button */
+	.mod-dl {
+		width: 100%;
 
-	tr:not(.collapsable)>td:nth-last-child(n+4) {
+		@media screen and (max-width: 1050px) {
+			// Ancient incantation to replace the text:
+			text-indent: -99999px;
+			line-height: 0;
+
+			&:after {
+				content: 'Download';
+				text-indent: 0;
+				line-height: initial;
+				display: block;
+			}
+		}
+	}
+
+	&.oc td:not(.collapsable):nth-last-child(n+4),
+	&.no-oc td:not(.collapsable):nth-last-child(n+3) {
 		padding-left: .25em;
 		padding-right: .25em;
 	}
-
-	&.gv tr>td:nth-child(n+5)>*,
-	&.no-gv tr>td:nth-child(n+4)>* {
-		@include file-dl-with-deps-wrapper;
-	}
-}
-
-.deps-table>tbody td:nth-child(3)>*{
-	@include file-dl-with-deps-wrapper;
 }
 
 /* release changelogs (animated collapse wrapper) */

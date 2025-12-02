@@ -1,4 +1,3 @@
-{assign var="first" value="1"}
 {capture name="head"}
 <meta content="{$asset['name']}" property="og:title" />
 <meta content="{strip_tags($assetraw['text'])}" property="og:description" />
@@ -175,12 +174,12 @@
 			</div>
 
 			<p style="clear: both"></p>
-			<div style="overflow-x: auto;">
-			<table class="stdtable release-table {$shouldListCompatibleGameVersion ? 'gv' : 'no-gv'}">
+			<div style="overflow-x:auto;">
+			<table class="stdtable release-table {$shouldListCompatibleGameVersion ? 'gv' : 'no-gv'} {$shouldShowOneClickInstall ? 'oc' : 'oc-oc'}">
 				<thead>
 					<tr>
 						<th class="version">Mod Version</th>
-						{if $shouldListCompatibleGameVersion}<th class="gameversion">For Game version</th>{/if}
+						{if $shouldListCompatibleGameVersion}<th>Mod Identifier</th><th class="gameversion">For Game version</th>{/if}
 						<th class="downloads">Downloads</th>
 						<th class="releasedate">Released</th>
 						<th class="changelog">Changelog</th>
@@ -191,13 +190,16 @@
 				<tbody>
 				{if !empty($releases)}
 					{foreach from=$releases item=release}
-						<tr data-assetid="{$release['assetId']}" {if !isset($first)} class="latest"{/if}>
+						<tr data-assetid="{$release['assetId']}">
 							<td>
 								{if isset($user) && canEditAsset($asset, $user)}
 									<a style="display:block;" href="/edit/release?assetid={$release['assetId']}">{formatSemanticVersion($release['version'])}</a>
 								{else}{formatSemanticVersion($release['version'])}{/if}
 							</td>
 							{if $shouldListCompatibleGameVersion}<td>
+								{$release['identifier']}
+							</td>
+							<td>
 								<div class="tags">
 								{foreach from=$release['compatibleGameVersionsFolded'] item=versionStr}
 									{if contains($versionStr, ' - ')}<span class="tag">{$versionStr}</span>
@@ -217,7 +219,6 @@
 							<div><div><div class="release-changelog">{$release['text']}</div></div></div>
 						</td></tr>
 						{/if}
-						{assign var="first" value="1"}
 					{/foreach}
 				{else}
 					<tr>
