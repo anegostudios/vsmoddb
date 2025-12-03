@@ -190,9 +190,9 @@
 				<tbody>
 				{if !empty($releases)}
 					{foreach from=$releases item=release}
-						<tr data-assetid="{$release['assetId']}">
+						<tr data-assetid="{$release['assetId']}" {$release['retractionReason'] ? 'class="retracted"' : ''}>
 							<td>
-								{if isset($user) && canEditAsset($asset, $user)}
+								{if isset($user) && (!$release['retractionReason'] || canModerate(null, $user)) && canEditAsset($asset, $user)}
 									<a style="display:block;" href="/edit/release?assetid={$release['assetId']}">{formatSemanticVersion($release['version'])}</a>
 								{else}{formatSemanticVersion($release['version'])}{/if}
 							</td>
@@ -209,14 +209,18 @@
 							</td>{/if}
 							<td>{if !empty($release['file'])}{intval($release['file']['downloads'])}{/if}</td>
 							<td>{fancyDate($release['created'])}</td>
-							<td>{if $release['text']}<label for="cl-trigger-{$release['assetId']}" class="button square cl-trigger">Show</label>{else}Empty{/if}</td>
-							<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{htmlspecialchars($release['file']['name'])}</a>{/if}</td>
+							<td>{if $release['text'] || $release['retractionReason']}<label for="cl-trigger-{$release['assetId']}" class="button square cl-trigger">Show</label>{else}Empty{/if}</td>
+							{if !$release['retractionReason']}
+								<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{htmlspecialchars($release['file']['name'])}</a>{/if}</td>
 							{if $shouldShowOneClickInstall}<td>{if !empty($release['identifier'])}{include file="button-one-click-install"}{/if}</td>{/if}
+							{else}
+								<td {if $shouldShowOneClickInstall} colspan="2"{/if}>Release Retracted</td>
+							{/if}
 						</tr>
-						{if $release['text']}
+						{if $release['text'] || $release['retractionReason']}
 						<tr><td class="collapsable cl-changelog" colspan="{$changelogColspan}">
 							<input type="checkbox" id="cl-trigger-{$release['assetId']}" autocomplete="off">
-							<div><div><div class="release-changelog">{$release['text']}</div></div></div>
+							<div><div><div class="release-changelog">{if $release['retractionReason']}<div><h4>Retraction Reason:</h4>{$release['retractionReason']}</div><h4>Changelog:</h4>{/if}{$release['text'] ?? ''}</div></div></div>
 						</td></tr>
 						{/if}
 					{/foreach}

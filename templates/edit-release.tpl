@@ -12,11 +12,6 @@
 		<span>{$release['assetId'] ? 'Edit Release' : 'Add new Release'}</span>
 	</h2>
 
-	<form method="post" name="deleteform">
-		<input type="hidden" name="at" value="{$user['actionToken']}">
-		<input type="hidden" name="delete" value="1">
-	</form>
-
 	<form method="post" name="form1" enctype="multipart/form-data" autocomplete="off" class="flex-list">
 		<input type="hidden" name="at" value="{$user['actionToken']}">
 		<input type="hidden" name="save" value="1">
@@ -98,25 +93,80 @@
 </div>
 
 <div class="buttons">
-	<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
-	<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
+	{if !$release['retractionReason']}
+		<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
+		<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
+	{/if}
 
 	{if $release['assetId']}
-		<a class="button large btndelete shine" style="margin-left: auto;" href="javascript:submitDelete()">Delete Release</a>
+		{if !$release['retractionReason'] || canModerate(null, $user)}
+			<button class="button large btndelete shine" id="retract-btn" style="margin-left:auto;" onclick="return false;">Retract Release</button>
+		{else}
+			<div class="bg-warning" style="width:100%;text-align: center;">Release retracted, cannot be edited.</div>
+		{/if}
 	{else}
 		<div class="flex-spacer not-mobile"></div>
 	{/if}
 </div>
 
-
-
+{if $release['assetId']}
+<dialog id="retract-mdl" autofocus="">
+	<form method="post" class="with-buttons-bottom" autocomplete="off">
+		<h1>Retract Release</h1>
+		<p>Are you sure want to retract this release?</p>
+		<p>
+			Retracting a release <b>prevents users from downloading</b> it and puts its release page into <b>readonly mode</b>.<br/>
+			This is intended for the removal of harmful releases, the existence of a newer version with bugfixes <b>does not constitute a reason</b> for retraction.
+		</p>
+		<p>Should you still wish to retract this release then provide the reason for doing so here:</p>
+		<textarea id="retract-reason-ta" name="reason"></textarea>
+		<div class="buttons">
+			<button class="button large btndelete shine" id="retract-subm" onclick="return false;">Confirm Retraction</button>
+			<button class="button large shine" style="margin-left:auto;" formmethod="dialog">Cancel</button>
+		</div>
+	</form>
+</dialog>
+{/if}
 
 {capture name="footerjs"}
 {include file="edit-asset-files-template.tpl"}
 <script nonce="{$cspNonce}" type="text/javascript">
 	var modId = {$mod['modId']};
 
-	{if $doFileValidation} {
+	{if $release['assetId']}\{
+		const retractMdl = document.getElementById('retract-mdl');
+		document.getElementById('retract-btn').addEventListener('click', () => retractMdl.showModal());
+		$(document).ready(() => createEditor($('textarea'), retractMdl), tinymceSettingsCmt);
+
+		const confirmBtn = document.getElementById('retract-subm');
+		const cancelBtn = retractMdl.querySelector('button[formmethod="dialog"]');
+		confirmBtn.addEventListener('click', () => \{
+			const reason = tinymce.get('retract-reason-ta').getContent();
+
+			if(!reason) {
+				const el = retractMdl.getElementsByClassName('tox-tinymce')[0];
+				el.classList.add('invalid');
+				setTimeout(() => el.classList.remove('invalid'), 500);
+				return;
+			}
+
+			confirmBtn.disabled = cancelBtn.disabled = true;
+			$.ajax(\{ url: `/api/v2/mods/$\{modId}/releases/{$release['releaseId']}/retraction?at=`+actiontoken, method: 'PUT', data: reason, contentType: 'text/html' })
+			.done(function (response, _, jqXHR) \{
+				retractMdl.close();
+				addMessage(MSG_CLASS_OK, 'Release retracted.', false);
+				window.location.replace("{formatModPath($mod)}#tab-files");
+			})
+			.fail(function(jqXHR) \{
+				confirmBtn.disabled = cancelBtn.disabled = false;
+				const d = JSON.parse(jqXHR.responseText);
+				addMessage(MSG_CLASS_ERROR, 'Failed to retract release' + (d.reason ? (': '+d.reason) : '.'), true)
+			});
+		});
+	}
+	{/if}
+
+	{if $doFileValidation} \{
 		function onUploadFinished(file) \{
 			if (file.modparse == "error") \{
 				addMessage(MSG_CLASS_ERROR, 'Failed to parse mod information from this file: '+file.parsemsg, true);

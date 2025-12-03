@@ -6,8 +6,14 @@
 $fileId = intval($_GET['fileid'] ?? $urlparts[1] ?? 0);
 if($fileId === 0) showErrorPage(HTTP_BAD_REQUEST, 'Missing fileid.');
 
-$file = $con->getRow('SELECT * FROM files WHERE fileId = ?', [$fileId]);
-if (!$file) showErrorPage(HTTP_NOT_FOUND, 'File not found.');
+$file = $con->getRow(<<<SQL
+	SELECT f.assetId, f.cdnPath, f.name, r.retractionReason
+	FROM files f
+	LEFT JOIN modReleases r ON r.assetId = f.assetId
+	WHERE f.fileId = ?
+SQL, [$fileId]);
+if(!$file) showErrorPage(HTTP_NOT_FOUND, 'File not found.');
+if($file['retractionReason']) showErrorPage(HTTP_GONE, '<h4>This release has been retracted. Reason:</h4>'.$file['retractionReason'], false, true);
 
 if(!DB_READONLY) {
 	// do download tracking

@@ -43,6 +43,12 @@
 		padding-left: .25em;
 		padding-right: .25em;
 	}
+
+	tr.retracted {
+		&>td:nth-child(1) { text-decoration: line-through; }
+		@at-root .release-table.gv tr.retracted>td:nth-child(2) { text-decoration: line-through; }
+		background-color: rgb(214, 137, 137) !important;
+	}
 }
 
 /* release changelogs (animated collapse wrapper) */

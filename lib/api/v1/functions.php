@@ -5,7 +5,7 @@ function listMod($modid)
 	global $con;
 
 	if ($modid != "" . intval($modid)) {
-		$modid = $con->getOne("select modId from modReleases where identifier = ?", array($modid));
+		$modid = $con->getOne("select modId from modReleases where identifier = ? AND r.retractionReason IS NULL", array($modid));
 	}
 
 	$row = $con->getRow(<<<SQL
@@ -39,7 +39,7 @@ function listMod($modid)
 			modReleases r 
 		join assets a on a.assetId = r.assetId
 		left join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
-		where modId = ?
+		where modId = ? AND r.retractionReason IS NULL
 		group by r.releaseId
 		order by r.created desc
 	SQL, array($row['modId']));
@@ -211,7 +211,7 @@ function listMods()
 			mods `mod` 
 			join assets asset on (`mod`.assetId = asset.assetId)
 			join users user on (asset.createdByUserId = user.userId)
-			left join modReleases r on r.modId = `mod`.modId
+			left join modReleases r on r.modId = `mod`.modId AND r.retractionReason IS NULL
 			left join files as logofileExternal on logofileExternal.fileId = mod.embedLogoFileId
 		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "
 		group by `mod`.modId
@@ -290,7 +290,7 @@ function listOutOfDateMods($currentModVersions) {
 			GROUP_CONCAT(cgv.gameVersion SEPARATOR ';') as compatibleGameVersions
 		from modReleases r
 		join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
-		where r.identifier in ($modIdStrParams)
+		where r.identifier in ($modIdStrParams) AND r.retractionReason IS NULL
 		group by r.releaseId
 		order by r.identifier, r.version desc
 	", $modIdStrs);

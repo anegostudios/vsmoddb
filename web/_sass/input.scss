@@ -1,3 +1,7 @@
+textarea {
+	resize: vertical;
+}
+
 /* uniform styling for mixed chosen and normal inputs */
 
 input:focus,
@@ -299,5 +303,21 @@ button.moderator {
 			min-height: 3em;
 			align-content: center;
 		}
+	}
+}
+
+@keyframes shake-h {
+	0% { transform: translateX(0) }
+	25% { transform: translateX(5px) }
+	50% { transform: translateX(-5px) }
+	75% { transform: translateX(5px) }
+	100% { transform: translateX(0) }
+ }
+
+.invalid {
+	animation: .5s shake-h;
+	&, & *,
+	&.tox .tox-menubar, &.tox .tox-toolbar {
+		background-color: var(--color-input-r) !important;
 	}
 }

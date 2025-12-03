@@ -18,7 +18,9 @@ $_csp = [
 	// Explicitly allow boxicons font(s) from unpkg
 	'font-src' => "unpkg.com/boxicons@2.1.4/fonts/",
 ];
-$_cspInlineHashes = [];
+$_cspInlineHashes = [
+	'sha256-2rvfFrggTCtyF5WOiTri1gDS8Boibj4Njn0e+VCBmDI=', // return false;
+];
 
 $view->assign('cspNonce', $cspNonce, null, true); // needs to be applied to all script elements
 

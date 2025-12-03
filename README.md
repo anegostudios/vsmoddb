@@ -111,6 +111,19 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 - `put`: Path arg `{modid}`
 	- `400`: Not implemented
 
+### /api/v2/mods/{modid}/releases/{releaseid}/retraction `auth` `at`
+- `put`: 
+	- Args:
+		- Path arg `{modid}`
+		- Path arg `{releaseid}`
+	- `400`: Invalid action token.
+	- `400`: Missing reason.
+	- `400`: Release is already retracted.
+	- `400`: Mod / release mismatch.
+	- `403`: User does not have permission to edit release.
+	- `404`: Target release does not exist.
+	- `200`: Successfully retracted the release.
+
 ### /api/v2/mods/{modid}/releases/upload-limit `auth` `at`
 - `get`:
 	-	Args:

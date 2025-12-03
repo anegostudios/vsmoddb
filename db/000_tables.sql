@@ -238,6 +238,7 @@ CREATE TABLE IF NOT EXISTS `modReleases` (
   `identifier`   VARCHAR(255)        NULL, -- TODO
   `version`      BIGINT UNSIGNED NOT NULL,
   `detailText`   TEXT                NULL,
+  `retractionReason` TEXT CHARACTER SET utf8mb4 NULL,
   `created`      DATETIME        NOT NULL DEFAULT NOW(),
   `lastModified` TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`releaseId`),

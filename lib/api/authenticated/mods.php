@@ -89,11 +89,7 @@ switch($urlparts[1]) {
 		}
 
 	case 'lock':
-		if($_SERVER['REQUEST_METHOD'] != 'POST') {
-			header('Allow: POST');
-			fail(HTTP_WRONG_METHOD);
-		}
-
+		validateMethod('POST');
 		validateUserNotBanned();
 		validateActionTokenAPI();
 		if(!canModerate(null, $user)) fail(HTTP_FORBIDDEN);
@@ -128,10 +124,10 @@ switch($urlparts[1]) {
 		else fail(HTTP_INTERNAL_ERROR, ['error' => 'Internal database error.']);
 
 	case 'releases':
-		if(count($urlparts) !== 3)   fail(HTTP_BAD_REQUEST);
-
 		switch($urlparts[2]) {
 			case 'upload-limit':
+				if(count($urlparts) !== 3)   fail(HTTP_BAD_REQUEST);
+				
 				switch($_SERVER['REQUEST_METHOD']) {
 					case 'GET':
 						validateUserNotBanned();
@@ -165,8 +161,7 @@ switch($urlparts[1]) {
 						if(!$assetId) fail(HTTP_NOT_FOUND);
 
 						$con->execute('UPDATE mods SET uploadLimitOverwrite = ? WHERE modId = ?', [$newLimit, $modId]);
-
-						logAssetChanges(['User #'.$user['userId'].' changed release upload limit to '.formatByteSize($newLimit)], $assetId);
+						logAssetChanges(['Changed release upload limit to '.formatByteSize($newLimit)], $assetId);
 
 						$ok = $con->completeTrans();
 						if($ok) good();
@@ -177,7 +172,80 @@ switch($urlparts[1]) {
 						fail(HTTP_WRONG_METHOD);
 				}
 
-			default:
-				fail(HTTP_BAD_REQUEST);
+			default: // actions targeting a specific release
+				$releaseId = filter_var($urlparts[2], FILTER_VALIDATE_INT);
+				if($releaseId === false)  fail(HTTP_BAD_REQUEST, ['reason' => 'Malformed query param.']);
+
+				if(count($urlparts) !== 4)   fail(HTTP_BAD_REQUEST);
+
+				switch($urlparts[3]) {
+					case 'retraction':
+						validateMethod('PUT');
+						validateContentType('text/html');
+						validateUserNotBanned();
+						validateActionTokenAPI();
+		
+						$prevData = $con->getRow(<<<SQL
+							SELECT r.modId, r.assetId, a.createdByUserId, r.retractionReason
+							FROM modReleases r
+							JOIN assets a ON a.assetId = r.assetId
+							WHERE r.releaseId = ?
+						SQL, [$releaseId]);
+						if(!$prevData)   fail(HTTP_NOT_FOUND);
+
+						$prevData['assetTypeId'] = ASSETTYPE_RELEASE;
+						if(!canEditAsset($prevData, $user))   fail(HTTP_FORBIDDEN, ['reason' => 'You may not edit this release.']);
+
+						if($modId !== $prevData['modId'])   fail(HTTP_BAD_REQUEST, ['reason' => 'Release does not belong to mod.']);
+
+						// Moderators can overwrite retraction reasons.
+						if(!canModerate(null, $user) && $prevData['retractionReason'])   fail(HTTP_BAD_REQUEST, ['reason' => 'This release is already retracted.']);
+
+						$reasonHtml = trim(sanitizeHtml(file_get_contents('php://input')));
+
+						if(empty(textContent($reasonHtml))) fail(HTTP_BAD_REQUEST, ['reason' => 'Missing reason.']);
+
+						include($config['basepath'] . 'lib/edit-release.php');
+
+						$con->startTrans();
+
+						$con->execute('UPDATE modReleases SET retractionReason = ? WHERE releaseId = ?', [$reasonHtml, $releaseId]);
+
+						//TODO(Rennorb) @correctness: Remove / hide unread release notifications for deleted releases.
+						// We cannot remove notifications for deleted releases trivially like we do with comment notifications because release notifications are tracked by modid, not by releaseid.
+						// Since we only have the modid in the notification entry we could run into the following scenario:
+						// 1. new release 1 for mod 1 -> notification 1 (unread)
+						// 2. new release 2 for mod 1 -> notification 2 (unread)
+						// 3. delete release 2 -> we would delete both notifications even though only one should be removed, because both of them are tracked by the same modid
+						// I think it is possible to figure out a solution to this using the creation dates for releases and notifications, or change the notifications to be tracking releaseid instead of modid.
+						// Both of those would however be a larger change, and right now I'm just supplying a small fix for notifications.
+						// For now we just let these "invalid" notifications exist, as to not potentially remove valid ones which would be a lot worse.
+
+						updateGameVersionsCached($modId);
+
+						// Reset lastReleased to the last release, or the mod creation date if there is no other release.
+						$con->execute(<<<SQL
+							UPDATE mods m
+							SET lastReleased = IFNULL(
+								(SELECT r.created FROM modReleases r WHERE r.modId = m.modId AND r.retractionReason IS NULL ORDER BY r.created DESC LIMIT 1),
+								m.created
+							)
+							WHERE m.modId = ?;
+						SQL, [$modId]);
+
+						// have to get rid of the images for size reasons.
+						//TODO(Rennorb) @cleanup @correctness: This should just get replaced with delta detection (kinda).
+						function stripImageForChangelog($html)
+						{
+							return preg_replace('#src="data:image/png;base64,.*?"#', 'src="x"', $html); //TODO(Rennorb): @perf
+						}
+
+						$log = !$prevData['retractionReason'] ? 'Retracted release.' : 'Changed retraction reason. Previous was: '.stripImageForChangelog($prevData['retractionReason']);
+						logAssetChanges([$log], $prevData['assetId']);
+
+						$ok = $con->completeTrans();
+						if($ok) good();
+						else fail(HTTP_INTERNAL_ERROR, ['error' => 'Internal database error.']);
+				}
 		}
 }

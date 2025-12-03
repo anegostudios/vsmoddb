@@ -16,7 +16,6 @@
 	<link nonce="{$cspNonce}" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" type="text/css">
 
 	<link nonce="{$cspNonce}" href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
-	<link nonce="{$cspNonce}" href="/web/css/dialog.css" rel="stylesheet" type="text/css">
 	<link nonce="{$cspNonce}" href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">
 	<link nonce="{$cspNonce}" href="/web/js/chosen/chosen.min.css" rel="stylesheet" type="text/css">
 	<link nonce="{$cspNonce}" href="/web/css/datepicker.min.css" rel="stylesheet" type="text/css">

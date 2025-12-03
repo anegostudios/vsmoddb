@@ -1,0 +1,26 @@
+dialog {
+	margin: auto;
+	background-color: var(--color-content-bg);
+	color: var(--color-text);
+	border: solid 2px var(--color-border-active);
+
+	max-width: 40em;
+
+	h1 {
+		text-align: center;
+		border-bottom: solid 1px var(--color-border);
+		margin: .5em 1em;
+		padding-bottom: .5em;
+
+		position: sticky;
+		top: 0;
+		background-color: var(--color-content-bg);
+	}
+
+	>form {
+		>*:not(.buttons) {
+			margin-left: 1em;
+			margin-right: 1em;
+		}
+	}
+}

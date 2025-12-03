@@ -197,17 +197,19 @@ $mv = null;
 $gvs = null;
 
 if(!empty($_SERVER['HTTP_REFERER'])) {
-	parse_str(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_QUERY), $refererQuerryArgs);
+	parse_str(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_QUERY), $refererQueryArgs);
 
-	if(!empty($refererQuerryArgs['mv'])) $mv = compilePrimaryVersion($refererQuerryArgs['mv']);
-	if(isset($refererQuerryArgs['gv']) && is_array($refererQuerryArgs['gv'])) {
-		$gvs = array_filter(array_map('compileSemanticVersion', $refererQuerryArgs['gv']));
+	if(!empty($refererQueryArgs['mv'])) $mv = compilePrimaryVersion($refererQueryArgs['mv']);
+	if(isset($refererQueryArgs['gv']) && is_array($refererQueryArgs['gv'])) {
+		$gvs = array_filter(array_map('compileSemanticVersion', $refererQueryArgs['gv']));
 	}
 }
 
-$recommendationIsInfluencedBySearch = selectDesiredVersions($allGameVersions, $mv, $gvs, $highestTargetVersion, $tagetRecommendedGameVersionStable, $tagetRecommendedGameVersionUnstable);
+$recommendationIsInfluencedBySearch = selectDesiredVersions($allGameVersions, $mv, $gvs, $highestTargetVersion, $targetRecommendedGameVersionStable, $targetRecommendedGameVersionUnstable);
 
-recommendReleases($releases, $tagetRecommendedGameVersionStable, $tagetRecommendedGameVersionUnstable, $recommendedReleaseStable, $recommendedReleaseUnstable, $fallbackRelease);
+// Make sure to never recommend retracted releases:
+$recommendationCandidates = array_filter($releases, fn($r) => !$r['retractionReason']);
+recommendReleases($recommendationCandidates, $targetRecommendedGameVersionStable, $targetRecommendedGameVersionUnstable, $recommendedReleaseStable, $recommendedReleaseUnstable, $fallbackRelease);
 
 
 $view->assign("releases", $releases, null, true);

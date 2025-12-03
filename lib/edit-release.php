@@ -135,56 +135,6 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 }
 
 
-/**
- * @security: Does not perform validation!
- * @param int $modId
- * @param array{assetId:int, releaseId:int} $release
- * @return bool Indicates if the release did in fact get deleted. Very unlikely to not succeed.
- */
-function deleteRelease($modId, $release)
-{
-	global $con;
-
-	$con->startTrans();
-
-	$usedFiles = $con->getAssoc('SELECT fileId, cdnPath FROM files WHERE assetId = ?', [$release['assetId']]);
-	// @perf: This could be merged into less queries, but in theory a release can only have one file either way, so this should not matter.
-	foreach($usedFiles as $fileId => $cdnPath) {
-		if($con->getOne('SELECT COUNT(*) FROM files WHERE cdnPath = ?', [$cdnPath]) == 1) {
-			// Only delete abandoned files! Unlikely to not be the case for release files, but might aswell be safe.
-			deleteFromCdn($cdnPath);
-		}
-		$con->execute('DELETE FROM files WHERE fileId = ?', [$fileId]);
-	}
-
-	$con->execute('DELETE FROM modReleases where releaseId = ?', [$release['releaseId']]);
-	$con->execute('DELETE FROM assets where assetId = ?', [$release['assetId']]);
-
-	//TODO(Rennorb) @correctness: Remove / hide unread release notifications for deleted releases.
-	// We cannot remove notifications for deleted releases trivially like we do with comment notifications because release notifications are tracked by modid, not by releaseid.
-	// Since we only have the modid in the notification entry we could run into the following scenario:
-	// 1. new release 1 for mod 1 -> notification 1 (unread)
-	// 2. new release 2 for mod 1 -> notification 2 (unread)
-	// 3. delete release 2 -> we would delete both notifications even though only one should be removed, because both of them are tracked by the same modid
-	// I think it is possible to figure out a solution to this using the creation dates for releases and notifications, or change the notifications to be tracking releaseid instead of modid.
-	// Both of those would however be a larger change, and right now I'm just supplying a small fix for notifications.
-	// For now we just let these "invalid" notifications exist, as to not potentially remove valid ones which would be a lot worse.
-
-	updateGameVersionsCached($modId);
-
-	// Reset lastReleased to the last release, or the mod creation date if there is no other release.
-	$con->execute(<<<SQL
-		UPDATE mods m
-		SET lastReleased = IFNULL(
-			(SELECT r.created FROM modReleases r WHERE r.modId = m.modId ORDER BY r.created DESC LIMIT 1),
-			m.created
-		)
-		WHERE m.modId = ?;
-	SQL, [$modId]);
-
-	return $con->completeTrans();
-}
-
 /** @param int $modId */
 function updateGameVersionsCached($modId)
 {
@@ -203,7 +153,7 @@ function updateGameVersionsCached($modId)
 		SELECT DISTINCT $modId, cgv.gameVersion
 		FROM modReleases r
 		JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
-		where r.modId = $modId
+		where r.modId = $modId AND r.retractionReason IS NULL
 	SQL);
 
 	$con->execute(<<<SQL
@@ -211,7 +161,7 @@ function updateGameVersionsCached($modId)
 		SELECT DISTINCT $modId, cgv.gameVersion & 0xffffffff00000000 -- :VERSION_MASK_PRIMARY
 		FROM modReleases r
 		JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
-		where r.modId = $modId
+		where r.modId = $modId AND r.retractionReason IS NULL
 	SQL);
 
 	$con->completeTrans();

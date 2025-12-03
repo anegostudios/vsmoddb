@@ -49,7 +49,10 @@ if(!canEditAsset($targetMod, $user))   showErrorPage(HTTP_FORBIDDEN);
 // Actions
 //
 
-if(!empty($_POST['save'])) {
+if($existingRelease && $existingRelease['retractionReason']) {
+	addMessage(MSG_CLASS_WARN.' permanent', "This release has been retracted!");
+}
+else if(!empty($_POST['save'])) {
 	validateActionToken();
 
 	$oldMsgCount = count($messages /* global */);
@@ -197,7 +200,6 @@ if(!empty($_POST['save'])) {
 		}
 	}
 
-
 	if(count($messages /* global */) === $oldMsgCount) { // no errors occurred
 		//
 		// Save
@@ -219,15 +221,6 @@ if(!empty($_POST['save'])) {
 				exit();
 			}
 		}
-	}
-}
-else if($existingRelease && !empty($_POST['delete'])) {
-	validateActionToken();
-
-	$ok = deleteRelease($targetMod['modId'], $existingRelease);
-	if($ok) {
-		forceRedirect(formatModPath($targetMod).'#tab-files');
-		exit();
 	}
 }
 
@@ -294,9 +287,11 @@ SQL, [$existingRelease['assetId']]) : [];
 if(!$existingRelease) {
 	$existingRelease = [
 		'assetId'    => 0,
+		'releaseId'  => 0,
 		'text'       => $_POST['text'] ?? '',
 		'numSaved'   => 0,
 		'compatibleGameVersions' => empty($_POST['cgvs']) ? [] : array_flip(array_filter(array_map('compileSemanticVersion', $_POST['cgvs']))),
+		'retractionReason' => null,
 	];
 
 	if(($targetMod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
@@ -330,8 +325,8 @@ $view->assign('uploadSizeLimit', min($maxUploadSizeLimit, $uploadSizeLimitOfThis
 cspAllowTinyMceFull();
 cspPushAllowedInlineHandlerHash('sha256-nTlTeikEEupAQmSPlHWFcoJvMdPCIBu+Zu+G64E7uC4='); // javascript:submitForm(0)
 cspPushAllowedInlineHandlerHash('sha256-XKuSPEJjbu3T+mAY9wlP6dgYQ4xJL1rP4m3GrDwZ68c='); // javascript:submitForm(1)
-cspPushAllowedInlineHandlerHash('sha256-HAn3sRp/DKqkhccjWmi+mt2NzQCTHLzeSlhZ0T2cDuY='); // javascript:submitDelete()
-cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/edit-deletefile {$_SERVER['HTTP_HOST']}/edit-uploadfile");
+cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/edit-deletefile {$_SERVER['HTTP_HOST']}/edit-uploadfile {$_SERVER['HTTP_HOST']}/api/v2/mods/{$targetMod['modId']}/releases/{$existingRelease['releaseId']}/retraction");
+
 
 $view->assign('allGameVersions', $allGameVersions);
 

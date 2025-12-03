@@ -100,6 +100,9 @@ function canEditAsset($asset, $user, $includeTeam = true)
 {
 	global $con;
 
+	if(!isset($user['userId'])) return false;
+	if($user['userId'] == $asset['createdByUserId'] || $user['roleCode'] === 'admin' || $user['roleCode'] === 'moderator') return true;
+
 	$canEditAsTeamMember = false;
 
 	//TODO(Rennorb) @cleanup: Probably just split this into two versions, one for releases, one for mods.
@@ -126,7 +129,7 @@ function canEditAsset($asset, $user, $includeTeam = true)
 		SQL, array($asset['assetId'], $user['userId'], $asset['assetId'], $user['userId']));
 	}
 
-	return isset($user['userId']) && ($user['userId'] == $asset['createdByUserId'] || $user['roleCode'] == 'admin' || $user['roleCode'] == 'moderator' || $canEditAsTeamMember);
+	return $canEditAsTeamMember;
 }
 
 /**

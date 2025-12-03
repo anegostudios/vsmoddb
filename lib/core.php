@@ -134,9 +134,6 @@ function formatGrammaticallyCorrectEnumeration($array)
  */
 function textContent($string)
 {
-	//TODO(Rennorb): @cleanup: using utf-8 here is suboptimal, as it will mangle actual utf8 in the database.
-	// The issue is that we literally cannot store actual utf8 in the database, because the current version of mysql does not support proper utfmb4 (lol).
-	// I will be working on resolving this, but it should work for "normal words" in the meantime.
 	return preg_replace('/\s+/u', ' ', trim(html_entity_decode(strip_tags($string), ENT_SUBSTITUTE | ENT_QUOTES | ENT_HTML5, 'UTF-8')));
 }
 
@@ -849,6 +846,7 @@ const HTTP_FORBIDDEN           = 403;
 const HTTP_NOT_FOUND           = 404;
 const HTTP_WRONG_METHOD        = 405;
 const HTTP_CONFLICT            = 409;
+const HTTP_GONE                = 410;
 const HTTP_INTERNAL_ERROR      = 500;
 const HTTP_NOT_IMPLEMENTED     = 501;
 const HTTP_SERVICE_UNAVAILABLE = 503;
@@ -877,6 +875,9 @@ function showErrorPage($errorCode, $reason = '', $goBugRennorb = null, $rawReaso
 			break;
 		case HTTP_NOT_FOUND:
 			$statusMessage = '404 - Requested page was not found.';
+			break;
+		case HTTP_GONE:
+			$statusMessage = '410 - Gone.';
 			break;
 		case HTTP_INTERNAL_ERROR:
 			$statusMessage = '500 - Internal server error.';
