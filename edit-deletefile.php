@@ -18,16 +18,22 @@ if (empty($_POST['fileid'])) {
 }
 
 $file = $con->getRow(<<<SQL
-	SELECT f.fileId, f.name, f.assetId, f.userId, f.cdnPath, d.hasThumbnail, a.assetTypeId
+	SELECT f.fileId, f.name, f.assetId, f.userId, f.cdnPath, d.hasThumbnail, a.assetTypeId, r.retractionReason IS NOT NULL AS releaseRetracted
 	FROM files f
 	LEFT JOIN fileImageData d ON d.fileId = f.fileId
 	LEFT JOIN assets a ON a.assetId = f.assetId
+	LEFT JOIN modReleases r ON r.assetId = f.assetId
 	WHERE f.fileId = ?
 SQL, [$_POST['fileid']]);
 
 if (!$file) {
 	http_response_code(HTTP_NOT_FOUND);
 	exit(json_encode(['status' => 'error']));
+}
+
+if ($file['releaseRetracted']) {
+	http_response_code(HTTP_BAD_REQUEST);
+	exit(json_encode(['status' => 'error', 'reason' => 'Associated release has been retracted.']));
 }
 
 
