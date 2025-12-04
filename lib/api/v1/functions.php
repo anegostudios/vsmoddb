@@ -5,7 +5,7 @@ function listMod($modid)
 	global $con;
 
 	if ($modid != "" . intval($modid)) {
-		$modid = $con->getOne("select modId from modReleases where identifier = ? AND r.retractionReason IS NULL", array($modid));
+		$modid = $con->getOne("select modId from modReleases where identifier = ? AND retractionReason IS NULL", array($modid));
 	}
 
 	$row = $con->getRow(<<<SQL

@@ -134,10 +134,9 @@ final class ApiV1Test extends TestCase {
 		$this->assertNotEquals('200', $data->data['statuscode']);
 	}
 
-	/** @test */
-	public function mod() : void
+	public function _mod($search) : void
 	{
-		$data = apiGet(['mod', '10']);
+		$data = apiGet(['mod', $search]);
 		$this->assertFalse($data->fail);
 		$this->assertEquals('200', $data->data['statuscode']);
 
@@ -190,6 +189,11 @@ final class ApiV1Test extends TestCase {
 			$this->assertTrue(is_string($screenshot['created']));
 		}
 	}
+
+	/** @test */
+	public function modNumeric() : void { $this->_mod('10'); }
+	/** @test */
+	public function modIdentifier() : void { $this->_mod('maltiezcrossbows'); }
 
 	/** @test */
 	public function authors() : void
