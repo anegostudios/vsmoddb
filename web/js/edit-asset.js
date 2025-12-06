@@ -32,7 +32,7 @@ $(document).ready(function () {
 
 			$.post("/edit-deletefile", { fileid: fileid, at: actiontoken }).done(function() {
 				$fileEl.remove();
-				addMessage(MSG_CLASS_OK, filename + ' deleted.', true);
+				R.addMessage(MSG_CLASS_OK, filename + ' deleted.', true);
 			});
 		}
 

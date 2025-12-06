@@ -58,16 +58,13 @@
 		if(!newVerStr || !(newVerStr = newVerStr.trim())) return;
 		if(newVerStr[0] === 'v') newVerStr = newVerStr.slice(1); // Just being nice here. If the input starts with a v, just slice it off.
 
-		$.post('/api/v2/game-versions', { new: newVerStr, at: actiontoken })
+		const xhr = $.post('/api/v2/game-versions', { new: newVerStr, at: actiontoken })
 			.done(function() {
-				addMessage(MSG_CLASS_OK, `Successfully added '${newVerStr}'.`, true);
+				R.addMessage(MSG_CLASS_OK, `Successfully added '${newVerStr}'.`, true);
 				const newRow = $(`<tr><td>${newVerStr}</td><td><button class="button btndelete">X</button></td></tr>`).get(0);
 				document.getElementById('Versions').getElementsByTagName('tbody')[0].prepend(newRow);
-			})
-			.fail(function(jqXHR) {
-				const d = JSON.parse(jqXHR.responseText);
-				addMessage(MSG_CLASS_ERROR, 'Failed to add Version' + (d.reason ? (': '+d.reason) : '.'), true)
 			});
+		R.attachDefaultFailHandler(xhr, 'Failed to add Version');
 	}
 
 	function clickDelete(e) {
@@ -75,15 +72,12 @@
 
 		const targetVersion = e.target.parentElement.previousElementSibling.textContent;
 
-		$.ajax({ url: `/api/v2/game-versions/${targetVersion}?at=${actiontoken}`, method: 'DELETE' })
+		const xhr = $.ajax({ url: `/api/v2/game-versions/${targetVersion}?at=${actiontoken}`, method: 'DELETE' })
 			.done(function() {
-				addMessage(MSG_CLASS_OK, `Successfully deleted '${targetVersion}'.`, true);
+				R.addMessage(MSG_CLASS_OK, `Successfully deleted '${targetVersion}'.`, true);
 				e.target.parentElement.parentElement.remove();
-			})
-			.fail(function(jqXHR) {
-				const d = JSON.parse(jqXHR.responseText);
-				addMessage(MSG_CLASS_ERROR, 'Failed to delete Version' + (d.reason ? (': '+d.reason) : '.'), true)
 			});
+		R.attachDefaultFailHandler(xhr, 'Failed to delete Version');
 	}
 
 </script>

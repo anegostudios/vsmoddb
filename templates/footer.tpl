@@ -7,11 +7,9 @@
 		</main>
 	</div>
 
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.are-you-sure.js"></script>
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/ays-beforeunload-shim.js"></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.cookie.js"></script>
 
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/wysiwyg.js?version=40"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/wysiwyg.js?version=41"></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/tinymce/tinymce.min.js"></script>
 
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.filedrop.js?v=2"></script>
@@ -22,53 +20,8 @@
 		assetid = {$asset['assetId'] ?? 0};
 		assettypeid = {$asset['assetTypeId'] ?? 0};
 		actiontoken = "{$user['actionToken'] ?? ''}";
-		
-		$(document).ready(function() {
-			$("select").each(function() {
-				if ($(this).parents(".template").length == 0) {
-					var ds = $(this).attr("noSearch") == 'noSearch';
-					$(this).chosen({ placeholder_text_multiple: " ", disable_search:ds, });
-				}
-			});
-			
-			$('form[name=form1]').areYouSure();
-		});
-
-		const MSG_CLASS_OK = 'bg-success text-success';
-		const MSG_CLASS_WARN = 'bg-warning';
-		const MSG_CLASS_ERROR = 'bg-error text-error';
-
-		const msgContainer = document.getElementById('message-container');
-		function addMessage(clazz, html, escapeMessage) {
-			escapeMessage = escapeMessage || false;
-			const msgEl = document.createElement('div');
-			msgEl.classList.add(...(clazz.split(' ')));
-			if(escapeMessage) {
-				msgEl.textContent = html;
-				const d = document.createElement('span');
-				d.classList.add('dismiss');
-				msgEl.append(d)
-			}
-			else {
-				msgEl.innerHTML = html+'<span class="dismiss"></span>';
-			}
-			msgContainer.append(msgEl);
-		}
-
-		function formatByteSize(size) {
-			if(size > 1073741824) return (size / 1073741824).toFixed(2) + ' GB';
-			if(size > 1048576) return (size / 1048576).toFixed(2) + ' MB';
-			if(size > 1024) return (size / 1024).toFixed(2) + ' KB';
-			return size + ' B';
-		}
-
-		msgContainer.addEventListener('click', function(e) {
-			let t = e.target;
-			if(!t || !t.classList.contains('dismiss')) return;
-			t = t.parentElement;
-			$(t).slideUp(400, () => t.remove());
-		})
 	</script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/script.js?v=0"></script>
 	{if !empty($footerjs)}{$footerjs}{/if}
 
 	<footer>

@@ -90,15 +90,13 @@
 			const newFlags = targetBitState ? (oldFlags | targetBitMask) : (oldFlags & ~targetBitMask);
 			trEl.dataset.settings = newFlags;
 
-			$.post('/api/v2/notifications/settings/followed-mods/'+targetModId, { 'new': newFlags })
+			const xhr = $.post('/api/v2/notifications/settings/followed-mods/'+targetModId, { 'new': newFlags })
 				.fail(jqXHR => {
 					e.target.checked = !targetBitState; // reset setting on error
 					const oldFlags = parseInt(trEl.dataset.settings); // can't reuse outer oldSetting, other bits might have changed in the meantime
 					trEl.dataset.settings = !targetBitState ? (oldFlags | targetBitMask) : (oldFlags & ~targetBitMask);
-
-					const d = JSON.parse(jqXHR.responseText);
-					addMessage(MSG_CLASS_ERROR, 'Failed to clear change setting' + (d.reason ? (': '+d.reason) : '.'), true)
 				});
+			R.attachDefaultFailHandler(xhr, 'Failed to change settings');
 		});
 	</script>
 {/capture}

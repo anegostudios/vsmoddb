@@ -49,13 +49,11 @@ $(document).ready(function () {
 			$comment.hide();
 
 			const commentid = $(this).attr("data-commentid");
-			$.ajax({ url: `/api/v2/comments/${commentid}?at=`+actiontoken, method: 'DELETE'})
+			const xhr = $.ajax({ url: `/api/v2/comments/${commentid}?at=`+actiontoken, method: 'DELETE'})
 				.fail(function(jqXHR) {
 					$comment.show();
-
-					const d = JSON.parse(jqXHR.responseText);
-					addMessage(MSG_CLASS_ERROR, 'Failed to delete comment' + (d.reason ? (': '+d.reason) : '.'), true)
-				});;
+				});
+			R.attachDefaultFailHandler(xhr, 'Failed to delete comment');
 		}
 	});
 
@@ -100,7 +98,7 @@ $(document).ready(function () {
 			var content = getEditorContents($editor);
 			//TODO(Rennorb): optimistic update
 
-			$.ajax({ url: `/api/v2/comments/${commentid}?at=`+actiontoken, method: 'POST', data: content, contentType: 'text/html', dataType: 'json' })
+			const xhr = $.ajax({ url: `/api/v2/comments/${commentid}?at=`+actiontoken, method: 'POST', data: content, contentType: 'text/html', dataType: 'json' })
 				.done(function(response) {
 					destroyEditor($editor);
 					$form.remove();
@@ -109,11 +107,8 @@ $(document).ready(function () {
 					attachSpoilerToggle($('.spoiler-toggle', $body));
 					$comment.data("editing", 0);
 					$body.show();
-				})
-				.fail(function(jqXHR) {
-					const d = JSON.parse(jqXHR.responseText);
-					addMessage(MSG_CLASS_ERROR, 'Failed to edit comment' + (d.reason ? (': '+d.reason) : '.'), true)
 				});
+			R.attachDefaultFailHandler(xhr, 'Failed to edit comment');
 		});
 
 		return false;
@@ -138,7 +133,7 @@ $(document).ready(function () {
 		attachSpoilerToggle($('.spoiler-toggle', $cmt));
 		$editor.hide();
 
-		$.ajax({ url: `/api/v2/mods/${modid}/comments?at=`+actiontoken, method: 'PUT', data: content, contentType: 'text/html', dataType: 'text' })
+		const xhr = $.ajax({ url: `/api/v2/mods/${modid}/comments?at=`+actiontoken, method: 'PUT', data: content, contentType: 'text/html', dataType: 'text' })
 			.done(function (response, _, jqXHR) {
 				const cmtFrag = jqXHR.getResponseHeader('Location');
 				$('.title a', $cmt)[0].href = cmtFrag;
@@ -146,13 +141,11 @@ $(document).ready(function () {
 				$('.body', $cmt)[0].innerHTML = response;
 				attachSpoilerToggle($('.spoiler-toggle', $cmt));
 			})
-			.fail(function(jqXHR) {
+			.fail(function() {
 				$cmt.remove();
 				$editor.show();
-
-				const d = JSON.parse(jqXHR.responseText);
-				addMessage(MSG_CLASS_ERROR, 'Failed to submit comment' + (d.reason ? (': '+d.reason) : '.'), true)
 			});
+		R.attachDefaultFailHandler(xhr, 'Failed to submit comment');
 	})
 
 	if(document.location.hash.split('-')[0] === '#cmt') {

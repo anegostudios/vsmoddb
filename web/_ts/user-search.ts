@@ -1,9 +1,16 @@
-function attachUserSearchHandler(scopeEl)
+function attachUserSearchHandler(scopeEl : HTMLElement) : void
 {
-	let waitTimeout = null, lastWaitTimeout = null;
+	let waitTimeout : number|null = null, lastWaitTimeout : number|null = null;
 
-	const input = scopeEl.getElementsByClassName('chosen-search-input')[0];
-	const select = scopeEl.getElementsByTagName('SELECT')[0];
+	const input = scopeEl.getElementsByClassName('chosen-search-input')[0] as HTMLInputElement;
+	const select = scopeEl.getElementsByTagName('select')[0];
+
+	const urlTemplate = select.dataset.url;
+	if(!urlTemplate) {
+		console.warn("attachUserSearchHandler called on an element who's select does not have a url in its dataset.");
+		return
+	}
+
 	input.addEventListener('keydown', e => {
 		if(waitTimeout !== null)  clearTimeout(waitTimeout);
 
@@ -16,9 +23,8 @@ function attachUserSearchHandler(scopeEl)
 			}
 
 			const timeoutRef = lastWaitTimeout;
-
-			const url = select.dataset.url.replace('{name}', search);
-			$.get(url, (authors) => {
+			const url = urlTemplate.replace('{name}', search);
+			$.get(url, (authors : Object) => {
 				if(lastWaitTimeout !== timeoutRef)  return;
 
 				if(!authors) {
@@ -29,7 +35,7 @@ function attachUserSearchHandler(scopeEl)
 				const currentUserIds = $(select).val();
 				select.replaceChildren(...Array.from(select.querySelectorAll('option:checked')));
 
-				for(const [id, name] of Object.entries(authors)) {
+				for(const [id, name] of Object.entries(authors as Object)) {
 					if(currentUserIds != null && currentUserIds.includes(id))  continue;
 
 					const opt = document.createElement('option');

@@ -217,11 +217,32 @@
 	</form>
 </div>
 
+{if $mod['modId'] && canModerate(null, $user)}
+<dialog id="lock-mdl" autofocus="">
+	<form class="with-buttons-bottom" method="dialog" data-method="post" autocomplete="off" action="/api/v2/mods/{$mod['modId']}/lock">
+		<h1>Lock Mod</h1>
+		<p>Are you sure want to lock this mod?</p>
+		<p>Locking a mod will <b>disable automatic downloads</b> for the duration and <b>cannot be lifted by a normal contributor</b>.</p>
+		<p>
+			Please provide a reason for locking this mod.<br/>
+			This reason will be displayed to the mod author and logged.<br/>
+			The reason message should contain information on how the author can get their mod to be unlocked again.
+		</p>
+		<textarea name="reason"></textarea>
+		<input type="hidden" name="at" value="{$user['actionToken']}">
+		<div class="buttons">
+			<button class="button large btndelete shine moderator" id="lock-subm" onclick="return false;">Lock</button>
+			<button class="button large shine" style="margin-left:auto;" formmethod="dialog">Cancel</button>
+		</div>
+	</form>
+</dialog>
+{/if}
+
 <div class="buttons">
 	<a class="button large submit shine" href="javascript:submitForm(0)">{if $mod['statusId'] != STATUS_LOCKED || canModerate(null, $user)}Save{else}Request Review{/if}</a>
 
 	{if canModerate(null, $user) && $mod['modId']}
-		<button class="button large shine moderator" style="height:unset;" onclick="lockModDlg(this); return false;">Lock Mod...</button>
+		<button class="button large shine moderator" style="height:unset;" data-opens-dialog="lock-mdl" onclick="return false;">Lock Mod...</button>
 		<button class="button large shine moderator" style="height:unset;padding-left:.5em;padding-right:.5em;" onclick="releaseSizeLimitDlg(this); return false;">Set Custom Release Size Limit...</button>
 	{/if}
 
@@ -232,29 +253,27 @@
 
 {capture name="footerjs"}
 	{include file="edit-asset-files-template.tpl"}
-	{if $canEditTeamMembers}<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/user-search.js"></script>{/if}
 	<script nonce="{$cspNonce}" type="text/javascript">
-		{if $canEditTeamMembers}$(() => attachUserSearchHandler(document.getElementById('teammembers-box')));{/if}
-
 		const modId = {$mod['modId'] ?? 0};
-		function lockModDlg(btnEl) {
-			const message = prompt("Locking a mod will disable automatic downloads for the duration and cannot be lifted by a normal contributor.\nPlease provide a reason for locking this mod.\nThis reason will be displayed to the mod author and logged. The reason message should contain information on how the author can get their mod to be unlocked again.");
+		
+		{if $canEditTeamMembers}R.onDOMLoaded(() => attachUserSearchHandler(R.get('teammembers-box')));{/if}
 
-			if(!message) { btnEl.disabled = false; return; }
-
-			btnEl.disabled = true;
-
-			$.post('/api/v2/mods/'+modId+'/lock', { 'reason': message, 'at': actiontoken })
-			.fail(jqXHR => {
-				btnEl.disabled = false;
-				const d = JSON.parse(jqXHR.responseText);
-				addMessage(MSG_CLASS_ERROR, 'Failed to lock mod' + (d.reason ? (': '+d.reason) : '.'), true)
-			})
-			.done(() => {
-				addMessage(MSG_CLASS_OK, 'Mod Locked.');
-				window.location.reload();
-			});
-		}
+		{if $mod['modId'] && canModerate(null, $user)}
+		$(() => createEditor($('textarea', R.get('lock-mdl')), tinymceSettingsCmt));
+		attachDialogSendHandler(R.get('lock-mdl'), (form, data) => \{
+			if(!data.get('reason')) \{
+				R.markAsErrorElement(form.getElementsByClassName('tox-tinymce')[0]);
+				return false;
+			}
+			return true;
+		}, (jqXHR) => \{
+			R.attachDefaultFailHandler(jqXHR, "Failed to lock mod")
+				.done(() => \{
+					R.addMessage(MSG_CLASS_OK, 'Mod Locked.');
+					window.location.reload();
+				});
+		});
+		
 
 		let currentReleaseUploadOverwrite = {$currentReleaseUploadOverwrite ?? 'null'};
 		function releaseSizeLimitDlg(btnEl) \{
@@ -275,7 +294,7 @@
 				}
 			}
 
-			let newLimitStr = prompt(`Set a custom size limit for release files for this mod.\nOnly do this to reasonable limits and when given a good reason.\nMost mods do not need this to be adjusted.\n\n- Deafult Upload Limit: $\{formatByteSize(defaultReleaseUploadLimit)}\n- Current Limit: $\{currentReleaseUploadOverwrite === null ? '[Default]' : formatByteSize(currentReleaseUploadOverwrite)}\n- Max Limit: $\{formatByteSize(maxUploadLimit)}\n- Keep in mind that 1000 is not 1KB.\n- Set to 'default' to reset to default.\n\nNew Limit (raw number or suffixed, e.g. '5.7MB'):`);
+			let newLimitStr = prompt(`Set a custom size limit for release files for this mod.\nOnly do this to reasonable limits and when given a good reason.\nMost mods do not need this to be adjusted.\n\n- Deafult Upload Limit: $\{R.formatByteSize(defaultReleaseUploadLimit)}\n- Current Limit: $\{currentReleaseUploadOverwrite === null ? '[Default]' : R.formatByteSize(currentReleaseUploadOverwrite)}\n- Max Limit: $\{R.formatByteSize(maxUploadLimit)}\n- Keep in mind that 1000 is not 1KB.\n- Set to 'default' to reset to default.\n\nNew Limit (raw number or suffixed, e.g. '5.7MB'):`);
 
 			if(!newLimitStr || !(newLimitStr = newLimitStr.trim())) { btnEl.disabled = false; return; }
 
@@ -291,28 +310,26 @@
 					btnEl.disabled = false; return;
 				}
 				if(newLimit > maxUploadLimit) {
-					alert(`$\{formatByteSize(newLimit)} is to high for current server settings. The current maximum possible is $\{formatByteSize(maxUploadLimit)}.`);
+					alert(`$\{R.formatByteSize(newLimit)} is to high for current server settings. The current maximum possible is $\{R.formatByteSize(maxUploadLimit)}.`);
 					btnEl.disabled = false; return;
 				}
 			}
 
-			$.ajax({ method: 'PUT', url: '/api/v2/mods/'+modId+'/releases/upload-limit', data: { 'limit': newLimit, 'at': actiontoken }})
-			.fail(jqXHR => {
-				btnEl.disabled = false;
-				const d = JSON.parse(jqXHR.responseText);
-				addMessage(MSG_CLASS_ERROR, 'Failed to set release upload limit for this mod' + (d.reason ? (': '+d.reason) : '.'), true)
-			})
+			const xhr = $.ajax({ method: 'PUT', url: '/api/v2/mods/'+modId+'/releases/upload-limit', data: { 'limit': newLimit, 'at': actiontoken }});
+			R.attachDefaultFailHandler(xhr, 'Failed to set release upload limit for this mod');
+			xhr.fail(jqXHR => btnEl.disabled = false)
 			.done(() => {
 				currentReleaseUploadOverwrite = newLimit;
 				btnEl.disabled = false;
-				addMessage(MSG_CLASS_OK, `Release upload limit for this mod changed to $\{formatByteSize(newLimit === null ? defaultReleaseUploadLimit : newLimit)}.`);
+				R.addMessage(MSG_CLASS_OK, `Release upload limit for this mod changed to $\{R.formatByteSize(newLimit === null ? defaultReleaseUploadLimit : newLimit)}.`);
 			});
 		}
+		{/if}
 		
 		const $cardLogoSelect = $('select[name="cardLogoFileId"]');
 		const $embedLogoSelect = $('select[name="embedLogoFileId"]');
-		const cardPreviewBoxEl = document.getElementById('preview-box-card');
-		const embedPreviewBoxEl = document.getElementById('preview-box-embed');
+		const cardPreviewBoxEl = R.get('preview-box-card');
+		const embedPreviewBoxEl = R.get('preview-box-embed');
 
 		{
 			const cardImageEl = cardPreviewBoxEl.getElementsByTagName('img')[0];
@@ -426,7 +443,7 @@
 		}
 	</style>
 
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=40" async></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=41" async></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 

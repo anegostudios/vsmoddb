@@ -95,7 +95,7 @@ switch($urlparts[1]) {
 		if(!canModerate(null, $user)) fail(HTTP_FORBIDDEN);
 
 		$reason = $_POST['reason'] ?? '';
-		$reason = htmlspecialchars(trim($reason));
+		$reason = trim(sanitizeHtml($reason));
 		if(!$reason) fail(HTTP_BAD_REQUEST, ['error' => 'Reason must not be empty.']);
 
 		$modData = $con->getRow(<<<SQL
@@ -181,7 +181,10 @@ switch($urlparts[1]) {
 				switch($urlparts[3]) {
 					case 'retraction':
 						validateMethod('PUT');
-						validateContentType('text/html');
+
+						list($_POST, $_) = request_parse_body();
+						if($_POST['at'] && empty($_REQUEST['at'])) $_REQUEST['at'] = $_POST['at'];
+
 						validateUserNotBanned();
 						validateActionTokenAPI();
 		
@@ -201,7 +204,7 @@ switch($urlparts[1]) {
 						// Moderators can overwrite retraction reasons.
 						if(!canModerate(null, $user) && $prevData['retractionReason'])   fail(HTTP_BAD_REQUEST, ['reason' => 'This release is already retracted.']);
 
-						$reasonHtml = trim(sanitizeHtml(file_get_contents('php://input')));
+						$reasonHtml = trim(sanitizeHtml($_POST['reason']));
 
 						if(empty(textContent($reasonHtml))) fail(HTTP_BAD_REQUEST, ['reason' => 'Missing reason.']);
 

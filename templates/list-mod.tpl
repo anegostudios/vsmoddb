@@ -115,7 +115,6 @@
 		No mods found :(
 	{/if}
 
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/user-search.js"></script>
 	<script nonce="{$cspNonce}" type="text/javascript">
 		$("select").each(function() {
 			if ($(this).parents(".template").length == 0) {
@@ -225,7 +224,7 @@
 						fetchCursor = c[1].headers.get('X-Fetch-Cursor');
 					})
 					.catch((t) => {
-						addMessage(MSG_CLASS_ERROR, 'Failed to fetch more mods: ' + t, true)
+						R.addMessage(MSG_CLASS_ERROR, 'Failed to fetch more mods: ' + t, true)
 					});
 			}
 		}

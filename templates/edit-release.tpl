@@ -100,7 +100,7 @@
 
 	{if $release['assetId']}
 		{if !$release['retractionReason'] || canModerate(null, $user)}
-			<button class="button large btndelete shine" id="retract-btn" style="margin-left:auto;" onclick="return false;">Retract Release</button>
+			<button class="button large btndelete shine" style="margin-left:auto;" data-opens-dialog="retract-mdl" onclick="return false;">Retract Release</button>
 		{else}
 			<div class="bg-warning" style="width:100%;text-align: center;">Release retracted, cannot be edited.</div>
 		{/if}
@@ -111,7 +111,7 @@
 
 {if $release['assetId']}
 <dialog id="retract-mdl" autofocus="">
-	<form method="post" class="with-buttons-bottom" autocomplete="off">
+	<form class="with-buttons-bottom" method="dialog" data-method="put" action="/api/v2/mods/{$mod['modId']}/releases/{$release['releaseId']}/retraction" autocomplete="off">
 		<h1>Retract Release</h1>
 		<p>Are you sure want to retract this release?</p>
 		<p>
@@ -120,6 +120,7 @@
 		</p>
 		<p>Should you still wish to retract this release then provide the reason for doing so here:</p>
 		<textarea id="retract-reason-ta" name="reason"></textarea>
+		<input type="hidden" name="at" value="{$user['actionToken']}">
 		<div class="buttons">
 			<button class="button large btndelete shine" id="retract-subm" onclick="return false;">Confirm Retraction</button>
 			<button class="button large shine" style="margin-left:auto;" formmethod="dialog">Cancel</button>
@@ -134,34 +135,21 @@
 	var modId = {$mod['modId']};
 
 	{if $release['assetId']}\{
-		const retractMdl = document.getElementById('retract-mdl');
-		document.getElementById('retract-btn').addEventListener('click', () => retractMdl.showModal());
-		$(document).ready(() => createEditor($('textarea'), retractMdl), tinymceSettingsCmt);
-
-		const confirmBtn = document.getElementById('retract-subm');
-		const cancelBtn = retractMdl.querySelector('button[formmethod="dialog"]');
-		confirmBtn.addEventListener('click', () => \{
-			const reason = tinymce.get('retract-reason-ta').getContent();
-
-			if(!reason) {
-				const el = retractMdl.getElementsByClassName('tox-tinymce')[0];
-				el.classList.add('invalid');
-				setTimeout(() => el.classList.remove('invalid'), 500);
-				return;
+		const retractMdl = R.get('retract-mdl');
+		$(() => createEditor($('textarea', retractMdl), tinymceSettingsCmt));
+		attachDialogSendHandler(retractMdl, (form, data) => \{
+			if(!data.get('reason')) \{
+				R.markAsErrorElement(form.getElementsByClassName('tox-tinymce')[0]);
+				return false;
 			}
-
-			confirmBtn.disabled = cancelBtn.disabled = true;
-			$.ajax(\{ url: `/api/v2/mods/$\{modId}/releases/{$release['releaseId']}/retraction?at=`+actiontoken, method: 'PUT', data: reason, contentType: 'text/html' })
-			.done(function (response, _, jqXHR) \{
-				retractMdl.close();
-				addMessage(MSG_CLASS_OK, 'Release retracted.', false);
-				window.location.replace("{formatModPath($mod)}#tab-files");
-			})
-			.fail(function(jqXHR) \{
-				confirmBtn.disabled = cancelBtn.disabled = false;
-				const d = JSON.parse(jqXHR.responseText);
-				addMessage(MSG_CLASS_ERROR, 'Failed to retract release' + (d.reason ? (': '+d.reason) : '.'), true)
-			});
+			return true;
+		}, (jqXHR) => \{
+			R.attachDefaultFailHandler(jqXHR, "Failed to retract release")
+				.done(() => \{
+					retractMdl.close();
+					R.addMessage(MSG_CLASS_OK, 'Release retracted.', false);
+					window.location.replace("{formatModPath($mod)}#tab-files");
+				});
 		});
 	}
 	{/if}
@@ -169,7 +157,7 @@
 	{if $doFileValidation} \{
 		function onUploadFinished(file) \{
 			if (file.modparse == "error") \{
-				addMessage(MSG_CLASS_ERROR, 'Failed to parse mod information from this file: '+file.parsemsg, true);
+				R.addMessage(MSG_CLASS_ERROR, 'Failed to parse mod information from this file: '+file.parsemsg, true);
 			} else \{
 				$("input[name='modidstr']").val(file.modid);
 				$("input[name='modversion']").val(file.modversion);
@@ -210,7 +198,7 @@
 		$('form[name=commentformtemplate]').areYouSure();
 	});
 </script>
-<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=40" async></script>
+<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=41" async></script>
 <script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 

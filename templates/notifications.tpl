@@ -59,16 +59,14 @@
 		})
 
 		function clearSpecific(ids) \{
-			return $.post('/api/v2/notifications/clear', \{ 'ids[]': ids })
+			const xhr = $.post('/api/v2/notifications/clear', \{ 'ids[]': ids })
 				.done(function() \{
 					for(const id of ids) \{
 						$list.find(`label[for="nid-${id}"]`).remove();
 					}
-				})
-				.fail(function(jqXHR) \{
-					const d = JSON.parse(jqXHR.responseText);
-					addMessage(MSG_CLASS_ERROR, 'Failed to clear notification(s)' + (d.reason ? (': '+d.reason) : '.'), true)
 				});
+			R.attachDefaultFailHandler(xhr, 'Failed to clear notification(s)');
+			return xhr;
 		}
 	</script>
 {/capture}

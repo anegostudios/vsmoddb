@@ -6,6 +6,10 @@ dialog {
 
 	max-width: 40em;
 
+	&:not([open]) {
+		display: none;
+	}
+
 	h1 {
 		text-align: center;
 		border-bottom: solid 1px var(--color-border);
@@ -17,8 +21,9 @@ dialog {
 		background-color: var(--color-content-bg);
 	}
 
-	>form {
-		>*:not(.buttons) {
+	&.with-buttons-bottom,
+	&>:only-child.with-buttons-bottom {
+		&>*:not(.buttons):not(h1) {
 			margin-left: 1em;
 			margin-right: 1em;
 		}

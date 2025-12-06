@@ -1,0 +1,7 @@
+/// <reference path="_globals.d.ts" />
+/// <reference path="core.ts" />
+/// <reference path="user-search.ts" />
+/// <reference path="dialog.ts" />
+/// <reference path="jquery.are-you-sure.js" />
+/// <reference path="on-dom-loaded.ts" />
+/// <reference path="ays-beforeunload-shim.js" />

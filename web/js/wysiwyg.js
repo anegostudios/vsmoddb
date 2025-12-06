@@ -97,7 +97,7 @@ var tinymceSettingsCmt = {
 	},
 	paste_postprocess: function(editor, args) {
 		trimLeadingEmptyLines(args.node)
-		timeLeadingEmptyLines(args.node)
+		trimTrailingEmptyLines(args.node)
 		if(wrapNextPaste) {
 			const spoiler = wrapAsSpoilerForTMCE(args.node.childNodes, wrapNextPaste === 2);
 			args.node.replaceChildren(spoiler);
@@ -189,7 +189,7 @@ function trimLeadingEmptyLines(element)
 	}
 }
 
-function timeLeadingEmptyLines(element)
+function trimTrailingEmptyLines(element)
 {
 	let lastChild = element.lastChild;
 	while(lastChild) {
@@ -215,7 +215,9 @@ function createEditor($elem, settings) {
 		}
 		settings.selector = "#" + this.id;
 
-		tinyMCE.init(settings);
+		// In case we are looping we need to shallow copy here.
+		// Seems to be a race condition in tiny.
+		tinyMCE.init(Object.assign({}, settings));
 	});
 }
 

@@ -555,7 +555,6 @@ if($mod['statusId'] == STATUS_LOCKED) {
 		ORDER BY rec.until DESC, rec.actionId DESC
 	', [$mod['modId'], $mod['modId']]);
 
-	$lockReason = htmlspecialchars($lockInfo['reason']);
 	if($lockInfo['notificationId']) {
 		$nextStepHint = !canModerate(null, $user) 
 			? 'You have submitted for review and will receive a notification once the review has concluded.'
@@ -567,11 +566,12 @@ if($mod['statusId'] == STATUS_LOCKED) {
 		$callToAction = '<p>Address these issues and submit for a review to get your mod published again.</p>';
 	}
 
+	// @security: using raw $lockInfo['reason'] which has been sanitized during ingest.
 	addMessage(MSG_CLASS_ERROR.' permanent', <<<HTML
 		<h3 style='text-align: center;'>This mod has been locked by a moderator.</h3>
 		<p>
 			<h4 style='margin-bottom: 0.25em;'>Reason:</h4>
-			<blockquote>{$lockReason}</blockquote>
+			<blockquote>{$lockInfo['reason']}</blockquote>
 		</p>
 		$callToAction
 	HTML);

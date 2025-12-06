@@ -279,6 +279,16 @@ To compile the styles into one file run the command for your method of installat
 
 If you add the `-w` argument to this command, sass will continue running after the first compile instead of terminating, and watch for changes to the soruce files, which will trigger a automatic recompile.
 
+## Compiling scripts
+We are now using [typescript](https://www.typescriptlang.org) in combination with [rollup](https://rollupjs.org/), mostly just to combine multiple scripts into one and minify them.
+
+Both of these want to be installed globally into the [node package manager](https://www.npmjs.com/) via `npm install -g typescript terser`.
+
+To only compile typescript without compression the following command can be used: 
+`npx tsc --target ES2021 --module none --removeComments --allowJs --alwaysStrict --outFile tmp/script.js --inlineSourceMap web/_ts/_script.ts`  
+To properly compress the output terser is used roughly as follows `npx terser tmp/script.js -c 'passes=3,keep_fargs=false' -m -o web/js/script.js --source-map "url='script.js.map',content='inline'"`.
+
+We purposefully do not include any configuration files for sass or tsc in the repository for now to avoid any unnecessary tool bloat.
 
 
 # Testing
