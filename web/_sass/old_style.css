@@ -557,16 +557,6 @@ body.opaque-desc .mod .moddesc {
 	right: -1px;
 }
 
-
-
-.comment:target {
-	background-color: #DDE5CB;
-	border-color: #abb29c;
-}
-
-
-
-
 .content {
 	margin: 1em 1em 0 1em;
 }
@@ -809,59 +799,11 @@ h2 .title {
 }
 
 
-.buttonlinks.template {
-	display: none;
-}
-.buttonlinks {
-	display: inline-block;
-}
-
-.comments .comment {
-	margin-bottom: .5em;
-}
-
-.comment {
-	width: 100%;
-	word-break: break-word;
-}
-
-.comment .title {
-	min-height: 20px;
-	padding: 4px;
-}
-.comment .body {
-	padding: 4px;
-	background-color: rgba(255,255,255,0.4);
-}
-
-.comment .body img, table.latestcomments img  {
-	position: static; /* fix for images copy pasted with hiding classes */
-	opacity: initial; /* fix for images copy pasted with hiding classes */
-	max-width: 100%;
-}
-
-
 p:first-child {
 	margin-top: 0px;
 }
 p:last-child {
 	margin-bottom: 0px;
-}
-
-.editbox.comment {
-	position: relative; /* fix for escaping elements covering other parts of the site */
-	overflow: hidden;
-	padding: 0px;
-	background: rgba(219, 208, 182, 0.7);
-}
-
-.comment.deleted {
-	background: rgb(228, 131, 131);
-}
-
-.comment.deleted .ribbon-tr {
-	background-color: rgb(184, 37, 37);
-	color: var(--color-text-inv);
 }
 
 /* fix tiny mobile sizing */

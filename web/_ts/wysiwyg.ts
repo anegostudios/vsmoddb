@@ -171,7 +171,7 @@ function wrapAsSpoilerForTMCE(nodes : HTMLElement[], isCrashReport : boolean) : 
 
 
 
-function createEditor(target : HTMLInputElement, settings) : void {
+function createEditor(target : HTMLTextAreaElement, settings) : void {
 	if (!target.id) {
 		target.id = "editor" + Math.floor(Math.random() * 10000);
 	}

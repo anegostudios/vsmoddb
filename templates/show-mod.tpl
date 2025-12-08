@@ -254,9 +254,11 @@
 
 {capture name="footerjs"}
 	<script nonce="{$cspNonce}" type="text/javascript">
-		modid = {$asset['modId']};
+		modId = {$asset['modId']};
 
-		$(document).ready(function() {
+		$(function() {
+			attachCommentHandlers();
+
 			$("a[href='#follow']").click(function() {
 				const oldCount = parseInt($(".count", $(this)).text());
 
@@ -265,12 +267,12 @@
 					$(this).toggleClass("on off");
 					$(".count", $(this)).text("" + (oldCount - 1));
 
-					promise = $.post(`/api/v2/notifications/settings/followed-mods/${modid}/unfollow`);
+					promise = $.post(`/api/v2/notifications/settings/followed-mods/${modId}/unfollow`);
 				} else {
 					$(this).toggleClass("on off");
 					$(".count", $(this)).text("" + (oldCount + 1));
 
-					promise = $.post(`/api/v2/notifications/settings/followed-mods/${modid}`, { 'new': 1 /* @hardcoded */ });
+					promise = $.post(`/api/v2/notifications/settings/followed-mods/${modId}`, { 'new': 1 /* @hardcoded */ });
 				}
 
 				promise.fail(jqXHR => {
@@ -283,7 +285,6 @@
 			});
 		});
 	</script>
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/comments.js?version=16" async></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 	<link nonce="{$cspNonce}" href="https://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.css" rel="stylesheet">
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/fotorama.js?v=2"></script>

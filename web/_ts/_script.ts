@@ -5,5 +5,6 @@
 /// <reference path="spoiler.ts" />
 /// <reference path="wysiwyg.ts" />
 /// <reference path="jquery.are-you-sure.js" />
+/// <reference path="comments.ts" />
 /// <reference path="on-dom-loaded.ts" />
 /// <reference path="ays-beforeunload-shim.js" />

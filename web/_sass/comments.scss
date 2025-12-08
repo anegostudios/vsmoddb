@@ -1,0 +1,63 @@
+.comment {
+	width: 100%;
+	word-break: break-word;
+
+	.title {
+		padding: .25em;
+		line-height: 1.75em;
+		display: flex;
+		flex-direction: row;
+
+		>.buttons {
+			margin-left: auto;
+			white-space: nowrap;
+	
+			>.button {
+				border: solid 1px var(--color-border);
+				box-shadow: none;
+				vertical-align: top;
+				font-size: 100%;
+				line-height: 1em;
+				height: 1.75em;
+			}
+		}
+	}
+
+	.body {
+		padding: 4px;
+		background-color: rgba(255,255,255,0.4);
+	}
+
+	&:target { // ??
+		background-color: #DDE5CB;
+		border-color: #abb29c;
+	}
+
+	&.editbox {
+		position: relative; /* fix for escaping elements covering other parts of the site */
+		overflow: hidden;
+		padding: 0px;
+		background: rgba(219, 208, 182, 0.7);
+	}
+
+	&.deleted {
+		background: rgb(228, 131, 131);
+
+		.ribbon-tr {
+			background-color: rgb(184, 37, 37);
+			color: var(--color-text-inv);
+		}
+	}
+}
+
+.comments {
+	.comment {
+		margin-bottom: .5em;
+	}
+}
+
+.comment .body img, table.latestcomments img  {
+	position: static; /* fix for images copy pasted with hiding classes */
+	opacity: initial; /* fix for images copy pasted with hiding classes */
+	max-width: 100%;
+}

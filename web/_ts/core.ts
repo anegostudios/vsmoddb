@@ -1,12 +1,12 @@
 var R = {
-get : (id : string) : HTMLElement|null => document.getElementById(id),
-getQ : (selector : string) : HTMLElement|null => document.querySelector(selector),
-make : function(spec : string, ...children : (string|Node)[]) : HTMLElement {
+get : <T extends HTMLElement = HTMLElement>(id : string) : T|null => document.getElementById(id) as T,
+getQ : <T extends HTMLElement = HTMLElement>(selector : string) : T|null => document.querySelector<T>(selector),
+make : function<T extends HTMLElement = HTMLElement>(spec : string, ...children : (string|Node)[]) : T {
 	const [nodeName, ...classes] = spec.split('.');
 	const el = document.createElement(nodeName);
 	if(classes) el.classList.add(...classes);
 	if(children) el.append(...children);
-	return el;
+	return el as T;
 },
 formatByteSize : function(size : number) : string {
 	if(size > 1073741824) return (size / 1073741824).toFixed(2) + ' GB';
