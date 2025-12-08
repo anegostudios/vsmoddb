@@ -12,14 +12,15 @@
 	--color-input-g: #9bc45e;
 	--color-input-r: #c45e5e;
 	--color-input-disabled: hsl(0 0% 85%);
-	--color-input-text-disabled:hsl(0, 0%, 43%);
+	--color-input-text-disabled:hsl(0 0% 43%);
 	--color-border: #aaa;
 	--color-border-active: #333;
 	--color-link: #3d6594;
 	--color-link-active: #608CBE;
 	--c-mod-bg: 0 0% 100%;
 	--color-mod-bg: hsl(var(--c-mod-bg));
-	--color-highlight: hsl(45, 51%, 54%);
+	--color-highlight: hsl(45 51% 54%);
+	--color-backdrop: hsl(0 0% 35% / .85);
 
 	--color-flair-author: #535c88;
 	--color-flair-moderator: #2a6b6f;
@@ -325,7 +326,7 @@ img::before { /* ff */
 .submenu>nav {
 	position: absolute;
 	z-index: 9999;
-	background-color: hsla(var(--c-accent) 33% / 0.9);
+	background-color: hsl(var(--c-accent) 33% / 0.9);
 	color: var(--color-text-inv);
 	left: 0;
 	display: none;
@@ -414,7 +415,7 @@ img::before { /* ff */
 	width: 100%;
 	padding: .25em;
 	background-color: white; /* fallback */
-	background-color: hsla(var(--c-mod-bg) / .8);
+	background-color: hsl(var(--c-mod-bg) / .8);
 	text-shadow: 1px white;
 }
 body.opaque-desc .mod .moddesc {
@@ -1001,7 +1002,7 @@ footer>ul {
 	gap: 1em;
 	justify-content: space-between;
 	padding: .5em;
-	background: hsla(0, 0%, 100%, 0.6);
+	background: hsl(0 0% 100% / 0.6);
 }
 
 

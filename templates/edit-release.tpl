@@ -136,7 +136,7 @@
 
 	{if $release['assetId']}\{
 		const retractMdl = R.get('retract-mdl');
-		$(() => createEditor($('textarea', retractMdl), tinymceSettingsCmt));
+		R.onDOMLoaded(() => createEditor(retractMdl.getElementsByTagName('textarea'), tinymceSettingsCmt));
 		attachDialogSendHandler(retractMdl, (form, data) => \{
 			if(!data.get('reason')) \{
 				R.markAsErrorElement(form.getElementsByClassName('tox-tinymce')[0]);
@@ -198,7 +198,7 @@
 		$('form[name=commentformtemplate]').areYouSure();
 	});
 </script>
-<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=41" async></script>
+<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=42" async></script>
 <script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 

@@ -1,7 +1,7 @@
 var uploading = 0;
 
 $(document).ready(function () {
-	createEditor($("textarea.editor"), tinymceSettings);
+	createEditor(R.getQ("textarea.editor"), tinymceSettings);
 
 	const $editPermsSelect = $('#teameditors-box select');
 	$("#teammembers-box select").on('change', function(e, ex) {

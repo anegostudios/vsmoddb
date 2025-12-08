@@ -28,4 +28,8 @@ dialog {
 			margin-right: 1em;
 		}
 	}
+
+	&::backdrop {
+		background-color: var(--color-backdrop);
+	}
 }

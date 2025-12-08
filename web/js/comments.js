@@ -39,7 +39,7 @@ $(document).ready(function () {
 		$(this).removeClass("whitetext");
 		initialized = true;
 		$('form[name=commentformtemplate]').trigger('reinitialize.areYouSure');
-		createEditor($('.comment.comment-editor textarea[name=commenttext]'), tinymceSettingsCmt);
+		createEditor(R.getQ('.comment.comment-editor textarea[name=commenttext]'), tinymceSettingsCmt);
 	});
 
 
@@ -91,7 +91,7 @@ $(document).ready(function () {
 		$form.areYouSure();
 
 		const $editor = $("textarea", $form);
-		createEditor($editor, tinymceSettingsCmt);
+		createEditor($editor[0], tinymceSettingsCmt);
 
 		$("button[name='save']", $form).click(function(e) {
 			e.preventDefault();

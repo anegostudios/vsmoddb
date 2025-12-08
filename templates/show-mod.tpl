@@ -283,7 +283,7 @@
 			});
 		});
 	</script>
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/comments.js?version=15" async></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/comments.js?version=16" async></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 	<link nonce="{$cspNonce}" href="https://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.css" rel="stylesheet">
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/fotorama.js?v=2"></script>

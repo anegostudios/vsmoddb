@@ -1,5 +1,6 @@
 var R = {
 get : (id : string) : HTMLElement|null => document.getElementById(id),
+getQ : (selector : string) : HTMLElement|null => document.querySelector(selector),
 make : function(spec : string, ...children : (string|Node)[]) : HTMLElement {
 	const [nodeName, ...classes] = spec.split('.');
 	const el = document.createElement(nodeName);
@@ -45,6 +46,36 @@ attachDefaultFailHandler : function(jqXHR : jqXHR, errorPrefix : string = 'Reque
 		R.addMessage(MSG_CLASS_ERROR, errorPrefix + (d.reason ? (': '+d.reason) : '.'), true)
 	});
 },
+trimLeadingEmptyLines : function(element : Node) : void {
+	let firstChild = element.firstChild;
+	while(firstChild) {
+		if(firstChild.nodeName === 'BR') {
+			firstChild.remove();
+		}
+		else if(["P", "DIV"].includes(firstChild.nodeName) && !firstChild.textContent) {
+			firstChild.remove();
+		}
+		else {
+			element = firstChild;
+		}
+		firstChild = element.firstChild;
+	}
+},
+trimTrailingEmptyLines : function(element : Node) : void {
+	let lastChild = element.lastChild;
+	while(lastChild) {
+		if(lastChild.nodeName === 'BR') {
+			lastChild.remove();
+		}
+		else if(["P", "DIV"].includes(lastChild.nodeName) && !lastChild.textContent) {
+			lastChild.remove();
+		}
+		else {
+			element = lastChild;
+		}
+		lastChild = element.lastChild;
+	}
+}
 };
 
 //NOTE(Rennorb) This script is included after the body, so this always already exists to be grabbed.

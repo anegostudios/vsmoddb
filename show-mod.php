@@ -134,7 +134,9 @@ if(count($releases)) {
 }
 
 foreach ($releases as &$release) {
-	$release['file'] = $releaseFiles[$release['assetId']];
+	// This catches the case where a release is missing its file because it got deleted retroactively.
+	//TODO(Rennorb) @cleanup @ux: make it impossible for a release to not have a file. Needs rework of the file upload system.
+	$release['file'] = $releaseFiles[$release['assetId']] ?? [];
 	
 	if($release['compatibleGameVersions']) {
 		$compatibleGameVersions        = array_map('intval', explode(',', $release['compatibleGameVersions'])); // sorted ascending

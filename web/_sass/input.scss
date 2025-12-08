@@ -212,7 +212,7 @@ input:disabled,
 
 
 .chosen-container-single .chosen-single {
-	background: linear-gradient(hsla(var(--c-input) 95%) 20%, hsla(var(--c-input) 98%) 50%, hsla(var(--c-input) 95%) 52%, hsla(var(--c-input) 97%) 100%);
+	background: linear-gradient(hsl(var(--c-input) 95%) 20%, hsl(var(--c-input) 98%) 50%, hsl(var(--c-input) 95%) 52%, hsl(var(--c-input) 97%) 100%);
 }
 
 .chosen-container-multi .chosen-choices {

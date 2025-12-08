@@ -22,4 +22,6 @@ R.onDOMLoaded(function() {
 			(target as HTMLDialogElement).showModal();
 		})
 	}
+
+	attachSpoilerToggle($('.spoiler-toggle'));
 });

@@ -22,7 +22,7 @@
 
 {capture name="footerjs"}
 	<script nonce="{$cspNonce}" type="text/javascript">
-		$(document).ready(function() { createEditor($("textarea.editor"), tinymceSettingsCmt); });
+		R.onDOMLoaded(() => createEditor(R.getQ("textarea.editor"), tinymceSettingsCmt));
 	</script>
 {/capture}
 

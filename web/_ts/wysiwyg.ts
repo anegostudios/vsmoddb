@@ -1,0 +1,197 @@
+var tinymceSettings = {
+	//NOTE(Rennorb): TinyMCE mobile has a whitelist for plugins, so if we want specific ones we need to use the external_plugins directive.
+	// Better practice either way, became it makes updating TinyMCE a lot easer.
+	plugins: 'paste print preview searchreplace autolink autoresize directionality visualblocks visualchars fullscreen image link media code codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime emoticons advlist lists wordcount imagetools textpattern help spoiler mention noneditable',
+	external_plugins: {
+		'mention': '/web/js/tinymce-custom/plugins/mention/plugin.min.js',
+	},
+	toolbar: 'formatselect | bold italic strikethrough forecolor backcolor permanentpen formatpainter | link image media pageembed emoticons | alignleft aligncenter alignright alignjustify  | numlist bullist outdent indent | removeformat code | spoiler-add spoiler-remove',
+	toolbar_sticky: true,
+	image_advtab: true,
+	importcss_append: true,
+	height: 400,
+	image_caption: true,
+	convert_urls:true,
+	relative_urls:false,
+	remove_script_host:false,
+	tinycomments_mode: 'embedded',
+	content_css: "/web/css/editor_content.css?ver=6",
+	setup: function (editor) {
+		editor.on('change', function(e) { 
+			tinyMCE.triggerSave(); 
+			var $form = $("#" + e.target.id).parents("form");
+			$form.trigger('checkform.areYouSure'); 
+		}); 
+		editor.on('keyup', function(e) { 
+			tinyMCE.triggerSave(); 
+			var $form = $("#" + e.target.id).parents("form");
+			$form.trigger('checkform.areYouSure');
+		});
+	},
+	paste_postprocess: function(editor, args) {
+		maybePromptForRelativeLinkRemoval(args.node);
+	},
+	mentions: {
+		source: function(query, process, delimiter) {
+			if(!query) return;
+	
+			$.getJSON('/api/v2/users/by-name/' + encodeURIComponent(query), function(data) {
+				process(Object.entries(data));
+			});
+		},
+		queryBy: 1,
+		insert: function(item) {
+			return `<a class="mention username mceNonEditable" data-user-hash="${item[0]}" href="/show/user/${item[0]}">${item[1]}</a>`;
+		}
+	},
+};
+
+var tinymceSettingsCmt = {
+	menubar: false,
+	plugins: 'paste searchreplace autolink autoresize directionality image link codesample charmap hr pagebreak nonbreaking anchor emoticons advlist lists wordcount imagetools textpattern help spoiler mention noneditable',
+	external_plugins: tinymceSettings.external_plugins,
+	toolbar: 'bold italic strikethrough | link image emoticons | alignleft aligncenter alignright alignjustify  | numlist bullist outdent indent | removeformat | spoiler-add spoiler-remove',
+	toolbar_sticky: true,
+	image_advtab: true,
+	importcss_append: true,
+	min_height: 400 /* @hack: required for mobile */,
+	height: 400,
+	image_caption: true,
+	convert_urls:true,
+	relative_urls:false,
+	remove_script_host:false,
+	tinycomments_mode: 'embedded',
+	paste_data_images: true,
+	content_css: tinymceSettings.content_css,
+	setup: function(editor) {
+		tinymceSettings.setup(editor);
+		editor.on('SetContent', function(e) {
+			if(e.initial) return;
+
+			if(e.paste && wrapNextPaste) {
+				wrapNextPaste = WrapMode.None;
+				//TODO(Rennorb) @correctness: This won't always select the correct one, but its good enough for now.
+				const spoilers  = editor.dom.select('.spoiler');
+				editor.selection.setNode(spoilers[spoilers.length - 1])
+				editor.selection.collapse(false);
+				editor.focus();
+			}
+		})
+	},
+	paste_preprocess: function(editor, args) {
+		const text = args.content;
+		if(!text) return;
+
+		args.content = text.trim().replaceAll('\r\n', '\n'); // fix windows double line endings...
+
+		if(couldBeCrashReport(text)) {
+			if(confirm('Whoa there, looks like you pasted a crash report.\nShould we wrap that for you, so its easier to read for the Modder?\n\nPressing "cancel" (or the equivalent in your language) will paste the text as-is.')) {
+				wrapNextPaste = WrapMode.AsCrashReport;
+			}
+		}
+		else if(text.length >= 1000 && !text.includes('base64,')) {
+			if(confirm('Whoa there, looks like you pasted a lot of text at once.\nShould we wrap that for you, so its easier to read for the Modder?\n\nPressing "cancel" (or the equivalent in your language) will paste the text as-is.')) {
+				wrapNextPaste = WrapMode.WithoutMarkup;
+			}
+		}
+	},
+	paste_postprocess: function(editor, args) {
+		R.trimLeadingEmptyLines(args.node)
+		R.trimTrailingEmptyLines(args.node)
+		if(wrapNextPaste) {
+			const spoiler = wrapAsSpoilerForTMCE(args.node.childNodes, wrapNextPaste === WrapMode.AsCrashReport);
+			args.node.replaceChildren(spoiler);
+		}
+		
+		maybePromptForRelativeLinkRemoval(args.node);
+	},
+	mentions: tinymceSettings.mentions,
+};
+
+function maybePromptForRelativeLinkRemoval(node : HTMLElement) {
+	const relativeUrlAnchors = node.querySelectorAll<HTMLAnchorElement>('a[href^="./"], a[href^="../"], a[href^="/"][href*="/issues/"]');
+	if(relativeUrlAnchors.length) {
+		let firstHref = relativeUrlAnchors[0].getAttribute('href')!; // cant use .href, that resolves the url
+		let firstActualDestination;
+		try { firstActualDestination = (new URL(firstHref, document.baseURI)).href; }
+		catch { firstActualDestination = '<link was malformed>' }
+
+		if(confirm(`Looks like there are relative links in that html you've just pasted in here - we found ${relativeUrlAnchors.length} such link${relativeUrlAnchors.length === 1 ? '' : 's'}.
+Unless you also copied it from here, those probably wont link to the page you want.
+
+Here is the first one and where it would link to:
+	${relativeUrlAnchors[0].textContent}
+	links to '${firstHref}',
+	which actually resolves to '${firstActualDestination}'
+
+Since we cannot determine where this was copied from, we cannot automatically fix the links for you - we can however at least remove them from the text.
+Should we do that?
+
+Pressing "cancel" (or the equivalent in your language) will paste the text as-is.`)) {
+			for(const el of relativeUrlAnchors) {
+				el.parentElement!.replaceChild(R.make('span', ...el.childNodes), el);
+			}
+		}
+	}
+}
+
+const enum WrapMode {
+	None = 0, WithoutMarkup, AsCrashReport,
+}
+
+let wrapNextPaste = WrapMode.None;
+
+function couldBeCrashReport(text : string) : boolean {
+	return text.includes('System.Exception') || text.includes('at Vintagestory.') || text.includes('Event Log') || text.includes('Critical error');
+}
+
+function wrapAsSpoilerForTMCE(nodes : HTMLElement[], isCrashReport : boolean) : HTMLElement {
+	const toggleEl = R.make('div.spoiler-toggle', isCrashReport ? 'Crash Report' : 'Spoiler');
+	toggleEl.setAttribute('contenteditable', 'true')
+
+	const textEl = R.make(isCrashReport ? 'pre.spoiler-text' : 'div.spoiler-text');
+	textEl.setAttribute('contenteditable', 'true')
+	for(const node of nodes) {
+		if(node.style) {
+			node.style.whiteSpace = ''; // strip whitespace-pre in inner pastes
+			node.style.font = '';
+		}
+	}
+	textEl.append(...nodes)
+
+	const wrapEl = R.make('div.spoiler');
+	if(isCrashReport) wrapEl.classList.add('crash-report');
+	wrapEl.setAttribute('contenteditable', 'false')
+	wrapEl.append(toggleEl, textEl);
+
+	return wrapEl;
+}
+
+
+
+
+
+function createEditor(target : HTMLInputElement, settings) : void {
+	if (!target.id) {
+		target.id = "editor" + Math.floor(Math.random() * 10000);
+	}
+
+	// We need to shallow copy here, otherwise multiple invocations of this will overwrite the target in the settings object and mangle ech other.
+	// Seems to be a race condition in tiny.
+	settings = Object.assign({}, settings)
+
+	settings.selector = "#" + target.id;
+
+	tinyMCE.init(settings);
+}
+
+function destroyEditor($elem) : void {
+	$elem.each(function() {
+		tinyMCE.remove("#" + this.id);
+	});
+}
+
+function getEditorContents($elem) : string {
+	tinyMCE.triggerSave();
+	return $elem.val();
+}

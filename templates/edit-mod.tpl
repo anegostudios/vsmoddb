@@ -259,7 +259,7 @@
 		{if $canEditTeamMembers}R.onDOMLoaded(() => attachUserSearchHandler(R.get('teammembers-box')));{/if}
 
 		{if $mod['modId'] && canModerate(null, $user)}
-		$(() => createEditor($('textarea', R.get('lock-mdl')), tinymceSettingsCmt));
+		R.onDOMLoaded(() => { debugger; createEditor(R.getQ('#lock-mdl textarea'), tinymceSettingsCmt) });
 		attachDialogSendHandler(R.get('lock-mdl'), (form, data) => \{
 			if(!data.get('reason')) \{
 				R.markAsErrorElement(form.getElementsByClassName('tox-tinymce')[0]);
@@ -443,7 +443,7 @@
 		}
 	</style>
 
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=41" async></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=42" async></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 

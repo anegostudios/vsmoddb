@@ -14,3 +14,6 @@ interface jqXHR extends XMLHttpRequest {
 	always : (cb : (dataOrXhr : any|jqXHR, textStatus : string, xhrOrError : jqXHR|any) => void) => jqXHR,
 	then : (done : (response : any, textStatus : string, xhr : jqXHR) => void, fail : (xhr : jqXHR, textStatus : string, error : any) => void) => jqXHR,
 }
+
+// Silence tinymce linter complaints
+declare const tinyMCE : any;
