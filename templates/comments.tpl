@@ -24,12 +24,12 @@
 								{if !empty($user)}
 										{if $comment["userId"] == $user["userId"]}
 											{if !$comment['deleted']}
-												<div class="buttons strikethrough-when-banned strikethrough-when-readonly"><button class="button square" data-a="e" title="Edit"><i class="bx bx-pencil"></i></button>&nbsp;<button class="button square" data-a="d" title="Delete"><i class="bx bx-trash"></i></button>&nbsp;<a class="button square" href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}" title="Moderate User"><i class="bx bx-shield-quarter"></i></a></div>
+												<span class="buttons strikethrough-when-banned strikethrough-when-readonly">(<a href="#e">edit</a>&nbsp;<a href="#d">delete</a>&nbsp;<a href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}">moderate user</a>)</span>
 											{/if}
 										{elseif canModerate($comment['userId'], $user) && !($comment["userId"] == $user["userId"])}
-												<div class="buttons strikethrough-when-banned strikethrough-when-readonly">{if !$comment['deleted']}<button class="button square" data-a="e" title="Edit"><i class="bx bx-pencil"></i></button>&nbsp;<button class="button square" data-a="d" title="Delete"><i class="bx bx-trash"></i></button>&nbsp;{/if}<a class="button square" href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}" title="Moderate User"><i class="bx bx-shield-quarter"></i></a></div>
+												<span class="buttons strikethrough-when-banned strikethrough-when-readonly">({if !$comment['deleted']}<a href="#e">edit</a>&nbsp;<a href="#d">delete</a>&nbsp;{/if}<a href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}">moderate user</a>)</span>
 										{elseif $asset['createdByUserId'] == $user['userId'] && !$comment['deleted']}
-												<div class="buttons strikethrough-when-banned strikethrough-when-readonly"><button class="button square" data-a="d" title="Delete"><i class="bx bx-trash"></i></button></div>
+												<span class="buttons strikethrough-when-banned strikethrough-when-readonly">(<button href="#d">delete</a>)</span>
 										{/if}
 								{/if}
 						</div>

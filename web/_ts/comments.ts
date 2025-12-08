@@ -67,7 +67,7 @@ function attachCommentHandlers() {
 				const cmtFrag = jqXHR.getResponseHeader('Location')!;
 				$cmt.id = cmtFrag.slice(1); // slice of the # from #cmt-213
 				$('.cmt-pinner', $cmt)[0].href = cmtFrag;
-				$('.title', $cmt)[0].innerHTML += `<div class="buttons"><button class="button square" data-a="e" title="Edit"><i class="bx bx-pencil"></i></button>&nbsp;<button class="button square" data-a="d" title="Delete"><i class="bx bx-trash"></i></button></div>`;
+				$('.title', $cmt)[0].innerHTML += ` <span class="buttons">(<a href="#e">edit</a>&nbsp;<a href="#d">delete</a>)</span>`;
 				$('.body', $cmt)[0].innerHTML = response; // update the response to the actual serverside validated version
 				attachSpoilerToggle($('.spoiler-toggle', $cmt));
 			})
@@ -79,7 +79,8 @@ function attachCommentHandlers() {
 	})
 
 
-	$(container).on("click", 'button[data-a="d"]', function () {
+	$(container).on("click", 'a[href="#d"]', function (e : MouseEvent) {
+		e.preventDefault();
 		if (confirm("Are you sure you want to delete this comment?")) {
 			const $comment = $(this).parents(".comment");
 			$comment.hide();
@@ -91,7 +92,8 @@ function attachCommentHandlers() {
 		}
 	});
 
-	$(container).on("click", 'button[data-a="e"]', function () {
+	$(container).on("click", 'a[href="#e"]', function (e : MouseEvent) {
+		e.preventDefault();
 		const $comment = $(this).parents(".comment");
 		const $body = $('.body', $comment);
 
@@ -116,7 +118,7 @@ function attachCommentHandlers() {
 
 		const commentId = $comment[0].id.split('-')[1];
 		const $form = $(`
-			<form name="commentformedit" onsubmit="javascript:return false;">
+			<form name="commentformedit" onsubmit="return false;">
 				<textarea name="commenttext" class="editor editcommenteditor" data-editorname="editcomment" style="width: 100%; height: 135px;">${$body.html()}</textarea>
 				<p style="margin:4px; margin-top:5px;"><button class="shine" type="submit" name="save">Update Comment</button></p>
 			</form>

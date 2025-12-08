@@ -4,23 +4,6 @@
 
 	.title {
 		padding: .25em;
-		line-height: 1.75em;
-		display: flex;
-		flex-direction: row;
-
-		>.buttons {
-			margin-left: auto;
-			white-space: nowrap;
-	
-			>.button {
-				border: solid 1px var(--color-border);
-				box-shadow: none;
-				vertical-align: top;
-				font-size: 100%;
-				line-height: 1em;
-				height: 1.75em;
-			}
-		}
 	}
 
 	.body {
