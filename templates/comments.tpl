@@ -24,12 +24,12 @@
 								{if !empty($user)}
 										{if $comment["userId"] == $user["userId"]}
 											{if !$comment['deleted']}
-												<span class="buttons strikethrough-when-banned strikethrough-when-readonly">(<a href="#e">edit</a>&nbsp;<a href="#d">delete</a>&nbsp;<a href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}">moderate user</a>)</span>
+												<span class="buttons strikethrough-when-banned strikethrough-when-readonly">(<a href="#e">edit</a>&nbsp;<a href="#d">delete</a>)</span>
 											{/if}
 										{elseif canModerate($comment['userId'], $user) && !($comment["userId"] == $user["userId"])}
 												<span class="buttons strikethrough-when-banned strikethrough-when-readonly">({if !$comment['deleted']}<a href="#e">edit</a>&nbsp;<a href="#d">delete</a>&nbsp;{/if}<a href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}">moderate user</a>)</span>
 										{elseif $asset['createdByUserId'] == $user['userId'] && !$comment['deleted']}
-												<span class="buttons strikethrough-when-banned strikethrough-when-readonly">(<button href="#d">delete</a>)</span>
+												<span class="buttons strikethrough-when-banned strikethrough-when-readonly">(<a href="#d">delete</a>)</span>
 										{/if}
 								{/if}
 						</div>
