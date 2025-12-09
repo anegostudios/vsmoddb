@@ -54,3 +54,48 @@ function attachUserSearchHandler(scopeEl : HTMLElement) : void
 		}, 500);
 	})
 }
+
+function attachVersionSelectorHandlers(versionSelectorEl : HTMLDetailsElement) : void
+{
+	const countLabelEl = versionSelectorEl.getElementsByClassName('count-label')[0];
+	const updateSelectedCounter = () => {
+		const count = versionSelectorEl.querySelectorAll('input:checked').length;
+		countLabelEl.textContent = `${count} Version${count !== 1 ? 's' : ''} Selected`;
+	}
+	versionSelectorEl.addEventListener('click', e => {
+		let t = e.target as Element | null
+		if(!t || !t.nodeName) return;
+
+		if(t.nodeName === 'INPUT') {
+			updateSelectedCounter();
+			return;
+		}
+
+		// <div><span>subversion</></>
+		// <div>container for all the inputs of that subversion</>
+		if(t.nodeName !== 'DIV' || t.firstChild?.nodeName !== 'SPAN') {
+			if(t.nodeName !== 'SPAN' || t.parentElement?.nodeName !== 'DIV') return;
+
+			t = t.parentElement;
+		}
+
+		e.stopPropagation()
+
+		const ns = t.nextElementSibling!;
+		const inputs = ns.nodeName === 'INPUT' ? [ns as HTMLInputElement] : ns.getElementsByTagName('input');
+
+		let toggleOn = false;
+		for(const el of inputs) {
+			if(!el.checked) {
+				// As long as there is one unchecked input in the subset check them all first.
+				toggleOn = true;
+				break;
+			}
+		}
+		for(const el of inputs) {
+			el.checked = toggleOn;
+		}
+		
+		updateSelectedCounter();
+	})
+}

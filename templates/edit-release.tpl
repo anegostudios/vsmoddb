@@ -23,13 +23,62 @@
 		{if ($mod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD}
 			<div class="editbox">
 				<label>Compatible with game versions</label>
-				<select name="cgvs[]" class="required" multiple>
-					{foreach from=$allGameVersions item=version}
-						<option value="{$version['name']}" {if isset($release['compatibleGameVersions'][$version['version']])}selected="selected"{/if}>{$version['name']}</option>
-					{/foreach}
-				</select>
+				<details class="version-selector">
+					<summary class="button square">Select</summary>
+					<div>
+						<p class="count-label" style="text-align:center;padding:.25em;">{$c = count($release['compatibleGameVersions'])} Version{$c !== 1 ? 's' : ''} Selected</p>
+						<h4>
+							<label>Major</label>
+							<label>Minor</label>
+							<label>Patch</label>
+							<label>Pre</label>
+							<label></label>
+						</h4>
+						<div>
+							{foreach from=$allGameVersionsTree item=major key=val}
+							<div class="h" style="border-left-width: 0;">
+								<div><span>{$val}</span></div>
+								<div>
+									{foreach from=$major item=minor key=val}
+									<div class="h">
+										<div><span>.{$val}</span></div>
+										<div>
+											{foreach from=$minor item=patch key=val}
+											<div class="h">
+												<div><span>.{$val}</span></div>
+												<div>
+													{foreach from=$patch item=version key=val}
+														<div class="h">
+															{if ($val & VERSION_MASK_PRERELEASE_KIND) === 0x4000}
+															<div><span>.dev-{$val & VERSION_MASK_PRERELEASE_NUMBER}</span></div>
+															{elseif ($val & VERSION_MASK_PRERELEASE_KIND) === 0x8000}
+															<div><span>.pre-{$val & VERSION_MASK_PRERELEASE_NUMBER}</span></div>
+															{elseif ($val & VERSION_MASK_PRERELEASE_KIND) === 0xc000}
+															<div><span>.rc-{$val & VERSION_MASK_PRERELEASE_NUMBER}</span></div>
+															{elseif ($val & VERSION_MASK_PRERELEASE_KIND) === 0xf000}
+																{if $val !== 0xffff}
+																<div><span>.{$val & VERSION_MASK_PRERELEASE_NUMBER}</span></div>
+																{else}
+																<div><span>&nbsp;</span></div>
+																{/if}
+															{/if}
+															<input type="checkbox" name="cgvs[]" value="{$version['name']}" {if isset($release['compatibleGameVersions'][$version['version']])}checked=""{/if}>
+														</div>
+													{/foreach}
+												</div>
+											</div>
+											{/foreach}
+										</div>
+									</div>
+									{/foreach}
+								</div>
+							</div>
+							{/foreach}
+						</div>
+					</div>
+				</details>
 			</div>
-			
+
 			{if $release["assetId"]}
 				<div class="editbox">
 					Created by: {$release['createdByUsername']}<br>
@@ -193,7 +242,7 @@
 		}
 	} {/if}
 	
-	
+	attachVersionSelectorHandlers(document.getElementsByClassName('version-selector')[0]);
 	$(document).ready(function() {
 		$('form[name=commentformtemplate]').areYouSure();
 	});

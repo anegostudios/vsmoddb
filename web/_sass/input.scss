@@ -321,3 +321,118 @@ button.moderator {
 		background-color: var(--color-input-r) !important;
 	}
 }
+
+
+details.version-selector {
+	position: relative;
+	background-color: var(--color-input);
+	border: 1px solid var(--color-border);
+
+	&>summary {
+		list-style: none;
+		display: block;
+	}
+
+	&>:last-child {
+		position: absolute;
+		z-index: 10;
+		width: 100%;
+		max-height: min(30em, 50vh);
+		overflow-y: auto;
+		scrollbar-width: thin;
+		background-color: var(--color-input);
+		border: 1px solid var(--color-border);
+		user-select: none;
+
+		--c1w: 3rem;
+		--c2w: 3rem;
+		--c3w: 3rem;
+		--c4w: 3rem;
+
+		>h4, div.h {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: nowrap;
+			>* {
+				flex-shrink: 0;
+				flex-grow: 0;
+				&:last-child { flex-grow: 1; }
+			}
+		}
+		>h4 {
+			padding-top: .25em;
+			margin-top: 0;
+			position: sticky;
+			top: 0;
+			background-color: var(--color-input);
+			border-bottom: solid var(--color-border) 1px;
+			z-index: 11; // needs to be higher so it covers the sticky numbers
+
+			>* {
+				text-align: right;
+				padding: 0 .125em;
+			}
+			>:nth-child(1) { width: var(--c1w); }
+			>:nth-child(2) { width: var(--c2w); }
+			>:nth-child(3) { width: var(--c3w); }	
+			>:nth-child(4) { width: var(--c4w); }
+		}
+		div.h {
+			border: solid var(--color-border) 0;
+			border-left-width: 1px;
+
+			&:not(:last-child) {
+				border-bottom-width: 1px;
+			}
+
+			cursor: pointer;
+
+			&:hover:not(:has(.h:hover)) {
+				background-color: hsl(var(--c-input) 80%);
+			}
+		}
+		>div {
+			padding-bottom: .25em;
+
+			>div {
+				>div{
+					>span {
+						width: var(--c1w);
+						position: sticky;
+						top: 1.75em;
+					}
+					>div {
+						>div{
+							>span {
+								width: var(--c2w);
+								position: sticky;
+								top: 1.75em;
+							}
+							>div {
+								>div {
+									>span {
+										width: var(--c3w);
+										position: sticky;
+										top: 1.75em;
+									}
+									>div {
+										>div {
+											>span { width: var(--c4w); }
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			span {
+				display: block;
+				text-align: right;
+			}
+		}
+	}
+
+	input, select { width: fit-content; }
+}

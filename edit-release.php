@@ -317,6 +317,17 @@ else {
 	$existingRelease['version'] = formatSemanticVersion(intval($existingRelease['version']));
 }
 
+$allGameVersionsTree = [];
+foreach($allGameVersions as $gameVersion) {
+	$num = $gameVersion['version'];
+
+	$major = ($num & VERSION_MASK_MAJOR) >> 48;
+	$minor = ($num & VERSION_MASK_MINOR) >> 32;
+	$patch = ($num & VERSION_MASK_PATCH) >> 16;
+	$prerelease = $num & VERSION_MASK_PRERELEASE;
+	$allGameVersionsTree[$major][$minor][$patch][$prerelease] = $gameVersion;
+}
+
 $maxUploadSizeLimit = parseMaxUploadSizeFromIni();
 $uploadSizeLimitOfThisMod = $targetMod['uploadLimitOverwrite'] !== null ? $targetMod['uploadLimitOverwrite'] : UPLOAD_LIMITS[ASSETTYPE_RELEASE]['individualSize'];
 $view->assign('uploadSizeLimit', min($maxUploadSizeLimit, $uploadSizeLimitOfThisMod), null, true);
@@ -328,10 +339,10 @@ cspPushAllowedInlineHandlerHash('sha256-XKuSPEJjbu3T+mAY9wlP6dgYQ4xJL1rP4m3GrDwZ
 cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/edit-deletefile {$_SERVER['HTTP_HOST']}/edit-uploadfile {$_SERVER['HTTP_HOST']}/api/v2/mods/{$targetMod['modId']}/releases/{$existingRelease['releaseId']}/retraction");
 
 
-$view->assign('allGameVersions', $allGameVersions);
+$view->assign('allGameVersionsTree', $allGameVersionsTree, null, true);
 
 $view->assign('mod', $targetMod);
-$view->assign('doFileValidation', ($targetMod["category"] & CATEGORY__MASK) === CATEGORY_GAME_MOD, null, false);
+$view->assign('doFileValidation', ($targetMod["category"] & CATEGORY__MASK) === CATEGORY_GAME_MOD, null, true);
 $view->assign('release', $existingRelease);
 $view->assign('asset', ['assetId' => $existingRelease['assetId'], 'assetTypeId' => ASSETTYPE_RELEASE], null, true); //TODO(Rennorb) @cleanup: only here for the footer js / file upload code
 $view->assign('files', $files);
