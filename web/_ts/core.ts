@@ -14,6 +14,24 @@ formatByteSize : function(size : number) : string {
 	if(size > 1024) return (size / 1024).toFixed(2) + ' KB';
 	return size + ' B';
 },
+compileSemanticVersion : function(versionStr : string) : BigInt|false {
+	const matches = /^(\d+)\.(\d+)\.(\d+)(?:-(dev|pre|rc)\.(\d+))?$/.exec(versionStr); // @perf
+	if(!matches) return false;
+	let compliedSuffix = 0xffffn; // non pre-release sorts after pre-release
+	if(matches[5]) {
+		switch(matches[4]) {
+			case 'dev': compliedSuffix =  4n << 12n; break;
+			case 'pre': compliedSuffix =  8n << 12n; break;
+			case 'rc' : compliedSuffix = 12n << 12n; break;
+			default: return false;
+		}
+		compliedSuffix |= BigInt(matches[5]) & 0x0fffn;
+	}
+	return ((BigInt(matches[1]) & 0xffffn) << 48n)
+			| ((BigInt(matches[2]) & 0xffffn) << 32n)
+			| ((BigInt(matches[3]) & 0xffffn) << 16n)
+			| compliedSuffix;
+},
 onDOMLoaded : function(callback : () => void) {
 	if(document.readyState !== 'loading') callback();
 	else document.addEventListener('DOMContentLoaded', callback);

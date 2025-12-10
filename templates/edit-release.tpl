@@ -211,34 +211,17 @@
 				$("input[name='modidstr']").val(file.modid);
 				$("input[name='modversion']").val(file.modversion);
 				if(file.gameversiondep) \{
-					const versionSelect = document.querySelector("select[name='cgvs[]']");
-					versionSelect.value = '';
-					for(const opt of versionSelect.children) \{
-						if(compileSemanticVersion(opt.value) >= file.gameversiondep)  opt.selected = true;
-						else break;
+					const versionInputs = document.querySelectorAll('.version-selector input[name="cgvs[]"]');
+					const labelEl = document.getElementsByClassName('count-label')[0];
+					let c = 0;
+					for(const box of versionInputs) {
+						box.checked = R.compileSemanticVersion(box.value) >= file.gameversiondep;
+						if(box.checked) c++;
 					}
-					$(versionSelect).trigger("chosen:updated");
+					labelEl.textContent = `${c} Versions${c !== 1 ? 's' : ''} Selected`;
+					R.addMessage(MSG_CLASS_OK, `Automatically selected ${c} compatible game version${c !== 1 ? 's' : ''}.`, false);
 				}
 			}
-		}
-
-		function compileSemanticVersion(versionStr) {
-			const matches = /^(\d+)\.(\d+)\.(\d+)(?:-(dev|pre|rc)\.(\d+))?$/.exec(versionStr); // @perf
-			if(!matches) return false;
-			let compliedSuffix = 0xffffn; // non pre-release sorts after pre-release
-			if(matches[5]) {
-				switch(matches[4]) {
-					case 'dev': compliedSuffix =  4n << 12n; break;
-					case 'pre': compliedSuffix =  8n << 12n; break;
-					case 'rc' : compliedSuffix = 12n << 12n; break;
-					default: return false;
-				}
-				compliedSuffix |= BigInt(matches[5]) & 0x0fffn;
-			}
-			return ((BigInt(matches[1]) & 0xffffn) << 48n)
-					| ((BigInt(matches[2]) & 0xffffn) << 32n)
-					| ((BigInt(matches[3]) & 0xffffn) << 16n)
-					| compliedSuffix;
 		}
 	} {/if}
 	

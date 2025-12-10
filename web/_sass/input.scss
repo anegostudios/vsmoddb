@@ -335,7 +335,7 @@ details.version-selector {
 
 	&>:last-child {
 		position: absolute;
-		z-index: 10;
+		z-index: 100;
 		width: 100%;
 		max-height: min(30em, 50vh);
 		overflow-y: auto;
@@ -366,7 +366,7 @@ details.version-selector {
 			top: 0;
 			background-color: var(--color-input);
 			border-bottom: solid var(--color-border) 1px;
-			z-index: 11; // needs to be higher so it covers the sticky numbers
+			z-index: 101; // needs to be higher so it covers the sticky numbers
 
 			>* {
 				text-align: right;
