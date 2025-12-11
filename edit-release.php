@@ -14,13 +14,19 @@ $pushedErrorForCurrentFile = false; // This is here so we can push the errors ev
 // /edit/release/?assetid=32 (edit existing release)
 if(!empty($_REQUEST['assetid'])) {
 	$existingRelease = $con->getRow(<<<SQL
-		SELECT a.*, r.*, createdBy.name as createdByUsername, lastEditedBy.name as lastEditedByUsername
+		SELECT a.*, r.*,
+			createdBy.name AS createdByUsername,
+			lastEditedBy.name AS lastEditedByUsername,
+			rr.reason AS retractionReason,
+			lastRetractedBy.roleId IN (?,?) AS retractedByModerator
 		FROM modReleases r
 		JOIN assets a ON a.assetId = r.assetId
-		LEFT JOIN users createdBy ON createdBy.userId = a.createdbyuserid 
-		LEFT JOIN users lastEditedBy ON lastEditedBy.userId = a.editedbyuserid 
+		LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
+		LEFT JOIN users createdBy ON createdBy.userId = a.createdbyuserid
+		LEFT JOIN users lastEditedBy ON lastEditedBy.userId = a.editedbyuserid
+		LEFT JOIN users lastRetractedBy ON lastRetractedBy.userId = rr.lastModifiedBy
 		WHERE r.assetId = ?
-	SQL, [$_REQUEST['assetid']]);
+	SQL, [ROLE_ADMIN, ROLE_MODERATOR, $_REQUEST['assetid']]);
 
 	if($existingRelease) {
 		$targetMod = $con->getRow(<<<SQL

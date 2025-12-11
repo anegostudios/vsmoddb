@@ -189,11 +189,13 @@ switch($urlparts[1]) {
 						validateActionTokenAPI();
 		
 						$prevData = $con->getRow(<<<SQL
-							SELECT r.modId, r.assetId, a.createdByUserId, r.retractionReason
+							SELECT r.modId, r.assetId, a.createdByUserId, rr.reason AS retractionReason, lastRetractedBy.roleId IN (?,?) AS retractedByModerator
 							FROM modReleases r
 							JOIN assets a ON a.assetId = r.assetId
+							LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
+							LEFT JOIN users lastRetractedBy ON lastRetractedBy.userId = rr.lastModifiedBy
 							WHERE r.releaseId = ?
-						SQL, [$releaseId]);
+						SQL, [ROLE_ADMIN, ROLE_MODERATOR, $releaseId]);
 						if(!$prevData)   fail(HTTP_NOT_FOUND);
 
 						$prevData['assetTypeId'] = ASSETTYPE_RELEASE;
@@ -202,7 +204,7 @@ switch($urlparts[1]) {
 						if($modId !== $prevData['modId'])   fail(HTTP_BAD_REQUEST, ['reason' => 'Release does not belong to mod.']);
 
 						// Moderators can overwrite retraction reasons.
-						if(!canModerate(null, $user) && $prevData['retractionReason'])   fail(HTTP_BAD_REQUEST, ['reason' => 'This release is already retracted.']);
+						if($prevData['retractedByModerator'] && !canModerate(null, $user))   fail(HTTP_BAD_REQUEST, ['reason' => 'This release is already retracted.']);
 
 						$reasonHtml = trim(sanitizeHtml($_POST['reason']));
 
@@ -212,7 +214,10 @@ switch($urlparts[1]) {
 
 						$con->startTrans();
 
-						$con->execute('UPDATE modReleases SET retractionReason = ? WHERE releaseId = ?', [$reasonHtml, $releaseId]);
+						$con->execute(<<<SQL
+							INSERT INTO modReleaseRetractions (releaseId, reason, lastModifiedBy) VALUES (?,?,?)
+							ON DUPLICATE KEY UPDATE reason = VALUES(reason), lastModifiedBy = VALUES(lastModifiedBy)
+						SQL, [$releaseId, $reasonHtml, $user['userId']]);
 
 						//TODO(Rennorb) @correctness: Remove / hide unread release notifications for deleted releases.
 						// We cannot remove notifications for deleted releases trivially like we do with comment notifications because release notifications are tracked by modid, not by releaseid.
@@ -230,7 +235,14 @@ switch($urlparts[1]) {
 						$con->execute(<<<SQL
 							UPDATE mods m
 							SET lastReleased = IFNULL(
-								(SELECT r.created FROM modReleases r WHERE r.modId = m.modId AND r.retractionReason IS NULL ORDER BY r.created DESC LIMIT 1),
+								(
+									SELECT r.created
+									FROM modReleases r
+									LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
+									WHERE r.modId = m.modId AND rr.reason IS NULL
+									ORDER BY r.created DESC
+									LIMIT 1
+								),
 								m.created
 							)
 							WHERE m.modId = ?;

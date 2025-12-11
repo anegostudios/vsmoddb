@@ -153,7 +153,8 @@ function updateGameVersionsCached($modId)
 		SELECT DISTINCT $modId, cgv.gameVersion
 		FROM modReleases r
 		JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
-		where r.modId = $modId AND r.retractionReason IS NULL
+		LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
+		where r.modId = $modId AND rr.reason IS NULL
 	SQL);
 
 	$con->execute(<<<SQL
@@ -161,7 +162,8 @@ function updateGameVersionsCached($modId)
 		SELECT DISTINCT $modId, cgv.gameVersion & 0xffffffff00000000 -- :VERSION_MASK_PRIMARY
 		FROM modReleases r
 		JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
-		where r.modId = $modId AND r.retractionReason IS NULL
+		LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
+		where r.modId = $modId AND rr.reason IS NULL
 	SQL);
 
 	$con->completeTrans();

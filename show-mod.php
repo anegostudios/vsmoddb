@@ -113,6 +113,7 @@ $view->assign("tags", unwrapCachedTagsWithText($asset["tagsCached"], $allTags));
 $releases = $con->getAll(<<<SQL
 	SELECT
 		r.*,
+		rr.reason as retractionReason,
 		a.text,
 		GROUP_CONCAT(cgv.gameVersion ORDER BY cgv.gameVersion ASC SEPARATOR ',') AS compatibleGameVersions,
 		GROUP_CONCAT(gv.sortIndex   ORDER BY cgv.gameVersion ASC SEPARATOR ',') AS compatibleGameVersionsIndices
@@ -120,6 +121,7 @@ $releases = $con->getAll(<<<SQL
 	JOIN assets a ON a.assetId = r.assetId
 	LEFT JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
 	LEFT JOIN gameVersions gv ON gv.version = cgv.gameVersion
+	LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
 	WHERE modId = ?
 	GROUP BY r.releaseId
 	ORDER BY r.version DESC, MAX(cgv.gameVersion) DESC, r.created DESC

@@ -55,8 +55,8 @@ function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 
 	if ($parentAssetId) { // Editing existing releases or adding mod images
 		if($assetTypeId === ASSETTYPE_RELEASE) {
-			if($reason = $con->getOne('SELECT retractionReason FROM modReleases WHERE assetId = ?', [$parentAssetId])) {
-				array("status" => "error", "errormessage" => 'Release Is restricted: '.textContent($reason)); 
+			if($reason = $con->getOne('SELECT rr.reason FROM modReleases r LEFT JOIN modReleaseRetractions rr WHERE r.assetId = ?', [$parentAssetId])) {
+				array("status" => "error", "errormessage" => 'Release has been retracted: '.textContent($reason)); 
 			}
 		}
 		$asset = $con->getRow("select assetTypeId, assetId, createdByUserId from assets where assetId = ?", array($parentAssetId));

@@ -5,7 +5,11 @@ function listMod($modid)
 	global $con;
 
 	if ($modid != "" . intval($modid)) {
-		$modid = $con->getOne("select modId from modReleases where identifier = ? AND retractionReason IS NULL", array($modid));
+		$modid = $con->getOne(<<<SQL
+			SELECT r.modId FROM modReleases r
+			LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
+			WHERE r.identifier = ? AND rr.reason IS NULL
+		SQL, array($modid));
 	}
 
 	$row = $con->getRow(<<<SQL
@@ -39,7 +43,8 @@ function listMod($modid)
 			modReleases r 
 		join assets a on a.assetId = r.assetId
 		left join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
-		where modId = ? AND r.retractionReason IS NULL
+		left join modReleaseRetractions rr on rr.releaseId = r.releaseId
+		where modId = ? AND rr.reason IS NULL
 		group by r.releaseId
 		order by r.created desc
 	SQL, array($row['modId']));
@@ -211,9 +216,11 @@ function listMods()
 			mods `mod` 
 			join assets asset on (`mod`.assetId = asset.assetId)
 			join users user on (asset.createdByUserId = user.userId)
-			left join modReleases r on r.modId = `mod`.modId AND r.retractionReason IS NULL
+			left join modReleases r on r.modId = `mod`.modId
+			left join modReleaseRetractions rr on rr.releaseId = r.releaseId
 			left join files as logofileExternal on logofileExternal.fileId = mod.embedLogoFileId
-		" . (count($wheresql) ? "where " . implode(" and ", $wheresql) : "") . "
+			where rr.reason is null
+		" . (count($wheresql) ? " and " . implode(" and ", $wheresql) : "") . "
 		group by `mod`.modId
 		order by $orderBy $orderDirection
 	", $wherevalues);
@@ -290,7 +297,8 @@ function listOutOfDateMods($currentModVersions) {
 			GROUP_CONCAT(cgv.gameVersion SEPARATOR ';') as compatibleGameVersions
 		from modReleases r
 		join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
-		where r.identifier in ($modIdStrParams) AND r.retractionReason IS NULL
+		left join modReleaseRetractions rr on rr.releaseId = r.releaseId
+		where r.identifier in ($modIdStrParams) and rr.reason is null
 		group by r.releaseId
 		order by r.identifier, r.version desc
 	", $modIdStrs);

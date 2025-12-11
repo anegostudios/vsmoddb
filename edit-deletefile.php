@@ -18,11 +18,12 @@ if (empty($_POST['fileid'])) {
 }
 
 $file = $con->getRow(<<<SQL
-	SELECT f.fileId, f.name, f.assetId, f.userId, f.cdnPath, d.hasThumbnail, a.assetTypeId, r.retractionReason IS NOT NULL AS releaseRetracted
+	SELECT f.fileId, f.name, f.assetId, f.userId, f.cdnPath, d.hasThumbnail, a.assetTypeId, rr.reason IS NOT NULL AS releaseRetracted
 	FROM files f
 	LEFT JOIN fileImageData d ON d.fileId = f.fileId
 	LEFT JOIN assets a ON a.assetId = f.assetId
 	LEFT JOIN modReleases r ON r.assetId = f.assetId
+	LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
 	WHERE f.fileId = ?
 SQL, [$_POST['fileid']]);
 

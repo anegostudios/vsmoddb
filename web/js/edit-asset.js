@@ -30,10 +30,12 @@ $(document).ready(function () {
 		if (confirm("Really delete " + filename + "?")) {
 			if(typeof(onFileDelete) === 'function') if(onFileDelete($fileEl, fileid) === false) return;
 
-			$.post("/edit-deletefile", { fileid: fileid, at: actiontoken }).done(function() {
-				$fileEl.remove();
-				R.addMessage(MSG_CLASS_OK, filename + ' deleted.', true);
-			});
+			const xhr = $.post("/edit-deletefile", { fileid: fileid, at: actiontoken });
+			R.attachDefaultFailHandler(xhr)
+				.done(function() {
+					$fileEl.remove();
+					R.addMessage(MSG_CLASS_OK, filename + ' deleted.', true);
+				});
 		}
 
 		return false;

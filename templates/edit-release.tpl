@@ -148,10 +148,10 @@
 	{/if}
 
 	{if $release['assetId']}
-		{if !$release['retractionReason'] || canModerate(null, $user)}
-			<button class="button large btndelete shine" style="margin-left:auto;" data-opens-dialog="retract-mdl" onclick="return false;">Retract Release</button>
+		{if !$release['retractionReason'] || !$release['retractedByModerator'] || canModerate(null, $user)}
+			<button class="button large btndelete shine" style="margin-left:auto;padding:.25em;" data-opens-dialog="retract-mdl" onclick="return false;">{$release['retractionReason'] ? 'Update Retraction Message' : 'Retract Release'}</button>
 		{else}
-			<div class="bg-warning" style="width:100%;text-align: center;">Release retracted, cannot be edited.</div>
+			<div class="bg-warning" style="width:100%;text-align: center;">Release retracted by moderator, cannot be edited.</div>
 		{/if}
 	{else}
 		<div class="flex-spacer not-mobile"></div>
@@ -161,14 +161,20 @@
 {if $release['assetId']}
 <dialog id="retract-mdl" autofocus="">
 	<form class="with-buttons-bottom" method="dialog" data-method="put" action="/api/v2/mods/{$mod['modId']}/releases/{$release['releaseId']}/retraction" autocomplete="off">
-		<h1>Retract Release</h1>
-		<p>Are you sure want to retract this release?</p>
-		<p>
-			Retracting a release <b>prevents users from downloading</b> it and puts its release page into <b>readonly mode</b>.<br/>
-			This is intended for the removal of harmful releases, the existence of a newer version with bugfixes <b>does not constitute a reason</b> for retraction.
-		</p>
-		<p>Should you still wish to retract this release then provide the reason for doing so here:</p>
-		<textarea id="retract-reason-ta" name="reason"></textarea>
+		{if !$release['retractionReason']}
+			<h1>Retract Release</h1>
+			<p>Are you sure want to retract this release?</p>
+			<p>
+				Retracting a release <b>prevents players from downloading it</b> and puts its release page into <b>readonly mode</b>.<br/>
+				This is intended for the removal of harmful releases, the existence of a newer version with bugfixes <b>does not constitute a reason</b> for retraction.
+			</p>
+			<p>Should you still wish to retract this release then provide the reason for doing so here:</p>
+		{else}
+			<h1>Update Retraction Message</h1>
+			<p>This release is already retracted. <b>players are prevented from downloading it</b> and the release page is in <b>readonly mode</b>.</p>
+			<p>Provide an updated retraction message here:</p>
+		{/if}
+		<textarea id="retract-reason-ta" name="reason">{$release['retractionReason']}</textarea>
 		<input type="hidden" name="at" value="{$user['actionToken']}">
 		<div class="buttons">
 			<button class="button large btndelete shine" id="retract-subm" onclick="return false;">Confirm Retraction</button>
@@ -196,8 +202,13 @@
 			R.attachDefaultFailHandler(jqXHR, "Failed to retract release")
 				.done(() => \{
 					retractMdl.close();
-					R.addMessage(MSG_CLASS_OK, 'Release retracted.', false);
-					window.location.replace("{formatModPath($mod)}#tab-files");
+					if({$release['retractionReason'] ? '0':'1'}) \{
+						R.addMessage(MSG_CLASS_OK, 'Release retracted.', false);
+						window.location.replace("{formatModPath($mod)}#tab-files");
+					}
+					else \{
+						R.addMessage(MSG_CLASS_OK, 'Retraction message updated.', false);
+					}
 				});
 		});
 	}
@@ -231,7 +242,7 @@
 		$('form[name=commentformtemplate]').areYouSure();
 	});
 </script>
-<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=42" async></script>
+<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=43" async></script>
 <script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 

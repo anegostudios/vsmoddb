@@ -238,7 +238,6 @@ CREATE TABLE IF NOT EXISTS `modReleases` (
   `identifier`   VARCHAR(255)        NULL, -- TODO
   `version`      BIGINT UNSIGNED NOT NULL,
   `detailText`   TEXT                NULL,
-  `retractionReason` TEXT CHARACTER SET utf8mb4 NULL,
   `created`      DATETIME        NOT NULL DEFAULT NOW(),
   `lastModified` TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`releaseId`),
@@ -249,6 +248,18 @@ CREATE TABLE IF NOT EXISTS `modReleases` (
   INDEX `modid` (`modId`),
   CONSTRAINT `FK_modReleases_assetId` FOREIGN KEY (`assetId`) REFERENCES `assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT `FK_modReleases_modId` FOREIGN KEY (`modId`) REFERENCES `mods`(`modId`) ON UPDATE CASCADE ON DELETE CASCADE
+)
+ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `modReleaseRetractions` (
+  `releaseId`      INT       NOT NULL,
+  `reason`         TEXT CHARACTER SET utf8mb4 NOT NULL,
+  `created`        DATETIME  NOT NULL DEFAULT NOW(),
+  `lastModified`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastModifiedBy` INT       NOT NULL,
+  PRIMARY KEY (`releaseId`),
+  CONSTRAINT `FK_FK_modReleaseRetractions_releaseId` FOREIGN KEY (`releaseId`) REFERENCES `modReleases`(`releaseId`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_modReleaseRetractions_lastModifiedBy` FOREIGN KEY (`lastModifiedBy`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE,
 )
 ENGINE = InnoDB;
 
