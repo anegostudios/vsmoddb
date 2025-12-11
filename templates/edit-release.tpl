@@ -185,7 +185,7 @@
 
 	{if $release['assetId']}\{
 		const retractMdl = R.get('retract-mdl');
-		R.onDOMLoaded(() => createEditor(retractMdl.getElementsByTagName('textarea'), tinymceSettingsCmt));
+		R.onDOMLoaded(() => createEditor(retractMdl.getElementsByTagName('textarea')[0], tinymceSettingsCmt));
 		attachDialogSendHandler(retractMdl, (form, data) => \{
 			if(!data.get('reason')) \{
 				R.markAsErrorElement(form.getElementsByClassName('tox-tinymce')[0]);
@@ -223,9 +223,10 @@
 				}
 			}
 		}
+
+		attachVersionSelectorHandlers(document.getElementsByClassName('version-selector')[0]);
 	} {/if}
 	
-	attachVersionSelectorHandlers(document.getElementsByClassName('version-selector')[0]);
 	$(document).ready(function() {
 		$('form[name=commentformtemplate]').areYouSure();
 	});

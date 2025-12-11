@@ -173,6 +173,8 @@ function wrapAsSpoilerForTMCE(nodes : HTMLElement[], isCrashReport : boolean) : 
 
 function createEditor(target : HTMLTextAreaElement, settings) : void {
 	if (!target.id) {
+		// Give it an id for later removal:
+		//TODO(Rennorb) @cleanup: get rid of this
 		target.id = "editor" + Math.floor(Math.random() * 10000);
 	}
 
@@ -180,7 +182,7 @@ function createEditor(target : HTMLTextAreaElement, settings) : void {
 	// Seems to be a race condition in tiny.
 	settings = Object.assign({}, settings)
 
-	settings.selector = "#" + target.id;
+	settings.target = target;
 
 	tinyMCE.init(settings);
 }
