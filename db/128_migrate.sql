@@ -23,7 +23,8 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 		SELECT r.releaseId, r.retractionReason, c.lastModified, c.lastModified, c.userId
 		FROM modReleases r
 		JOIN changelogs c ON c.assetId = r.assetId AND (c.text LIKE '%Retracted release.%' OR c.text LIKE '%Changed retraction reason.%')
-		WHERE r.retractionReason IS NOT NULL;
+		WHERE r.retractionReason IS NOT NULL
+		GROUP BY r.releaseId;
 
 	ALTER TABLE `modReleases` DROP COLUMN `retractionReason`;
 END IF;
