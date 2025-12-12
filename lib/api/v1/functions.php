@@ -67,7 +67,7 @@ function listMod($modid)
 		);
 	}
 
-	$screenshots = $con->getAll(<<<SQL
+	$screenshotRows = $con->getAll(<<<SQL
 		select 
 			f.fileId,
 			f.assetId,
@@ -82,7 +82,7 @@ function listMod($modid)
 	SQL, array($row['assetId'], $row['cardLogoFileId'] ?? 0, $row['embedLogoFileId'] ?? 0)); /* sql cant compare against null */
 
 	$screenshots = array();
-	foreach ($screenshots as $screenshot) {
+	foreach ($screenshotRows as $screenshot) {
 		$screenshots[] = array(
 			"fileid"            => intval($screenshot["fileId"]),
 			"mainfile"          => formatCdnUrl($screenshot),
@@ -123,7 +123,7 @@ function listMod($modid)
 		"lastmodified"    => $row['lastModified'],
 		"tags"            => unwrapTagNames($row['tagsCached']),
 		"releases"        => $releases,
-		"screenshots"     => $screenshots
+		"screenshots"     => $screenshots,
 	);
 
 	good(array("mod" => $mod));
