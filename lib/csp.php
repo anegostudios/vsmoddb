@@ -52,10 +52,13 @@ function cspAllowTinyMceComment()
 	$tinymce = $_SERVER['HTTP_HOST'].'/web/js/tinymce';
 	$plugins = $tinymce.'/plugins';
 
-	$_csp['script-src-elem'] = $_csp['default-src']." $tinymce/themes/silver/theme.min.js $plugins/paste/plugin.min.js $plugins/searchreplace/plugin.min.js $plugins/autolink/plugin.min.js $plugins/autoresize/plugin.min.js $plugins/directionality/plugin.min.js $plugins/image/plugin.min.js $plugins/link/plugin.min.js $plugins/codesample/plugin.min.js $plugins/charmap/plugin.min.js $plugins/hr/plugin.min.js $plugins/pagebreak/plugin.min.js $plugins/nonbreaking/plugin.min.js $plugins/anchor/plugin.min.js $plugins/emoticons/plugin.min.js $plugins/emoticons/js/emojis.min.js $plugins/advlist/plugin.min.js $plugins/lists/plugin.min.js $plugins/wordcount/plugin.min.js $plugins/imagetools/plugin.min.js $plugins/textpattern/plugin.min.js $plugins/help/plugin.min.js $plugins/spoiler/plugin.min.js $plugins/noneditable/plugin.min.js {$_SERVER['HTTP_HOST']}/web/js/tinymce-custom/plugins/mention/plugin.min.js";
+	$_csp['script-src-elem'] = $_csp['default-src']." $tinymce/themes/silver/theme.min.js $tinymce/themes/mobile/theme.min.js $plugins/paste/plugin.min.js $plugins/searchreplace/plugin.min.js $plugins/autolink/plugin.min.js $plugins/autoresize/plugin.min.js $plugins/directionality/plugin.min.js $plugins/image/plugin.min.js $plugins/link/plugin.min.js $plugins/codesample/plugin.min.js $plugins/charmap/plugin.min.js $plugins/hr/plugin.min.js $plugins/pagebreak/plugin.min.js $plugins/nonbreaking/plugin.min.js $plugins/anchor/plugin.min.js $plugins/emoticons/plugin.min.js $plugins/emoticons/js/emojis.min.js $plugins/advlist/plugin.min.js $plugins/lists/plugin.min.js $plugins/wordcount/plugin.min.js $plugins/imagetools/plugin.min.js $plugins/textpattern/plugin.min.js $plugins/help/plugin.min.js $plugins/spoiler/plugin.min.js $plugins/noneditable/plugin.min.js {$_SERVER['HTTP_HOST']}/web/js/tinymce-custom/plugins/mention/plugin.min.js";
 
 	// Safari apparently doesn't recognize style-src-elem
 	$_csp['style-src'] = $_csp['default-src']." $tinymce/skins/ui/oxide/skin.min.css $tinymce/skins/ui/oxide/content.min.css $tinymce/plugins/spoiler/css/spoiler.css {$_SERVER['HTTP_HOST']}/web/css/editor_content.css";
+
+	// Icon font
+	$_csp['font-src'] .= " $tinymce/skins/ui/oxide/fonts/tinymce-mobile.woff?8x92w3";
 }
 
 function cspAllowTinyMceFull()
@@ -65,10 +68,13 @@ function cspAllowTinyMceFull()
 	$tinymce = $_SERVER['HTTP_HOST'].'/web/js/tinymce';
 	$plugins = $tinymce.'/plugins';
 
-	$_csp['script-src-elem'] = $_csp['default-src']." $tinymce/themes/silver/theme.min.js $plugins/paste/plugin.min.js $plugins/searchreplace/plugin.min.js $plugins/autolink/plugin.min.js $plugins/autoresize/plugin.min.js $plugins/directionality/plugin.min.js $plugins/image/plugin.min.js $plugins/link/plugin.min.js $plugins/codesample/plugin.min.js $plugins/charmap/plugin.min.js $plugins/hr/plugin.min.js $plugins/pagebreak/plugin.min.js $plugins/nonbreaking/plugin.min.js $plugins/anchor/plugin.min.js $plugins/emoticons/plugin.min.js $plugins/emoticons/js/emojis.min.js $plugins/advlist/plugin.min.js $plugins/lists/plugin.min.js $plugins/wordcount/plugin.min.js $plugins/imagetools/plugin.min.js $plugins/textpattern/plugin.min.js $plugins/help/plugin.min.js $plugins/spoiler/plugin.min.js $plugins/noneditable/plugin.min.js $plugins/preview/plugin.min.js $plugins/visualblocks/plugin.min.js $plugins/visualchars/plugin.min.js $plugins/fullscreen/plugin.min.js $plugins/media/plugin.min.js $plugins/code/plugin.min.js $plugins/table/plugin.min.js $plugins/toc/plugin.min.js $plugins/insertdatetime/plugin.min.js $plugins/print/plugin.min.js {$_SERVER['HTTP_HOST']}/web/js/tinymce-custom/plugins/mention/plugin.min.js";
+	$_csp['script-src-elem'] = $_csp['default-src']." $tinymce/themes/silver/theme.min.js $tinymce/themes/mobile/theme.min.js $plugins/paste/plugin.min.js $plugins/searchreplace/plugin.min.js $plugins/autolink/plugin.min.js $plugins/autoresize/plugin.min.js $plugins/directionality/plugin.min.js $plugins/image/plugin.min.js $plugins/link/plugin.min.js $plugins/codesample/plugin.min.js $plugins/charmap/plugin.min.js $plugins/hr/plugin.min.js $plugins/pagebreak/plugin.min.js $plugins/nonbreaking/plugin.min.js $plugins/anchor/plugin.min.js $plugins/emoticons/plugin.min.js $plugins/emoticons/js/emojis.min.js $plugins/advlist/plugin.min.js $plugins/lists/plugin.min.js $plugins/wordcount/plugin.min.js $plugins/imagetools/plugin.min.js $plugins/textpattern/plugin.min.js $plugins/help/plugin.min.js $plugins/spoiler/plugin.min.js $plugins/noneditable/plugin.min.js $plugins/preview/plugin.min.js $plugins/visualblocks/plugin.min.js $plugins/visualchars/plugin.min.js $plugins/fullscreen/plugin.min.js $plugins/media/plugin.min.js $plugins/code/plugin.min.js $plugins/table/plugin.min.js $plugins/toc/plugin.min.js $plugins/insertdatetime/plugin.min.js $plugins/print/plugin.min.js {$_SERVER['HTTP_HOST']}/web/js/tinymce-custom/plugins/mention/plugin.min.js";
 
 	// Safari apparently doesn't recognize style-src-elem
 	$_csp['style-src'] = $_csp['default-src']." $tinymce/skins/ui/oxide/skin.min.css $tinymce/skins/ui/oxide/content.min.css $tinymce/plugins/spoiler/css/spoiler.css {$_SERVER['HTTP_HOST']}/web/css/editor_content.css";
+
+	// Icon font
+	$_csp['font-src'] .= " $tinymce/skins/ui/oxide/fonts/tinymce-mobile.woff?8x92w3";
 }
 
 /** Call this one last, it overwrites all allowed style sources. */
