@@ -216,6 +216,11 @@ function sanitizeHtml($text)
 
 	$text = htmLawed($text, array('tidy' => 0, 'safe' => 1, 'elements' => '* -script -object -applet -canvas +iframe -video -audio -embed -form', 'schemes' => 'src: http, https, data', 'hook_tag' => "_htmLawed_sanitize_node"));
 
+	// Remove inspect-element junk that started to show up:
+	//TODO(Rennorb) @cleanup @brittle
+	//NOTE(Rennorb): Cant do this in htmllawd, node content will be left over.
+	$text = preg_replace('#<div id="inspect-element-top-layer".*?>(?:<div[ >](?:<[^d][^i][^v]|.)*?</div>|.)*</div>#si', '', $text);
+
 	return $text;
 }
 
@@ -234,21 +239,25 @@ function _htmLawed_sanitize_node($elementName, $attributes = 0) {
 	// Taken from htmlLawed.
 	static $emptyElements = array('area'=>1, 'br'=>1, 'col'=>1, 'command'=>1, 'embed'=>1, 'hr'=>1, 'img'=>1, 'input'=>1, 'isindex'=>1, 'keygen'=>1, 'link'=>1, 'meta'=>1, 'param'=>1, 'source'=>1, 'track'=>1, 'wbr'=>1); // Empty ele
 
-	static $removeNextClosing = false;
+	static $removeDepth = 0;
 	if($attributes === 0) {
-		if($removeNextClosing) {
-			$removeNextClosing = false;
+		if($removeDepth > 0) {
+			$removeDepth--;
 			return '';
 		}
 		else {
 			return "</$elementName>";
 		}
 	}
+	else if($removeDepth > 0) {
+		if(!isset($emptyElements[$elementName])) $removeDepth++;
+		return '';
+	}
 
 	switch($elementName) {
 		case 'iframe': {
 			if(empty($attributes['src']) || !preg_match('#//(?:www\.)?youtube(?:-nocookie)?\.com/embed#i', $attributes['src'])) {
-				$removeNextClosing = true;
+				$removeDepth = 1;
 				return '';
 			}
 

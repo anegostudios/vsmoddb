@@ -1,0 +1,3 @@
+USE `moddb`;
+
+UPDATE comments SET text = REGEXP_REPLACE(text, '(?si)<div id="inspect-element-top-layer".*?>(?:<div[ >](?:<[^d][^i][^v]|.)*?</div>|.)*</div>', '');
