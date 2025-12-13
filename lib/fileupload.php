@@ -55,7 +55,7 @@ function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 
 	if ($parentAssetId) { // Editing existing releases or adding mod images
 		if($assetTypeId === ASSETTYPE_RELEASE) {
-			if($reason = $con->getOne('SELECT rr.reason FROM modReleases r LEFT JOIN modReleaseRetractions rr WHERE r.assetId = ?', [$parentAssetId])) {
+			if($reason = $con->getOne('SELECT rr.reason FROM modReleases r LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId WHERE r.assetId = ?', [$parentAssetId])) {
 				array("status" => "error", "errormessage" => 'Release has been retracted: '.textContent($reason)); 
 			}
 		}
