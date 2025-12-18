@@ -820,7 +820,7 @@ else {
  * Formats a download tracking link to the file.
  * This url is meant to enforce that the enduser gets prompted to download the file, as compared to a "normal" link which might just display the file in browser as well as tracking that download (-attempt).
  * 
- * @param array{name:string, fileid:int} $file
+ * @param array{name:string, fileId:int} $file
  * @return string
  */
 function formatDownloadTrackingUrl($file)

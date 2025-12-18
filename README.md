@@ -86,6 +86,52 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 > Endpoints marked as `auth` require authentication and response with `401` if it is missing.  
 > Endpoints marked as `at` additionally require a valid actiontoken and response with `400` if it is missing. The token can be provided as a query parameter or in the POST body.  
 
+### /api/v2/mods/install-information
+- `get`:
+	- Args:
+		- Query arg `ids`: Comma separated list of `{identifier}@{version}` pairs, where `{identifier}` is the identifier specified in the modinfo, and `{version}` is the semvar string of the desired version. If a `gv` is specified, the `@{version}` segment becomes optional.
+		- Optional query arg `gv`: semvar string of the target game version
+		- Optional query arg `ignore-retraction`: truthy value indicating that retracted releases should return their attachment anyways.
+		- Optional query arg `hosted-mode`: truthy value indicating that the game is running in hosted mode, and only special mods are allowed.
+	- `400`: Malformed game version, no ids or all ids are malformed.
+	- `200`: json of the following format is returned: 
+		```json
+		{
+			"data": {
+				"modidentifier": {
+					"errorCode": 1234,
+				},
+				"modidentifier2": {
+					"fileName": "file.zip",
+					"fileUrl": "/download/12331/file.zip"
+				},
+				"modidentifier3": {
+					"fileName": "file.zip",
+					"fileUrl": "/download/12332/file.zip",
+					"recommendedUpgrade": "2.3.4"
+				},
+				"modidentifier5": {
+					"errorCode": 4101,
+					"retractionReason": "The reason why this release was retracted",
+					"recommendedUpgrade": "2.3.4"
+				},
+				...
+			}
+		}
+		```
+		- `recommendedUpgrade` is provided if 
+			- a) no version was provided as part of the mod spec -> this is the selected version
+			- b) a gameversion was specified, and there is a newer version of the mod than specified that is compatible with that game version. The other data still pertains to the version of the mod spec.
+		- Without the `ignore-retraction` argument specified, retracted releases will not respond with `fileName` and `fileUrl`.  
+		- `errorCode` is a numeric code similar to http status codes indicating the error in a machine readable format:
+			- `4001`: Failed to parse mod spec
+			- `4002`: Mod spec does not contain a version and no gameversion was provided.
+			- `4031`: Mod not allowed in hosted mode
+			- `4032`: Cannot ignore release retraction
+			- `4031`: Mod spec not found
+			- `4101`: Release is retracted
+			- `4102`: Release is force-retracted (cannot be ignored)
+
 
 ### /api/v2/mods/{modid}/releases
 - `get`: Path arg `{modid}`
