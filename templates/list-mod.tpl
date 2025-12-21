@@ -1,4 +1,8 @@
 {include file="header"}
+
+	{if $selectedParams['category'] === 's'}
+	<p>These mods are generally not meant for personal use, instead being designed for specific servers.</p>
+	{/if}
 	
 	<form method="get" autocomplete="off" class="flex-list" style="margin-bottom: 1em;">
 		<input type="hidden" name="sortby" value="{$selectedParams['order'][0]}">
