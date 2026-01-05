@@ -11,7 +11,7 @@ if(!canModerate($targetUser, $user)) showErrorPage(HTTP_FORBIDDEN);
 
 if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 	$postData = filter_input_array(INPUT_POST, [
-		'modreason' => FILTER_SANITIZE_SPECIAL_CHARS,
+		'modreason' => ['filter' => FILTER_CALLBACK, 'options' => 'sanitizeHtml'],
 		'forever'   => FILTER_VALIDATE_BOOLEAN,
 		'until'     => FILTER_UNSAFE_RAW,
 	]);
@@ -46,16 +46,39 @@ if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 	}
 }
 else if(isset($_POST['submit']) && $_POST['submit'] == 'redeem') {
-	$reason = filter_input(INPUT_POST, 'modreason', FILTER_SANITIZE_SPECIAL_CHARS);
+	$reason = filter_input(INPUT_POST, 'modreason', FILTER_CALLBACK, ['options' => 'sanitizeHtml']);
 	if(empty($reason)) {
 		http_response_code(HTTP_BAD_REQUEST);
 		addMessage(MSG_CLASS_ERROR, 'Missing reason for redemption.');
 	}
 	else {
-		//TODO(Rennorb) @feedback: Check if hte user even needs to be redeemed.
+		//TODO(Rennorb) @feedback: Check if the user even needs to be redeemed.
+
+		$con->startTrans();
+
 		$con->execute('UPDATE users SET bannedUntil = NOW() WHERE userId = ?', [$targetUser['userId']]);
 		$con->execute('UPDATE moderationRecords SET until = NOW() WHERE kind = '.MODACTION_KIND_BAN.' AND until > NOW()');
 		logModeratorAction($targetUser['userId'], $user['userId'], MODACTION_KIND_REDEEM, $targetUser['userId'], SQL_DATE_FOREVER, $reason);
+
+		$con->completeTrans();
+
+		forceRedirectAfterPOST();
+		exit();
+	}
+}
+else if(isset($_POST['submit']) && $_POST['submit'] == 'warn') {
+	$reason = filter_input(INPUT_POST, 'modreason', FILTER_CALLBACK, ['options' => 'sanitizeHtml']);
+	if(empty($reason)) {
+		http_response_code(HTTP_BAD_REQUEST);
+		addMessage(MSG_CLASS_ERROR, 'Missing warning message.');
+	}
+	else {
+		$con->startTrans();
+
+		$modActionId = logModeratorAction($targetUser['userId'], $user['userId'], MODACTION_KIND_WARN, $targetUser['userId'], SQL_DATE_FOREVER, $reason);
+		$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES ('.NOTIFICATION_WARNING_RECEIVED.', ?, ?) ', [$targetUser['userId'], $modActionId]);
+
+		$con->completeTrans();
 
 		forceRedirectAfterPOST();
 		exit();
@@ -81,6 +104,8 @@ unset($row);
 $sourceCommentId = $_GET['source-comment'] ?? null;
 $banReasonSuggestion = $sourceCommentId == null ? ''
 	: 'Offensive comment: '.strip_tags($con->getOne('SELECT text FROM comments WHERE commentId = ?', [$sourceCommentId]));
+
+cspAllowTinyMceComment();
 
 $view->assign('pagetitle', "Moderate {$shownUser['name']} - ");
 

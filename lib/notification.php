@@ -53,7 +53,7 @@ switch($notification['kind']) {
 	case NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED:
 		$assetId = $con->getOne('SELECT assetId FROM mods WHERE modId = ?', [(intval($notification['recordId']) & ((1 << 30) - 1))]); // :PackedTransferSuccess
 
-		if (!DB_READONLY) $con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]);
+		if (!DB_READONLY) $con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$notification['notificationId']]);
 
 		forceRedirect([
 			'path'     => '/edit/mod/',
@@ -70,12 +70,32 @@ switch($notification['kind']) {
 			WHERE c.commentId = ?
 		SQL, [$notification['recordId']]);
 
-		if (!DB_READONLY) $con->execute('UPDATE notifications SET `read` = 1 where notificationId = ?', [$notification['notificationId']]); // TODO @setting
+		if (!DB_READONLY) $con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$notification['notificationId']]); // TODO @setting
 
 		forceRedirect([
 			'path'     => formatModPath($mod),
 			'fragment' => 'cmt-'.$notification['recordId'],
 		]);
+		exit();
+
+	case NOTIFICATION_WARNING_RECEIVED:
+		if (!DB_READONLY) {
+			$con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$notification['notificationId']]);
+			if($con->affected_rows()) {
+				$moderatorId = $con->getOne('SELECT moderatorId FROM moderationRecords WHERE actionId = ?', [$notification['recordId']]);
+				$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES (?, ?, ?)', [NOTIFICATION_WARNING_ACKNOWLEDGED, $moderatorId, $notification['userId']]);
+			}
+		}
+
+		goBackOrRootFallback();
+		exit();
+
+	case NOTIFICATION_WARNING_ACKNOWLEDGED:
+		if (!DB_READONLY) $con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$notification['notificationId']]);
+
+		$userFrag = $con->getOne('SELECT HEX(`hash`) FROM users WHERE userId = ?', [$notification['recordId']]);
+
+		forceRedirect('/moderate/user/'.$userFrag);
 		exit();
 
 	case NOTIFICATION_ONEOFF_MALFORMED_RELEASE:

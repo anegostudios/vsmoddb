@@ -3,7 +3,6 @@
 $sessionToken = $_COOKIE['vs_websessionkey'] ?? null;
 
 $user = null;
-$cnt = 0;
 
 const USER_QUERY_SQL_BASE = '
 	SELECT u.*, HEX(`hash`) AS `hash`, HEX(u.actionToken) AS actionToken, r.code AS roleCode, IFNULL(u.bannedUntil >= NOW(), 0) AS isBanned, rec.reason AS banReason
@@ -32,6 +31,8 @@ const NOTIFICATION_MOD_LOCKED             = 6;
 const NOTIFICATION_MOD_UNLOCK_REQUEST     = 7;
 const NOTIFICATION_MOD_UNLOCKED           = 8;
 const NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED = 10;
+const NOTIFICATION_WARNING_RECEIVED       = 16;
+const NOTIFICATION_WARNING_ACKNOWLEDGED   = 17;
 
 const NOTIFICATION_ONEOFF_MALFORMED_RELEASE = 64 + 0; // :LegacyMalformedModInfo
 
@@ -254,6 +255,23 @@ function loadNotifications($loadAll)
 			case NOTIFICATION_MOD_UNLOCKED:
 				$modName = $con->getOne('SELECT name FROM mods m JOIN assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
 				$notification['text'] = "Your mod '{$modName}' got unlocked by a moderator";
+				break;
+
+			case NOTIFICATION_WARNING_RECEIVED:
+				$notification['text'] = "You have been issued a warning by a moderator. Dismiss this notification to dismiss and acknowledge the warning.";
+
+				$reason = $con->getOne('SELECT reason FROM moderationRecords WHERE actionId = ?', [$notification['recordId']]);
+				addMessage('bg-warning permanent', <<<HTML
+					<h3 style='text-align: center;'>You have been issued a warning:</h3>
+					<p><blockquote>{$reason}</blockquote></p>
+					<p><small>Dismiss and acknowledge this by <a href="/notification/{$notification['notificationId']}">dismissing the notification</a>.</small></p>
+				HTML);
+
+				break;
+
+			case NOTIFICATION_WARNING_ACKNOWLEDGED:
+				$username = $con->getOne('SELECT name FROM users WHERE userId = ?', [$notification['recordId']]);
+				$notification['text'] = "{$username} has acknowledged your warning.";
 				break;
 
 			case NOTIFICATION_ONEOFF_MALFORMED_RELEASE:

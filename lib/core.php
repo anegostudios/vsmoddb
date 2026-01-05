@@ -445,6 +445,7 @@ const MODACTION_KIND_DELETE = 2;
 const MODACTION_KIND_EDIT   = 3;
 const MODACTION_KIND_REDEEM = 4;
 const MODACTION_KIND_LOCK   = 5;
+const MODACTION_KIND_WARN   = 6;
 
 
 /**
@@ -459,6 +460,7 @@ function stringifyModactionKind($kind)
 		case MODACTION_KIND_EDIT  : return "Edit";
 		case MODACTION_KIND_REDEEM: return "Redeem";
 		case MODACTION_KIND_LOCK  : return "Lock Mod";
+		case MODACTION_KIND_WARN  : return "Warning";
 		default: return strval($kind);
 	}
 }
