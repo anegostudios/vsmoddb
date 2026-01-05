@@ -34,7 +34,9 @@ function tryDeleteFiles($files)
 		splitOffExtension($file['cdnPath'], $noext, $ext);
 
 		$countOfFilesUsingThisCDNPath = $con->getOne('SELECT COUNT(*) FROM files WHERE cdnPath = ?', [$file['cdnPath']]);
-		if($countOfFilesUsingThisCDNPath < 2) {
+
+		//NOTE(Rennorb): We already deleted the file(s) from the files table, so the remaining usage needs to be zero, not one.
+		if($countOfFilesUsingThisCDNPath === 0) {
 			//TODO(Rennorb) @correctness: Could try and figure out if there is a difference between a "generic error" response and "this file does not exist" and then decided on whether or not this should be an error.
 			// For now we ignore errors here, even if we fail to delete from cdn we still deleted the table entry because we otherwise block user interaction because of third party issues (no-go).
 			deleteFromCdn($file['cdnPath']);
@@ -43,8 +45,7 @@ function tryDeleteFiles($files)
 			logAssetChanges(["Deleted file '{$file['name']}' and underlying resources"], $assetId);
 		}
 		else {
-			$others = $countOfFilesUsingThisCDNPath - 1;
-			logAssetChanges(["Deleted file entry '{$file['name']}', $others other file(s) are still using the underlying resource"], $assetId);
+			logAssetChanges(["Deleted file entry '{$file['name']}', $countOfFilesUsingThisCDNPath other file(s) are still using the underlying resource"], $assetId);
 		}
 	}
 
