@@ -259,7 +259,7 @@
 		{if $canEditTeamMembers}R.onDOMLoaded(() => attachUserSearchHandler(R.get('teammembers-box')));{/if}
 
 		{if $mod['modId'] && canModerate(null, $user)}
-		R.onDOMLoaded(() => { debugger; createEditor(R.getQ('#lock-mdl textarea'), tinymceSettingsCmt) });
+		R.onDOMLoaded(() => { createEditor(R.getQ('#lock-mdl textarea'), tinymceSettingsCmt) });
 		attachDialogSendHandler(R.get('lock-mdl'), (form, data) => \{
 			if(!data.get('reason')) \{
 				R.markAsErrorElement(form.getElementsByClassName('tox-tinymce')[0]);
