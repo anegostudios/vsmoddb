@@ -88,7 +88,7 @@
 					</span>
 				{/if}
 
-				<span class="submenu{if $headerHighlight === HEADER_HIGHLIGHT_CURRENT_USER} active{/if}" tabindex="0">
+				<span id="account-menu" class="submenu{if $headerHighlight === HEADER_HIGHLIGHT_CURRENT_USER} active{/if}">
 					<span>{$user['name']}</span>
 					<nav>
 						<a href="/show/user/{$user['hash']}">Profile</a>

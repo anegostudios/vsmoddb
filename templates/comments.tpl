@@ -3,9 +3,7 @@
 			<div class="comments">
 				{if !empty($user)}
 				<div class="comment comment-editor editbox overlay-when-banned overlay-when-readonly" style="clear:both; display:none;">
-					<div class="title">
-						{$user['name']}, 0 seconds ago
-					</div>
+					<div class="title">Add new comment:</div>
 					<div class="body">
 						
 						<form name="commentformtemplate" autocomplete="off">

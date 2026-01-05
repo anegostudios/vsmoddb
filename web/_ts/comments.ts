@@ -49,10 +49,15 @@ function attachCommentHandlers() {
 
 		const $editor = $(".comments .comment.comment-editor");
 
+		// We don't have direct information about the current user in js land, so we extract it form the menu:
+		const accMenu = R.get('account-menu');
+		const userName = accMenu!.firstElementChild!.textContent;
+		const userUrl = (accMenu!.lastElementChild!.firstElementChild as HTMLAnchorElement).getAttribute('href');
+
 		const $cmt = $(`
-<div class="editbox comment">
+<div class="editbox comment" data-timestamp="${Date.now()}">
 	<div class="title">
-		<span><a style="text-decoration:none;" class="cmt-pinner" href="#"><i class="bx bx-link-alt"></i></a> You, just now</span>
+		<span><a style="text-decoration:none;" class="cmt-pinner" href="#"><i class="bx bx-link-alt"></i></a> <a href="${userUrl}">${userName}</a>, just now</span>
 	</div>
 	<div class="body">${content}</div>
 </div>
@@ -65,7 +70,7 @@ function attachCommentHandlers() {
 		const xhr = $.ajax({ url: `/api/v2/mods/${modId}/comments?at=`+actiontoken, method: 'PUT', data: content, contentType: 'text/html', dataType: 'text' })
 			.done(function (response : string, _, jqXHR : jqXHR) {
 				const cmtFrag = jqXHR.getResponseHeader('Location')!;
-				$cmt.id = cmtFrag.slice(1); // slice of the # from #cmt-213
+				$cmt[0].id = cmtFrag.slice(1); // slice of the # from #cmt-213
 				$('.cmt-pinner', $cmt)[0].href = cmtFrag;
 				$('.title', $cmt)[0].innerHTML += ` <span class="buttons">(<a href="#e">edit</a>&nbsp;<a href="#d">delete</a>)</span>`;
 				$('.body', $cmt)[0].innerHTML = response; // update the response to the actual serverside validated version
