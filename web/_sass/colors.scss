@@ -1,0 +1,27 @@
+:root {
+	--color-content-bg: hsl(42 100% 98%);
+	--color-text: #333;
+	--color-text-inv: white;
+	--c-accent: 30 19%;
+	--color-accent: hsl(var(--c-accent) 10%);
+	--c-input: 40 67.7%;
+	--color-input: hsl(var(--c-input) 95%);
+	--c-input-btn: 0 0%;
+	--color-input-btn: hsl(var(--c-input-btn) 80%);
+	--color-input-g: #9bc45e;
+	--color-input-r: #c45e5e;
+	--color-input-disabled: hsl(0 0% 85%);
+	--color-input-text-disabled:hsl(0 0% 43%);
+	--color-border: #aaa;
+	--color-border-active: #333;
+	--color-link: #3d6594;
+	--color-link-active: #608CBE;
+	--c-mod-bg: 0 0% 100%;
+	--color-mod-bg: hsl(var(--c-mod-bg));
+	--color-highlight: hsl(45 51% 54%);
+	--color-backdrop: hsl(0 0% 35% / .85);
+
+	--color-flair-author: #535c88;
+	--color-flair-moderator: #2a6b6f;
+	--color-flair-admin: #0e7239;
+}

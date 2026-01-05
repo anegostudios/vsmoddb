@@ -39,8 +39,7 @@
 	}
 }
 
-.comment .body img, table.latestcomments img  {
+.comment .body img, table.latestcomments img {
 	position: static; /* fix for images copy pasted with hiding classes */
 	opacity: initial; /* fix for images copy pasted with hiding classes */
-	max-width: 100%;
 }
