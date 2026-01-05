@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Try to delete a set of file. This will check if the file happens to still be used somewhere, and issue a deletion if its not.
+ * Try to delete a set of files. This will check if the file happens to still be used somewhere, and issue a deletion if its not.
  * 
  * @param array{fileId: int, assetId: int, assetTypeId: int, name: string, cdnPath: string, hasThumbnail: bool}[] $files - @security: must be sql safe. Will not validate ownership.
  */
@@ -35,12 +35,10 @@ function tryDeleteFiles($files)
 
 		$countOfFilesUsingThisCDNPath = $con->getOne('SELECT COUNT(*) FROM files WHERE cdnPath = ?', [$file['cdnPath']]);
 		if($countOfFilesUsingThisCDNPath < 2) {
-			$con->Execute('DELETE FROM files WHERE cdnPath = ?', ["{$noext}_480_320.{$ext}"]); // legacy logo
 			//TODO(Rennorb) @correctness: Could try and figure out if there is a difference between a "generic error" response and "this file does not exist" and then decided on whether or not this should be an error.
 			// For now we ignore errors here, even if we fail to delete from cdn we still deleted the table entry because we otherwise block user interaction because of third party issues (no-go).
 			deleteFromCdn($file['cdnPath']);
 			if($file['hasThumbnail']) deleteFromCdn("{$noext}_55_60.{$ext}"); // thumbnail
-			deleteFromCdn("{$noext}_480_320.{$ext}"); // legacy logo
 		
 			logAssetChanges(["Deleted file '{$file['name']}' and underlying resources"], $assetId);
 		}
