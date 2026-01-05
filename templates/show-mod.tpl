@@ -1,6 +1,6 @@
 {capture name="head"}
 <meta content="{$asset['name']}" property="og:title" />
-<meta content="{strip_tags($assetraw['text'])}" property="og:description" />
+<meta content="{htmlspecialchars(strip_tags($assetraw['text']))}" property="og:description" />
 <meta name="twitter:card" content="summary_large_image">
 {if (empty($asset['logoUrl']))}
 <meta content="/web/img/mod-default.png" property="og:image" />
