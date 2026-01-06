@@ -73,8 +73,8 @@ switch($urlparts[0]) {
 		}
 
 
-		//NOTE(Rennorb): The trick to selecting all requested mods at once here is to form tow almost identical queries, 
-		// then join them onto eachother under the condition that the second one fids a higher version than the first.
+		//NOTE(Rennorb): The trick to selecting all requested mods at once here is to form two almost identical queries, 
+		// then join them onto each other under the condition that the second one finds a higher version than the first.
 		// This is not possible for the highest version in the first query, so we can then filter for null in the second query
 		// to obtain the row that has the highest version in the first row. This is possible with arbitrary amounts of "groups"
 		// if crafted carefully. Note that we cannot use 'group by' in most cases, as it is up to the implementation to select any row
