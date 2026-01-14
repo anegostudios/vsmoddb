@@ -24,9 +24,10 @@ const VALID_ORDER_BY_COLUMNS = [
  *  limit:int,
  *  cursor:array{0:mixed, 1:int}
  * } &$outParams
+ * @param bool $trimText if set, the search text will be trimmed of leading / trailing whitespace and multiple whitespaces will be collapsed.
  * @return null|string error message
  */
-function validateModSearchInputs(&$outParams)
+function validateModSearchInputs(&$outParams, $trimText)
 {
 	$outParams = [
 		'order'   => ['lastReleased', 'desc'],
@@ -61,7 +62,7 @@ function validateModSearchInputs(&$outParams)
 	}
 
 	if(!empty($_REQUEST['text'])) {
-		$outParams['filters']['text'] = $_REQUEST['text'];
+		$outParams['filters']['text'] = !$trimText ? $_REQUEST['text'] : preg_replace('/\s+/', ' ', trim($_REQUEST['text']));
 	}
 
 	if(!empty($_REQUEST['tagids'])) {
@@ -425,26 +426,3 @@ function getNextFetchCursor($searchParams, $mods)
 
 	return "&cursor[]={$cursorVal}&cursor[]={$modId}&cursor[]={$score}";
 }
-
-
-//TODO(Rennorb): @completeness: Translate priority text matching to sql.
-// This is the old ranking algorithm which ordered text searches b  "correctness" of the match (only in 5 layers, but still).
-// This is really hard to replicate with paging. period. I need to have a really hard think on how to do this.
-/* 
-function getModMatchWeight($mod, $text) {
-		if (empty($text)) return 5;
-		
-		// Exact mod name match
-		if (strcasecmp($mod['name'], $text) == 0) return 1;
-		$pos = stripos($mod['name'], $text);
-		// Mod name starts with text
-		if ($pos === 0) return 2;
-		// Mod name contains text
-		if ($pos > 0) return 3;
-		// Summary contains text
-		if (strstr($mod['summary'], $text)) return 4;
-		// Contained somewhere
-		return 5;
-	}
-
-*/

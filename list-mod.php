@@ -3,7 +3,7 @@
 include($config["basepath"] . "lib/search-mods.php");
 
 if(isset($_GET['paging'])) {
-	if($paramError = validateModSearchInputs($searchParams)) {
+	if($paramError = validateModSearchInputs($searchParams, true)) {
 		http_response_code(HTTP_BAD_REQUEST);
 		exit(htmlspecialchars($paramError));
 	}
@@ -20,7 +20,7 @@ if(isset($_GET['paging'])) {
 
 
 
-if($paramError = validateModSearchInputs($searchParams)) {
+if($paramError = validateModSearchInputs($searchParams, true)) {
 	addMessage(MSG_CLASS_ERROR, $paramError, true);
 }
 $searchParams['limit'] = MOD_SEARCH_INITIAL_RESULTS;
