@@ -62,6 +62,8 @@
 				<option value="o"{if $selectedParams['category'] === 'o'} selected="selected"{/if}>Other</option>
 			</select>
 		</span>
+		{else}
+		<input type="hidden" name="c" value="s" />
 		{/if}
 
 		<span data-label="Mod Type">
