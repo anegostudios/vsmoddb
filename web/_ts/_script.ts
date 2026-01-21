@@ -1,6 +1,7 @@
 /// <reference path="_globals.d.ts" />
 /// <reference path="core.ts" />
 /// <reference path="input.ts" />
+/// <reference path="filedrop.ts" />
 /// <reference path="dialog.ts" />
 /// <reference path="spoiler.ts" />
 /// <reference path="wysiwyg.ts" />

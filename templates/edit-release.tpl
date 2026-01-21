@@ -242,7 +242,7 @@
 		$('form[name=commentformtemplate]').areYouSure();
 	});
 </script>
-<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=43" async></script>
+<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=44" async></script>
 <script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 

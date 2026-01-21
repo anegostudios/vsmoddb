@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `assets` (
   PRIMARY KEY (`assetId`),
   INDEX `createdByUserId` (`createdByUserId`),
   CONSTRAINT `FK_assets_createdByUserId` FOREIGN KEY (`createdByUserId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT `FK_assets_editedByUserId` FOREIGN KEY (`editedByUserId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT `FK_assets_editedByUserId` FOREIGN KEY (`editedByUserId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT
 )
 ENGINE = InnoDB;
 
@@ -259,7 +259,7 @@ CREATE TABLE IF NOT EXISTS `modReleaseRetractions` (
   `lastModifiedBy` INT       NOT NULL,
   PRIMARY KEY (`releaseId`),
   CONSTRAINT `FK_FK_modReleaseRetractions_releaseId` FOREIGN KEY (`releaseId`) REFERENCES `modReleases`(`releaseId`) ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT `FK_modReleaseRetractions_lastModifiedBy` FOREIGN KEY (`lastModifiedBy`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_modReleaseRetractions_lastModifiedBy` FOREIGN KEY (`lastModifiedBy`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
 

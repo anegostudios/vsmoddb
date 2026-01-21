@@ -9,14 +9,13 @@
 
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.cookie.js"></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/tinymce/tinymce.min.js"></script>
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.filedrop.js?v=2"></script>
 
 	<script nonce="{$cspNonce}" type="text/javascript">
 		assetid = {$asset['assetId'] ?? 0};
 		assettypeid = {$asset['assetTypeId'] ?? 0};
 		actiontoken = "{$user['actionToken'] ?? ''}";
 	</script>
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/script.js?v=5"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/script.js?v=6"></script>
 	{if !empty($footerjs)}{$footerjs}{/if}
 
 	<footer>
