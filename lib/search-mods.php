@@ -212,7 +212,7 @@ function queryModSearch($searchParams)
 	foreach($searchParams['filters'] as $name => $value) {
 		switch($name) {
 			case 'text':
-				$v = '%'.escapeStringForLikeQuery($value).'%';
+				$exactPattern = '%'.escapeStringForLikeQuery($value).'%';
 
 				// We want to return results ordered by relevance, so we build a 'score' metric to order by.
 				// This score metric is constructed as follows:
@@ -237,34 +237,64 @@ function queryModSearch($searchParams)
 				// 3 - (2 - 1) & 0b11 = 3 - (0x00000001 & 0x11) = 3 - 1 = 2   // match starts later
 				$matchScoreFormular = '(3 - ((LEAST(LOCATE(LOWER(?), LOWER(a.name)), 2) - 1) & 0b11)) * 5 + (m.summary LIKE ?) * 5 + (m.descriptionSearchable LIKE ?)';
 				$matchScoreSelect = $matchScoreFormular.' as matchScore,';
-				array_unshift($sqlParams, $value, $v, $v);
+				array_unshift($sqlParams, $value, $exactPattern, $exactPattern);
 				$joinParamsOffset += 3;
 
+				// Join modPeekResults to enable searching by mod identifier (e.g. "carrycapacity", "xlib")
+				$joinClauses .= 'LEFT JOIN modReleases mr_search ON mr_search.modId = m.modId ';
+				$joinClauses .= 'LEFT JOIN files f_search ON f_search.assetId = mr_search.assetId ';
+				$joinClauses .= 'LEFT JOIN modPeekResults mpr_search ON mpr_search.fileId = f_search.fileId ';
+
+				// Tokenize search text into individual words for flexible matching.
+				// This allows "story vintage" to find "Vintage Story" (word order independent).
+				// Exact phrase matches are prioritized via the score formula above.
+				// Filter out words shorter than 2 characters to reduce noise and false positives.
+				$words = array_filter(
+					preg_split('/\s+/', trim($value), -1, PREG_SPLIT_NO_EMPTY),
+					fn($w) => mb_strlen($w) >= 2
+				);
+				$words = array_slice($words, 0, 5);
+
+				// Concatenate all searchable fields into one for efficient LIKE matching (1 comparison per word instead of 5)
+				$searchableConcat = "CONCAT_WS(' ', a.name, m.summary, m.descriptionSearchable, m.urlAlias, mpr_search.modIdentifier)";
+
 				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
-				$whereClauses .= '(a.name LIKE ? OR m.summary LIKE ? OR m.descriptionSearchable LIKE ?)';
-				array_push($sqlParams, $v, $v, $v);
+				if (count($words) <= 1) {
+					// Single word or all words filtered out: use exact phrase (original behavior)
+					$whereClauses .= "$searchableConcat LIKE ?";
+					array_push($sqlParams, $exactPattern);
+				} else {
+					// Multiple words: each word must appear in at least one searchable field
+					$wordConditions = [];
+					foreach ($words as $word) {
+						$wordPattern = '%'.escapeStringForLikeQuery($word).'%';
+						$wordConditions[] = "$searchableConcat LIKE ?";
+						array_push($sqlParams, $wordPattern);
+					}
+					$whereClauses .= '('.implode(' AND ', $wordConditions).')';
+				}
 
 				$orderBy = 'matchScore DESC, '.$orderBy;
 
 				break;
 
 			case 'tags':
-				$joinClauses .= 'JOIN modTags t ON t.modId = m.modId AND t.tagId IN ('.implode(',', $value).')'; // @security: $value must be sql safe (validateModSearchInputs does that)
+				$joinClauses .= 'JOIN modTags t ON t.modId = m.modId AND t.tagId IN ('.implode(',', $value).') '; // @security: $value must be sql safe (validateModSearchInputs does that)
 				break;
 
 			case 'gameversions':
-				$joinClauses .= 'JOIN modCompatibleGameVersionsCached mcv ON mcv.modId = m.modId AND mcv.gameVersion IN ('.implode(',', $value).')'; // @security: $value must be sql safe (validateModSearchInputs does that)
+				$joinClauses .= 'JOIN modCompatibleGameVersionsCached mcv ON mcv.modId = m.modId AND mcv.gameVersion IN ('.implode(',', $value).') '; // @security: $value must be sql safe (validateModSearchInputs does that)
 				break;
 
 			case 'majorversion':
-				$joinClauses .= 'JOIN modCompatibleMajorGameVersionsCached mcmv ON mcmv.modId = m.modId AND mcmv.majorGameVersion = ?';
+				$joinClauses .= 'JOIN modCompatibleMajorGameVersionsCached mcmv ON mcmv.modId = m.modId AND mcmv.majorGameVersion = ? ';
 				array_splice($sqlParams, $joinParamsOffset, 0, $value);
 				$joinParamsOffset++;
 				break;
 
 			case 'contributor':
 				// team members
-				$joinClauses .= 'LEFT JOIN modTeamMembers tm ON tm.modId = m.modId AND tm.userId = (SELECT userId FROM users tu WHERE tu.hash = UNHEX(?))';
+				$joinClauses .= 'LEFT JOIN modTeamMembers tm ON tm.modId = m.modId AND tm.userId = (SELECT userId FROM users tu WHERE tu.hash = UNHEX(?)) ';
 				array_splice($sqlParams, $joinParamsOffset, 0, $value);
 				$joinParamsOffset++;
 
@@ -290,7 +320,7 @@ function queryModSearch($searchParams)
 				$joinClauses .= <<<SQL
 					JOIN modReleases r ON r.modId = m.modId
 					JOIN files fi ON fi.assetId = r.assetId
-					JOIN modPeekResults mpr on mpr.fileId = fi.fileId AND mpr.type = '$value'
+					JOIN modPeekResults mpr on mpr.fileId = fi.fileId AND mpr.type = '$value' 
 				SQL; // @security: $value can only be one of the specified strings, therefore its sql inert.
 				break;
 
