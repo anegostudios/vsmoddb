@@ -19,6 +19,18 @@ function attachDropHandler(args : DropHandler)
 
 	args.target.addEventListener('dragover', e => {
 		let hasFiles = false;
+
+		if(R.isSafari()) {
+			//NOTE(Rennorb): the dataTransfer is empty for Safari, so no pre-filter for us.
+			if(e.dataTransfer!.types.includes('Files')) { // https://html.spec.whatwg.org/multipage/dnd.html#dom-datatransfer-types-dev   section 2.2
+				e.preventDefault()
+				e.dataTransfer!.dropEffect = 'copy';
+			}
+			else {
+				e.dataTransfer!.dropEffect = 'none';
+			}
+			return
+		}
 		
 		for(const item of e.dataTransfer!.items) {
 			if(item.kind === 'file') {
@@ -36,6 +48,7 @@ function attachDropHandler(args : DropHandler)
 	});
 
 	args.target.addEventListener('drop', e => {
+		debugger;
 		const files = Array.from(e.dataTransfer!.files).filter(args.onValidate);
 		if(!files.length) return;
 

@@ -57,7 +57,7 @@ function cspAllowTinyMceComment()
 	$_csp['style-src'] = $_csp['default-src']." $tinymce/skins/ui/oxide/skin.min.css $tinymce/skins/ui/oxide/content.min.css $tinymce/plugins/spoiler/css/spoiler.css {$_SERVER['HTTP_HOST']}/web/css/editor_content.css";
 
 	// Icon font
-	$_csp['font-src'] .= " $tinymce/skins/ui/oxide/fonts/tinymce-mobile.woff?8x92w3";
+	$_csp['font-src'] .= " $tinymce/skins/ui/oxide/fonts/tinymce-mobile.woff";
 }
 
 function cspAllowTinyMceFull()
@@ -72,7 +72,7 @@ function cspAllowTinyMceFull()
 	$_csp['style-src'] = $_csp['default-src']." $tinymce/skins/ui/oxide/skin.min.css $tinymce/skins/ui/oxide/content.min.css $tinymce/plugins/spoiler/css/spoiler.css {$_SERVER['HTTP_HOST']}/web/css/editor_content.css";
 
 	// Icon font
-	$_csp['font-src'] .= " $tinymce/skins/ui/oxide/fonts/tinymce-mobile.woff?8x92w3";
+	$_csp['font-src'] .= " $tinymce/skins/ui/oxide/fonts/tinymce-mobile.woff";
 }
 
 /** Call this one last, it overwrites all allowed style sources. */
