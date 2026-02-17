@@ -1,4 +1,7 @@
-FROM mcr.microsoft.com/devcontainers/php:1-8.2-bullseye
+FROM mcr.microsoft.com/devcontainers/php:2-8.4-bullseye
+
+# Remove unneeded repositories
+RUN rm /etc/apt/sources.list.d/yarn.list
 
 # Install MariaDB client
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
