@@ -517,7 +517,7 @@ h2 .title {
 
 	background-color: hsl(var(--c-accent) 86%);
   padding: .25rem;
-	padding-right: 2em;
+	padding-right: 2.5rem;
   border: 1px solid hsl(var(--c-accent) 58%);
 }
 
@@ -551,14 +551,15 @@ h2 .title {
 	z-index: 5;
 	right: .25em;
 
-	/* @cleanup */
 	width: 1em; height: 1em;
-	line-height: .75em;
-  padding: 0 .125em;
+	line-height: .65em;
+	padding: 2px;
+	text-align: center;
 }
 
 .file .delete {
 	bottom: .25em;
+	line-height: .55em;
 }
 
 .file .download {
