@@ -322,6 +322,9 @@
 				});
 			});
 		});
+		window.addEventListener('pageshow', function(e) {
+			if (e.persisted) document.getElementById(location.hash === '#tab-files' ? 'tab-files' : 'tab-description').checked = true;
+		});
 	</script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 	<link nonce="{$cspNonce}" href="https://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.css" rel="stylesheet">
