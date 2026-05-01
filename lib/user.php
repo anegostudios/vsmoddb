@@ -172,117 +172,147 @@ function loadNotifications($loadAll)
 	$limit = $loadAll ? '' : 'LIMIT 10';
 	$notifications = $con->getAll("SELECT * FROM notifications WHERE userId = ? AND !`read` ORDER BY created DESC $limit", [$user['userId']]);
 
+	if(empty($notifications)) {
+		$view->assign('notifications', []);
+		return;
+	}
+
+	$modIds = [];
+	$commentIds = [];
+	$warningIds = [];
+	$userIds = [];
+	$releaseAssetIds = [];
+
+	foreach($notifications as $notification) {
+		$recordId = $notification['recordId'];
+		switch($notification['kind']) {
+			case NOTIFICATION_NEW_RELEASE:
+			case NOTIFICATION_MOD_LOCKED:
+			case NOTIFICATION_MOD_UNLOCK_REQUEST:
+			case NOTIFICATION_MOD_UNLOCKED:
+			case NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST:
+				$modIds[$recordId] = true;
+				break;
+			case NOTIFICATION_TEAM_INVITE:
+				$modIds[$recordId & ((1 << 30) - 1)] = true; // :InviteEditBit
+				break;
+			// NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED: cannot be batched, handled individually below. :IndividualTransferInfos
+			case NOTIFICATION_NEW_COMMENT:
+			case NOTIFICATION_MENTIONED_IN_COMMENT:
+			case NOTIFICATION_RESPONDED_TO_COMMENT:
+				$commentIds[$recordId] = true;
+				break;
+			case NOTIFICATION_WARNING_RECEIVED:
+				$warningIds[$recordId] = true;
+				break;
+			case NOTIFICATION_WARNING_ACKNOWLEDGED:
+				$userIds[$recordId] = true;
+				break;
+			case NOTIFICATION_ONEOFF_MALFORMED_RELEASE:
+				$releaseAssetIds[$recordId] = true;
+				break;
+		}
+	}
+
+	// @security: array keys are database integers, therefore sql inert when interpolated into IN().
+	if($modIds) {
+		$ids = implode(',', array_keys($modIds));
+		$modInfos = $con->getAssoc("SELECT m.modId, a.name AS modName, u.name AS username FROM mods m JOIN assets a ON a.assetId = m.assetId JOIN users u ON u.userId = a.createdByUserId WHERE m.modId IN ($ids)");
+	}
+
+	if($commentIds) {
+		$ids = implode(',', array_keys($commentIds));
+		$commentInfos = $con->getAssoc("SELECT c.commentId, a.name AS modName, u.name AS username FROM comments c JOIN assets a ON a.assetId = c.assetId JOIN users u ON u.userId = c.userId WHERE c.commentId IN ($ids)");
+	}
+
+	if($warningIds) {
+		$ids = implode(',', array_keys($warningIds));
+		$warningReasons = $con->getAssoc("SELECT actionId, reason FROM moderationRecords WHERE actionId IN ($ids)");
+	}
+
+	if($userIds) {
+		$ids = implode(',', array_keys($userIds));
+		$userNames = $con->getAssoc("SELECT userId, name FROM users WHERE userId IN ($ids)");
+	}
+
+	if($releaseAssetIds) {
+		$ids = implode(',', array_keys($releaseAssetIds));
+		$releaseModNames = $con->getAssoc("SELECT r.assetId, a.name FROM modReleases r JOIN mods m ON m.modId = r.modId JOIN assets a ON a.assetId = m.assetId WHERE r.assetId IN ($ids)");
+	}
+
+
 	foreach ($notifications as &$notification) {
+		$recordId = $notification['recordId'];
 		switch ($notification['kind']) {
 			case NOTIFICATION_NEW_RELEASE:
-				$cmt = $con->getRow(<<<SQL
-					SELECT a.name AS modName, u.name AS username
-					FROM mods m
-					JOIN assets a ON a.assetId = m.assetId
-					JOIN users u ON u.userId = a.createdByUserId
-					WHERE m.modId = ?
-				SQL, [$notification['recordId']]);
-
-				$notification['text'] = "{$cmt['username']} uploaded a new version of {$cmt['modName']}";
+				$info = $modInfos[$recordId];
+				$notification['text'] = "{$info['username']} uploaded a new version of {$info['modName']}";
 				break;
 
 			case NOTIFICATION_TEAM_INVITE:
-				$cmt = $con->getRow(<<<SQL
-					SELECT a.name AS modName, u.name AS username
-					FROM mods m
-					JOIN assets a ON a.assetId = m.assetId
-					JOIN users u ON u.userId = a.createdByUserId
-					WHERE m.modId = ? 
-				SQL, [intval($notification['recordId']) & ((1 << 30) - 1)]);  // :InviteEditBit
-
-				$notification['text'] = "{$cmt['username']} invited you to join the team of {$cmt['modName']}";
+				$info = $modInfos[$recordId & ((1 << 30) - 1)]; // :InviteEditBit
+				$notification['text'] = "{$info['username']} invited you to join the team of {$info['modName']}";
 				break;
 
 			case NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST:
-				$cmt = $con->getRow(<<<SQL
-					SELECT a.name AS modName, u.name AS username
-					FROM mods m
-					JOIN assets a ON a.assetId = m.assetId
-					JOIN users u ON u.userId = a.createdByUserId
-					WHERE m.modId = ?
-				SQL, [$notification['recordId']]);
-
-				$notification['text'] = "{$cmt['username']} offered you ownership of {$cmt['modName']}";
+				$info = $modInfos[$recordId];
+				$notification['text'] = "{$info['username']} offered you ownership of {$info['modName']}";
 				break;
 
-			case NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED:
-				$modId = intval($notification['recordId']) & ((1 << 30) - 1);  // :PackedTransferSuccess
-				$cmt = $con->getRow(<<<SQL
+			case NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED: // :IndividualTransferInfos
+				$modId = $recordId & ((1 << 30) - 1); // :PackedTransferSuccess
+				$info = $con->getRow(<<<SQL
 					SELECT a.name AS modName, u.name AS username
 					FROM mods m
 					JOIN assets a ON a.assetId = m.assetId
-					JOIN (SELECT userId FROM notifications n WHERE kind = ? AND (n.recordId & ((1 << 30) - 1)) = ? ORDER BY created DESC LIMIT 1) ogn ON 1 = 1 -- :InviteEditBit
+					JOIN (SELECT userId FROM notifications n WHERE kind = ? AND (n.recordId & ((1 << 30) - 1)) = ? ORDER BY created DESC LIMIT 1) ogn ON 1 = 1
 					JOIN users u ON u.userId = ogn.userId
 					WHERE m.modId = ?
 				SQL, [NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST, $modId, $modId]);
-
-				$verb = $notification['recordId'] & (1 << 30) ? 'accepted' : 'rejected'; // :PackedTransferSuccess
-
-				$notification['text'] = "{$cmt['username']} has $verb your ownership transfer of {$cmt['modName']}";
+				$verb = $recordId & (1 << 30) ? 'accepted' : 'rejected';
+				$notification['text'] = "{$info['username']} has $verb your ownership transfer of {$info['modName']}";
 				break;
 
 			case NOTIFICATION_NEW_COMMENT: case NOTIFICATION_MENTIONED_IN_COMMENT: case NOTIFICATION_RESPONDED_TO_COMMENT:
-				$cmt = $con->getRow(<<<SQL
-					SELECT a.name AS modName, u.name AS username
-					FROM comments c
-					JOIN assets a ON a.assetId = c.assetId
-					JOIN users u ON u.userId = c.userId
-					WHERE c.commentId = ?
-				SQL, [$notification['recordId']]);
-
+				$info = $commentInfos[$recordId];
 				switch ($notification['kind']) {
-					case NOTIFICATION_NEW_COMMENT: $notification['text'] = "{$cmt['username']} commented on {$cmt['modName']}"; break;
-					case NOTIFICATION_MENTIONED_IN_COMMENT: $notification['text'] = "{$cmt['username']} mentioned you in a comment on {$cmt['modName']}"; break;
-					case NOTIFICATION_RESPONDED_TO_COMMENT: $notification['text'] = "{$cmt['username']} responded to one of your comments on {$cmt['modName']}"; break;
+					case NOTIFICATION_NEW_COMMENT: $notification['text'] = "{$info['username']} commented on {$info['modName']}"; break;
+					case NOTIFICATION_MENTIONED_IN_COMMENT: $notification['text'] = "{$info['username']} mentioned you in a comment on {$info['modName']}"; break;
+					case NOTIFICATION_RESPONDED_TO_COMMENT: $notification['text'] = "{$info['username']} responded to one of your comments on {$info['modName']}"; break;
 				}
 				break;
 
 			case NOTIFICATION_MOD_LOCKED:
-				$modName = $con->getOne('SELECT name FROM mods m JOIN assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
-				$notification['text'] = "Your mod '{$modName}' got locked by a moderator";
+				$info = $modInfos[$recordId];
+				$notification['text'] = "Your mod '{$info['modName']}' got locked by a moderator";
 				break;
 
 			case NOTIFICATION_MOD_UNLOCK_REQUEST:
-				$modName = $con->getOne('SELECT name FROM mods m JOIN assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
-				$notification['text'] = "A review-request was issued for a mod locked by you ('{$modName}')";
+				$info = $modInfos[$recordId];
+				$notification['text'] = "A review-request was issued for a mod locked by you ('{$info['modName']}')";
 				break;
 
 			case NOTIFICATION_MOD_UNLOCKED:
-				$modName = $con->getOne('SELECT name FROM mods m JOIN assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$notification['recordId']]);
-				$notification['text'] = "Your mod '{$modName}' got unlocked by a moderator";
+				$info = $modInfos[$recordId];
+				$notification['text'] = "Your mod '{$info['modName']}' got unlocked by a moderator";
 				break;
 
 			case NOTIFICATION_WARNING_RECEIVED:
 				$notification['text'] = "You have been issued a warning by a moderator. Dismiss this notification to dismiss and acknowledge the warning.";
-
-				$reason = $con->getOne('SELECT reason FROM moderationRecords WHERE actionId = ?', [$notification['recordId']]);
+				$reason = $warningReasons[$recordId];
 				addMessage('bg-warning permanent', <<<HTML
 					<h3 style='text-align: center;'>You have been issued a warning:</h3>
 					<p><blockquote>{$reason}</blockquote></p>
 					<p><small>Dismiss and acknowledge this by <a href="/notification/{$notification['notificationId']}">dismissing the notification</a>.</small></p>
 				HTML);
-
 				break;
 
 			case NOTIFICATION_WARNING_ACKNOWLEDGED:
-				$username = $con->getOne('SELECT name FROM users WHERE userId = ?', [$notification['recordId']]);
-				$notification['text'] = "{$username} has acknowledged your warning.";
+				$notification['text'] = "{$userNames[$recordId]} has acknowledged your warning.";
 				break;
 
 			case NOTIFICATION_ONEOFF_MALFORMED_RELEASE:
-				$modName = $con->getOne(<<<SQL
-					SELECT name
-					FROM mods m
-					JOIN modReleases r ON r.modId = m.modId
-					JOIN assets a ON a.assetId = m.assetId
-					WHERE r.assetId = ?
-				SQL, [$notification['recordId']]);
-				$notification['text'] = "A release of your mod '$modName' contains a file that has malformed information. Please resolve this issue.";
+				$notification['text'] = "A release of your mod '{$releaseModNames[$recordId]}' contains a file that has malformed information. Please resolve this issue.";
 				break;
 		}
 		$notification['link'] = "/notification/{$notification['notificationId']}";
