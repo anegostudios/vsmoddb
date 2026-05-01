@@ -45,7 +45,7 @@ $view->assign("assetserver", $config['assetserver']);
 
 
 //NOTE(Rennorb): Technically we should only count the public mods, but in reality this probably doesn't matter for production and just counting all mods makes the query simpler.
-$view->assign('totalModCount', $con->getOne('SELECT COUNT(*) from mods'), null, true);
+// Moved to index.php after the API branch -- API requests don't render the header where this is used.
 
 
 

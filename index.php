@@ -40,6 +40,8 @@ if($urlparts[0] === 'api') { // :ReservedUrlPrefixes
 
 include("lib/csp.php");
 
+$view->assign('totalModCount', $con->getOne('SELECT COUNT(*) from mods'), null, true);
+
 //TODO(Rennorb) @cleanup @perf: Move view initialization here, after api branch.
 $view->assign('headerHighlight', null, null, true);
 if(DB_READONLY) addMessage(MSG_CLASS_OK.' permanent', 'We are currently in readonly mode. All editing is disabled, but you can still browse and download.');
