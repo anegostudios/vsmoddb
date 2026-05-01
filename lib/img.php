@@ -104,7 +104,7 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 		$image = imagecreatefromgif($file);
 	  break;
 	  case IMAGETYPE_JPEG:
-		$image = imagecreatefromjpeg($file); //TODO(Rennorb) @bug: undefined function. php version? missing lib?
+		$image = imagecreatefromjpeg($file);
 	  break;
 	  case IMAGETYPE_PNG:
 		$image = imagecreatefrompng($file);
