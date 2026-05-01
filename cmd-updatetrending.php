@@ -22,10 +22,10 @@ $ok = $con->execute(<<<SQL
 		GROUP BY c.assetId
 	) c1 ON c1.assetId = m.assetId
 	LEFT JOIN (
-		SELECT r.modId, COUNT(d.lastDownload) as downloads
+		SELECT r.modId, COUNT(*) as downloads
 		FROM fileDownloadTracking d
 		JOIN files f ON f.fileId = d.fileId
-		join modReleases r on r.assetId = f.assetId
+		JOIN modReleases r ON r.assetId = f.assetId
 		WHERE d.lastDownload > DATE_SUB(NOW(), INTERVAL 72 HOUR)
 		GROUP BY r.modId
 	) f1 ON f1.modId = m.modId
@@ -33,3 +33,5 @@ $ok = $con->execute(<<<SQL
 SQL);
 
 if(!$ok) http_response_code(HTTP_INTERNAL_ERROR);
+
+$con->execute('DELETE FROM fileDownloadTracking WHERE lastDownload < DATE_SUB(NOW(), INTERVAL 72 HOUR)');
