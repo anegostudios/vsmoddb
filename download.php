@@ -26,7 +26,7 @@ if(!DB_READONLY) {
 	if (!$lastDownload) {
 		$countAsSeparateDownload = true;
 		$con->execute('INSERT INTO fileDownloadTracking (fileId, ipAddress) VALUES (?, ?)', $identifier);
-	} else if (strtotime($lastDownload) - time() > 24*3600) {
+	} else if (time() - strtotime($lastDownload) > 24*3600) {
 		$countAsSeparateDownload = true;
 		//TODO(Rennorb) @correctness: This does not produce the correct result for trending points.
 		$con->execute('UPDATE fileDownloadTracking SET lastDownload = NOW() WHERE fileId = ? and ipAddress = ?', $identifier);
