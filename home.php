@@ -3,7 +3,7 @@
 if (!empty($user)) {
 	$ownMods = $con->getAll("
 		SELECT
-			a.*,
+			a.assetId, a.name, a.created, a.statusId, a.createdByUserId,
 			m.*,
 			logo.cdnPath AS logoCdnPath,
 			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
@@ -21,7 +21,6 @@ if (!empty($user)) {
 	", [$user['userId'], $user['userId']]);
 
 	foreach($ownMods as &$mod) {
-		unset($mod['text']);
 		$mod['tags'] = [];
 		$mod['from'] = $user['name'];
 		$mod['dbPath'] = formatModPath($mod);
@@ -34,7 +33,7 @@ if (!empty($user)) {
 	//TODO(Rennorb) @cleanup
 	$followedMods = $con->getAll("
 		SELECT
-			a.*,
+			a.assetId, a.name, a.created, a.statusId, a.createdByUserId,
 			m.*,
 			logo.cdnPath AS logoCdnPath,
 			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
@@ -69,7 +68,7 @@ if (!empty($user)) {
 
 $latestMods = $con->getAll("
 	SELECT
-		a.*,
+		a.assetId, a.name, a.created, a.statusId, a.createdByUserId,
 		m.*,
 		logo.cdnPath AS logoCdnPath,
 		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
