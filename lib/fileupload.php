@@ -129,8 +129,7 @@ function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 	$con->execute("INSERT INTO files (`$foldedKeys`) VALUES ($placeholders)", array_values($data));
 	$fileId = $con->Insert_ID();
 	if($acceptedImage) {
-		// :BrokenSqlPointType
-		$con->execute("INSERT INTO fileImageData (fileId, hasThumbnail, size) VALUES ($fileId, 1, POINT($width, $height))");
+		$con->execute("INSERT INTO fileImageData (fileId, hasThumbnail, size) VALUES (?, 1, POINT(?, ?))", [$fileId, $width, $height]);
 	}
 
 	if($parentAssetId) logAssetChanges(array("Uploaded file '{$file['name']}'"), $parentAssetId);
