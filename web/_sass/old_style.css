@@ -1157,3 +1157,7 @@ body.readonly .strikethrough-when-readonly {
 #notifications-list>:hover {
 	background-color: var(--color-input);
 }
+
+body.hide-embed-comments .comment.embed-only {
+	display: none;
+}

@@ -39,7 +39,7 @@
 </head>
 
 <body class="{if DB_READONLY}readonly{/if}{if !empty($user) && $user['isBanned']} banned{/if}">
-	<script nonce="{$cspNonce}">try\{if(+window.localStorage.getItem('opaque-desc'))document.body.classList.add('opaque-desc')}catch\{}</script>
+	<script nonce="{$cspNonce}">try\{if(+window.localStorage.getItem('opaque-desc'))document.body.classList.add('opaque-desc');if(+window.localStorage.getItem('hide-embed-comments'))document.body.classList.add('hide-embed-comments')}catch\{}</script>
 	<a name="top"></a>
 	
 	<div class="content">

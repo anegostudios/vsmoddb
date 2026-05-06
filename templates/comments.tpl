@@ -62,3 +62,9 @@ $visibleCommentCount = $showDeleted ? count($comments) : array_reduce($comments,
 	}
 ?>
 			</div>
+			<script nonce="{$cspNonce}">
+			for(const c of document.querySelectorAll('.comment .body')) {
+				if(!c.textContent.trim() && c.querySelector('img, iframe'))
+					c.parentElement.classList.add('embed-only');
+			}
+			</script>

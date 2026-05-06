@@ -43,6 +43,18 @@
 	}
 }</script>
 
+<label for="ch-a-hide-embeds"><label class="toggle" for="ch-a-hide-embeds"><input id="ch-a-hide-embeds" type="checkbox" autocomplete="off" /></label> <abbr title="Hides comments that contain only images or embeds and no text.">Hide embed-only comments</abbr></label>
+<script nonce="{$cspNonce}" type="text/javascript">{
+	const cb = document.getElementById('ch-a-hide-embeds');
+	try {
+		cb.checked = +window.localStorage.getItem('hide-embed-comments');
+		cb.addEventListener('change', e => window.localStorage.setItem('hide-embed-comments', String(+e.target.checked)));
+	}
+	catch {
+		cb.parentElement.replaceWith('[Please allow local storage]');
+	}
+}</script>
+
 <h3>Notification Settings</h3>
 {if count($followedMods)}
 <p><small>Changes apply immediately.</small></p>
