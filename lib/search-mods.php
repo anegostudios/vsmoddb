@@ -74,6 +74,10 @@ function validateModSearchInputs(&$outParams, $trimText)
 		$outParams['filters']['tags'] = $tags;
 	}
 
+	if(!empty($_REQUEST['modid'])) {
+		$outParams['filters']['modid'] = trim($_REQUEST['modid']);
+	}
+
 	if(!empty($_REQUEST['a'])) {
 		$contributorHash = filter_var($_REQUEST['a'], FILTER_UNSAFE_RAW | FILTER_FLAG_STRIP_LOW);
 		if($contributorHash !== $_REQUEST['a']) {
@@ -247,6 +251,15 @@ function queryModSearch($searchParams)
 
 				$orderBy = 'matchScore DESC, '.$orderBy;
 
+				break;
+
+			case 'modid':
+				$joinClauses .= 'JOIN modReleases mr ON mr.modId = m.modId AND mr.identifier = ? LEFT JOIN modReleaseRetractions mrr ON mrr.releaseId = mr.releaseId ';
+				array_splice($sqlParams, $joinParamsOffset, 0, $value);
+				$joinParamsOffset++;
+
+				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+				$whereClauses .= 'mrr.reason IS NULL';
 				break;
 
 			case 'tags':

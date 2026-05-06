@@ -12,6 +12,10 @@
 			<input type="text" name="text" value="{$selectedParams['text']}" style="width:12em;">
 		</span>
 
+		<span data-label="Mod ID">
+			<input type="text" name="modid" value="{$selectedParams['modid']}" style="width:10em;">
+		</span>
+
 		<span data-label="Side">
 			<select name="side" style="width:10em;">
 				<option value="">Any</option>

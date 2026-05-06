@@ -33,6 +33,7 @@ $selectedParams = [
 	'type'    => $filters['type'] ?? '',
 	'category'=> $filters['category'] ?? '',
 	'text'    => htmlSpecialChars($filters['text'] ?? ''),
+	'modid'   => htmlSpecialChars($filters['modid'] ?? ''),
 	'contributor' => !empty($filters['contributor'])
 		? [$filters['contributor'], $con->getOne('SELECT `name` FROM users WHERE `hash` = UNHEX(?)', [$filters['contributor']])]
 		: [],
