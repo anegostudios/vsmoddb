@@ -2,6 +2,28 @@
 
 include($config["basepath"] . "lib/search-mods.php");
 
+// Mod ID search: identifier uniquely identifies a mod, so redirect directly to its page.
+if(!empty($_REQUEST['modid'])) {
+	$modid = trim($_REQUEST['modid']);
+	$retractionFilter = canModerate(null, $user) ? '' : 'AND mrr.releaseId IS NULL';
+	$assetId = $con->getOne("
+		SELECT m.assetId
+		FROM modReleases mr
+		JOIN mods m ON m.modId = mr.modId
+		LEFT JOIN modReleaseRetractions mrr ON mrr.releaseId = mr.releaseId
+		WHERE mr.identifier = ?
+		$retractionFilter
+		LIMIT 1
+	", [$modid]);
+
+	if($assetId) {
+		header("Location: /show/mod/$assetId");
+		exit();
+	}
+
+	addMessage(MSG_CLASS_ERROR, "No mod found with identifier '$modid'.", true);
+}
+
 if(isset($_GET['paging'])) {
 	if($paramError = validateModSearchInputs($searchParams, true)) {
 		http_response_code(HTTP_BAD_REQUEST);
