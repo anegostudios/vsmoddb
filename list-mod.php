@@ -3,11 +3,11 @@
 include($config["basepath"] . "lib/search-mods.php");
 
 // Mod ID search: identifier uniquely identifies a mod, so redirect directly to its page.
-if(!empty($_REQUEST['modid'])) {
-	$modid = trim($_REQUEST['modid']);
+if(!empty($_GET['i'])) {
+	$modid = trim($_GET['text']);
 	$retractionFilter = canModerate(null, $user) ? '' : 'AND mrr.releaseId IS NULL';
-	$assetId = $con->getOne("
-		SELECT m.assetId
+	$mod = $con->getRow("
+		SELECT m.urlAlias, m.assetId
 		FROM modReleases mr
 		JOIN mods m ON m.modId = mr.modId
 		LEFT JOIN modReleaseRetractions mrr ON mrr.releaseId = mr.releaseId
@@ -16,12 +16,9 @@ if(!empty($_REQUEST['modid'])) {
 		LIMIT 1
 	", [$modid]);
 
-	if($assetId) {
-		header("Location: /show/mod/$assetId");
-		exit();
-	}
-
-	addMessage(MSG_CLASS_ERROR, "No mod found with identifier '$modid'.", true);
+	if($mod) exit(forceRedirect(formatModPath($mod)));
+	else     addMessage(MSG_CLASS_WARN, "No mod found with identifier '$modid'.", true);
+	// if we failed to find the mod directly we drop into the normal search from here
 }
 
 if(isset($_GET['paging'])) {
@@ -62,6 +59,7 @@ $selectedParams = [
 	'gameversions' => !empty($filters['gameversions']) ? array_flip($filters['gameversions']) : [],
 	'tags'  => [],
 	'stati' => !empty($filters['stati']) ? array_flip($filters['stati']) : [ STATUS_RELEASED => true, STATUS_LOCKED => true ],
+	'searchId' => !empty($_GET['i']),
 ];
 
 if(!empty($filters['tags'])) {

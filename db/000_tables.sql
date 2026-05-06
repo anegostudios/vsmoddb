@@ -261,8 +261,9 @@ CREATE TABLE IF NOT EXISTS `modReleases` (
   `lastModified` TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`releaseId`),
   -- This has to include identifier, as one mod can contain releases for multiple identifier's.
-  -- This also has to include the modId, as tool/other mods dont need to have a identifier.
-  UNIQUE INDEX `identifier` (`modId`, `identifier`, `version`),
+  -- This also has to include the modId, as tool/other mods don't need to have a identifier.
+  UNIQUE INDEX `hybrid_identifier` (`modId`, `identifier`, `version`),
+  INDEX `identifier` (`identifier`), -- For search by identifier
   UNIQUE INDEX `assetid` (`assetId`),
   INDEX `modid` (`modId`),
   CONSTRAINT `FK_modReleases_assetId` FOREIGN KEY (`assetId`) REFERENCES `assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE,

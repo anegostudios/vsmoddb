@@ -8,16 +8,20 @@
 		<input type="hidden" name="sortby" value="{$selectedParams['order'][0]}">
 		<input type="hidden" name="sortdir" value="{$selectedParams['order'][1][0]}">
 
+		{if $selectedParams['searchId']}
+		<span id="search-box" data-label="Exact ModID" title="Searches for a specific ModID.">
+		{else}
 		<span id="search-box" data-label="Text" title="Searches mod names, summaries and descriptions.">
+		{/if}
 			<input type="text" name="text" value="{$selectedParams['text']}" style="width:12em;">
 		</span>
 
-		<span data-label="ID">
-			<label class="toggle" style="border-radius:0;"><input type="checkbox" id="modid-toggle" style="border-radius:0;"></label>
+		<span data-label="ID" title="Search for a ModID instead of name / description.">
+			<label class="toggle" style="border-radius:0;"><input type="checkbox" name="i" value="1" style="border-radius:0;"{if $selectedParams['searchId']} checked{/if}></label>
 		</span>
 
 		<span data-label="Side">
-			<select name="side" style="width:10em;">
+			<select name="side" style="width:10em;"{if $selectedParams['searchId']} disabled{/if}>
 				<option value="">Any</option>
 				<option value="both"{if $selectedParams['side'] == 'both'} selected="selected"{/if}>Both</option>
 				<option value="client"{if $selectedParams['side'] == 'client'} selected="selected"{/if}>Client side mod</option>
@@ -26,7 +30,7 @@
 		</span>
 
 		<span id="tags-box" data-label="Tags">
-			<select style="width:20em;" name="tagids[]" multiple data-placeholder="Search Tags" data-url="/api/v2/tags/by-name/\{name}">
+			<select style="width:20em;" name="tagids[]" multiple data-placeholder="Search Tags" data-url="/api/v2/tags/by-name/\{name}"{if $selectedParams['searchId']} disabled{/if}>
 				{foreach from=$selectedParams['tags'] item=tag}
 					<option value="{$tag['tagId']}" title="{htmlspecialchars($tag['text'], encoding: 'UTF-8')}" selected="selected">{htmlspecialchars($tag['name'], encoding: 'UTF-8')}</option>
 				{/foreach}
@@ -34,14 +38,14 @@
 		</span>
 		
 		<span id="contributor-box" data-label="Contributor">
-			<select style="width:10em;" name="a" data-url="/api/v2/users/by-name/\{name}?contributors-only=1" data-placeholder="Search Users">
+			<select style="width:10em;" name="a" data-url="/api/v2/users/by-name/\{name}?contributors-only=1" data-placeholder="Search Users"{if $selectedParams['searchId']} disabled{/if}>
 				<option value="">-</option>
 				{if !empty($selectedParams['contributor'])}<option value="{$selectedParams['contributor'][0]}" selected="true">{$selectedParams['contributor'][1]}</option>{/if}
 			</select>
 		</span>
 		
 		<span data-label="Game Version">
-			<select style="width:10em;" name="mv" noSearch="noSearch">
+			<select style="width:10em;" name="mv" noSearch="noSearch"{if $selectedParams['searchId']} disabled{/if}>
 				<option value="">Any</option>
 				{foreach from=$majorGameVersions item=version}
 					<option value="{$version['name']}"{if $selectedParams['majorversion'] === $version['version']} selected="selected"{/if}>{$version['name']}.x</option>
@@ -50,7 +54,7 @@
 		</span>
 		
 		<span data-label="Game Version Exact">
-			<select style="width:12em;" name="gv[]" multiple>
+			<select style="width:12em;" name="gv[]" multiple{if $selectedParams['searchId']} disabled{/if}>
 				{foreach from=$gameVersions item=version}
 					<option value="{$version['name']}"{if isset($selectedParams['gameversions'][$version['version']])} selected="selected"{/if}>{$version['name']}</option>
 				{/foreach}
@@ -59,7 +63,7 @@
 
 		{if $selectedParams['category'] !== 's'}
 		<span data-label="Category">
-			<select name="c" style="width:14em;">
+			<select name="c" style="width:14em;"{if $selectedParams['searchId']} disabled{/if}>
 				<option value="">Any</option>
 				<option value="m"{if $selectedParams['category'] === 'm'} selected="selected"{/if}>Game Mod</option>
 				<option value="e"{if $selectedParams['category'] === 'e'} selected="selected"{/if}>External Tool</option>
@@ -71,7 +75,7 @@
 		{/if}
 
 		<span data-label="Mod Type">
-			<select name="t" style="width:10em;">
+			<select name="t" style="width:10em;"{if $selectedParams['searchId']} disabled{/if}>
 				<option value="">Any</option>
 				<option value="v"{if $selectedParams['type'] === 'v'} selected="selected"{/if}>* Theme Pack (purely visual)</option>
 				<option value="d"{if $selectedParams['type'] === 'd'} selected="selected"{/if}>* Content Mod</option>
@@ -81,7 +85,7 @@
 
 		{if canModerate(null, $user)}
 		<span data-label="[Moderator] Mod Status">
-			<select name="stati[]" multiple="true" noSearch="noSearch" style="width:18em;">
+			<select name="stati[]" multiple="true" noSearch="noSearch" style="width:18em;"{if $selectedParams['searchId']} disabled{/if}>
 				<option value="1"{if isset($selectedParams['stati'][1])} selected="selected"{/if}>Draft</option>
 				<option value="2"{if isset($selectedParams['stati'][2])} selected="selected"{/if}>Released</option>
 				<option value="3"{if isset($selectedParams['stati'][3])} selected="selected"{/if}>Status3</option>
@@ -158,19 +162,20 @@
 		$(() => \{
 			attachRemoteSearchHandler(document.getElementById('contributor-box'));
 			attachRemoteSearchHandler(document.getElementById('tags-box'));
+		});
 
-			const modidToggle = document.getElementById('modid-toggle');
-			const searchInput = document.querySelector('#search-box input[type="text"]');
-			const otherFilters = document.querySelectorAll('select[name="side"], #tags-box select, #contributor-box select, select[name="c"], select[name="t"], select[name="mv"], select[name="gv[]"]');
 
-			modidToggle.addEventListener('change', function() {
-				const active = this.checked;
-				searchInput.name = active ? 'modid' : 'text';
-				otherFilters.forEach(el => {
-					el.disabled = active;
-					$(el).trigger('chosen:updated');
-				});
-			});
+		const searchBoxEl = document.getElementById('search-box');
+		const otherFilterEls = document.querySelectorAll('select[name="side"], #tags-box select, #contributor-box select, select[name="c"], select[name="t"], select[name="mv"], select[name="gv[]"], select[name="stati[]"]');
+		const modidToggleEl = document.querySelector('input[name="i"]');
+		modidToggleEl.addEventListener('change', function(e) \{
+			const active = e.target.checked;
+			searchBoxEl.dataset.label = active ? 'Exact ModID' : 'Text';
+			searchBoxEl.title = active ? 'Searches for a specific ModID.' : 'Searches mod names, summaries and descriptions.'
+			for(const el of otherFilterEls) \{
+				el.disabled = active;
+				$(el).trigger('chosen:updated');
+			}
 		});
 
 		let fetchCursor = '{$fetchCursorJS}';

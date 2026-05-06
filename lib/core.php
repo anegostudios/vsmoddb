@@ -294,7 +294,7 @@ function createADOConnection($config, $persistent = true)
  */
 function forceRedirectAfterPOST()
 {
-	header('Location: '.$_SERVER['REQUEST_URI'], true, 303);
+	header('Location: '.$_SERVER['REQUEST_URI'], true, HTTP_FOUND);
 }
 
 /** This function forces a location header to the provided location, as well as status 303.
@@ -305,7 +305,7 @@ function forceRedirectAfterPOST()
 function forceRedirect($url)
 {
 	if(gettype($url) === 'array') $url = buildLocalUri($url);
-	header('Location: '.$url, true, 303);
+	header('Location: '.$url, true, HTTP_FOUND);
 }
 
 /** Constructs a uri from a parse_url result shaped array.
@@ -836,7 +836,8 @@ function maybeFormatDownloadTrackingUrlDependingOnFileExt($file)
 }
 
 const HTTP_CREATED             = 201;
-const HTTP_FOUND               = 302;
+const HTTP_FOUND               = 302; // temp redirect
+const HTTP_SEE_OTHER           = 303; // permanent redirect
 const HTTP_BAD_REQUEST         = 400;
 const HTTP_UNAUTHORIZED        = 401;
 const HTTP_FORBIDDEN           = 403;
