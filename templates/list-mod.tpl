@@ -8,8 +8,12 @@
 		<input type="hidden" name="sortby" value="{$selectedParams['order'][0]}">
 		<input type="hidden" name="sortdir" value="{$selectedParams['order'][1][0]}">
 
-		<span data-label="Text" title="Searches mod names, summaries and descriptions.">
+		<span id="search-box" data-label="Text" title="Searches mod names, summaries and descriptions.">
 			<input type="text" name="text" value="{$selectedParams['text']}" style="width:12em;">
+		</span>
+
+		<span data-label="ID">
+			<label class="toggle" style="border-radius:0;"><input type="checkbox" id="modid-toggle" style="border-radius:0;"></label>
 		</span>
 
 		<span data-label="Side">
@@ -154,6 +158,19 @@
 		$(() => \{
 			attachRemoteSearchHandler(document.getElementById('contributor-box'));
 			attachRemoteSearchHandler(document.getElementById('tags-box'));
+
+			const modidToggle = document.getElementById('modid-toggle');
+			const searchInput = document.querySelector('#search-box input[type="text"]');
+			const otherFilters = document.querySelectorAll('select[name="side"], #tags-box select, #contributor-box select, select[name="c"], select[name="t"], select[name="mv"], select[name="gv[]"]');
+
+			modidToggle.addEventListener('change', function() {
+				const active = this.checked;
+				searchInput.name = active ? 'modid' : 'text';
+				otherFilters.forEach(el => {
+					el.disabled = active;
+					$(el).trigger('chosen:updated');
+				});
+			});
 		});
 
 		let fetchCursor = '{$fetchCursorJS}';
