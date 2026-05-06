@@ -235,4 +235,92 @@ switch($urlparts[0]) {
 		unset($r);
 
 		good(['data' => $result]);
+
+	default:
+		// /api/v2/mods/{modId}/releases[/{releaseId}|/latest]
+		$modId = filter_var($urlparts[0], FILTER_VALIDATE_INT);
+		if($modId === false) break;
+		if(!isset($urlparts[1]) || $urlparts[1] !== 'releases') break;
+
+		validateMethod('GET');
+
+		$releaseSegment = $urlparts[2] ?? null;
+
+		if($releaseSegment === null) {
+			// GET /api/v2/mods/{modId}/releases — list release IDs
+			$releases = $con->getAll(<<<SQL
+				SELECT r.releaseId
+				FROM modReleases r
+				LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
+				WHERE r.modId = ? AND rr.reason IS NULL
+				ORDER BY r.version DESC
+			SQL, [$modId]);
+
+			good(['data' => array_map(fn($r) => intval($r['releaseId']), $releases)]);
+		}
+
+		if($releaseSegment === 'latest') {
+			// GET /api/v2/mods/{modId}/releases/latest — latest non-retracted release
+			$release = $con->getRow(<<<SQL
+				SELECT r.releaseId, r.identifier, r.version, r.created,
+					f.fileId, f.name,
+					GROUP_CONCAT(cgv.gameVersion ORDER BY cgv.gameVersion DESC SEPARATOR ';') AS compatibleGameVersions
+				FROM modReleases r
+				LEFT JOIN files f ON f.assetId = r.assetId
+				LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
+				LEFT JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
+				WHERE r.modId = ? AND rr.reason IS NULL
+				GROUP BY r.releaseId
+				ORDER BY r.version DESC
+				LIMIT 1
+			SQL, [$modId]);
+
+			if(!$release) fail(HTTP_NOT_FOUND, ['reason' => 'No non-retracted release found.']);
+
+			good(['data' => [
+				'releaseId'  => intval($release['releaseId']),
+				'identifier' => $release['identifier'],
+				'version'    => formatSemanticVersion(intval($release['version'])),
+				'fileName'   => $release['name'],
+				'fileUrl'    => $release['fileId'] ? formatDownloadTrackingUrl($release) : null,
+				'compatibleGameVersions' => $release['compatibleGameVersions']
+					? array_map(fn($v) => formatSemanticVersion(intval($v)), explode(';', $release['compatibleGameVersions']))
+					: [],
+				'created'    => $release['created'],
+			]]);
+		}
+
+		// GET /api/v2/mods/{modId}/releases/{releaseId}
+		$releaseId = filter_var($releaseSegment, FILTER_VALIDATE_INT);
+		if($releaseId === false) break;
+
+		$release = $con->getRow(<<<SQL
+			SELECT r.releaseId, r.identifier, r.version, r.created,
+				f.fileId, f.name,
+				rr.reason AS retractionReason,
+				GROUP_CONCAT(cgv.gameVersion ORDER BY cgv.gameVersion DESC SEPARATOR ';') AS compatibleGameVersions
+			FROM modReleases r
+			LEFT JOIN files f ON f.assetId = r.assetId
+			LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
+			LEFT JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
+			WHERE r.releaseId = ? AND r.modId = ?
+			GROUP BY r.releaseId
+		SQL, [$releaseId, $modId]);
+
+		if(!$release) fail(HTTP_NOT_FOUND, ['reason' => 'Release not found.']);
+
+		$data = [
+			'releaseId'  => intval($release['releaseId']),
+			'identifier' => $release['identifier'],
+			'version'    => formatSemanticVersion(intval($release['version'])),
+			'fileName'   => $release['name'],
+			'fileUrl'    => $release['fileId'] ? formatDownloadTrackingUrl($release) : null,
+			'compatibleGameVersions' => $release['compatibleGameVersions']
+				? array_map(fn($v) => formatSemanticVersion(intval($v)), explode(';', $release['compatibleGameVersions']))
+				: [],
+			'created'    => $release['created'],
+		];
+		if($release['retractionReason']) $data['retractionReason'] = $release['retractionReason'];
+
+		good(['data' => $data]);
 }

@@ -134,8 +134,29 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 
 
 ### /api/v2/mods/{modid}/releases
-- `get`: Path arg `{modid}`
-	- `400`: Not implemented
+- `get`: Path arg `{modid}` (numeric)
+	- `200`: json array of non-retracted release IDs (ordered by version descending, empty if mod has no releases or does not exist):
+		```json
+		{"data": [456, 123, 89]}
+		```
+
+### /api/v2/mods/{modid}/releases/latest
+- `get`: Path arg `{modid}` (numeric)
+	- `404`: No non-retracted release found.
+	- `200`: json of the latest non-retracted release:
+		```json
+		{
+			"data": {
+				"releaseId": 456,
+				"identifier": "carrycapacity",
+				"version": "1.2.3",
+				"fileName": "carrycapacity-1.2.3.zip",
+				"fileUrl": "/download/789/carrycapacity-1.2.3.zip",
+				"compatibleGameVersions": ["1.20.7", "1.20.6"],
+				"created": "2025-01-15 12:00:00"
+			}
+		}
+		```
 
 ### /api/v2/mods/{modid}/releases/all
 - `get`: Path arg `{modid}`
@@ -144,9 +165,24 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 ### /api/v2/mods/{modid}/releases/{releaseid}
 - `get`
 	- Args:
-		- Path arg `{modid}`
-		- Path arg `{releaseid}`
-	- `400`: Not implemented
+		- Path arg `{modid}` (numeric)
+		- Path arg `{releaseid}` (numeric)
+	- `404`: Release not found.
+	- `200`: json of the release (same shape as /latest, plus `retractionReason` if retracted):
+		```json
+		{
+			"data": {
+				"releaseId": 456,
+				"identifier": "carrycapacity",
+				"version": "1.2.3",
+				"fileName": "carrycapacity-1.2.3.zip",
+				"fileUrl": "/download/789/carrycapacity-1.2.3.zip",
+				"compatibleGameVersions": ["1.20.7", "1.20.6"],
+				"created": "2025-01-15 12:00:00",
+				"retractionReason": "..."
+			}
+		}
+		```
 - `post` `auth` `at`
 	- Args:
 		- Path arg `{modid}`
