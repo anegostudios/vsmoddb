@@ -7,7 +7,7 @@ $fileId = intval($_GET['fileid'] ?? $urlparts[1] ?? 0);
 if($fileId === 0) showErrorPage(HTTP_BAD_REQUEST, 'Missing fileid.');
 
 $file = $con->getRow(<<<SQL
-	SELECT f.assetId, f.cdnPath, f.name, rr.reason AS retractionReason
+	SELECT f.assetId, f.cdnPath, f.name, r.modId, rr.reason AS retractionReason
 	FROM files f
 	LEFT JOIN modReleases r ON r.assetId = f.assetId
 	LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
@@ -27,7 +27,9 @@ if(!DB_READONLY) {
 		$con->execute('INSERT INTO fileDownloadTracking (fileId, ipAddress) VALUES (?, ?)', $identifier);
 
 		$con->execute('UPDATE files SET downloads = downloads + 1 WHERE fileId = ?', [$fileId]);
-		$con->execute('UPDATE mods  SET downloads = downloads + 1 WHERE modId = (SELECT r.modId FROM modReleases r WHERE r.assetId = ?)', [$file['assetId']]);
+		if($file['modId']) {
+			$con->execute('UPDATE mods SET downloads = downloads + 1 WHERE modId = ?', [$file['modId']]);
+		}
 
 		$con->completeTrans();
 	}
