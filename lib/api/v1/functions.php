@@ -44,10 +44,12 @@ function listMod($modid)
 	$rrows = $con->getAll(<<<SQL
 		select 
 			r.*, a.text,
+			f.fileId, f.name as fileName, f.cdnPath, f.downloads as fileDownloads,
 			GROUP_CONCAT(cgv.gameVersion SEPARATOR ';') as compatibleGameVersions
 		from 
 			modReleases r 
 		join assets a on a.assetId = r.assetId
+		left join files f on f.assetId = r.assetId
 		left join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
 		left join modReleaseRetractions rr on rr.releaseId = r.releaseId
 		where modId = ? AND rr.reason IS NULL
@@ -57,14 +59,13 @@ function listMod($modid)
 
 	$releases = array();
 	foreach ($rrows as $release) {
-		$file = $con->getRow("select * from files where assetId = ? limit 1", array($release['assetId']));
-
+		$file = ['cdnPath' => $release['cdnPath'], 'name' => $release['fileName']];
 		$releases[] = array(
 			"releaseid"  => intval($release['releaseId']),
-			"mainfile"   => empty($file) ? "" : formatCdnDownloadUrl($file),
-			"filename"   => $file['name'] ?? '',
-			"fileid"     => isset($file['fileId']) ? intval($file['fileId']) : null,
-			"downloads"  => empty($file) ? 0 : intval($file["downloads"]),
+			"mainfile"   => isset($release['fileId']) ? formatCdnDownloadUrl($file) : "",
+			"filename"   => $release['fileName'] ?? '',
+			"fileid"     => isset($release['fileId']) ? intval($release['fileId']) : null,
+			"downloads"  => isset($release['fileId']) ? intval($release['fileDownloads']) : 0,
 			"tags"       => array_map(fn($s) => formatSemanticVersion(intval($s)), explode(';', $release["compatibleGameVersions"])),
 			"modidstr"   => $release['identifier'],
 			"modversion" => formatSemanticVersion(intval($release['version'])),
@@ -291,9 +292,11 @@ function listOutOfDateMods($currentModVersions) {
 			r.version,
 			r.created,
 			r.assetId,
+			f.fileId, f.name as fileName, f.cdnPath, f.downloads as fileDownloads,
 			GROUP_CONCAT(cgv.gameVersion SEPARATOR ';') as compatibleGameVersions
 		from modReleases r
 		join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
+		left join files f on f.assetId = r.assetId
 		left join modReleaseRetractions rr on rr.releaseId = r.releaseId
 		where r.identifier in ($modIdStrParams) and rr.reason is null
 		group by r.releaseId
@@ -311,13 +314,13 @@ function listOutOfDateMods($currentModVersions) {
 
 		if($currentModVersions[$release['identifier']] >= $release['version'])  continue; // already has the latest version
 
-		$file = $con->getRow('select * from files where assetId = ? limit 1', [$release['assetId']]);
+		$file = ['cdnPath' => $release['cdnPath'], 'name' => $release['fileName']];
 		$outOfDateMods[$release['identifier']] = [
 			'releaseid'  => intval($release['releaseId']),
-			'mainfile'   => formatCdnDownloadUrl($file),
-			'filename'   => $file['name'] ?? "",
-			'fileid'     => $file['fileId'] ? intval($file['fileId']) : null,
-			'downloads'  => intval($file['downloads']),
+			'mainfile'   => isset($release['fileId']) ? formatCdnDownloadUrl($file) : "",
+			'filename'   => $release['fileName'] ?? "",
+			'fileid'     => isset($release['fileId']) ? intval($release['fileId']) : null,
+			'downloads'  => isset($release['fileId']) ? intval($release['fileDownloads']) : 0,
 			'tags'       => array_map(fn($s) => formatSemanticVersion(intval($s)), explode(';', $release["compatibleGameVersions"])),
 			'modidstr'   => $release['identifier'],
 			'modversion' => formatSemanticVersion(intval($release['version'])),
