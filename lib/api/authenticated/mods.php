@@ -39,7 +39,7 @@ switch($urlparts[1]) {
 					$responseTarget = ['conversationRoot' => null, 'responseDepth' => -1, 'userId' => 0];
 				}
 
-				$commentHtml = trim(sanitizeHtml(file_get_contents('php://input')));
+				$commentHtml = trimHtml(trim(sanitizeHtml(file_get_contents('php://input'))));
 				if(!$commentHtml)  fail(HTTP_BAD_REQUEST, ['reason' => 'Comment must not be empty.']);
 
 				$textLen = strlen($commentHtml);
@@ -115,7 +115,7 @@ switch($urlparts[1]) {
 		if(!canModerate(null, $user)) fail(HTTP_FORBIDDEN);
 
 		$reason = $_POST['reason'] ?? '';
-		$reason = trim(sanitizeHtml($reason));
+		$reason = trimHtml(trim(sanitizeHtml($reason)));
 		if(!$reason) fail(HTTP_BAD_REQUEST, ['error' => 'Reason must not be empty.']);
 
 		$modData = $con->getRow(<<<SQL
@@ -226,7 +226,7 @@ switch($urlparts[1]) {
 						// Moderators can overwrite retraction reasons.
 						if($prevData['retractedByModerator'] && !canModerate(null, $user))   fail(HTTP_BAD_REQUEST, ['reason' => 'This release is already retracted.']);
 
-						$reasonHtml = trim(sanitizeHtml($_POST['reason']));
+						$reasonHtml = trimHtml(trim(sanitizeHtml($_POST['reason'])));
 
 						if(empty(textContent($reasonHtml))) fail(HTTP_BAD_REQUEST, ['reason' => 'Missing reason.']);
 

@@ -21,7 +21,7 @@ switch($_SERVER['REQUEST_METHOD']) {
 		$wasModAction = $user['userId'] != $comment['userId'];
 		if($wasModAction && !canModerate(null, $user))  fail(HTTP_FORBIDDEN);
 
-		$commentHtml = trim(sanitizeHtml(file_get_contents('php://input')));
+		$commentHtml = trimHtml(trim(sanitizeHtml(file_get_contents('php://input'))));
 		if(!$commentHtml)  fail(HTTP_BAD_REQUEST, ['reason' => 'Comment must not be empty.']);
 
 		$textLen = strlen($commentHtml);
