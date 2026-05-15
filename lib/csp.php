@@ -75,15 +75,6 @@ function cspAllowTinyMceFull()
 	$_csp['font-src'] .= " $tinymce/skins/ui/oxide/fonts/tinymce-mobile.woff";
 }
 
-/** Call this one last, it overwrites all allowed style sources. */
-function cspAllowFotorama()
-{
-	global $_csp;
-	// Fotorama uses insertRule, which is blocked by unsafe-inline rules
-	//TODO(Rennorb): Replace fotorama. its literally a few lines of css.
-	$_csp['style-src-elem'] = "'self' https: 'unsafe-inline' 'unsafe-eval'";
-}
-
 function _cspEmitHeader()
 {
 	global $_csp, $_cspInlineHashes;

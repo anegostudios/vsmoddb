@@ -98,17 +98,41 @@
 				{/if}
 			</div>
 
-			<div class="imageslideshow fotorama" data-max-width="min(800px, 100%)" data-max-height="450"{if !empty($asset['trailerVideoUrl'])} data-width="800"{/if} data-autoplay="5000" data-nav="thumbs" data-allowfullscreen="true">
-				{if !empty($asset['trailerVideoUrl'])}
-					<a rel="nofollow" href="{$asset['trailerVideoUrl']}">Trailer Video</a>
+			{if !empty($files) || !empty($trailerEmbedUrl)}
+		<div class="imageslideshow" style="--gallery-w:{$galleryWidth}px; --gallery-h:{$galleryHeight}px">
+			<div class="gallery-viewport">
+			<div class="gallery-stage" style="width:{$galleryWidth}px; height:{$galleryHeight}px">
+				{if !empty($trailerEmbedUrl)}
+					<div class="gallery-slide"><iframe src="{$trailerEmbedUrl}" allowfullscreen loading="lazy"></iframe></div>
 				{/if}
 				{foreach from=$files item=file}
-					<img src="{$file['url']}">
+					<a href="{$file['url']}" target="_blank"><img src="{$file['url']}" loading="lazy"></a>
 				{/foreach}
-				{if empty($files) && empty($asset['trailerVideoUrl']) && !empty($asset['logoUrl'])}
-				<img src="{$asset['logoUrl']}">
+				{if empty($files) && empty($trailerEmbedUrl) && !empty($asset['logoUrl'])}
+					<img src="{$asset['logoUrl']}">
 				{/if}
 			</div>
+			<button class="gallery-fullscreen" title="Fullscreen"></button>
+			{if count($files) + (!empty($trailerEmbedUrl) ? 1 : 0) >= 2}
+			<button class="gallery-arr prev"></button>
+			<button class="gallery-arr next"></button>
+			{/if}
+			</div>
+			{if count($files) + (!empty($trailerEmbedUrl) ? 1 : 0) >= 2}
+			<div class="gallery-nav">
+				<div class="gallery-nav-shaft">
+					<div class="gallery-thumb-border" style="width:60px"></div>
+					{if !empty($trailerEmbedUrl)}
+					<button class="gallery-thumb" data-i="0"><div class="thumb-img thumb-video"><img src="{$trailerThumbUrl}" loading="lazy"></div></button>
+					{/if}
+					{foreach from=$files item=file name=thumbs}
+					<button class="gallery-thumb" data-i="{$file['thumbIndex']}"><div class="thumb-img"><img src="{$file['url']}" loading="lazy"></div></button>
+					{/foreach}
+				</div>
+			</div>
+			{/if}
+		</div>
+		{/if}
 
 			<dl class="infobox{if empty($asset['trailerVideoUrl']) && empty($files)} nomedia{/if}">
 				<dt>Tags:</dt>
@@ -329,9 +353,6 @@
 			});
 		});
 	</script>
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
-	<link nonce="{$cspNonce}" href="https://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.css" rel="stylesheet">
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/fotorama.js?v=2"></script>
 {/capture}
 
 {include file="footer"}

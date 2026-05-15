@@ -4,6 +4,7 @@
 /// <reference path="filedrop.ts" />
 /// <reference path="dialog.ts" />
 /// <reference path="spoiler.ts" />
+/// <reference path="gallery.ts" />
 /// <reference path="wysiwyg.ts" />
 /// <reference path="jquery.are-you-sure.js" />
 /// <reference path="comments.ts" />

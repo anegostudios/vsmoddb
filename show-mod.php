@@ -59,7 +59,7 @@ $teamMembers = $con->getAll(<<<SQL
 SQL, [$asset['modId']]);
 $view->assign('teamMembers', $teamMembers);
 
-$files = $con->getAll('SELECT * FROM files WHERE assetId = ? AND fileId NOT IN (?, ?) ORDER BY `order`', 
+$files = $con->getAll('SELECT f.*, ST_X(d.size) AS width, ST_Y(d.size) AS height FROM files f LEFT JOIN fileImageData d ON d.fileId = f.fileId WHERE f.assetId = ? AND f.fileId NOT IN (?, ?) ORDER BY f.`order`', 
 	[$assetId, $asset['cardLogoFileId'] ?? 0, $asset['embedLogoFileId'] ?? 0]);  /* sql cant compare against null */
 
 //NOTE(Rennorb): There was a time where we rescaled images for logos. We no longer do that, but in ~140 cases there are still two images for the logo: the actual logo image, and the original one that was uploaded.
@@ -93,6 +93,44 @@ foreach ($files as &$file) {
 	$file['created'] = date('M jS Y, H:i:s', strtotime($file['created']));
 	$file['ext'] = substr($file['name'], strrpos($file['name'], '.')+1); // no clue why pathinfo doesnt work here
 	$file['url'] = formatCdnUrl($file);
+}
+unset($file);
+
+// Compute gallery stage dimensions from image sizes (capped at 800x450).
+$galleryWidth = 0;
+$galleryHeight = 0;
+foreach ($files as $file) {
+	if (!empty($file['width']) && !empty($file['height'])) {
+		$w = min((int)$file['width'], 800);
+		$h = (int)round($w * (int)$file['height'] / (int)$file['width']);
+		if ($w > $galleryWidth) $galleryWidth = $w;
+		if ($h > $galleryHeight) $galleryHeight = $h;
+	}
+}
+$galleryWidth = $galleryWidth ?: 800;
+$galleryHeight = $galleryHeight ?: 450;
+$galleryWidth = min($galleryWidth, 800);
+$galleryHeight = min($galleryHeight, 450);
+$view->assign('galleryWidth', $galleryWidth);
+$view->assign('galleryHeight', $galleryHeight);
+
+$trailerEmbedUrl = null;
+$trailerThumbUrl = null;
+if (!empty($asset['trailerVideoUrl'])) {
+	if (preg_match('#youtu(?:be\.\w+/.+?v=|\.be/)([\w-]+)#', $asset['trailerVideoUrl'], $m)) {
+		$trailerEmbedUrl = "https://www.youtube-nocookie.com/embed/{$m[1]}";
+		$trailerThumbUrl = "https://img.youtube.com/vi/{$m[1]}/mqdefault.jpg";
+	} elseif (preg_match('#vimeo\.com/(\d+)#', $asset['trailerVideoUrl'], $m)) {
+		$trailerEmbedUrl = "https://player.vimeo.com/video/{$m[1]}";
+		$trailerThumbUrl = "https://vumbnail.com/{$m[1]}.jpg";
+	}
+}
+$view->assign('trailerEmbedUrl', $trailerEmbedUrl);
+$view->assign('trailerThumbUrl', $trailerThumbUrl);
+
+$thumbOffset = !empty($trailerEmbedUrl) ? 1 : 0;
+foreach ($files as &$file) {
+	$file['thumbIndex'] = $thumbOffset++;
 }
 unset($file);
 
@@ -301,7 +339,6 @@ cspAllowTinyMceComment();
 cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/api/v2/mods/{$asset['modId']}/ {$_SERVER['HTTP_HOST']}/api/v2/comments/ {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/ {$_SERVER['HTTP_HOST']}/api/v2/tags/by-name/ {$_SERVER['HTTP_HOST']}/api/v2/notifications/settings/followed-mods/{$asset['modId']} {$_SERVER['HTTP_HOST']}/api/v2/notifications/settings/followed-mods/{$asset['modId']}/unfollow"); // create / edit comments, tag search, following //TODO(Rennorb): cleanup follow url
 cspPushAllowedInlineHandlerHash('sha256-ro1cG9y3w13M1KSgaV9WpZDq3jSUi/S0hNEJ9yw3Uw4='); // location.hash = 'tab-description'
 cspPushAllowedInlineHandlerHash('sha256-94NvHZFeRkm6w/lzsqG4nAxFmD5kBzGoK6eIsReP3v4='); // location.hash = 'tab-files'
-cspAllowFotorama();
 
 $view->assign('pagetitle', "{$asset['name']} - ");
 
