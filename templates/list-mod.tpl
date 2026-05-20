@@ -113,7 +113,6 @@
 		<p>List of mods, ordered by {$sortOptions[$selectedParams['order'][0]][$selectedParams['order'][1] === 'asc' ? 2 : 1]}</p>
 		<div class="mods">
 			{foreach from=$mods item=mod}{include file="list-mod-entry"}{/foreach}
-			{if count($mods) < 5 /* @hack some spacing so the mods dont blow out */}<span></span><span></span><span></span><span></span><span></span>{/if}
 		</div>
 		{if $fetchCursorJS}<div id="scroll-trigger" style="text-align: center; margin-top: 1em;">Loading More...</div>{/if}
 	{else}

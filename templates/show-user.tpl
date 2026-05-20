@@ -23,7 +23,6 @@
 
 	<div class="mods">
 		{foreach from=$mods item=mod}{include file="list-mod-entry"}{/foreach}
-		{if count($mods) < 5 /* @hack some spacing so the mods dont blow out */}<span></span><span></span><span></span><span></span><span></span>{/if}
 	</div>
 {/if}
 
