@@ -202,7 +202,7 @@ function bunny_pullLogsAndUpdateDownloadNumbers($date)
 		if($statuscode != 200) continue;
 
 		$url = parse_url($parts[5]);
-		if(!startsWith($url['query'], '?dl=')) continue;
+		if(!str_starts_with($url['query'] ?? '', '?dl=')) continue;
 		
 		$cdnPath = substr($url['path'], 1);
 		$time = intval($parts[2]) / 1000;

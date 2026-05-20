@@ -138,11 +138,11 @@ function listMod($modid)
 
 function parseVersion($rawValue)
 {
-	return startsWith($rawValue, '-') ? intval(substr($rawValue, 1)) : compileSemanticVersion($rawValue);
+	return str_starts_with($rawValue, '-') ? intval(substr($rawValue, 1)) : compileSemanticVersion($rawValue);
 }
 function parsePrimaryVersion($rawValue)
 {
-	return startsWith($rawValue, '-') ? intval(substr($rawValue, 1)) & VERSION_MASK_PRIMARY : compilePrimaryVersion($rawValue);
+	return str_starts_with($rawValue, '-') ? intval(substr($rawValue, 1)) & VERSION_MASK_PRIMARY : compilePrimaryVersion($rawValue);
 }
 
 function listMods()

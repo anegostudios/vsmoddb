@@ -74,7 +74,7 @@ $files = $con->getAll('SELECT * FROM files WHERE assetId = ? AND fileId NOT IN (
 */
 if($asset['hasLegacyLogo']) {
 	splitOffExtension($asset['logoUrl'], $base, $ext);
-	if(endsWith($base, '_480_320')) {
+	if(str_ends_with($base, '_480_320')) {
 		$legacyLogoPath = substr($base, 0, strlen($base) - 8).'.'.$ext;
 		foreach ($files as $k => $file) {
 			if($file['cdnPath'] === $legacyLogoPath) {

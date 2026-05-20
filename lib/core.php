@@ -56,16 +56,6 @@ function dump_die($var)
 
 
 
-function endsWith($string, $part) //TODO(Rennorb)  @perf: use str_ends_with() instead, if we can get a newer version of php
-{
-	return mb_strlen($string) >= mb_strlen($part) && mb_substr($string, mb_strlen($string) - mb_strlen($part)) == $part;
-}
-
-function startsWith($string, $part) //TODO(Rennorb)  @perf: use str_starts_with() instead, if we can get a newer version of php
-{
-	return mb_substr($string, 0, mb_strlen($part)) == $part;
-}
-
 function contains($string, $part)
 {
 	return mb_strstr($string, $part) !== false;
@@ -345,7 +335,7 @@ function stripQueryParam($query, $paramname)
 {
 	$params = explode('&', $query);
 	$s = $paramname.'=';
-	$params = array_filter($params, fn($p) => !startsWith($p, $s));
+	$params = array_filter($params, fn($p) => !str_starts_with($p, $s));
 	return implode('&', $params);
 }
 
@@ -524,7 +514,7 @@ function parseSqlDateTime($str)
 function formatDateWhichMightBeForever($date, $format = "M jS Y, H:i:s", $forevertext = "forever")
 {
 	$year = $date->format("Y"); // unfortunately no way to get the year directly.
-	return startsWith($year, "9999") ? $forevertext : $date->format($format);
+	return str_starts_with($year, "9999") ? $forevertext : $date->format($format);
 }
 
 /**
@@ -829,7 +819,7 @@ function _inflateLink($link, $wrapUnmatchedLink)
 
 	$urlParts = parse_url($link);
 	$path = $urlParts['path'] ?? '';
-	$relAttr = empty($urlParts['host']) || endsWith($urlParts['host'], 'vintagestory.at') ? '' : ' rel="nofollow external"';
+	$relAttr = empty($urlParts['host']) || str_ends_with($urlParts['host'], 'vintagestory.at') ? '' : ' rel="nofollow external"';
 
 	$lastDot = strrpos($path, '.');
 	if($lastDot !== false && $lastDot + 1 < strlen($path)) {

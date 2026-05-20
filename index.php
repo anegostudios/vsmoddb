@@ -24,7 +24,7 @@ if(empty($urlpath))  $urlpath = 'home';
 
 // @security: Filter out directory traversal segments.
 // Just discard them completely, they are not used in any actual application.
-$urlparts = array_filter(explode('/', $urlpath), fn($s) => !startsWith($s, '.'));
+$urlparts = array_filter(explode('/', $urlpath), fn($s) => !str_starts_with($s, '.'));
 
 if($urlparts[0] === 'api') { // :ReservedUrlPrefixes
 	array_shift($urlparts);
