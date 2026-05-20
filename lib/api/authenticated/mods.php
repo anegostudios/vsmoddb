@@ -46,7 +46,7 @@ switch($urlparts[1]) {
 				if($textLen > 65535) { // TEXT column max length in comments.text
 					$sizeKb = floor($textLen / 1024);
 					$reason = "Excessive size ({$sizeKb}KB).";
-					if(contains($commentHtml, 'src="data:image')) $reason .= " You cannot paste large images directly. If you need a large image, upload it to an external site and link to that.";
+					if(str_contains($commentHtml, 'src="data:image')) $reason .= " You cannot paste large images directly. If you need a large image, upload it to an external site and link to that.";
 					fail(HTTP_BAD_REQUEST, ['reason' => $reason]);
 				}
 

@@ -263,7 +263,7 @@ final class ApiV1Test extends TestCase {
 		set_error_handler(function($errno, $errstr) {
 			// Suppress that error, its to complicated to "properly" avoid it.
 			// Would need to isolate the cache control header somehow, and thats not worth it.
-			return contains($errstr, 'Cannot modify header information');
+			return str_contains($errstr, 'Cannot modify header information');
 		}, E_WARNING);
 		$data = apiGet('changelogs');
 		restore_error_handler();

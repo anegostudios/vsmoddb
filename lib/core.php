@@ -66,11 +66,6 @@ function startsWith($string, $part) //TODO(Rennorb)  @perf: use str_starts_with(
 	return mb_substr($string, 0, mb_strlen($part)) == $part;
 }
 
-function contains($string, $part)
-{
-	return mb_strstr($string, $part) !== false;
-}
-
 /** Splits a string at a separator, but at most once.
  * If the separator is not found the left string contains the whole input, and the right string is empty.
  * @param string $string

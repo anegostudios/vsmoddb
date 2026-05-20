@@ -2,7 +2,7 @@
 
 function goBackOrRootFallback()
 {
-	forceRedirect(!contains($_SERVER['HTTP_REFERER'] ?? '', 'notification/') ? $_SERVER['HTTP_REFERER'] : '/');
+	forceRedirect(!str_contains($_SERVER['HTTP_REFERER'] ?? '', 'notification/') ? $_SERVER['HTTP_REFERER'] : '/');
 }
 
 if (empty($user)) {

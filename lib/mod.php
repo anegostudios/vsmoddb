@@ -166,7 +166,7 @@ function updateModTags($modId, $oldTags, $newTagsIds)
 		}
 
 		if ($addedNamesFolded) {
-			$s = contains($addedNamesFolded, ',') ? 's' : '';
+			$s = str_contains($addedNamesFolded, ',') ? 's' : '';
 			$changes[] = "Added tag{$s} '$addedNamesFolded'.";
 		}
 	}

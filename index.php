@@ -10,7 +10,7 @@ include("lib/config.php");
 if(CDN === 'none') include("lib/core.php");
 
 if (!empty($_SERVER['HTTP_ACCEPT']) && $_SERVER['REQUEST_METHOD'] == "GET") {
-	if(!strstr($_SERVER['HTTP_ACCEPT'], "text/html") && !strstr($_SERVER['HTTP_ACCEPT'], "application/json") && $_SERVER['HTTP_ACCEPT'] != "*/*") exit("not an image");
+	if(!str_contains($_SERVER['HTTP_ACCEPT'] ?? '', "text/html") && !str_contains($_SERVER['HTTP_ACCEPT'] ?? '', "application/json") && ($_SERVER['HTTP_ACCEPT'] ?? '') != "*/*") exit("not an image");
 }
 
 // This is the more desirable point to initialize.

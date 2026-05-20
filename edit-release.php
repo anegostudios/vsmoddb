@@ -140,7 +140,7 @@ else if(!empty($_POST['save'])) {
 		if($textLen > 65535) { // TEXT column max length in assets.text
 			$sizeKb = floor($textLen / 1024);
 			$reason = "Excessive size ({$sizeKb}KB).";
-			if(contains($newData['text'], 'src="data:image')) $reason .= " You cannot paste large images directly. If you need a large image, upload it to an external site and link to that.";
+			if(str_contains($newData['text'], 'src="data:image')) $reason .= " You cannot paste large images directly. If you need a large image, upload it to an external site and link to that.";
 			addMessage(MSG_CLASS_ERROR, $reason);
 		}
 	}

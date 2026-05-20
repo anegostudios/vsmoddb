@@ -17,7 +17,7 @@ function _define_default($name, $default)
 
 // If you want to set up a local installation, I recommend
 // adding "127.0.0.1	mods.vintagestory.stage"  to your hosts file
-if (strstr($_SERVER["SERVER_NAME"], "mods.vintagestory.stage")) {
+if (str_contains($_SERVER["SERVER_NAME"], "mods.vintagestory.stage")) {
 	$filepath = $config["basepath"] . "lib/config.dev.php";
 	if (file_exists($filepath)) {
 		include($filepath);
