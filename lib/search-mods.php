@@ -140,10 +140,9 @@ function validateModSearchInputs(&$outParams, $trimText)
 		$outParams['filters']['majorversion'] = $majorversion;
 	}
 
-	//TODO(Rennorb) @cleanup: these limits are arbitrary and should probably be outside of this function.
 	if(!empty($_REQUEST['limit'])) {
 		$limit = intval($_REQUEST['limit']);
-		$clampedLimit = max(1, min($limit, 20));
+		$clampedLimit = max(1, min($limit, MOD_SEARCH_MAX_LIMIT));
 		if($limit !== $clampedLimit) {
 			return "Invalid entry limit: '{$_REQUEST['limit']}'";
 		}

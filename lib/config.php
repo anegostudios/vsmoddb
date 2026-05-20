@@ -36,6 +36,7 @@ if (strstr($_SERVER["SERVER_NAME"], "mods.vintagestory.stage")) {
 
 	_define_default("MOD_SEARCH_INITIAL_RESULTS", 10);
 	_define_default("MOD_SEARCH_PAGE_SIZE", 10);
+	_define_default("MOD_SEARCH_MAX_LIMIT", 20);
 
 	_define_default("DOWNLOAD_DEDUPLICATION_TIMESPAN", 60); // seconds
 } else {
@@ -53,6 +54,7 @@ if (strstr($_SERVER["SERVER_NAME"], "mods.vintagestory.stage")) {
 
 	_define_default("MOD_SEARCH_INITIAL_RESULTS", 200);
 	_define_default("MOD_SEARCH_PAGE_SIZE", 200);
+	_define_default("MOD_SEARCH_MAX_LIMIT", 20);
 
 	_define_default("DOWNLOAD_DEDUPLICATION_TIMESPAN", 24*3600); // seconds
 }
