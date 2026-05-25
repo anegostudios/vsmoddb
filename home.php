@@ -46,10 +46,9 @@ if (!empty($user)) {
 			JOIN users u ON u.userId = a.createdByUserId
 			JOIN userFollowedMods f ON f.modId = m.modId AND f.userId = ?
 			LEFT JOIN files AS logo ON logo.fileId = m.cardLogoFileId
-			LEFT JOIN modReleases rd ON rd.modId = m.modId
+			LEFT JOIN modReleases rd ON rd.releaseId = (SELECT releaseId FROM modReleases WHERE modId = m.modId ORDER BY created DESC LIMIT 1)
 		WHERE
 			a.statusId = ".STATUS_RELEASED."
-			AND rd.created = (select max(created) from modReleases r where r.modId = m.modId)
 		ORDER BY
 			releaseDate DESC
 	", [$user['userId']]);
