@@ -144,6 +144,7 @@ function submitForm(returntolist) {
 
 		if (!$(this).val()) {
 			$(this).addClass("bg-error");
+			$(this).next(".chosen-container").find(".chosen-single,.chosen-choices").css("background", "#f6d2ca");
 			good = false;
 		}
 	});

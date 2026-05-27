@@ -70,7 +70,7 @@ else { // New mod
 		'modId'           => 0,
 		'assetTypeId'     => ASSETTYPE_MOD,
 		'statusId'        => STATUS_DRAFT,
-		'category'        => CATEGORY_GAME_MOD,
+		'category'        => null,
 		'side'            => 'both',
 		'name'            => '',
 		'summary'         => '',
@@ -149,8 +149,8 @@ else if(!empty($_POST['save'])) {
 	}
 
 	$mod['category'] = intval($_POST['category']);
-	if(!in_array($mod['category'], array_keys($modCategories), true)) {
-		addMessage(MSG_CLASS_WARN, "The new mod category is not valid and has been reset.");
+	if($_POST['category'] === '' || !in_array($mod['category'], array_keys($modCategories), true)) {
+		addMessage(MSG_CLASS_WARN, "The mod category is not valid.");
 		$mod['category'] = $oldModData['category'];
 	}
 
