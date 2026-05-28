@@ -106,7 +106,7 @@
 					<div class="gallery-slide"><iframe src="{$trailerEmbedUrl}" allowfullscreen loading="lazy"></iframe></div>
 				{/if}
 				{foreach from=$files item=file}
-					<a href="{$file['url']}" target="_blank"><img src="{$file['url']}" loading="lazy"></a>
+					<a href="{$file['url']}"><img src="{$file['url']}" loading="lazy"></a>
 				{/foreach}
 				{if empty($files) && empty($trailerEmbedUrl) && !empty($asset['logoUrl'])}
 					<img src="{$asset['logoUrl']}">
@@ -351,6 +351,8 @@
 					R.addMessage(MSG_CLASS_ERROR, 'Failed to (un-)follow mod' + (d.reason ? (': '+d.reason) : '.'), true)
 				});
 			});
+
+			initGallery();
 		});
 	</script>
 {/capture}

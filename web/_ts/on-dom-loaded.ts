@@ -24,6 +24,4 @@ R.onDOMLoaded(function() {
 	}
 
 	attachSpoilerToggle($('.spoiler-toggle'));
-
-	initGallery();
 });

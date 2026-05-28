@@ -96,21 +96,23 @@ foreach ($files as &$file) {
 }
 unset($file);
 
-// Compute gallery stage dimensions from image sizes (capped at 800x450).
+// Compute gallery stage dimensions: shrink-wrap to largest image within 800x450 bounds.
 $galleryWidth = 0;
 $galleryHeight = 0;
 foreach ($files as $file) {
 	if (!empty($file['width']) && !empty($file['height'])) {
 		$w = min((int)$file['width'], 800);
 		$h = (int)round($w * (int)$file['height'] / (int)$file['width']);
+		if ($h > 450) {
+			$w = (int)round($w * 450 / $h);
+			$h = 450;
+		}
 		if ($w > $galleryWidth) $galleryWidth = $w;
 		if ($h > $galleryHeight) $galleryHeight = $h;
 	}
 }
 $galleryWidth = $galleryWidth ?: 800;
 $galleryHeight = $galleryHeight ?: 450;
-$galleryWidth = min($galleryWidth, 800);
-$galleryHeight = min($galleryHeight, 450);
 $view->assign('galleryWidth', $galleryWidth);
 $view->assign('galleryHeight', $galleryHeight);
 
