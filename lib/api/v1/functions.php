@@ -164,9 +164,17 @@ function listMods()
 	}
 
 	if (!empty($_GET["text"])) {
-		$wheresql[] = "(asset.name like ? or asset.text like ?)";
-		$wherevalues[] = "%" . escapeStringForLikeQuery($_GET["text"]) . "%";
-		$wherevalues[] = "%" . escapeStringForLikeQuery($_GET["text"]) . "%";
+		$text = $_GET["text"];
+		if(strlen($text) >= 3) {
+			$ftTerm = '+'.preg_replace('/[+\-><()~*"@]+/', ' ', $text).'*';
+			$wheresql[] = "(MATCH(asset.name) AGAINST(? IN BOOLEAN MODE) OR MATCH(`mod`.summary, `mod`.descriptionSearchable) AGAINST(? IN BOOLEAN MODE))";
+			$wherevalues[] = $ftTerm;
+			$wherevalues[] = $ftTerm;
+		} else {
+			$wheresql[] = "(asset.name like ? or `mod`.descriptionSearchable like ?)";
+			$wherevalues[] = "%" . escapeStringForLikeQuery($text) . "%";
+			$wherevalues[] = "%" . escapeStringForLikeQuery($text) . "%";
+		}
 	}
 
 	if (!empty($_GET["tagids"])) {
