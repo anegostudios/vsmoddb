@@ -378,8 +378,13 @@ function queryModSearch($searchParams)
 
 	$currentUserId = $user['userId'] ?? 0;
 
+	// :ConditionalDedup — base joins (users, status, files, followedMods) all hit PK/UNIQUE and cannot produce
+	// duplicates. Only filter joins (tags IN, gameversions IN, type via releases) can multiply rows.
+	$dedup = $joinClauses ? 'DISTINCT' : '';
+	$groupBy = $joinClauses ? 'GROUP BY m.modId' : '';
+
 	return $con->getAll("
-		SELECT DISTINCT
+		SELECT $dedup
 			$matchScoreSelect
 			a.createdByUserId,
 			a.name,
@@ -399,7 +404,7 @@ function queryModSearch($searchParams)
 		LEFT JOIN files l ON l.fileId = m.cardLogoFileId
 		$joinClauses
 		$whereClauses
-		GROUP BY m.modId
+		$groupBy
 		ORDER BY $orderBy
 		$limitClause
 	", $sqlParams);
