@@ -83,18 +83,18 @@
 		if(fms) fms.addEventListener('change', e => {
 			const trEl = e.target.parentElement.parentElement.parentElement;
 			const targetModId = trEl.dataset.modid;
-			const oldFlags = parseInt(trEl.dataset.settings);
+			const oldFlags = parseInt(trEl.dataset.flags);
 			const targetBitMask = 1 << parseInt(e.target.dataset.bit);
 			const targetBitState = e.target.checked;
 
 			const newFlags = targetBitState ? (oldFlags | targetBitMask) : (oldFlags & ~targetBitMask);
-			trEl.dataset.settings = newFlags;
+			trEl.dataset.flags = newFlags;
 
 			const xhr = $.post('/api/v2/notifications/settings/followed-mods/'+targetModId, { 'new': newFlags })
 				.fail(jqXHR => {
 					e.target.checked = !targetBitState; // reset setting on error
-					const oldFlags = parseInt(trEl.dataset.settings); // can't reuse outer oldSetting, other bits might have changed in the meantime
-					trEl.dataset.settings = !targetBitState ? (oldFlags | targetBitMask) : (oldFlags & ~targetBitMask);
+					const oldFlags = parseInt(trEl.dataset.flags); // can't reuse outer oldSetting, other bits might have changed in the meantime
+					trEl.dataset.flags = !targetBitState ? (oldFlags | targetBitMask) : (oldFlags & ~targetBitMask);
 				});
 			R.attachDefaultFailHandler(xhr, 'Failed to change settings');
 		});

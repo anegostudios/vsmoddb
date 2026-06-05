@@ -229,7 +229,7 @@
 						box.checked = R.compileSemanticVersion(box.value) >= file.gameversiondep;
 						if(box.checked) c++;
 					}
-					labelEl.textContent = `${c} Versions${c !== 1 ? 's' : ''} Selected`;
+					labelEl.textContent = `${c} Version${c !== 1 ? 's' : ''} Selected`;
 					R.addMessage(MSG_CLASS_OK, `Automatically selected ${c} compatible game version${c !== 1 ? 's' : ''}.`, false);
 				}
 			}
