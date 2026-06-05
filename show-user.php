@@ -16,7 +16,7 @@ if (empty($userHash) || empty($shownUser = getUserByHash($userHash, $con))) {
 $sqlWhereExt = (isset($user) && $shownUser['userId'] == $user['userId']) || canModerate($shownUser, $user) ? '' : ' and a.statusId = 2'; // show drafts if owner or mod
 $userMods = $con->getAll("
 	SELECT
-		a.*,
+		a.assetId, a.name, a.createdByUserId, a.created, a.statusId,
 		m.*,
 		logo.cdnPath AS logoCdnPath,
 		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
@@ -34,7 +34,6 @@ $userMods = $con->getAll("
 ", array($shownUser['userId'], $shownUser['userId']));
 
 foreach ($userMods as &$mod) {
-	unset($mod['text']);
 	$mod['tags'] = [];
 	$mod['from'] = $shownUser['name'];
 	$mod['dbPath'] = formatModPath($mod);
