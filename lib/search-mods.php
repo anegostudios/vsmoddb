@@ -378,8 +378,7 @@ function queryModSearch($searchParams)
 
 	$currentUserId = $user['userId'] ?? 0;
 
-	// :ConditionalDedup — base joins (users, status, files, followedMods) all hit PK/UNIQUE and cannot produce
-	// duplicates. Only filter joins (tags IN, gameversions IN, type via releases) can multiply rows.
+	// Only filter joins (tags, gameversions, type) can multiply rows; base joins all hit PK/UNIQUE.
 	$dedup = $joinClauses ? 'DISTINCT' : '';
 	$groupBy = $joinClauses ? 'GROUP BY m.modId' : '';
 
