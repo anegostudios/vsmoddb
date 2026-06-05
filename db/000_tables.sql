@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS `assets` (
   `lastModified`    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`assetId`),
   INDEX `createdByUserId` (`createdByUserId`),
+  FULLTEXT INDEX `ft_assets_name` (`name`),
   CONSTRAINT `FK_assets_createdByUserId` FOREIGN KEY (`createdByUserId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT `FK_assets_editedByUserId` FOREIGN KEY (`editedByUserId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT
 )
@@ -219,6 +220,7 @@ CREATE TABLE IF NOT EXISTS `mods` (
   INDEX `trendingpoints_id` (`trendingPoints`, `modId`),
   INDEX `lastreleased_id` (`lastReleased`, `modId`),
   INDEX `downloads_id` (`downloads`, `modId`),
+  FULLTEXT INDEX `ft_mods_search` (`summary`, `descriptionSearchable`),
   CONSTRAINT `FK_mods_assetId` FOREIGN KEY (`assetId`) REFERENCES `assets`(`assetId`) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT `FK_mods_cardLogoFileId` FOREIGN KEY (`cardLogoFileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL,
   CONSTRAINT `FK_mods_embedLogoFileId` FOREIGN KEY (`embedLogoFileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE SET NULL

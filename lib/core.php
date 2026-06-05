@@ -604,6 +604,45 @@ function escapeStringForLikeQuery($str)
 	return str_replace(['_', '%'], ['\_', '\%'], $str);
 }
 
+/** Converts a user search string to a FULLTEXT boolean mode expression.
+ * Preserves user-provided +, - and "quotes" for explicit inclusion/exclusion.
+ * Appends * to unquoted terms for prefix matching.
+ * Each unquoted word without an explicit operator gets + (require).
+ * Requires ft_min_word_len=3 (MariaDB default) for terms to match.
+ * @param string $input Raw user search input.
+ * @return string Boolean mode expression.
+ */
+function fulltextBooleanTerm($input)
+{
+	$input = trim($input);
+	if(!$input) return '';
+
+	// Pass through quoted sections unchanged (user wants exact phrase)
+	// Split on quotes, process unquoted parts
+	$parts = preg_split('/("[^"]*")/', $input, -1, PREG_SPLIT_DELIM_CAPTURE);
+	$result = '';
+
+	foreach($parts as $part) {
+		if($part && $part[0] === '"') {
+			// Quoted phrase — pass through as-is (boolean mode handles it)
+			$result .= $part.' ';
+		} else {
+			// Unquoted words — each gets +word*
+			$words = preg_split('/\s+/', trim($part), -1, PREG_SPLIT_NO_EMPTY);
+			foreach($words as $word) {
+				// Preserve user operators at start: +, -
+				if($word[0] === '+' || $word[0] === '-') {
+					$result .= $word.'* ';
+				} else {
+					$result .= '+'.$word.'* ';
+				}
+			}
+		}
+	}
+
+	return trim($result);
+}
+
 
 /** Inflates links and creates spoiler elements.
  * @param string $html

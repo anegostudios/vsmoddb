@@ -242,10 +242,11 @@ function queryModSearch($searchParams)
 
 				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
 				if(strlen($value) >= 3) {
-					$ftTerm = '+'.preg_replace('/[+\-><()~*"@]+/', ' ', $value).'*';
+					$ftTerm = fulltextBooleanTerm($value);
 					$whereClauses .= '(MATCH(a.name) AGAINST(? IN BOOLEAN MODE) OR MATCH(m.summary, m.descriptionSearchable) AGAINST(? IN BOOLEAN MODE))';
 					array_push($sqlParams, $ftTerm, $ftTerm);
 				} else {
+					// Below ft_min_word_len (default 3), FULLTEXT won't match. Fall back to LIKE.
 					$whereClauses .= '(a.name LIKE ? OR m.summary LIKE ? OR m.descriptionSearchable LIKE ?)';
 					array_push($sqlParams, $v, $v, $v);
 				}
