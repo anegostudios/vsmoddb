@@ -313,7 +313,8 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   `recordId`       INT      NOT NULL,
   `created`        DATETIME NOT NULL DEFAULT NOW(),
   PRIMARY KEY (`notificationId`),
-  INDEX `userid` (`userId`),
+  INDEX `userid_read_created` (`userId`, `read`, `created`),
+  INDEX `kind_recordid` (`kind`, `recordId`),
   CONSTRAINT `FK_notifications_userId` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE CASCADE
 )
 ENGINE = InnoDB;
