@@ -59,7 +59,7 @@ else if(isset($_POST['submit']) && $_POST['submit'] == 'redeem') {
 		$con->startTrans();
 
 		$con->execute('UPDATE users SET bannedUntil = NOW() WHERE userId = ?', [$targetUser['userId']]);
-		$con->execute('UPDATE moderationRecords SET until = NOW() WHERE kind = '.MODACTION_KIND_BAN.' AND until > NOW()');
+		$con->execute('UPDATE moderationRecords SET until = NOW() WHERE kind = '.MODACTION_KIND_BAN.' AND until > NOW() AND targetUserId = ?', [$targetUser['userId']]);
 		logModeratorAction($targetUser['userId'], $user['userId'], MODACTION_KIND_REDEEM, $targetUser['userId'], SQL_DATE_FOREVER, $reason);
 
 		$con->completeTrans();
