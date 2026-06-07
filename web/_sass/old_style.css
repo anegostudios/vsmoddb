@@ -400,7 +400,6 @@ body.opaque-desc .mod .moddesc {
 	position: relative;
 	display: flex;
 	overflow-x: auto;
-	overflow-y: hidden;
 	scroll-snap-type: x mandatory;
 	scroll-behavior: smooth;
 	max-width: 100%;
@@ -412,6 +411,7 @@ body.opaque-desc .mod .moddesc {
 
 .gallery-viewport > .gallery-stage > * {
 	flex: 0 0 100%;
+	height: 100%;
 	scroll-snap-align: start;
 	scroll-snap-stop: always;
 }
@@ -421,6 +421,7 @@ body.opaque-desc .mod .moddesc {
 }
 
 .gallery-viewport > .gallery-stage img {
+	display: block;
 	width: 100%;
 	height: 100%;
 	object-fit: contain;

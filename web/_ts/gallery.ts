@@ -65,8 +65,13 @@ function initGallery(): void {
 		}
 	}
 
+	const storageKey = 'gallery-' + location.pathname;
+
+	let isNavigating = false;
 	function goTo(idx: number): void {
 		current = idx;
+		isNavigating = true;
+		sessionStorage.setItem(storageKey, String(idx));
 		updateBorder();
 		updateArrows();
 		slides[idx].scrollIntoView({behavior: 'smooth', block: 'nearest', inline: 'start'});
@@ -131,7 +136,10 @@ function initGallery(): void {
 	});
 
 	// Sync on scroll end
+	let isAutoScrolling = false; // set for any programmatic scroll that should not stop autoplay (autoplay tick + restoration)
 	stage.addEventListener('scrollend', () => {
+		if(isAutoScrolling) { isAutoScrolling = false; return; }
+		if(isNavigating) { isNavigating = false; return; }
 		userInteracted = true;
 		const idx = Math.round(stage.scrollLeft / stage.offsetWidth);
 		if (idx !== current) { current = idx; updateBorder(); updateArrows(); }
@@ -140,9 +148,22 @@ function initGallery(): void {
 	// Auto-play: advance every 5s until user interacts
 	const autoplay = setInterval(() => {
 		if (userInteracted) { clearInterval(autoplay); return; }
+		isAutoScrolling = true;
 		goTo((current + 1) % slides.length);
 	}, 5000);
 
-	// Initial state
+	// Initial state — restore from sessionStorage (scroll-snap resets scrollLeft on reload)
+	const saved = sessionStorage.getItem(storageKey);
+	if(saved) {
+		const idx = parseInt(saved, 10);
+		if(idx > 0 && idx < slides.length) {
+			current = idx;
+			isAutoScrolling = true;
+			stage.style.scrollBehavior = 'auto';
+			slides[idx].scrollIntoView({block: 'nearest', inline: 'start'});
+			stage.style.scrollBehavior = '';
+		}
+	}
+	updateBorder();
 	updateArrows();
 }
