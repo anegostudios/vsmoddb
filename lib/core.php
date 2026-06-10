@@ -771,20 +771,16 @@ function _isVisuallyEmpty($node)
  */
 function inflateLinks($html)
 {
-	$doc = new DOMDocument();
-	$doc->recover = true;
-	$doc->strictErrorChecking = false;
-	// @hack: The parser realy doesnt like having multiple root elements, so we first synthesize one and then strip it from the result...
-	//  :WrapUnwrapForDomParser
-	//TODO(Rennorb): Update to php 8 so we can use the proper htmldom parser with html5, which should get rid of this reencoding requirement here.
-	$doc->loadHTML('<body>'.mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8').'</body>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-	_inflateWalker($doc);
-	$result = $doc->saveHTML();
-	$result = $result ? substr($result, 6, strlen($result) - 1 - 6 - 7) : ''; // :WrapUnwrapForDomParser
-	return $result;
+	$doc = \Dom\HTMLDocument::createFromString('<body>'.$html.'</body>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR, 'UTF-8'); // :WrapUnwrapForDomParser
+	$body = $doc->getElementsByTagName('body')->item(0);
+	if(!$body) return $html;
+
+	_inflateWalker($body);
+	$result = $doc->saveHtml($body);
+	return $result ? substr($result, 6, -7) : ''; // :WrapUnwrapForDomParser
 }
 
-/** @param \DOMNode &$node */
+/** @param \Dom\Node $node */
 function _inflateWalker($node)
 {
 	$toReplace = [];
@@ -797,9 +793,8 @@ function _inflateWalker($node)
 				$child->textContent, -1, $count
 			);
 			if($count) {
-				$d = new DOMDocument();
-				$d->loadHTML($newHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-				
+				$d = \Dom\HTMLDocument::createFromString($newHtml, LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR, 'UTF-8');
+
 				$frag = $node->ownerDocument->createDocumentFragment();
 				foreach($d->childNodes as $c) {
 					$frag->appendChild($frag->ownerDocument->importNode($c, true));
@@ -826,8 +821,7 @@ function _inflateWalker($node)
 					if($link) {
 						$newHtml = _inflateLink($link, false);
 						if($newHtml) {
-							$d = new DOMDocument();
-							$d->loadHTML($newHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+							$d = \Dom\HTMLDocument::createFromString($newHtml, LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR, 'UTF-8');
 							// This is always one-to-one, so we can directly replace it.
 							$node->replaceChild($node->ownerDocument->importNode($d->firstChild, true), $child);
 						}
