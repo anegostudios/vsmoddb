@@ -41,7 +41,7 @@ if ($file['releaseRetracted']) {
 $assetId = $file['assetId'];
 
 if ($assetId) {
-	$asset = $con->getRow('SELECT * FROM assets WHERE assetId = ?', [$assetId]);
+	$asset = $con->getRow('SELECT assetId, createdByUserId, assetTypeId FROM assets WHERE assetId = ?', [$assetId]);
 	if (!canEditAsset($asset, $user)) {
 		exit(json_encode(['status' => 'error', 'errormessage' => 'No privilege to delete files from this asset. You may need to login again'])); 
 	}

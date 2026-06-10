@@ -14,7 +14,7 @@ $pushedErrorForCurrentFile = false; // This is here so we can push the errors ev
 // /edit/release/?assetid=32 (edit existing release)
 if(!empty($_REQUEST['assetid'])) {
 	$existingRelease = $con->getRow(<<<SQL
-		SELECT a.*, r.*,
+		SELECT a.assetId, a.text, a.numSaved, r.*,
 			createdBy.name AS createdByUsername,
 			lastEditedBy.name AS lastEditedByUsername,
 			rr.reason AS retractionReason,
@@ -30,7 +30,7 @@ if(!empty($_REQUEST['assetid'])) {
 
 	if($existingRelease) {
 		$targetMod = $con->getRow(<<<SQL
-			SELECT a.*, m.*
+			SELECT a.assetId, a.createdByUserId, a.assetTypeId, a.name, m.modId, m.category, m.uploadLimitOverwrite, m.urlAlias
 			FROM mods m
 			JOIN assets a ON a.assetId = m.assetId
 			WHERE m.modId = ?
@@ -40,7 +40,7 @@ if(!empty($_REQUEST['assetid'])) {
 // /edit/release/?modid=32  (add new release)
 else if(!empty($_REQUEST['modid'])) {
 	$targetMod = $con->getRow(<<<SQL
-		SELECT a.*, m.*
+		SELECT a.assetId, a.createdByUserId, a.assetTypeId, a.name, m.modId, m.category, m.uploadLimitOverwrite, m.urlAlias
 		FROM mods m
 		JOIN assets a ON a.assetId = m.assetId
 		WHERE m.modId = ?
@@ -159,7 +159,7 @@ else if(!empty($_POST['save'])) {
 			else {
 				$sqlIgnoreExistingRelease = $existingRelease ? "r.releaseId != {$existingRelease['releaseId']} AND" : ''; // @security $existingRelease['releaseId'] comes from the database and is numeric, therefore sql inert.
 				$inUseBy = $con->getRow(<<<SQL
-					SELECT a.*, r.modId, r.version, m.assetId as modAssetId, m.urlAlias
+					SELECT a.assetId, r.modId, r.version, m.assetId as modAssetId, m.urlAlias
 					FROM modReleases r
 					JOIN assets a ON a.assetId = r.assetId
 					JOIN mods m ON m.modId = r.modId
