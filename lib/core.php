@@ -118,11 +118,6 @@ function isNumber($val)
 	return intval($val) . "" == $val;
 }
 
-function isUrl($url)
-{
-	return strlen(filter_var($url, FILTER_VALIDATE_URL));
-}
-
 /**
  *  When filter_input doesn't quite do what you need it to.
  * 
@@ -174,11 +169,6 @@ function forceArrayOfInts($var, $filterInsteadOfFail = false)
 		return $mapped;
 	}
 	return $filterInsteadOfFail ? [] : false;
-}
-
-function last($array)
-{
-	return $array[count($array) - 1];
 }
 
 function sanitizeHtml($text)
