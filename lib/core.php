@@ -171,6 +171,12 @@ function forceArrayOfInts($var, $filterInsteadOfFail = false)
 	return $filterInsteadOfFail ? [] : false;
 }
 
+/** Returns the last element without moving the array internal pointer (unlike end()). */
+function last($array)
+{
+	return $array[count($array) - 1];
+}
+
 function sanitizeHtml($text)
 {
 	global $config;

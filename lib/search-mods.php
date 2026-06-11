@@ -441,7 +441,7 @@ function getNextFetchCursor($searchParams, $mods)
 {
 	if(empty($mods) || !$searchParams['limit'] || count($mods) < $searchParams['limit'])  return '';
 
-	$lastMod = end($mods);
+	$lastMod = last($mods);
 
 	$cursorVal = $lastMod[$searchParams['order'][0]];
 	// prevent header injection just in case

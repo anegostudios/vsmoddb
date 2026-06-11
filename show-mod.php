@@ -203,7 +203,7 @@ foreach ($releases as &$release) {
 	if($release['compatibleGameVersions']) {
 		$compatibleGameVersions        = array_map('intval', explode(',', $release['compatibleGameVersions'])); // sorted ascending
 		$compatibleGameVersionsIndices = array_map('intval', explode(',', $release['compatibleGameVersionsIndices'])); // sorted ascending
-		$release['maxCompatibleGameVersion'] = end($compatibleGameVersions);
+		$release['maxCompatibleGameVersion'] = last($compatibleGameVersions);
 		$release['compatibleGameVersions'] = $compatibleGameVersions;
 		$release['compatibleGameVersionsFolded'] = foldSequentialVersionRanges($compatibleGameVersions, $compatibleGameVersionsIndices);
 	}
