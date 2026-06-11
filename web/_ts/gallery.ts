@@ -93,33 +93,44 @@ function initGallery(): void {
 	let dragStartX = 0;
 	let dragScrollLeft = 0;
 	let isDragging = false;
+	let didDrag = false;
 
 	stage.addEventListener('mousedown', (e: MouseEvent) => {
 		isDragging = true;
+		didDrag = false;
 		dragStartX = e.pageX;
 		dragScrollLeft = stage.scrollLeft;
-		stage.style.scrollSnapType = 'none';
-		stage.style.scrollBehavior = 'auto';
 		stage.style.cursor = 'grabbing';
+		e.preventDefault(); // suppress native image/link drag
 	});
 
 	document.addEventListener('mousemove', (e: MouseEvent) => {
 		if (!isDragging) return;
-		e.preventDefault();
-		stage.scrollLeft = dragScrollLeft - (e.pageX - dragStartX);
+		const dx = e.pageX - dragStartX;
+		if (!didDrag && Math.abs(dx) > 5) {
+			didDrag = true;
+			stage.style.scrollSnapType = 'none';
+			stage.style.scrollBehavior = 'auto';
+		}
+		if (didDrag) stage.scrollLeft = dragScrollLeft - dx;
 	});
 
 	document.addEventListener('mouseup', () => {
 		if (!isDragging) return;
 		isDragging = false;
+		stage.style.cursor = '';
+		if (!didDrag) return;
 		userInteracted = true;
 		stage.style.scrollSnapType = '';
 		stage.style.scrollBehavior = '';
-		stage.style.cursor = '';
-		// Snap to nearest slide
 		const idx = Math.round(stage.scrollLeft / stage.offsetWidth);
 		goTo(Math.max(0, Math.min(idx, slides.length - 1)));
 	});
+
+	// Suppress click after a drag (otherwise fullscreen toggles or links open)
+	stage.addEventListener('click', (e: MouseEvent) => {
+		if (didDrag) { e.preventDefault(); e.stopPropagation(); }
+	}, true);
 
 	// Horizontal scroll (deltaX) navigates one slide at a time
 	let wheelLock = false;

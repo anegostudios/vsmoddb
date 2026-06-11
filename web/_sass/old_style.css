@@ -405,6 +405,7 @@ body.opaque-desc .mod .moddesc {
 	max-width: 100%;
 	scrollbar-width: none;
 	background: rgba(166, 159, 125, 0.3);
+	user-select: none;
 }
 
 .gallery-viewport > .gallery-stage::-webkit-scrollbar { display: none; }
