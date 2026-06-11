@@ -175,6 +175,8 @@ function initGallery(): void {
 			stage.style.scrollBehavior = '';
 		}
 	}
+	if (border) border.style.transition = 'none';
 	updateBorder();
 	updateArrows();
+	requestAnimationFrame(() => { if (border) border.style.transition = ''; });
 }
