@@ -17,7 +17,7 @@ $sqlWhereExt = (isset($user) && $shownUser['userId'] == $user['userId']) || canM
 $userMods = $con->getAll("
 	SELECT
 		a.assetId, a.name, a.createdByUserId, a.statusId,
-		m.*,
+		m.modId, m.urlAlias, m.summary, m.downloads, m.comments,
 		logo.cdnPath AS logoCdnPath,
 		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 		s.code AS statusCode
