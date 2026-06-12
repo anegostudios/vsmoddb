@@ -4,7 +4,7 @@ if (!empty($user)) {
 	$ownMods = $con->getAll("
 		SELECT
 			a.assetId, a.name, a.created, a.statusId, a.createdByUserId,
-			m.*,
+			m.modId, m.urlAlias, m.summary, m.downloads, m.comments,
 			logo.cdnPath AS logoCdnPath,
 			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 			s.code AS statusCode
@@ -34,7 +34,7 @@ if (!empty($user)) {
 	$followedMods = $con->getAll("
 		SELECT
 			a.assetId, a.name, a.created, a.statusId, a.createdByUserId,
-			m.*,
+			m.modId, m.urlAlias, m.summary, m.downloads, m.comments,
 			logo.cdnPath AS logoCdnPath,
 			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 			u.name AS `from`,
@@ -68,7 +68,7 @@ if (!empty($user)) {
 $latestMods = $con->getAll("
 	SELECT
 		a.assetId, a.name, a.created, a.statusId, a.createdByUserId,
-		m.*,
+		m.modId, m.urlAlias, m.summary, m.downloads, m.comments, m.category,
 		logo.cdnPath AS logoCdnPath,
 		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 		u.name AS `from`
