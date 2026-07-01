@@ -52,7 +52,7 @@ switch($urlparts[1] ?? null) {
 
 		$requestsInLast7Days = $con->getOne('SELECT COUNT(*) FROM moderationRequests WHERE kind = '.MOD_REQUEST_KIND_REPORT_COMMENT." AND initiatorUserId = {$user['userId']} AND created >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
 		if($requestsInLast7Days > COMMENT_REPORT_LIMIT_PER_WEEK) {
-			fail(HTTP_TOO_MANY_REQUESTS, "You have reached your alloted quota for reporting comments this week. Your reports can be found <a href='/t/u/self' target='_blank'>here</a>.");
+			fail(HTTP_TOO_MANY_REQUESTS, "You have reached your allotted quota for reporting comments this week. Your reports can be found <a href='/t/u/self' target='_blank'>here</a>.");
 		}
 
 		$con->startTrans();

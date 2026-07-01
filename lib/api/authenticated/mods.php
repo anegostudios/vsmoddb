@@ -177,15 +177,15 @@ switch($urlparts[1]) {
 		if($previousRequest) {
 			fail(HTTP_TOO_MANY_REQUESTS, [
 				'reason' => $previousRequest['resolved']
-					? "You have already reported this server for the same reason some time ago, which has been resolved <a href='/t/{$previousRequest['requestId']}' target='_blank'>here</a>."
-					: "You have already reported this server for the same reason some time ago, which can be viewed <a href='/t/{$previousRequest['requestId']}' target='_blank'>here</a>.",
+					? "You have already reported this mod for the same reason some time ago, which has been resolved <a href='/t/{$previousRequest['requestId']}' target='_blank'>here</a>."
+					: "You have already reported this mod for the same reason some time ago, which can be viewed <a href='/t/{$previousRequest['requestId']}' target='_blank'>here</a>.",
 			]);
 		}
 
 		$requestsInLast7Days = $con->getOne('SELECT COUNT(*) FROM moderationRequests WHERE kind = '.MOD_REQUEST_KIND_REPORT_MOD." AND initiatorUserId = {$user['userId']} AND created >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
 		if($requestsInLast7Days > MOD_REPORT_LIMIT_PER_WEEK) {
 			fail(HTTP_TOO_MANY_REQUESTS, [
-				'reason' => "You have reached your alloted quota for reporting mods this week. Your reports can be found <a href='/t/u/self' target='_blank'>here</a>.",
+				'reason' => "You have reached your allotted quota for reporting mods this week. Your reports can be found <a href='/t/u/self' target='_blank'>here</a>.",
 			]);
 		}
 
