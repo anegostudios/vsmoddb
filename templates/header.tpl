@@ -17,7 +17,6 @@
 
 	<link nonce="{$cspNonce}" href="/web/css/chosen.min.css" rel="stylesheet" type="text/css">
 	<link nonce="{$cspNonce}" href="/web/css/jquery.fancybox.min.css" rel="stylesheet" type="text/css">
-	<link nonce="{$cspNonce}" href="/web/js/chosen/chosen.min.css" rel="stylesheet" type="text/css">
 	<link nonce="{$cspNonce}" href="/web/css/datepicker.min.css" rel="stylesheet" type="text/css">
 	<link nonce="{$cspNonce}" href="/web/js/tinymce/plugins/spoiler/css/spoiler.css?v=2" rel="stylesheet" type="text/css">
 
