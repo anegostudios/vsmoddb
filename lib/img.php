@@ -1,15 +1,28 @@
 <?php
 
 /**
+ * @param string $fileContent at least 21 bytes of the files content
+ * @return bool
+ */
+function isAnimatedWebp($fileContent) {
+	//TODO(Rennorb) @brittle: RIFF sections could be in a different order and this would break.
+	return strlen($fileContent) >= 21
+		&& substr($fileContent, 0, 4) === 'RIFF'
+		&& substr($fileContent, 8, 4) === 'WEBP'
+		&& substr($fileContent, 12, 4) === 'VP8X'
+		&& (ord($fileContent[20]) & 0x02) !== 0;
+}
+
+/**
  * @param string $localpath input filepath
  * @param string $cdnbasepath basepath element for the cdn file, no ext, gets suffixed
  * @param string $ext file ext
- * @return array{status:'ok'|'error', errormessage?: string, cdnthumbnailpath?: stirng}
+ * @return array{status:'ok'|'error', errormessage?: string, cdnthumbnailpath?: string}
  */
 function createThumbnailAndUploadToCDN($localpath, $cdnbasepath, $ext) {
 	$localthumbnailfilename = tempnam(sys_get_temp_dir(), '');
 
-	$resizeresult = copyImageResized($localpath, 55, 60, true, 'file', '', $localthumbnailfilename);
+	$resizeresult = copyImageResized($localpath, 55, 60, true, '', $localthumbnailfilename);
 	if(!$resizeresult) {
 		@unlink($localthumbnailfilename);
 		return ['status' => 'error', 'errormessage' => 'Failed to resize image for thumbnail.'];
@@ -32,13 +45,12 @@ function createThumbnailAndUploadToCDN($localpath, $cdnbasepath, $ext) {
  * @param int              $width
  * @param int              $height
  * @param bool             $proportional
- * @param 'file'|'browser' $output
  * @param string           $ext filename suffix
  * @param string|''        $newfile result filename
  * @param array{w:int, h:int}|null $crop
  * @return bool|null|string
  */
-function copyImageResized($file, $width = 0, $height = 0, $proportional = true, $output = 'file', $ext = '_thumb', $newfile = '', $crop = null) {
+function copyImageResized($file, $width = 0, $height = 0, $proportional = true, $ext = '_thumb', $newfile = '', $crop = null) {
 	if ($height <= 0 && $width <= 0) {
 		return false;
 	}
@@ -52,26 +64,13 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 	
 	if ($info[2] != IMAGETYPE_GIF && 
 		$info[2] != IMAGETYPE_JPEG && 
-		$info[2] != IMAGETYPE_PNG) return false;
+		$info[2] != IMAGETYPE_PNG &&
+		$info[2] != IMAGETYPE_WEBP) return false;
 	
-	$filename = NULL;
-	switch (strtolower($output)) {
-		case 'browser':
-			$mime = image_type_to_mime_type($info[2]);
-			header("Content-type: $mime");
-			break;
-		
-		case 'file':
-			if (strlen($newfile)) {
-				$filename = $newfile;
-			} else {
-				$filename = preg_replace("/(?U)(.*)(\.\w+)$/", "\\1$ext\\2", $file);
-			}
-			break;
-		
-		default:
-			return false;
-			break;
+	if (strlen($newfile)) {
+		$filename = $newfile;
+	} else {
+		$filename = preg_replace("/(?U)(.*)(\.\w+)$/", "\\1$ext\\2", $file);
 	}
 	
 	// Don't resize, just copy
@@ -100,18 +99,13 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 	}
 
 	switch ($info[2]) {
-	  case IMAGETYPE_GIF:
-		$image = imagecreatefromgif($file);
-	  break;
-	  case IMAGETYPE_JPEG:
-		$image = imagecreatefromjpeg($file);
-	  break;
-	  case IMAGETYPE_PNG:
-		$image = imagecreatefrompng($file);
-	  break;
-	  default:
-		return false;
+	  case IMAGETYPE_GIF : $image = imagecreatefromgif($file);  break;
+	  case IMAGETYPE_JPEG: $image = imagecreatefromjpeg($file); break;
+	  case IMAGETYPE_PNG : $image = imagecreatefrompng($file);  break;
+	  case IMAGETYPE_WEBP: $image = imagecreatefromwebp($file); break;
+	  default: return false;
 	}
+	if (!$image) return false; // webp might fail if it is animated
 
 	if ($crop) {
 		$image_resized = imagecreatetruecolor( $crop['w'], $crop['h'] );
@@ -119,7 +113,7 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 		$image_resized = imagecreatetruecolor( $final_width, $final_height );
 	}
  
-	if (($info[2] == IMAGETYPE_GIF) || ($info[2] == IMAGETYPE_PNG)) {
+	if (($info[2] == IMAGETYPE_GIF) || ($info[2] == IMAGETYPE_PNG) || ($info[2] == IMAGETYPE_WEBP)) {
 		$trnprt_indx = imagecolortransparent($image);
 
 		// If we have a specific transparent color
@@ -136,8 +130,8 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 			// Set the background color for new image to transparent
 			imagecolortransparent($image_resized, $trnprt_indx);
 	 
-		// Always make a transparent background color for PNGs that don't have one allocated already
-		} elseif ($info[2] == IMAGETYPE_PNG) {
+		// Always make a transparent background color for PNGs and WEBPs that don't have one allocated already
+		} elseif ($info[2] == IMAGETYPE_PNG || $info[2] == IMAGETYPE_WEBP) {
 	   
 			// Turn off transparency blending (temporarily)
 			imagealphablending($image_resized, false);
@@ -159,7 +153,7 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 	
 		fastimagecopyresampled($image_resized, $image, 0, 0, $crop['x'] * $propX, $crop['y'] * $propY, $crop['w'], $crop['h'], $crop['w'] * $propX, $crop['h'] * $propY);
 	} else {
-		if ($info[2] == IMAGETYPE_PNG) {
+		if ($info[2] == IMAGETYPE_PNG || $info[2] == IMAGETYPE_WEBP) {
 			imagecopyresampled ($image_resized, $image, 0, 0, 0, 0, $final_width, $final_height, $width_old, $height_old);
 		} else {
 			fastimagecopyresampled($image_resized, $image, 0, 0, 0, 0, $final_width, $final_height, $width_old, $height_old);
@@ -167,30 +161,14 @@ function copyImageResized($file, $width = 0, $height = 0, $proportional = true, 
 	}
 
 	switch ($info[2]) {
-		case IMAGETYPE_GIF:
-			if(!imagegif($image_resized, $filename))
-				return false;
-			break;
-			
-		case IMAGETYPE_JPEG:
-			if(!imagejpeg($image_resized, $filename, 95))
-				return false;
-			break;
-			
-		case IMAGETYPE_PNG:
-			if(!imagepng($image_resized, $filename))
-				return false;
-			break;
-			
-		default:
-			return null;
+		case IMAGETYPE_GIF : if(!imagegif($image_resized, $filename))      return false; break;
+		case IMAGETYPE_JPEG: if(!imagejpeg($image_resized, $filename, 95)) return false; break;
+		case IMAGETYPE_PNG : if(!imagepng($image_resized, $filename))      return false; break;
+		case IMAGETYPE_WEBP: if(!imagewebp($image_resized, $filename, 95)) return false; break;
+		default: return null;
 	}
 
-	if (strtolower($output) === 'file') {
-		@chmod($filename, 0664);
-		return $filename;
-	}
-	
+	@chmod($filename, 0664);
 	return $filename;
 }
 
@@ -210,8 +188,10 @@ function cropImage($pathIn, $pathOut, $x, $y, $w, $h) {
 	  case IMAGETYPE_GIF : $imageSrc = imagecreatefromgif($pathIn);  break;
 	  case IMAGETYPE_JPEG: $imageSrc = imagecreatefromjpeg($pathIn); break;
 	  case IMAGETYPE_PNG : $imageSrc = imagecreatefrompng($pathIn);  break;
+	  case IMAGETYPE_WEBP: $imageSrc = imagecreatefromwebp($pathIn); break;
 	  default: return false;
 	}
+	if (!$imageSrc) return false; // webp might fail if it is animated
 
 	$imageDst = imagecreatetruecolor($w, $h);
 	fastimagecopyresampled($imageDst, $imageSrc, 0, 0, $x, $y, $w, $h, $w, $h);
@@ -220,6 +200,7 @@ function cropImage($pathIn, $pathOut, $x, $y, $w, $h) {
 		case IMAGETYPE_GIF : if(!imagegif($imageDst, $pathOut))      return false; break;
 		case IMAGETYPE_JPEG: if(!imagejpeg($imageDst, $pathOut, 95)) return false; break;
 		case IMAGETYPE_PNG : if(!imagepng($imageDst, $pathOut))      return false; break;
+		case IMAGETYPE_WEBP: if(!imagewebp($imageDst, $pathOut, 95)) return false; break;
 		default: return false;
 	}
 

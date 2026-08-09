@@ -42,7 +42,7 @@ function parseIniSize($size) {
 
 const UPLOAD_LIMITS = [
 	ASSETTYPE_MOD => [
-		'allowedTypes'    => ['png', 'jpg', 'gif'],
+		'allowedTypes'    => ['png', 'jpg', 'gif', 'webp'],
 		'attachmentCount' => 12,
 		'individualSize'  => 2 * MB,
 	],

@@ -396,7 +396,7 @@ else if(!empty($_POST['save'])) {
 
 		if(!$cropResult) {
 			unlink($croppedFileLocalPath);
-			addMessage(MSG_CLASS_ERROR, 'Failed to crop image.');
+			addMessage(MSG_CLASS_ERROR, 'Failed to crop image.'.(isAnimatedWebp($originalFileContents) ? " Animated WEBPs cannot be cropped automatically, sorry." : ''));
 			break;
 		}
 
