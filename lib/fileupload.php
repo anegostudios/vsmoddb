@@ -111,7 +111,7 @@ function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 		}
 
 		// GD is entirely incapable of handling animated WebP, so we omit generating an editor thumbnail. Everything else just works.
-		if ($type != IMAGETYPE_WEBP || !isAnimatedWebp(file_get_contents($localPath, length: 21))) {
+		if ($type != IMAGETYPE_WEBP || !isAnimatedWebp(file_get_contents($localPath))) {
 			$thumbStatus = createThumbnailAndUploadToCDN($localPath, $cdnBasePath, $ext);
 			if($thumbStatus['status'] !== 'ok') {
 				unlink($localPath);

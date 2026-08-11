@@ -5,12 +5,27 @@
  * @return bool
  */
 function isAnimatedWebp($fileContent) {
-	//TODO(Rennorb) @brittle: RIFF sections could be in a different order and this would break.
-	return strlen($fileContent) >= 21
-		&& substr($fileContent, 0, 4) === 'RIFF'
-		&& substr($fileContent, 8, 4) === 'WEBP'
-		&& substr($fileContent, 12, 4) === 'VP8X'
-		&& (ord($fileContent[20]) & 0x02) !== 0;
+	if(strlen($fileContent) < 21 || 
+		substr($fileContent, 0, 4) !== 'RIFF' ||
+		substr($fileContent, 8, 4) !== 'WEBP') return false;
+
+	$end = strlen($fileContent);
+	for($o = 12; $o + 8 < $end; ) {
+		$chunkHeader = unpack('a4magic/Vlength', substr($fileContent, $o, 8));
+		switch($chunkHeader['magic']) {
+			case 'ANIM':
+				return true;
+
+			case 'VP8X':
+				if($o + 12 <= $end && ord($fileContent[$o + 8]) & 0x02) return true;
+				break;
+		}
+
+		$o += 8 + $chunkHeader['length'];
+		if($chunkHeader['length'] % 2 !== 0) $o += 1;
+	}
+
+	return false;
 }
 
 /**
