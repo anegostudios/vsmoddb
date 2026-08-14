@@ -1,5 +1,19 @@
 <?php
 
+chdir(dirname(__FILE__));
+
+$config = array();
+$config["basepath"] = getcwd() . '/';
+$_SERVER["SERVER_NAME"] = "mods.vintagestory.at";
+$_SERVER["REQUEST_URI"] = "";
+define("DEBUG", 1);
+include("lib/config.php");
+include("lib/core.php");
+if(DB_READONLY) {
+	http_response_code(HTTP_SERVICE_UNAVAILABLE);
+	exit();
+}
+
 $availableVersionsStrs = array_keys(json_decode(file_get_contents('http://api.vintagestory.at/stable-unstable.json'), true));
 
 $availableVersions = [];

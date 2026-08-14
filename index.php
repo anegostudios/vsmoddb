@@ -62,7 +62,6 @@ switch($urlparts[0]) { // :ReservedUrlPrefixes
 
 	case 'download':
 	case 'notifications':
-	case 'updateversiontags':
 		exit(require($urlparts[0].'.php'));
 	
 	case 'notification':
