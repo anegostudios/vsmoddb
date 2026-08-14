@@ -1,4 +1,11 @@
 <?php
+
+/**
+ * @var array  $config
+ * @var object $con
+ * @var array  $messages
+ */
+
 if(DB_READONLY) showReadonlyPage();
 
 include_once $config['basepath'].'lib/mod.php';
@@ -65,6 +72,8 @@ if(isset($_GET['assetid'])) {
 	SQL, [$mod['assetId']]);
 }
 else { // New mod
+	if (empty($user)) showErrorPage(HTTP_UNAUTHORIZED);
+
 	$assetId = 0;
 	$mod = [
 		'assetId'         => 0,
@@ -124,7 +133,7 @@ $modSidedness = [
 // Check revokenewownership first because its lumped in with the other fields, including submit=1:
 if(isset($_POST['revokenewownership'])) {
 	validateActionToken();
-	$oldMsgCount = count($messages /* global */);
+	$oldMsgCount = count($messages);
 
 	if(!$currentlyBeingTransferredTo) {
 		addMessage(MSG_CLASS_ERROR, 'Ownership transfer revocation requested but this mod is not currently being transferred.');
@@ -132,7 +141,7 @@ if(isset($_POST['revokenewownership'])) {
 }
 else if(!empty($_POST['save'])) {
 	validateActionToken();
-	$oldMsgCount = count($messages /* global */);
+	$oldMsgCount = count($messages);
 	//NOTE(Rennorb): We will be reusing the $mod array so we can present the input to the user when a mistake is made.
 	// This way they don't have to re-input everything, and can just adjust their input.
 	$oldModData = $mod;
@@ -475,7 +484,7 @@ else if(!empty($_POST["delete"])) {
 
 // Check revokenewownership first because its lumped in with the other fields, including submit=1:
 if(isset($_POST['revokenewownership'])) {
-	if(count($messages /* global */) === $oldMsgCount) { // no errors occurred
+	if(count($messages) === $oldMsgCount) { // no errors occurred
 		revokeModOwnershipTransfer($mod['modId'], $currentlyBeingTransferredTo['notificationId']);
 
 		//NOTE(Rennorb): This cannot just use the current path, as saving a new mod will go from 
@@ -488,7 +497,7 @@ if(isset($_POST['revokenewownership'])) {
 	}
 }
 else if(!empty($_POST['save'])) {
-	if(count($messages /* global */) === $oldMsgCount) { // no errors occurred
+	if(count($messages) === $oldMsgCount) { // no errors occurred
 		if($mod['modId']) {
 			updateMod($oldModData, $mod, $filesInOrder, $newMembers, $newEditorMemberHashes);
 
