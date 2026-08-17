@@ -27,7 +27,7 @@
 	<link nonce="{$cspNonce}" href="/web/js/tinymce/skins/ui/oxide/content.min.css?v=2" as="style">
 	<link nonce="{$cspNonce}" href="/web/css/editor_content.css?ver=4" as="style">
 
-	<link nonce="{$cspNonce}" href="/web/css/style.css?version=108" rel="stylesheet" type="text/css">
+	<link nonce="{$cspNonce}" href="/web/css/style.css?version=109" rel="stylesheet" type="text/css">
 
 	{if isset($assetserver) && str_starts_with($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
 

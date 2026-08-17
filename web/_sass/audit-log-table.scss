@@ -9,15 +9,15 @@
 		background-color: var(--color-content-bg);
 	}
 
-	td:nth-child(1) { // date
+	td.date {
 		min-width: 14ch;
 	}
 
-	td:nth-child(2) { // target
+	td.target {
 		min-width: 14ch;
 	}
 
-	td:nth-child(4) { // info
+	td.info {
 		white-space: pre;
 	}
 

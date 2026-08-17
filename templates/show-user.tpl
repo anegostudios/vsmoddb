@@ -43,7 +43,13 @@
 			<table class="stdtable">
 				<thead><tr><th>Date</th><th>Target</th><th>Kind</th><th>Info</th></tr></thead>
 				<tbody>
-					<? foreach($auditLogs as $logEntry) require($this->templatedir.'audit-log-entry-for-user.tpl'); ?>
+					<? foreach($auditLogs as $logEntry): ?>
+					<tr>
+						<? require($this->templatedir.'audit-log-entry-cell-date.tpl'); ?>
+						<? require($this->templatedir.'audit-log-entry-cell-referenced-asset.tpl'); ?>
+						<? require($this->templatedir.'audit-log-entry-cells-kind-info.tpl'); ?>
+					</tr>
+					<? endforeach; ?>
 				</tbody>
 			</table>
 		</div>

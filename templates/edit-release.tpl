@@ -119,28 +119,23 @@
 	{if $release['assetId']} 
 		<p><br></p>
 		<h3 style="margin-bottom:.5em;">Change log</h3>
-		{if $assetChangelog}
+		{if $auditLogs}
+		<div class="audit-log-wrap">
 			<table class="stdtable" style="width:100%;">
-			<thead>
-				<tr>
-					<th>Changes</th>
-					<th style="width:15ch;">User</th>
-					<th style="width:15ch;">Date</th>
-				</tr>
-			</thead>
-			<tbody>
-				{foreach from=$assetChangelog item=entry}
+				<thead><tr><th>Date</th><th>Kind</th><th>Info</th></tr></thead>
+				<tbody>
+					<? foreach($auditLogs as $logEntry): ?>
 					<tr>
-						<td>{str_replace("\n\r", "<br/>", $entry['text'])}</td>
-						<td>{$entry['username']}</td>
-						<td>{fancyDate($entry['lastModified'])}</td>
+						<? require($this->templatedir.'audit-log-entry-cell-date.tpl'); ?>
+						<? require($this->templatedir.'audit-log-entry-cells-kind-info.tpl'); ?>
 					</tr>
-				{/foreach}
+					<? endforeach; ?>
 				</tbody>
-			{else}
-				<p><i>No activity found.</i></p>
-			{/if}
-		</table>
+			</table>
+		</div>
+		{else}
+			<p><i>No activity found.</i></p>
+		{/if}
 	{/if}
 </div>
 

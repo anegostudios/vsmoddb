@@ -279,14 +279,14 @@ foreach($allGameVersions as &$gameVersion) {
 unset($gameVersion);
 
 
-$assetChangelog = $existingRelease ? $con->getAll(<<<SQL
-	SELECT ch.text, ch.lastModified, u.name AS username
-	FROM changelogs ch
-	JOIN users u ON u.userId = ch.userId
-	WHERE ch.assetId = ?
-	ORDER BY ch.created DESC
+$auditLogs = $existingRelease ? $con->getAll(<<<SQL
+	SELECT l.kind, l.info, l.created, u.name AS username
+	FROM auditLogs l
+	JOIN users u ON u.userId = l.initiatorUserId
+	WHERE l.referenceId = {$existingRelease['releaseId']}
+	ORDER BY l.created DESC
 	LIMIT 20
-SQL, [$existingRelease['assetId']]) : [];
+SQL) : [];
 
 
 
@@ -353,6 +353,6 @@ $view->assign('release', $existingRelease);
 $view->assign('asset', ['assetId' => $existingRelease['assetId'], 'assetTypeId' => ASSETTYPE_RELEASE], null, true); //TODO(Rennorb) @cleanup: only here for the footer js / file upload code
 $view->assign('files', $files);
 
-$view->assign('assetChangelog', $assetChangelog);
+$view->assign('auditLogs', $auditLogs, null, true);
 
 $view->display('edit-release');
