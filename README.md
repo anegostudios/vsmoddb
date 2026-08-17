@@ -355,26 +355,9 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 	- `200`: Successfully deleted the specified game-version.
 
 # Development setup
-## VS Code - Remote Containers (untested for a while now)
-You can use the provided vscode devcontainer to get up a running without installing everything on your own.
-
-Required for that is docker installed aswell as docker-compose and vscode with the [Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
-Then you can open the [devcontainer.json](.devcontainer/devcontainer.json) in vscode, and it should prompt you 
-```
-Folder contains a Dev Container configuration file. Reopen folder to develop in a container ([learn more](https://aka.ms/vscode-remote/docker)).
-```
-Simply click reopen in container, and it should start building the devcontainer and starting the mysql database aswell.
-
-Now edit the [config.php](lib/config.php) to match the settings in the [dockerdocker-compose.yml](.devcontainer/docker-compose.yml) for the db `MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD`
-and add `127.0.0.1	mods.vintagestory.stage`  to your hosts file on your local machine.
-
-To deploy the database to the mysql instance run the [tables.sql](db/tables.sql) script against the database. You can use MySQL WOrkbench or any other mysql tool. When connecting from your local machine use localhost and 3306 (default) port to connect.
-
-There is also a optional MySQL Workbench container that when enabled in the [dockerdocker-compose.yml](.devcontainer/docker-compose.yml) can be reached at [http://localhost:4444/](http://localhost:4444/). To connect to the mysql database from workbench container use `db` for the hostname.
-
-## Universal (vscode/intellij/notepad)
 Requirements:
 - [Docker](https://www.docker.com/)
+- Any text editor
 
 Steps:
 - add `127.0.0.1 mods.vintagestory.stage` to your hosts file (this has to be a different domain from `vintagestory.at`, because that domain uses HSTS and so a self signed cert will not be deemed acceptable by browsers)
