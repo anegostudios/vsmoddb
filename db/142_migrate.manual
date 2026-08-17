@@ -1,0 +1,9 @@
+
+
+-- DO NOT RUN THIS TWICE
+
+UPDATE auditLogs l
+JOIN assets a ON a.assetId = l.referenceId AND a.assetTypeId IN (1, 2) AND l.kind = 0 -- type = 2 == release,  kind = 0 == legacy
+LEFT JOIN mods m        ON m.assetId = a.assetId AND a.assetTypeId = 1 -- type = 1 == mod
+LEFT JOIN modReleases r ON r.assetId = a.assetId AND a.assetTypeId = 2 -- type = 2 == release
+SET l.referenceId = COALESCE(IF(a.assetTypeId = 1, m.modId, r.releaseId), -l.referenceId);

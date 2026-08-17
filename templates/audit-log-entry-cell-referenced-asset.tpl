@@ -1,6 +1,6 @@
 <? /** @var array $logEntry */ switch($logEntry['kind']) {
 case AUDIT_LOG_KIND_LEGACY: ?>
-<td class="target">Asset #<?= $logEntry['referenceId'] ?></td>
+<td class="target">Target #<?= $logEntry['referenceId'] ?></td>
 	<? break;
 
 

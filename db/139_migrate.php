@@ -23,7 +23,7 @@ include($config["basepath"]."lib/core.php");
 		$individualChanges = preg_split('/\r\n|\n\r/', $row['text']);
 
 		foreach($individualChanges as $change) {
-			$con->execute($preparedInsert, [$row['assetId'] ?? 0, $row['userId'], $row['created'], $change]);
+			$con->execute($preparedInsert, [$row['assetId'] ?? 0, $row['userId'], $row['created'], $change]); // does not line up with other log kinds
 		}
 
 		if(($i++ % 1000) === 0) echo ".";
