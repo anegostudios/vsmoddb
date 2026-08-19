@@ -16,14 +16,18 @@ function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 	global $con, $user;
 	
 	switch($file['error']) {
-		case 0: break;
-		case 1: 
-		case 2: 
-			return array("status" => "error", "errormessage" => 'File too large! Limit is ' . (parseMaxUploadSizeFromIni() / MB) . "MB");
+		case UPLOAD_ERR_OK:
 			break;
-		case 7: return array("status" => "error", "errormessage" => 'Cannot write file to temporary files folder. No free space left?'); break;
-		default: return array("status" => "error", "errormessage" => sprintf('A unexpected error occurend while uploading. Error number %s', $file['error'])); break;
-		break;
+
+		case UPLOAD_ERR_INI_SIZE: 
+		case UPLOAD_ERR_FORM_SIZE: 
+			return array("status" => "error", "errormessage" => 'File too large! Limit is ' . (parseMaxUploadSizeFromIni() / MB) . "MB");
+
+		case UPLOAD_ERR_CANT_WRITE:
+			return array("status" => "error", "errormessage" => 'Cannot write file to temporary files folder. No free space left?');
+
+		default:
+			return array("status" => "error", "errormessage" => sprintf('A unexpected error occurred while uploading. Error number %s', $file['error']));
 	}	
 	
 	if (empty($assetTypeId)) {

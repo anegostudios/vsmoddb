@@ -108,8 +108,40 @@
 			</div>
 		{/if}
 
-		<h3 class="flex-fill">Screenshots {$screenshotsDisclaimer}<span style="float:right; font-size:70%;">(drag&drop to upload{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}, <a href="/download?assetid={$mod['assetId']}">download all as zip</a>{/if})</span></h3>
-		{include file="edit-asset-files.tpl"}
+		<h3 class="flex-fill">Screenshots {$screenshotsDisclaimer}<small style="float:right;">(drag&drop to upload)</small></h3>
+		<ol class="no-mark files flex-list reorderable">
+			{foreach from=$files item=file}
+				<li class="file">
+					<input type="hidden" name="fileIds[]" value="{$file['fileId']}" />
+					{if $file['hasThumbnail']}
+						<a data-fancybox="gallery" href="{$file['url']}">
+							<img src="{formatCdnUrl($file, '_55_60')}"/>
+							<div class="details">
+								<h5 class="filename">{$file["name"]}</h5>
+								<small class="uploaddate">{$file["created"]}</small>
+								<small>
+									<span class="imagesize">{$file["imageSize"]} px</span>
+									{if $file["size"]} - <span class="size">{formatByteSize($file["size"])}</span>{/if}
+								</small>
+							</div>
+						</a>
+					{else}
+						<a href="{$file['url']}">
+							<div class="fi fi-{$file['ext']}">
+								<div class="fi-content">{$file['ext']}</div>
+							</div>
+							<div class="details">
+								<h5 class="filename">{$file["name"]}</h5>
+								<small class="uploaddate">{$file["created"]}</small>
+								{if $file["size"]}<small class="size">{formatByteSize($file["size"])}</small>{/if}
+							</div>
+						</a>
+					{/if}
+					<a href="#" class="delete" data-fileid="{$file['fileId']}"></a>
+					<a href="{formatDownloadTrackingUrl($file)}" class="download">&#11123;</a>
+				</li>
+			{/foreach}
+		</ol>
 
 		<h3 class="flex-fill">Links</h3>
 		<div class="editbox">
@@ -437,6 +469,8 @@
 			removeOpt($cardLogoSelect, cardPreviewBoxEl);
 			removeOpt($embedLogoSelect, embedPreviewBoxEl);
 		}
+
+		window.allowdrop = true;
 	</script>
 	<style nonce="{$cspNonce}">
 		#preview-box-embed>div {
@@ -453,7 +487,7 @@
 	</style>
 
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/prism.min.js?v=0" data-manual=""></script>
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=45" async></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=46" async></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 

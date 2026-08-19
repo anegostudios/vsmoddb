@@ -111,9 +111,34 @@
 			<textarea name="text" class="editor" data-editorname="text" style="width: 100%; height: auto;">{$release['text']}</textarea>
 		</div>
 
-		<h3 class="flex-fill">Files {if $release['assetId']}<small>(changes apply immediately!)</small>{/if}{if false /*:ZipDownloadDisabled*/ && (count($files) > 0)}<span style="float:right; font-size:70%;">(<a href="/download?assetid={$release['assetId']}">download all as zip</a>)</span>{/if}</h3>
+		<h3 class="flex-fill">File <small>(cannot be altered after release is submitted)</small>{if !$release['assetId']}<small style="float:right;">(drag&drop to upload)</small>{/if}</h3>
 
-		{include file="edit-asset-files.tpl" formupload="1"}	
+		<ol class="no-mark files flex-list">
+			{foreach from=$files item=file}
+				<li class="file">
+					<input type="hidden" name="fileIds[]" value="{$file['fileId']}" />
+						<a href="{$file['url']}">
+							<div class="fi fi-{$file['ext']}">
+								<div class="fi-content">{$file['ext']}</div>
+							</div>
+							<div class="details">
+								<h5 class="filename">{$file["name"]}</h5>
+								<small class="uploaddate">{$file["created"]}</small>
+								{if $file["size"]}<small class="size">{formatByteSize($file["size"])}</small>{/if}
+							</div>
+						</a>
+						{if !$release['assetId']}<a href="#" class="delete" data-fileid="{$file['fileId']}"></a>{/if}
+					<a href="{formatDownloadTrackingUrl($file)}" class="download">&#11123;</a>
+				</li>
+			{/foreach}
+			
+			{if !$release['assetId']}
+				<li class="editbox file-upload immovable">
+					<label>Upload new file (or drag and drop, max file size: {formatByteSize($uploadSizeLimit)})</label>
+					<input type="file" name="newfile" style="height: unset; padding: .25em;">
+				</li>
+			{/if}
+		</ol>
 	</form>
 
 	{if $release['assetId']} 
@@ -240,10 +265,12 @@
 	$(document).ready(function() {
 		$('form[name=commentformtemplate]').areYouSure();
 	});
+
+	window.allowdrop = {$release['assetId'] ? 'false' : 'true'};
 </script>
 
 <script nonce="{$cspNonce}" type="text/javascript" src="/web/js/prism.min.js?v=0" data-manual=""></script>
-<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=45" async></script>
+<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=46" async></script>
 <script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 

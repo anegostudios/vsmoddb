@@ -18,7 +18,7 @@ if (empty($_POST['fileid'])) {
 }
 
 $file = $con->getRow(<<<SQL
-	SELECT f.fileId, f.name, f.assetId, f.userId, f.cdnPath, d.hasThumbnail, a.assetTypeId, rr.reason IS NOT NULL AS releaseRetracted
+	SELECT f.fileId, f.name, f.assetId, f.userId, f.cdnPath, d.hasThumbnail, a.assetTypeId, r.releaseId, rr.reason IS NOT NULL AS releaseRetracted
 	FROM files f
 	LEFT JOIN fileImageData d ON d.fileId = f.fileId
 	LEFT JOIN assets a ON a.assetId = f.assetId
@@ -30,6 +30,11 @@ SQL, [$_POST['fileid']]);
 if (!$file) {
 	http_response_code(HTTP_NOT_FOUND);
 	exit(json_encode(['status' => 'error']));
+}
+
+if ($file['releaseId']) {
+	http_response_code(HTTP_BAD_REQUEST);
+	exit(json_encode(['status' => 'error', 'reason' => 'Released files cannot be deleted.']));
 }
 
 if ($file['releaseRetracted']) {

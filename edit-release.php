@@ -94,7 +94,7 @@ else if(!empty($_POST['save'])) {
 	/** @var array{'assetId':int, 'fileId':int, 'modIdentifier':string|null, 'modVersion':string|null}[] $currentFiles */
 
 	//TODO(Rennorb) @cleanup: This exists for the case that the user used the "Browse" button instead of drag and drop, that doesn't immediately upload the file. 
-	if(!empty($_FILES['newfile']) && $_FILES['newfile']['error'] != 4) {
+	if(!empty($_FILES['newfile']) && $_FILES['newfile']['error'] != UPLOAD_ERR_NO_FILE) {
 		if($currentFiles) {
 			addMessage(MSG_CLASS_ERROR, 'Only one file can be attached to a release.');
 		}
@@ -212,7 +212,7 @@ else if(!empty($_POST['save'])) {
 		//
 
 		if($existingRelease) {
-			$ok = updateRelease($targetMod, $existingRelease, $newData, $newCompatibleGameVersions, $currentFiles[0]);
+			$ok = updateRelease($targetMod, $existingRelease, $newData, $newCompatibleGameVersions);
 			if($ok) {
 				if(!empty($_POST['saveandback'])) forceRedirect(formatModPath($targetMod).'#tab-files');
 				else                              forceRedirectAfterPOST();

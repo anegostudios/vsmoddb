@@ -1,5 +1,3 @@
-var uploading = 0;
-
 $(document).ready(function () {
 	createEditor(R.getQ("textarea.editor"), tinymceSettings);
 
@@ -41,6 +39,7 @@ $(document).ready(function () {
 		return false;
 	});
 
+	if(window.allowdrop)
 	attachDropHandler({
 		target: window,
 		destUrl: '/edit-uploadfile',
@@ -57,8 +56,6 @@ $(document).ready(function () {
 			return file.size <= 200 * 1024 * 1024;
 		},
 		onStart: function (e) {
-			uploading++;
-			
 			const file = e.file;
 			const extIdx = file.name.lastIndexOf('.');
 			const ext = extIdx < 0 ? '' : file.name.slice(extIdx + 1)

@@ -13,14 +13,12 @@ if (!$user['roleId']) showErrorPage(HTTP_FORBIDDEN);
 
 if ($user['isBanned']) showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
 
-if (!empty($_POST['upload']) && @$_FILES['file']) {
-	$file = $_FILES['file'];
-	
+if (!empty($_POST['upload']) && !empty($_FILES['file'])) {
 	if (empty($_REQUEST['assettypeid'])) {
 		exit(json_encode(array('status' => 'error', 'errormessage' => 'Missing assettypeid')));
 	}
 	
-	$res = processFileUpload($file, intval($_REQUEST['assettypeid']), intval($_REQUEST['assetid']), intval($_REQUEST['modId'] ?? 0));
+	$res = processFileUpload($_FILES['file'], intval($_REQUEST['assettypeid']), intval($_REQUEST['assetid']), intval($_REQUEST['modId'] ?? 0));
 
 	if(isset($res['modversion'])) $res['modversion'] = formatSemanticVersion($res['modversion']);
 	

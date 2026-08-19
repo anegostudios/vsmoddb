@@ -59,10 +59,9 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
  * @param array{releaseId:int, assetId:int, text:string, identifier:string|null, version:int} $existingRelease
  * @param array{text:string, identifier?:string, version:int} $newData
  * @param int[] $newCompatibleGameVersions
- * @param array{assetId:int, fileId:int} $file Unused for now
  * @return bool Indicates if the release did in fact get created. Very unlikely to not succeed.
  */
-function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersions, $file)
+function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersions)
 {
 	global $con, $user;
 
