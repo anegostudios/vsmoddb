@@ -122,11 +122,12 @@
 		{if $auditLogs}
 		<div class="audit-log-wrap">
 			<table class="stdtable" style="width:100%;">
-				<thead><tr><th>Date</th><th>Kind</th><th>Info</th></tr></thead>
+				<thead><tr><th>Date</th><th>Initiator</th><th>Kind</th><th>Info</th></tr></thead>
 				<tbody>
 					<? foreach($auditLogs as $logEntry): ?>
 					<tr>
 						<? require($this->templatedir.'audit-log-entry-cell-date.tpl'); ?>
+						<? require($this->templatedir.'audit-log-entry-cell-initiator.tpl'); ?>
 						<? require($this->templatedir.'audit-log-entry-cells-kind-info.tpl'); ?>
 					</tr>
 					<? endforeach; ?>

@@ -280,7 +280,7 @@ unset($gameVersion);
 
 
 $auditLogs = $existingRelease ? $con->getAll(<<<SQL
-	SELECT l.kind, l.info, l.created, u.name AS username
+	SELECT l.kind, l.info, l.created, u.name AS username, l.flags
 	FROM auditLogs l
 	JOIN users u ON u.userId = l.initiatorUserId
 	WHERE l.referenceId = {$existingRelease['releaseId']}
