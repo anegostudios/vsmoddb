@@ -411,8 +411,8 @@ switch($urlparts[1]) {
 			SQL); // @security: All of these values are filtered to be integers, and therefore sql inert.
 
 			if(count($allAddedTagIds) !== count($tagsThatAreAlreadyOnThisMod)) {
-				$old = formatGrammaticallyCorrectEnumeration(array_column(array_intersect_key($response, array_flip($tagsThatAreAlreadyOnThisMod)), 'name'));
-				$new = formatGrammaticallyCorrectEnumeration(array_column($response, 'name'));
+				$old = implode("\n", array_column(array_intersect_key($response, array_flip($tagsThatAreAlreadyOnThisMod)), 'name'));
+				$new = implode("\n", array_column($response, 'name'));
 				logAuditEvent(AUDIT_LOG_KIND_MOD_CHANGE_TAGS, $modId, createAuditLogDiff($old, $new));
 			}
 

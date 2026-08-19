@@ -154,12 +154,12 @@ function updateModTags($modId, $oldTags, $newTagsIds)
 	if($newTagsIds) {
 		$idsFolded = implode(',', array_map('intval', $newTagsIds));
 		$newNames = $con->getCol("SELECT name FROM tags WHERE tagId IN ($idsFolded) ORDER BY name ASC");
-		$logNew = formatGrammaticallyCorrectEnumeration($newNames);
+		$logNew = implode("\n", $newNames);
 	}
 	else {
 		$logNew = '';
 	}
-	$diff = createAuditLogDiff(formatGrammaticallyCorrectEnumeration($oldNames), $logNew);
+	$diff = createAuditLogDiff(implode("\n", $oldNames), $logNew);
 	if(!$diff) return;
 
 	foreach ($newTagsIds as $tagId) {

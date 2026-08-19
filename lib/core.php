@@ -474,8 +474,8 @@ function logAuditEvent($kind, $referenceId, $info = null, $flags = 0)
  */
 function createAuditLogDiff($old, $new)
 {
-	$diff = xdiff_string_diff($old, $new, 1, true);
-	$diff = str_replace("\\ No newline at end of file\n", '', $diff);
+	//NOTE(Rennorb): The last newline here is xdiff specific to get the last line to also properly diff.
+	$diff = xdiff_string_diff($old."\n", $new."\n", 1, true);
 	return $diff;
 }
 

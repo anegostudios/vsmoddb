@@ -112,8 +112,8 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 			// @security: Version numbers and releaseIds are numeric and therefore SQL Inert.
 			$con->execute("INSERT INTO modReleaseCompatibleGameVersions (releaseId, gameVersion) VALUES $folded");
 
-			$old = formatGrammaticallyCorrectEnumeration(array_map('formatSemanticVersion', $oldCompatibleGameVersions));
-			$new = formatGrammaticallyCorrectEnumeration(array_map('formatSemanticVersion', $newCompatibleGameVersions));
+			$old = implode("\n", array_map('formatSemanticVersion', $oldCompatibleGameVersions));
+			$new = implode("\n", array_map('formatSemanticVersion', $newCompatibleGameVersions));
 			array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_COMPAT, createAuditLogDiff($old, $new));
 		}
 
