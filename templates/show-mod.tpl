@@ -168,6 +168,24 @@
 				{/if}
 
 				<dt>Side:</dt><dt>{ucfirst($asset['side'])}</dt>
+				{if !empty($relations['required'])}
+				<dt>Requires:</dt>
+				<dd class="mod-relations">
+					{foreach from=$relations['required'] item=rel key=i}{if $i > 0}, {/if}{if $rel['resolvedMod']}<a class="mod-link" href="{formatModPath($rel['resolvedMod'])}" title="{$rel['resolvedMod']['summary']}">{$rel['resolvedMod']['name']}{if $rel['minVersion']} &ge;{formatSemanticVersion($rel['minVersion'])}{/if}</a>{else}<span class="mod-link unresolved" title="Not hosted on this moddb">{$rel['targetIdentifier']}{if $rel['minVersion']} &ge;{formatSemanticVersion($rel['minVersion'])}{/if}</span>{/if}{/foreach}
+				</dd>
+				{/if}
+				{if !empty($relations['optional'])}
+				<dt>Recommended:</dt>
+				<dd class="mod-relations">{include file="show-mod-relation-list" list=$relations['optional']}</dd>
+				{/if}
+				{if !empty($relations['tested_with'])}
+				<dt>Verified compatible with:</dt>
+				<dd class="mod-relations">{include file="show-mod-relation-list" list=$relations['tested_with']}</dd>
+				{/if}
+				{if !empty($relations['incompatible'])}
+				<dt class="warn">Incompatible with:</dt>
+				<dd class="mod-relations incompatible">{include file="show-mod-relation-list" list=$relations['incompatible']}</dd>
+				{/if}
 				<dt>Created:</dt><dt>{fancyDate($asset['created'])}</dt>
 				<dt>Last modified:</dt><dt>{fancyDate($asset['lastReleased'])}</dt>
 				<dt>Downloads:</dt><dt>{intval($asset['downloads'])}</dt>

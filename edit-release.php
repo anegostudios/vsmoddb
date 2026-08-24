@@ -214,6 +214,15 @@ else if(!empty($_POST['save'])) {
 		if($existingRelease) {
 			$ok = updateRelease($targetMod, $existingRelease, $newData, $newCompatibleGameVersions);
 			if($ok) {
+				if (!empty($_POST['removeRelations'])) {
+					foreach ($_POST['removeRelations'] as $rid) {
+						deleteManualRelation(intval($rid));
+					}
+				}
+				if (!empty($_POST['relations'])) {
+					persistManualRelationsFromForm(intval($existingRelease['releaseId']), $_POST['relations']);
+				}
+
 				if(!empty($_POST['saveandback'])) forceRedirect(formatModPath($targetMod).'#tab-files');
 				else                              forceRedirectAfterPOST();
 				exit();
@@ -354,5 +363,14 @@ $view->assign('asset', ['assetId' => $existingRelease['assetId'], 'assetTypeId' 
 $view->assign('files', $files);
 
 $view->assign('auditLogs', $auditLogs, null, true);
+
+if (!empty($existingRelease['releaseId'])) {
+	$relView = getRelationsForReleaseEditView(intval($existingRelease['releaseId']));
+	$view->assign('autoRelations',   $relView['auto']);
+	$view->assign('manualRelations', $relView['manual']);
+} else {
+	$view->assign('autoRelations',   []);
+	$view->assign('manualRelations', []);
+}
 
 $view->display('edit-release');

@@ -1,5 +1,7 @@
 <?php
 
+include_once $config['basepath'].'lib/relations.php';
+
 const ERROR_SPEC_PARSE_FAILED          = 4001;
 const ERROR_MISSING_SPEC_VERSION_NO_GV = 4002;
 const ERROR_FORBIDDEN_IN_HOSTED_MODE   = 4031;
@@ -79,14 +81,19 @@ switch($urlparts[0]) {
 		// if crafted carefully. Note that we cannot use 'group by' in most cases, as it is up to the implementation to select any row
 		// for non aggregated columns, even different ones for each column, where we would need the first - or first by some other column.
 
+		// Tracks the release the caller explicitly asked for (or that we recommended in the unknown-version
+		// path). Used to seed the dep resolver below so the dependency tree reflects the exact release
+		// being installed, not whatever pickReleaseForIdentifier would re-pick.
+		$pickedRootReleases = [];
+
 		if($knownVersionQueryParams) {
 			$placeholders = substr(str_repeat('(?, ?),', count($knownVersionQueryParams) / 2), 0, -1);
 
 			if($gameVersion) {
 				// Complicated path with upgrade recommendations:
 				$releases = $con->execute(<<<SQL
-					SELECT 
-						r0.identifier, f0.fileId, f0.name, rr0.reason AS retractionReason,
+					SELECT
+						r0.releaseId, r0.identifier, r0.version, f0.fileId, f0.name, rr0.reason AS retractionReason,
 						ru0.roleId AS retractedByRoleId, rr0.lastModifiedBy AS retractedByUserId, a0.createdByUserId,
 						r1.version AS recommendedUpgrade
 
@@ -141,14 +148,22 @@ switch($urlparts[0]) {
 
 					$r['fileName'] = $release['name'];
 					$r['fileUrl'] = formatDownloadTrackingUrl($release);
+
+					$pickedRootReleases[$release['identifier']] = [
+						'releaseId'  => (int)$release['releaseId'],
+						'identifier' => $release['identifier'],
+						'version'    => (int)$release['version'],
+						'fileName'   => $release['name'],
+						'fileUrl'    => $r['fileUrl'],
+					];
 				}
 				unset($r);
 			}
 			else {
 				// Simple path, no recommends:
 				$releases = $con->execute(<<<SQL
-					SELECT 
-						r0.identifier, f0.fileId, f0.name, rr0.reason as retractionReason,
+					SELECT
+						r0.releaseId, r0.identifier, r0.version, f0.fileId, f0.name, rr0.reason as retractionReason,
 						ru0.roleId AS retractedByRoleId, rr0.lastModifiedBy AS retractedByUserId, a0.createdByUserId
 
 					FROM modReleases r0
@@ -179,19 +194,27 @@ switch($urlparts[0]) {
 
 					$r['fileName'] = $release['name'];
 					$r['fileUrl'] = formatDownloadTrackingUrl($release);
+
+					$pickedRootReleases[$release['identifier']] = [
+						'releaseId'  => (int)$release['releaseId'],
+						'identifier' => $release['identifier'],
+						'version'    => (int)$release['version'],
+						'fileName'   => $release['name'],
+						'fileUrl'    => $r['fileUrl'],
+					];
 				}
 				unset($r);
 			}
 		}
-		
+
 		if($unknownVersionQueryParams && $gameVersion) {
 			// Complicated path. Can only exist if we have a gameversion to recommend any releases for.
 			// Never recommend retracted releases.
 			$placeholders = substr(str_repeat('?,', count($unknownVersionQueryParams)), 0, -1);
 
 			$releases = $con->execute(<<<SQL
-				SELECT 
-					r1.identifier, f1.fileId, f1.name,
+				SELECT
+					r1.releaseId, r1.identifier, f1.fileId, f1.name,
 					r1.version as recommendedUpgrade
 
 				FROM (
@@ -222,6 +245,14 @@ switch($urlparts[0]) {
 				$r['fileName'] = $release['name'];
 				$r['fileUrl'] = formatDownloadTrackingUrl($release);
 				if($release['recommendedUpgrade']) $r['recommendedUpgrade'] = formatSemanticVersion(intval($release['recommendedUpgrade']));
+
+				$pickedRootReleases[$release['identifier']] = [
+					'releaseId'  => (int)$release['releaseId'],
+					'identifier' => $release['identifier'],
+					'version'    => (int)$release['recommendedUpgrade'],
+					'fileName'   => $release['name'],
+					'fileUrl'    => $r['fileUrl'],
+				];
 			}
 			unset($r);
 		}
@@ -233,9 +264,21 @@ switch($urlparts[0]) {
 		}
 		unset($r);
 
-		good(['data' => $result]);
+		$resolvePayload = [];
+		if (boolval($_GET['resolve-deps'] ?? false)) {
+			// Don't pass identifiers with already-known errors into the resolver.
+			// They are unavailable / malformed / retracted and should not surface dependency trees.
+			$rootIds = array_keys(array_filter($result, fn($r) => empty($r['errorCode'])));
+			// Seed the resolver with the releases picked above so the dep tree starts from the
+			// exact (identifier, version) requested in the URL instead of pickReleaseForIdentifier's
+			// "latest available" fallback. Transitive deps still use that fallback.
+			$rootMap = array_intersect_key($pickedRootReleases, array_flip($rootIds));
+			$deps = resolveTransitiveDeps($rootIds, $gameVersion ?: null, $rootMap);
+			$resolvePayload = ['resolved' => $deps['resolved'], 'warnings' => $deps['warnings']];
+		}
+		good(['data' => $result] + $resolvePayload);
 
-	default: 
+	default:
 		// /mods/{modId}
 		$modId = filter_var($urlparts[0], FILTER_VALIDATE_INT);
 		if(!$modId) break; // fallthrough into the authenticated section.

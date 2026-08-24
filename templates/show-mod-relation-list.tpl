@@ -1,0 +1,1 @@
+{foreach from=$list item=rel key=i}{if $i > 0}, {/if}{if $rel['resolvedMod']}<a class="mod-link" href="{formatModPath($rel['resolvedMod'])}" title="{$rel['resolvedMod']['summary']}">{$rel['resolvedMod']['name']}</a>{else}<span class="mod-link unresolved" title="Not hosted on this moddb">{$rel['targetIdentifier']}</span>{/if}{/foreach}
