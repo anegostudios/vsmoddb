@@ -15,6 +15,17 @@ const IGNORED_AUTO_IDENTIFIERS = ['game', 'survival', 'creative'];
 // Hard cap on BFS depth during transitive resolution to guard against pathological graphs.
 const MAX_DEPS_DEPTH = 32;
 
+// Machine-readable warning codes emitted by bfsResolve and surfaced verbatim through
+// install-information?resolve-deps=1. Clients branch on `kind`, so changing a value here
+// is an API break.
+const WARN_CYCLE             = 'cycle';
+const WARN_DEPTH_LIMIT       = 'depth_limit';
+const WARN_MISSING_DEP       = 'missing_dep';
+const WARN_INCOMPATIBLE      = 'incompatible';
+const WARN_VERSION_CONFLICT  = 'version_conflict';
+const WARN_OPTIONAL_UNMET    = 'optional_unmet';
+const WARN_TESTED_WITH_UNMET = 'tested_with_unmet';
+
 /**
  * Parse a modinfo dependency string ("modA@1.2.3, modB, modC@2.0.0") into an associative array
  * [identifier => compiledMinVersion]. Returns 0 for entries without a version OR with a version
@@ -62,10 +73,15 @@ function mergeRanges(array $constraints): array
  * Pure BFS resolver. Same shape as before; relations are now release-scoped so the loader callback
  * resolves identifier -> picked release -> relations of that specific release.
  *
+ * The `resolved` map is emitted in install order (dependencies before their dependents), and
+ * `installOrder` lists the same identifiers as a plain array for clients whose JSON handling
+ * does not preserve object key order. Applying entries front to back never installs a mod
+ * before its resolved requirements.
+ *
  * @param string[]                 $rootIdentifiers
  * @param callable(string): array  $relationsLoader  identifier -> array of relation rows
  * @param callable(string): ?array $releasePicker    identifier -> ['fileName'=>..., 'fileUrl'=>..., ...] or null
- * @return array{resolved: array<string, array<string,mixed>>, warnings: array<array<string,mixed>>}
+ * @return array{resolved: array<string, array<string,mixed>>, installOrder: string[], warnings: array<array<string,mixed>>}
  */
 function bfsResolve(array $rootIdentifiers, callable $relationsLoader, callable $releasePicker): array
 {
@@ -84,11 +100,11 @@ function bfsResolve(array $rootIdentifiers, callable $relationsLoader, callable 
 		[$id, $chain] = array_shift($queue);
 
 		if (in_array($id, $chain, true)) {
-			$warnings[] = ['kind' => 'cycle', 'path' => array_merge($chain, [$id])];
+			$warnings[] = ['kind' => WARN_CYCLE, 'path' => array_merge($chain, [$id])];
 			continue;
 		}
 		if (count($chain) > MAX_DEPS_DEPTH) {
-			$warnings[] = ['kind' => 'depth_limit', 'stoppedAt' => $id, 'limit' => MAX_DEPS_DEPTH];
+			$warnings[] = ['kind' => WARN_DEPTH_LIMIT, 'stoppedAt' => $id, 'limit' => MAX_DEPS_DEPTH];
 			continue;
 		}
 		if (isset($resolved[$id])) {
@@ -101,7 +117,7 @@ function bfsResolve(array $rootIdentifiers, callable $relationsLoader, callable 
 
 		$release = $releasePicker($id);
 		if ($release === null) {
-			$warnings[] = ['kind' => 'missing_dep', 'identifier' => $id, 'requiredBy' => $chain];
+			$warnings[] = ['kind' => WARN_MISSING_DEP, 'identifier' => $id, 'requiredBy' => $chain];
 			continue;
 		}
 		$parent = end($chain);
@@ -126,7 +142,7 @@ function bfsResolve(array $rootIdentifiers, callable $relationsLoader, callable 
 				case REL_OPTIONAL:
 				case REL_TESTED_WITH:
 					$informational[] = [
-						'kind'       => $rel['relationType'].'_unmet',
+						'kind'       => $rel['relationType'] === REL_OPTIONAL ? WARN_OPTIONAL_UNMET : WARN_TESTED_WITH_UNMET,
 						'from'       => $id,
 						'identifier' => $rel['targetIdentifier'],
 					];
@@ -138,7 +154,7 @@ function bfsResolve(array $rootIdentifiers, callable $relationsLoader, callable 
 	foreach ($incompatDeclared as $declarer => $targets) {
 		foreach ($targets as $target) {
 			if (isset($resolved[$target]) || in_array($target, $rootIdentifiers, true)) {
-				$warnings[] = ['kind' => 'incompatible', 'between' => [$declarer, $target], 'declaredBy' => $declarer];
+				$warnings[] = ['kind' => WARN_INCOMPATIBLE, 'between' => [$declarer, $target], 'declaredBy' => $declarer];
 			}
 		}
 	}
@@ -146,7 +162,7 @@ function bfsResolve(array $rootIdentifiers, callable $relationsLoader, callable 
 	foreach ($versionConstrs as $target => $constraints) {
 		$merged = mergeRanges($constraints);
 		if ($merged['unsatisfiable']) {
-			$warnings[] = ['kind' => 'version_conflict', 'identifier' => $target, 'ranges' => $constraints];
+			$warnings[] = ['kind' => WARN_VERSION_CONFLICT, 'identifier' => $target, 'ranges' => $constraints];
 		}
 	}
 
@@ -156,7 +172,34 @@ function bfsResolve(array $rootIdentifiers, callable $relationsLoader, callable 
 		}
 	}
 
-	return ['resolved' => $resolved, 'warnings' => $warnings];
+	// Reorder the resolved set so every dependency precedes its dependents (Kahn's algorithm
+	// over the requiredBy edges). BFS discovery order breaks ties, keeping output deterministic.
+	$dependentsOf = [];
+	$depCount     = array_fill_keys(array_keys($resolved), 0);
+	foreach ($resolved as $id => $entry) {
+		foreach ($entry['requiredBy'] as $parent) {
+			if (!isset($resolved[$parent])) continue; // '<root>' markers and unresolved parents carry no edge
+			$dependentsOf[$id][] = $parent;
+			$depCount[$parent]++;
+		}
+	}
+	$ready = [];
+	foreach ($resolved as $id => $entry) {
+		if ($depCount[$id] === 0) $ready[] = $id;
+	}
+	$ordered = [];
+	for ($i = 0; $i < count($ready); $i++) {
+		$id = $ready[$i];
+		$ordered[$id] = $resolved[$id];
+		foreach ($dependentsOf[$id] ?? [] as $parent) {
+			if (--$depCount[$parent] === 0) $ready[] = $parent;
+		}
+	}
+	// The requiredBy edges cannot cycle (cyclic expansions are cut before the edge is recorded),
+	// so $ordered always covers $resolved; keep the fallback in case that invariant ever breaks.
+	$resolved = $ordered + $resolved;
+
+	return ['resolved' => $resolved, 'installOrder' => array_keys($resolved), 'warnings' => $warnings];
 }
 
 /**

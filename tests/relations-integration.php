@@ -442,6 +442,8 @@ final class RelationsIntegrationTest extends TestCase
 		$out = resolveTransitiveDeps(['rel-test-A'], null);
 		$this->assertArrayHasKey('rel-test-B', $out['resolved']);
 		$this->assertArrayHasKey('rel-test-C', $out['resolved']);
+		$this->assertSame(['rel-test-C', 'rel-test-B', 'rel-test-A'], $out['installOrder'],
+			'dependencies must come before their dependents');
 		$this->assertEquals([], $out['warnings']);
 	}
 

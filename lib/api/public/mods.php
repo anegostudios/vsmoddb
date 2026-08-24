@@ -274,7 +274,7 @@ switch($urlparts[0]) {
 			// "latest available" fallback. Transitive deps still use that fallback.
 			$rootMap = array_intersect_key($pickedRootReleases, array_flip($rootIds));
 			$deps = resolveTransitiveDeps($rootIds, $gameVersion ?: null, $rootMap);
-			$resolvePayload = ['resolved' => $deps['resolved'], 'warnings' => $deps['warnings']];
+			$resolvePayload = ['resolved' => $deps['resolved'], 'installOrder' => $deps['installOrder'], 'warnings' => $deps['warnings']];
 		}
 		good(['data' => $result] + $resolvePayload);
 

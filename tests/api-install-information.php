@@ -34,6 +34,7 @@ final class ApiInstallInfoTest extends TestCase
 	{
 		$r = callInstallInfo(['ids' => 'rel-test-A@1.0.0']);
 		$this->assertArrayNotHasKey('resolved', $r);
+		$this->assertArrayNotHasKey('installOrder', $r);
 		$this->assertArrayNotHasKey('warnings', $r);
 		$this->assertArrayHasKey('data', $r);
 	}
@@ -42,6 +43,9 @@ final class ApiInstallInfoTest extends TestCase
 	{
 		$r = callInstallInfo(['ids' => 'rel-test-A@1.0.0', 'resolve-deps' => '1']);
 		$this->assertArrayHasKey('resolved', $r);
+		$this->assertArrayHasKey('installOrder', $r);
 		$this->assertArrayHasKey('warnings', $r);
+		$this->assertSame($r['installOrder'], array_keys($r['resolved']),
+			'installOrder must list the resolved identifiers in emission order');
 	}
 }

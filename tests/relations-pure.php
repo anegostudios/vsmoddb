@@ -258,6 +258,57 @@ final class RelationsBfsResolveTest extends TestCase
         $this->assertSame(array_unique($out['resolved']['D']['requiredBy']), $out['resolved']['D']['requiredBy'],
             'requiredBy must not contain duplicates');
     }
+
+    public function testInstallOrderPutsDependenciesFirstOnLinearChain(): void
+    {
+        $graph = ['A' => [['B']], 'B' => [['C']], 'C' => []];
+        $out = bfsResolve(['A'], $this->loaderFromGraph($graph), $this->defaultPicker(['A','B','C']));
+        $this->assertSame(['C','B','A'], $out['installOrder']);
+        $this->assertSame($out['installOrder'], array_keys($out['resolved']),
+            'resolved must be emitted in the same order as installOrder');
+    }
+
+    public function testInstallOrderPutsSharedDepBeforeBothDependentsInDiamond(): void
+    {
+        $graph = ['A' => [['B'], ['C']], 'B' => [['D']], 'C' => [['D']], 'D' => []];
+        $out = bfsResolve(['A'], $this->loaderFromGraph($graph), $this->defaultPicker(['A','B','C','D']));
+        $order = array_flip($out['installOrder']);
+        $this->assertLessThan($order['B'], $order['D'], 'D must install before B');
+        $this->assertLessThan($order['C'], $order['D'], 'D must install before C');
+        $this->assertSame('A', end($out['installOrder']), 'the root installs last');
+    }
+
+    public function testInstallOrderHandlesSameDepthCrossDependency(): void
+    {
+        // B and C are both at depth 1, but B also requires C: C must still install before B.
+        // Plain reversed BFS order would get this wrong when C is discovered before B's edge to it.
+        $graph = ['A' => [['B'], ['C']], 'B' => [['C']], 'C' => []];
+        $out = bfsResolve(['A'], $this->loaderFromGraph($graph), $this->defaultPicker(['A','B','C']));
+        $order = array_flip($out['installOrder']);
+        $this->assertLessThan($order['B'], $order['C'], 'C must install before B, which requires it');
+    }
+
+    public function testInstallOrderKeepsDiscoveryOrderForIndependentRoots(): void
+    {
+        $graph = ['A' => [], 'B' => []];
+        $out = bfsResolve(['A','B'], $this->loaderFromGraph($graph), $this->defaultPicker(['A','B']));
+        $this->assertSame(['A','B'], $out['installOrder']);
+    }
+
+    public function testInstallOrderOmitsMissingDeps(): void
+    {
+        $graph = ['A' => [['MissingMod']]];
+        $out = bfsResolve(['A'], $this->loaderFromGraph($graph), $this->defaultPicker(['A']));
+        $this->assertSame(['A'], $out['installOrder']);
+    }
+
+    public function testInstallOrderStaysCompleteWhenCycleIsCut(): void
+    {
+        $graph = ['A' => [['B']], 'B' => [['A']]];
+        $out = bfsResolve(['A'], $this->loaderFromGraph($graph), $this->defaultPicker(['A','B']));
+        $this->assertSame(['B','A'], $out['installOrder'],
+            'the surviving edge A->B still orders B first; the cut back-edge must not drop nodes');
+    }
 }
 
 final class RelationsCycleGuardTest extends TestCase
