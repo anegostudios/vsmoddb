@@ -1,6 +1,6 @@
 <?php
 
-if ($user['roleCode'] != 'admin') showErrorPage(HTTP_FORBIDDEN);
+if ($user['roleCode'] !== 'admin' && $user['roleCode'] !== 'moderator') showErrorPage(HTTP_FORBIDDEN);
 
 cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/api/v2/game-versions {$_SERVER['HTTP_HOST']}/api/v2/game-versions/"); //NOTE(Rennorb): Yes. The CSP api genuinely requires both to be specified here.
 cspPushAllowedInlineHandlerHash('sha256-ACiiR9Pq4vOFtqhzTGFgHTXHnUnOEGCMCKPo/Hys5tE='); // addVersionPrompt()

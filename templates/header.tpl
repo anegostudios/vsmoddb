@@ -75,13 +75,13 @@
 					</nav>
 				</span>
 				
-				{if ($user['roleCode'] == 'admin')}
+				{if $user['roleCode'] === 'admin' || $user['roleCode'] === 'moderator'}
 					<span class="icon-only submenu{if $headerHighlight === HEADER_HIGHLIGHT_ADMIN_TOOLS} active{/if} site-settings">
 						<span><i class="bx bxs-cog"></i></span>
 						<nav>
 							<a href="/list/user">Users</a>
 							<a href="/list/tag">Tags</a>
-							<a href="/list/sponsorable">Sponsorable</a>
+							{if $user['roleCode'] === 'admin'}<a href="/list/sponsorable">Sponsorable</a>{/if}
 						</nav>
 					</span>
 				{/if}

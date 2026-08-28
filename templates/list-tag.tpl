@@ -30,14 +30,17 @@
 
 	<table class="stdtable" id="Versions" style="display: inline-table;" onclick="clickDelete(event)">
 		<thead>
-			<tr><th>Game Version</th><th></th></tr>
+			<tr>
+				<th>Game Version</th>
+				{if $user['roleCode'] === 'admin'}<th></th>{/if}
+			</tr>
 		</thead>
 		<tbody>
 		{if !empty($gameVersionStrings)}
 			{foreach from=$gameVersionStrings item=gvStr}
 				<tr>
 					<td>{$gvStr}</td>
-					<td><button class="button btndelete strikethrough-when-readonly">X</button></td>
+					{if $user['roleCode'] === 'admin'}<td><button class="button btndelete strikethrough-when-readonly">X</button></td>{/if}
 				</tr>
 			{/foreach}
 		{else}
@@ -49,7 +52,7 @@
 
 {capture name="buttons"}
 	<a class="button large shine strikethrough-when-readonly" href="/edit/tag">New Tag</a>
-	<button class="button large shine strikethrough-when-readonly" onclick="addVersionPrompt()" nonce="{$cspNonce}">Manually Add Version</button>
+	{if $user['roleCode'] === 'admin'}<button class="button large shine strikethrough-when-readonly" onclick="addVersionPrompt()" nonce="{$cspNonce}">Manually Add Version</button>{/if}
 {/capture}
 
 <script nonce="{$cspNonce}" type="text/javascript">

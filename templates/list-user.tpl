@@ -1,14 +1,12 @@
 {include file="header"}
-
 	<h2>
-		<span>
-			<a href="/list/user">{intval(count($rows))} Users</a>
-		</span>
-	</h2>	
+		User List
+	</h2>
+	<p>{count($rows)} Results{if count($rows) === 500} <small><i>(display limit)</i></small>{/if}</p>
 	
 	<form method="get" autocomplete="off" class="flex-list">
 		<div data-label="Name">
-			<input type="text" name="name" value="{$searchvalues['name']}">
+			<input type="text" name="name" value="{$searchParameters['name']}">
 		</div>
 		
 		<div data-label="">
@@ -21,31 +19,24 @@
 	<table class="stdtable" id="Users">
 		<thead>
 			<tr>
-				{foreach from=$columns item=column}
-					<th>{$column['title']}</th>
-				{/foreach}
+				<th>Name</th>
+				{if $user['roleCode'] === 'admin'}<th>E-Mail</th>{/if}
+				<th>First Login</th>
+				<th>Banned Until</th>
 			</tr>
 		</thead>
 		<tbody>
 		{if !empty($rows)}
 			{foreach from=$rows item=row}
 				<tr>
-					{foreach from=$columns item=column}
-						<td>
-							<a href="/show/user/{$row['hash']}">
-								{if isset($column["format"]) && $column["format"] == "date"} 
-									{fancyDate($row[$column['code']])}
-								{else}
-									{$row[$column['code']]}
-								{/if}
-							</a>
-						</td>
-					{/foreach}
-					
+					<td><a href="/show/user/{$row['hash']}">{$row['name']}</a></td>
+					{if $user['roleCode'] === 'admin'}<td>{$row['email']}</td>{/if}
+					<td>{fancyDate($row['created'])}</td>
+					<td>{fancyDate($row['bannedUntil'])}</td>
 				</tr>
 			{/foreach}
 		{else}
-			<td colspan="{count($columns)}">{if empty($searchvalues['name'])}Search for a name to get results{else}<i>No {$entryplural} found</i>{/if}</td>
+			<td colspan="5"><i>No Users found</i></td>
 		{/if}
 		</tbody>
 	</table>

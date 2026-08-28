@@ -1,30 +1,39 @@
 <?php
+/**
+ * @var object $view
+ * @var object $con
+ * @var array? $user
+ */
 
-if ($user['roleCode'] !== 'admin' && $user['roleCode'] !== 'moderator') showErrorPage(HTTP_FORBIDDEN);
+if($user['roleCode'] !== 'admin' && $user['roleCode'] !== 'moderator') showErrorPage(HTTP_FORBIDDEN);
 
-$view->assign("columns", array(
-	["code" => "name", "title" => "Name"],
-	["code" => "email", "title" => "E-Mail"],
-	["code" => "created", "title" => "First Login", "format" => "date"],
-	["code" => "lastOnline", "title" => "Last online", "format" => "date"],
-	["code" => "bannedUntil", "title" => "Banned until", "format" => "date"],
-));
-
-$searchvalues = array(
+$searchParameters = [
 	"name" => $_GET["name"] ?? '',
-);
-$view->assign("searchvalues", $searchvalues);
+];
 
-if (isset($searchvalues["name"])) {
-	$view->assign("rows", $con->getAll(<<<SQL
-		SELECT *, HEX(`hash`) AS `hash`
-		FROM users
-		WHERE name LIKE ?
-		LIMIT 500
-	SQL, ["%".escapeStringForLikeQuery($searchvalues['name'])."%"]));
+$sqlColumns = '`name`, email, HEX(`hash`) AS `hash`, created, bannedUntil';
+
+if (!empty($searchParameters["name"])) {
+	$resultRows = $con->getAll(<<<SQL
+			SELECT $sqlColumns
+			FROM users
+			WHERE `name` = ?
+		UNION 
+			SELECT $sqlColumns
+			FROM users
+			WHERE `name` LIKE ?
+			LIMIT 500
+	SQL, [$searchParameters['name'], "%".escapeStringForLikeQuery($searchParameters['name'])."%"]);
 } else {
-	$view->assign("rows", []);
+	$resultRows = $con->getAll(<<<SQL
+		SELECT $sqlColumns
+		FROM users
+		ORDER BY created DESC
+		LIMIT 500
+	SQL);
 }
 
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_ADMIN_TOOLS, null, true);
+$view->assign('searchParameters', $searchParameters);
+$view->assign('rows', $resultRows);
 $view->display('list-user');

@@ -5,7 +5,7 @@ if (empty($user)) {
 	header('Location: /login');
 	exit();
 }
-if ($user['roleCode'] != 'admin') showErrorPage(HTTP_FORBIDDEN);
+if ($user['roleCode'] !== 'admin' && $user['roleCode'] !== 'moderator') showErrorPage(HTTP_FORBIDDEN);
 
 $tagId = $_REQUEST['tagid'] ?? 0;
 
