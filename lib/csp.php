@@ -13,8 +13,8 @@ $_csp = [
 	// Allow all images served from us or any http(s) domain, as well as inlined data images. Effectively all images.
 	'img-src' => "'self' http: data: blob:",
 	'manifest-src' => "'self'",
-	// Allow data i-frames for tinymce preview and youtube (very specific, www.youtube.com is the only one allowed by the filters)
-	'frame-src' => "data: www.youtube.com/embed/ www.youtube-nocookie.com/embed/",
+	// Allow data i-frames for tinymce preview, youtube and billi-billi
+	'frame-src' => "data: www.youtube.com/embed/ www.youtube-nocookie.com/embed/ player.bilibili.com/player.html",
 	// Explicitly allow boxicons font(s) from unpkg
 	'font-src' => "unpkg.com/boxicons@2.1.4/fonts/",
 ];

@@ -159,9 +159,14 @@ if (!empty($asset['trailerVideoUrl'])) {
 	if (preg_match('#youtu(?:be(?:-nocookie)?\.\w{2,3}(?:/embed/|.+?v=)|\.be/)([\w-]+)#', $asset['trailerVideoUrl'], $m)) {
 		$trailerEmbedUrl = "https://www.youtube-nocookie.com/embed/{$m[1]}";
 		$trailerThumbUrl = "https://img.youtube.com/vi/{$m[1]}/mqdefault.jpg";
-	} elseif (preg_match('#vimeo\.com/(\d+)#', $asset['trailerVideoUrl'], $m)) {
+	}
+	elseif (preg_match('#vimeo\.com/(\d+)#', $asset['trailerVideoUrl'], $m)) {
 		$trailerEmbedUrl = "https://player.vimeo.com/video/{$m[1]}";
 		$trailerThumbUrl = "https://vumbnail.com/{$m[1]}.jpg";
+	}
+	elseif (preg_match('#bilibili\.com/video/(\w+)#', $asset['trailerVideoUrl'], $m)) {
+		$trailerEmbedUrl = "https://player.bilibili.com/player.html?isOutside=true&bvid={$m[1]}&p=1";
+		$trailerThumbUrl = "";
 	}
 	else {
 		$trailerEmbedUrl = $asset['trailerVideoUrl']; // Fallback. Will probably not work because of csp, but lets at least try.

@@ -106,7 +106,7 @@
 				<div class="viewport">
 					<div class="stage">
 						{if !empty($trailerEmbedUrl)}
-						<div><iframe src="{$trailerEmbedUrl}" allowfullscreen loading="lazy"></iframe></div>
+						<div><iframe src="{$trailerEmbedUrl}" allowfullscreen loading="lazy" allow="encrypted-media; picture-in-picture; web-share; clipboard-write"></iframe></div>
 						{/if}
 						{foreach from=$files item=file}
 						<div><img src="{$file['url']}" loading="lazy"></div>

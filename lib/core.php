@@ -207,7 +207,7 @@ function sanitizeHtml($text)
 // <iframe width="560" height="315" src="https://www.youtube.com/embed/AmQV7QwjCac?si=iJaNM5nzTf4s7FHX" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 /**
- * @param string $element_name
+ * @param string $elementName
  * @param array<string, string>|0 $attributes  zero in case of closing tag
  * @return string post-filter html according to the tag. Must produce opening / closing tags according to the attributes param.
  */
@@ -232,17 +232,26 @@ function _htmLawed_sanitize_node($elementName, $attributes = 0) {
 
 	switch($elementName) {
 		case 'iframe': {
-			if(empty($attributes['src']) || !preg_match('#//(?:www\.)?youtube(?:-nocookie)?\.com/embed#i', $attributes['src'])) {
+			$hasSrc = empty($attributes['src']);
+			static $allowedKeys = ['src'=>1, 'width'=>1, 'height'=>1];
+			if($hasSrc && preg_match('#//(?:www\.)?youtube(?:-nocookie)?\.com/embed#i', $attributes['src'])) {
+				$attributes = array_intersect_key($attributes, $allowedKeys);
+				// Strip unnecessary params from url and turn it into a no-cookie link:
+				$attributes['src'] = '//www.youtube-nocookie.com'.parse_url($attributes['src'], PHP_URL_PATH);
+				// Strip autoplay and other telemetry gunk:
+				$attributes['allow'] = 'encrypted-media; picture-in-picture; web-share; clipboard-write';
+				$attributes['allowfullscreen'] = '';
+			}
+			else if($hasSrc && preg_match('#//player.bilibili.com/player.html?#i', $attributes['src'])) {
+				$attributes = array_intersect_key($attributes, $allowedKeys);
+				// Strip autoplay and other telemetry gunk:
+				$attributes['allow'] = 'encrypted-media; picture-in-picture; web-share; clipboard-write';
+				$attributes['allowfullscreen'] = '';
+			}
+			else {
 				$removeDepth = 1;
 				return '';
 			}
-
-			static $allowedKeys = ['src'=>1, 'width'=>1, 'height'=>1, 'allowfullscreen'=>1, 'allow'=>1];
-			$attributes = array_intersect_key($attributes, $allowedKeys);
-			// Strip unnecessary params from url and turn it into a no-cookie link:
-			$attributes['src'] = '//www.youtube-nocookie.com'.parse_url($attributes['src'], PHP_URL_PATH);
-			// Strip autoplay and other telemetry gunk:
-			$attributes['allow'] = 'encrypted-media; picture-in-picture; web-share; clipboard-write';
 		}
 	}
 
@@ -949,7 +958,13 @@ function _inflateLink($link, $wrapUnmatchedLink)
 	// https://youtu.be/fo1-OcWmJDM
 	if(preg_match('#youtu(?:be.\w+/.+?v=|\.be/)([\w\-]+)#', $link, $matches)) {
 		$ytid = $matches[1]; // @security: The id is alphanumeric and therefore inert
-		return "<iframe width='100%' height='315' src='https://www.youtube.com/embed/{$ytid}?rel=0&amp;showinfo=0&amp;color=orange&amp;iv_load_policy=3' frameborder='0' allowfullscreen></iframe>";
+		return "<iframe width='100%' height='315' src='https://www.youtube.com/embed/{$ytid}?rel=0&amp;showinfo=0&amp;color=orange&amp;iv_load_policy=3' frameborder='0' allowfullscreen allow='encrypted-media; picture-in-picture; web-share; clipboard-write'></iframe>";
+	}
+
+	// https://www.bilibili.com/video/BV13bgn6gEg1/
+	if(preg_match('#bilibili\.com/video/([\w]+)#', $link, $matches)) {
+		$bid = $matches[1]; // @security: The id is alphanumeric and therefore inert
+		return "<iframe width='100%' height='315' src='https://player.bilibili.com/player.html?isOutside=true&bvid={$bid}&p=1' frameborder='0' allowfullscreen allow='encrypted-media; picture-in-picture; web-share; clipboard-write'></iframe>";
 	}
 
 	$urlParts = parse_url($link);
