@@ -55,7 +55,9 @@ function dump($var)
  * @param string $string
  * @param string $separator
  * @param string &$out_left
+ * @param-out string $out_left
  * @param string &$out_right
+ * @param-out string $out_right
  */
 function splitOnce($string, $separator, &$out_left, &$out_right)
 {

@@ -7,7 +7,8 @@
 
 /**
  * @param string $filepath
- * @param array{'id':string|null, 'name':string|null, 'version':int, 'type':'Theme'|'Content'|'Code'|null, 'side':'Universal'|'Client'|'Server'|null, 'requiredOnClient':bool, 'requiredOnServer':bool, 'networkVersion':int, 'description':string|null, 'rawAuthors':string|null, 'rawContributors':string|null, 'website':string|null, 'iconPath':string|null, 'rawDependencies':string|null, 'errors':string|null} &$modInfo
+ * @param array &$modInfo
+ * @param-out array{'id':string|null, 'name':string|null, 'version':int, 'type':'Theme'|'Content'|'Code'|null, 'side':'Universal'|'Client'|'Server'|null, 'requiredOnClient':bool, 'requiredOnServer':bool, 'networkVersion':int, 'description':string|null, 'rawAuthors':string|null, 'rawContributors':string|null, 'website':string|null, 'iconPath':string|null, 'rawBackgroundPaths': string|null, 'rawDependencies':string|null, 'errors':string|null} $modInfo
  * @return bool false on error
  */
 function modpeek($filepath, &$modInfo)
@@ -44,21 +45,22 @@ function modpeek($filepath, &$modInfo)
 
 
 	$modInfo = [
-		'id'               => null,
-		'name'             => null,
-		'version'          => 0,
-		'type'             => null,
-		'side'             => null,
-		'requiredOnServer' => false,
-		'requiredOnClient' => false,
-		'networkVersion'   => 0,
-		'description'      => null,
-		'website'          => null,
-		'iconPath'         => null,
-		'rawAuthors'       => null,
-		'rawContributors'  => null,
-		'rawDependencies'  => null,
-		'errors'           => trim($errors) ?: null
+		'id'                 => null,
+		'name'               => null,
+		'version'            => 0,
+		'type'               => null,
+		'side'               => null,
+		'requiredOnServer'   => false,
+		'requiredOnClient'   => false,
+		'networkVersion'     => 0,
+		'description'        => null,
+		'website'            => null,
+		'iconPath'           => null,
+		'rawAuthors'         => null,
+		'rawContributors'    => null,
+		'rawBackgroundPaths' => null,
+		'rawDependencies'    => null,
+		'errors'             => trim($errors) ?: null
 	];
 
 	//NOTE(Rennorb): Validation happens in modpeek, the only thing we need to be aware of is that a description or name may contain arbitrary characters.
@@ -83,6 +85,8 @@ function modpeek($filepath, &$modInfo)
 			case 'Authors':      $modInfo['rawAuthors']      = $rawValue ?: null; break;
 			case 'Contributors': $modInfo['rawContributors'] = $rawValue ?: null; break;
 			case 'Dependencies': $modInfo['rawDependencies'] = $rawValue ?: null; break;
+
+			case 'BackgroundPaths': $modInfo['rawBackgroundPaths'] = $rawValue ?: null; break;
 		}
 	}
 
@@ -113,6 +117,11 @@ function deserializeModInfoArrayFields(&$modInfo)
 		}
 	}
 	$modInfo['dependencies'] = $deps;
+
+	$modInfo['backgroundPaths'] = $modInfo['rawBackgroundPaths']
+		// Unescape escaped names here     ',\ '  -> ', '
+		? array_map(fn($n) => str_replace(',\ ', ', ', $n), explode(', ', $modInfo['rawBackgroundPaths']))
+		: [];
 }
 
 
