@@ -27,10 +27,7 @@ else {
 		<span><?= stringifyModerationRequestKind($ticket) ?></span>
 		<span class="text-weak">[#<?= $ticket['requestId'] ?>]</span>
 		<span class="tag"><?= $isModerator ? stringifyModerationRequestState($ticket['stateFlags']) : stringifyModerationRequestStateForUser($ticket['stateFlags']) ?></span>
-		<p class="by-user">
-			About <a href="/show/mod/<?= $targetLink ?>"><?= $targetLabel ?></a>
-			<? if($isModerator): ?>by <a href="/show/user/<?= $ticket['initiatorHash'] ?>"><?= escapeHtml($ticket['initiatorName']) ?></a><? endif; ?>
-		</p>
+		<p class="by-user">About <a href="/show/mod/<?= $targetLink ?>"><?= $targetLabel ?></a><? if($isModerator): ?>, reported by <a href="/show/user/<?= $ticket['initiatorHash'] ?>"><?= escapeHtml($ticket['initiatorName']) ?></a><? endif; ?></p>
 	</h2>
 
 	<h3>Request:</h3>
