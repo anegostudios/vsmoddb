@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS `auditLogs` (
   `flags`            INT1 UNSIGNED NOT NULL,
 	`referenceId`      INT           NOT NULL,
 	`initiatorUserId`  INT           NOT NULL,
-	`info`             TEXT CHARACTER SET 'utf8mb4' NULL,
+	`info`             MEDIUMTEXT CHARACTER SET 'utf8mb4' NULL,
 	`created`          DATETIME      NOT NULL DEFAULT NOW(),
 	PRIMARY KEY (logId),
 	INDEX `referenced` (referenceId, kind)

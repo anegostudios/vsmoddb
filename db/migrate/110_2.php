@@ -1,7 +1,7 @@
 <?php
 
 $config = [];
-$config["basepath"] = dirname(__DIR__).'/';
+$config["basepath"] = dirname(dirname(__DIR__)).'/';
 $_SERVER["SERVER_NAME"] = "mods.vintagestory.stage";
 $_SERVER["REQUEST_URI"] = "/";
 include($config["basepath"]."lib/config.php");
