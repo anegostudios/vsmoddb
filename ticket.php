@@ -14,15 +14,19 @@ if(!$requestId)   showErrorPage(HTTP_BAD_REQUEST, 'Missing or malformed request 
 
 
 $queryFilterOwnTickets = canModerate(null, $user) ? '' : ' AND r.initiatorUserId = '.$user['userId']; // @security: $user['userId'] comes form the database and is int, therefore sql inert.
-$ticket = $con->getRow(<<<SQL
-	SELECT r.*,
+$ticket = $con->getRow("
+	SELECT r.requestId, r.kind, r.category, r.request, r.resolution, r.stateFlags, r.initiatorUserId, r.referenceId, COALESCE(`mod`.modId, modc.modId) AS modId, am.name AS modName,
 		i.name AS `initiatorName`, HEX(i.hash) AS `initiatorHash`, 
 		m.name AS `resolverName`, HEX(m.hash) AS `resolverHash`
 	FROM moderationRequests r
 	LEFT JOIN users i ON i.userId = r.initiatorUserId
 	LEFT JOIN users m ON m.userId = r.resolverUserId
+	LEFT JOIN mods `mod` ON (r.kind = ".MOD_REQUEST_KIND_REPORT_MOD." AND `mod`.modId = r.referenceId)
+	LEFT JOIN comments c ON (r.kind = ".MOD_REQUEST_KIND_REPORT_COMMENT." AND c.commentId = r.referenceId)
+	LEFT JOIN assets am ON am.assetId = COALESCE(`mod`.assetId, c.assetId)
+	LEFT JOIN mods modc ON (r.kind = ".MOD_REQUEST_KIND_REPORT_COMMENT." AND modc.assetId = am.assetId)
 	WHERE r.requestId = $requestId $queryFilterOwnTickets
-SQL); // @security: $requestId is validated to be int, therefore sql inert.
+"); // @security: $requestId is validated to be int, therefore sql inert.
 if(!$ticket)   showErrorPage(HTTP_NOT_FOUND, 'Moderation Request not found.');
 
 $ticket['stateFlags'] = intval($ticket['stateFlags']); // ... ffs mysqli

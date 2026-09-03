@@ -2,6 +2,15 @@
 
 $isModerator = canModerate(null, $user);
 
+if($ticket['kind'] == MOD_REQUEST_KIND_REPORT_MOD) {
+	$targetLink = $ticket['modId'];
+	$targetLabel = escapeHtml($ticket['modName']);
+}
+else {
+	$targetLink = $ticket['modId'].'#cmt-'.$ticket['referenceId'];
+	$targetLabel = 'a comment on '.escapeHtml($ticket['modName']);
+}
+
 ?>
 {include file="header" hclass="innercontent with-buttons-bottom moderation-request"}
 
@@ -18,9 +27,10 @@ $isModerator = canModerate(null, $user);
 		<span><?= stringifyModerationRequestKind($ticket) ?></span>
 		<span class="text-weak">[#<?= $ticket['requestId'] ?>]</span>
 		<span class="tag"><?= $isModerator ? stringifyModerationRequestState($ticket['stateFlags']) : stringifyModerationRequestStateForUser($ticket['stateFlags']) ?></span>
-		<? if($isModerator): ?>
-		<p class="by-user">By <a href="/show/user/<?= $ticket['initiatorHash'] ?>"><?= escapeHtml($ticket['initiatorName']) ?></a></p>
-		<? endif; ?>
+		<p class="by-user">
+			About <a href="/show/mod/<?= $targetLink ?>"><?= $targetLabel ?></a>
+			<? if($isModerator): ?>by <a href="/show/user/<?= $ticket['initiatorHash'] ?>"><?= escapeHtml($ticket['initiatorName']) ?></a><? endif; ?>
+		</p>
 	</h2>
 
 	<h3>Request:</h3>
