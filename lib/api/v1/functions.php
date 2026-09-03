@@ -153,6 +153,7 @@ function listMods()
 	$wherevalues = array();
 	$orderBy = 'asset.created';
 	$orderDirection = 'desc';
+	$limitSql = '';
 	$allowedOrderBy = ['asset.created', 'lastreleased', 'downloads', 'follows', 'comments', 'trendingpoints'];
 
 	if (!empty($_GET["orderby"]) && in_array($_GET['orderby'], $allowedOrderBy, true)) {
@@ -197,6 +198,9 @@ function listMods()
 		$wheresql[] = "exists (select 1 from modCompatibleGameVersionsCached cgv where cgv.modId = `mod`.modId and cgv.gameVersion in (" . implode(",", $gamevers) . "))";
 	}
 
+	$limit = filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT, [ 'min_range' => 1 ]);
+	if($limit) $limitSql = "LIMIT $limit";
+
 
 	$wheresql[] = "asset.statusId = 2";
 
@@ -232,6 +236,7 @@ function listMods()
 		" . (count($wheresql) ? " and " . implode(" and ", $wheresql) : "") . "
 		group by `mod`.modId
 		order by $orderBy $orderDirection
+		$limitSql
 	", $wherevalues);
 	$mods = array();
 	foreach ($rows as $row) {
