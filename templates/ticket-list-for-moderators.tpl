@@ -25,7 +25,7 @@
 				<? foreach($mod['reports'] as $ticket): ?>
 					<a href="/t/<?= $ticket['requestId'] ?>" target="_blank">
 						<h4><?= stringifyModerationRequestCategory($ticket) ?></h4>
-						<div><?= $ticket['requestSearchable'] ?></div>
+						<div><?= escapeHtml($ticket['requestSearchable']) ?></div>
 					</a>
 				<? endforeach; ?>
 				</div>
@@ -56,7 +56,7 @@
 				<? foreach($comment['reports'] as $ticket): ?>
 					<a href="/t/<?= $ticket['requestId'] ?>" target="_blank">
 						<h4><?= stringifyModerationRequestCategory($ticket) ?></h4>
-						<div><?= $ticket['requestSearchable'] ?></div>
+						<div><?= escapeHtml($ticket['requestSearchable']) ?></div>
 					</a>
 				<? endforeach; ?>
 				</div>
