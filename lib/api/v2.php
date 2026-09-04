@@ -57,7 +57,7 @@ if (empty($urlparts)) {
 function good($data = null, $flags = 0)
 {
 	header('Content-Type: application/json');
-	exit(($data !== null) ? json_encode($data, $flags) : '{}');
+	exit(($data !== null) ? json_encode($data, $flags) : '{}'); //TODO(Rennorb)  @cleanup: switch this to HTTP_NO_CONTENT if empty
 }
 
 include($config["basepath"] . "lib/api/public/_routing.php");

@@ -16,12 +16,12 @@
 {include file="header"}
 
 {if $transferownership}
-	<form class="teaminvite overlay-when-readonly" method="post">
+	<form class="teaminvite transfer overlay-when-readonly" method="post" onsubmit="return false;">
 		<input type="hidden" name="at" value="{$user['actionToken']}">
 		<span>You have been invited to become the owner of this modification.</span>
 		<div class="buttons">
-			<button type="submit" name="acceptownershiptransfer" value="1" title="Accept Ownership" class="button submit">Accept</button>
-			<button type="submit" name="acceptownershiptransfer" value="0" title="Decline Ownership" class="button btndelete">Decline</button>
+			<button type="submit" name="accept" value="1" title="Accept Ownership" class="button submit">Accept</button>
+			<button type="submit" name="accept" value="0" title="Decline Ownership" class="button btndelete">Decline</button>
 		</div>
 	</form>
 {elseif $teaminvite}
@@ -381,7 +381,7 @@
 					$(this).toggleClass("on off");
 					$(".count", $(this)).text("" + (oldCount + 1));
 
-					promise = $.post(`/api/v2/settings/notifications/followed-mods/${modId}`, { 'new': 1 /* @hardcoded */ });
+					promise = $.post(`/api/v2/settings/notifications/followed-mods/${modId}`, \{ 'new': 1 /* @hardcoded */ });
 				}
 
 				promise.fail(jqXHR => {
@@ -391,6 +391,30 @@
 					const d = JSON.parse(jqXHR.responseText);
 					R.addMessage(MSG_CLASS_ERROR, 'Failed to (un-)follow mod' + (d.error ? (': '+d.error) : '.'), true)
 				});
+			});
+
+			const transferForm = document.getElementsByClassName('teaminvite transfer')[0];
+			if(transferForm) transferForm.addEventListener('submit', (e) => \{
+				const data = new FormData(e.target, e.submitter); // before the disable
+
+				const buttons = e.target.getElementsByTagName('button');
+				for(const btn of buttons) btn.disabled = true;
+
+				const buttonContent = e.submitter.textContent;
+				startSubmissionSpinner(e.submitter);
+
+				const promise = $.ajax(\{ url: `/api/v2/mods/${modId}/transfer`, method: 'POST', data: data, processData: false, contentType: false });
+				R.attachDefaultFailHandler(promise, 'Failed '+(+e.submitter.value ? 'accept' : 'reject')+' transfer');
+				promise
+					.fail(() => \{
+						stopSubmissionSpinner(e.submitter, buttonContent);
+						for(const btn of buttons) btn.disabled = false;
+					})
+					.done(() => \{
+						stopSubmissionSpinner(e.submitter, 'Success!');
+						R.addMessage(MSG_CLASS_OK, 'Transfer '+(+e.submitter.value ? 'accepted' : 'rejected')+'.');
+						window.location.reload();
+					});
 			});
 		{/if}
 

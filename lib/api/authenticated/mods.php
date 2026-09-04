@@ -1,6 +1,15 @@
 <?php
 
-/** @var array $user */
+/**
+ * @var object $con
+ * @var array $user
+ * @var array $config
+ * @var array<string> $urlparts
+ */
+
+const PREVIOUS_OWNER_HANDLING_PRESERVE = 0;
+const PREVIOUS_OWNER_HANDLING_DEMOTE   = 1;
+const PREVIOUS_OWNER_HANDLING_REMOVE   = 2;
 
 if(count($urlparts) < 2)   fail(HTTP_BAD_REQUEST);
 
@@ -142,6 +151,147 @@ switch($urlparts[1]) {
 		$ok = $con->completeTrans();
 		if($ok) good();
 		else fail(HTTP_INTERNAL_ERROR, 'Internal database error.');
+
+	case 'transfer':
+		validateMethod('POST');
+		validateUserNotBanned();
+		validateActionTokenAPI();
+
+		$newOwnerId = filter_input(INPUT_POST, 'newOwnerId', FILTER_VALIDATE_INT, [ 'options' => [ 'min_range' => 1 ]]);
+		$transferAccepted = isset($_POST['accept']) ? (filter_input(INPUT_POST, 'accept', FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? -1) : null;
+		if($newOwnerId === null && $transferAccepted === null)  fail(HTTP_BAD_REQUEST, "Missing either 'newOwnerId' or 'accepted'.");
+		if($newOwnerId !== null && $transferAccepted !== null)  fail(HTTP_BAD_REQUEST, "You must only provide one of 'newOwnerId' or 'accepted'.");
+		if($newOwnerId === false)  fail(HTTP_BAD_REQUEST, "Malformed parameter 'newOwnerId'.");
+		if($transferAccepted === -1)  fail(HTTP_BAD_REQUEST, "Malformed parameter 'accepted'.");
+
+		$mod = $con->getRow("
+			SELECT m.assetId, a.createdByUserId, m.created, t.userId AS currentTransferUserId, t.name AS currentTransferUserName, n.notificationId
+			FROM mods m
+			JOIN assets a ON a.assetId = m.assetId
+			LEFT JOIN notifications AS n ON n.kind = ".NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST." AND n.recordId = $modId AND !n.`read`
+			LEFT JOIN users t ON t.userId = n.userId
+			WHERE m.modId = $modId
+		"); // @security $modId is validate to be int, therefor sql inert
+		$mod['assetTypeId'] = ASSETTYPE_MOD;
+		if(!$mod)  fail(HTTP_NOT_FOUND);
+
+		if($transferAccepted !== null) {
+			if($mod['currentTransferUserId'] != $user['userId']) fail(HTTP_BAD_REQUEST, 'This mod is not currently being transferred to you.');
+
+			$con->startTrans();
+
+			$con->execute("UPDATE notifications SET `read` = 1 WHERE notificationId = {$mod['notificationId']}");
+
+			if($transferAccepted) {
+				// swap owner and teammember that accepted in the teammembers table
+				$con->execute(<<<SQL
+					UPDATE modTeamMembers
+					SET userId = {$mod['createdByUserId']}, canEdit = 1, created = '{$mod['created']}'
+					WHERE modId = $modId AND userId = {$user['userId']}
+				SQL);
+				$con->execute("UPDATE assets SET createdByUserId = {$user['userId']} WHERE assetId = {$mod['assetId']}");
+
+				$responseNotificationFlag = (1 << 30); // Use the 31st bit of the modId to indicate success :PackedTransferSuccess
+				$auditLogFlag = AUDIT_LOG_FLAG_ACCEPTED;
+			}
+			else {
+				$responseNotificationFlag = (0 << 30); // :PackedTransferSuccess
+				$auditLogFlag = AUDIT_LOG_FLAG_REJECTED;
+			}
+
+			// Send notification to the original author:
+			$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES ('.NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED.', ?, ?) ', [$mod['createdByUserId'], $modId | $responseNotificationFlag]);
+
+			logAuditEvent(AUDIT_LOG_KIND_MOD_CHANGE_OWNER_RESOLVED, $modId, null, $auditLogFlag);
+
+			$con->completeTrans();
+
+			good();
+		}
+
+		if(!canEditAsset($mod, $user, false))  fail(HTTP_FORBIDDEN);
+
+		$bypassChecks = filter_input(INPUT_POST, 'immediate', FILTER_VALIDATE_BOOL);
+		if($bypassChecks && !canModerate(null, $user))  fail(HTTP_FORBIDDEN, 'Only moderators can immediately transfer mods without a notification.');
+
+		$previousOwnerHandling = filter_input(INPUT_POST, 'previousOwnerHandling', FILTER_UNSAFE_RAW);
+		if(!$previousOwnerHandling) {
+			$previousOwnerHandling = PREVIOUS_OWNER_HANDLING_PRESERVE;
+		}
+		else {
+			if(!canModerate(null, $user))   fail(HTTP_BAD_REQUEST, 'Only moderators can specify previousOwnerHandling.');
+			if(!$bypassChecks)   fail(HTTP_BAD_REQUEST, 'previousOwnerHandling requires immediate mode.');
+
+			switch($previousOwnerHandling) {
+				case 'preserve': $previousOwnerHandling = PREVIOUS_OWNER_HANDLING_PRESERVE; break;
+				case 'demote'  : $previousOwnerHandling = PREVIOUS_OWNER_HANDLING_DEMOTE;   break;
+				case 'remove'  : $previousOwnerHandling = PREVIOUS_OWNER_HANDLING_REMOVE;   break;
+				default: fail(HTTP_BAD_REQUEST, "Malformed param previousOwnerHandling'. Must be one of 'preserve', 'demote' or 'remove'.");
+			}
+		}
+
+		require_once($config['basepath'].'lib/mod.php');
+
+		if(!$bypassChecks) {
+			if($mod['currentTransferUserId']) {
+				fail(HTTP_BAD_REQUEST, 'An invitation to transfer ownership has already been sent to '.($mod['currentTransferUserId'] == $newOwnerId ? 'this user.' : "'{$mod['currentTransferUserName']}'."));
+			}
+			if(!isTeamMember($modId, $newOwnerId)) {
+				fail(HTTP_BAD_REQUEST, 'The new owner is not a team member of the mod.');
+			}
+		}
+		else {
+			// Got to at least check the user exists, even if we bypass other checks:
+			if(!$con->getOne("SELECT 1 FROM users WHERE userId = $newOwnerId")) { // @security $newOwnerId is validate to be int, therefor sql inert
+				fail(HTTP_BAD_REQUEST, 'The new owner does not exist.');
+			}
+		}
+
+		$con->startTrans();
+
+		if(!$bypassChecks) {
+			$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES (?, ?, ?)', [NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST, $newOwnerId, $modId]);
+			logAuditEvent(AUDIT_LOG_KIND_MOD_CHANGE_OWNER_INITIATED, $modId, "{$mod['createdByUserId']}");
+		}
+		else if($mod['createdByUserId'] != $newOwnerId) {
+			// Abort pending transfers:
+			$con->execute("
+				INSERT INTO auditLogs (kind, flags, referenceId, initiatorUserId)
+					SELECT ".AUDIT_LOG_KIND_MOD_CHANGE_OWNER_RESOLVED.", ".AUDIT_LOG_FLAG_ABORTED.", $modId, {$user['userId']}
+					FROM notifications
+					WHERE (kind, recordId, `read`) = (".NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST.", $modId, 0)
+			");
+			$con->execute("UPDATE notifications SET `read` = 1 WHERE (kind, recordId, `read`) = (".NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST.", $modId, 0)");
+
+			if($previousOwnerHandling === PREVIOUS_OWNER_HANDLING_REMOVE) {
+				// Remove the new owner from team members if the entry exists, but don't swap it with the old owner:
+				$con->execute("DELETE FROM modTeamMembers WHERE userId = $newOwnerId");
+			}
+			else {
+				$canEdit = $previousOwnerHandling === PREVIOUS_OWNER_HANDLING_PRESERVE ? 1 : 0;
+				// Swap owner and teammember that accepted in the teammembers table:
+				$con->execute(<<<SQL
+					UPDATE modTeamMembers
+					SET userId = {$mod['createdByUserId']}, canEdit = $canEdit, created = '{$mod['created']}'
+					WHERE modId = $modId AND userId = $newOwnerId
+				SQL);
+
+				if(!$con->affected_rows()) {
+					// If the new owner was not a member before we need to create a new entry here:
+					$con->execute("INSERT INTO modTeamMembers (modId, userId, canEdit) VALUES ($modId, {$mod['createdByUserId']}, $canEdit)");
+				}
+			}
+
+			$con->execute("UPDATE assets SET createdByUserId = $newOwnerId WHERE assetId = {$mod['assetId']}");
+			
+			logAuditEvent(AUDIT_LOG_KIND_MOD_CHANGE_OWNER_INITIATED, $modId, "{$mod['createdByUserId']}");
+			logAuditEvent(AUDIT_LOG_KIND_MOD_CHANGE_OWNER_RESOLVED, $modId, null, AUDIT_LOG_FLAG_ACCEPTED);
+		}
+
+		$ok = $con->completeTrans();
+		if(!$ok) fail(HTTP_INTERNAL_ERROR, 'Internal database error.');
+
+		good();
 
 	case 'report':
 		validateMethod('PUT');

@@ -368,7 +368,9 @@ $view->assign("isFollowing", empty($user) ? 0 : $con->getOne('SELECT modId FROM 
 
 if (!empty($user)) {
 	processTeamInvitation($asset, $user);
-	processOwnershipTransfer($asset, $user);
+
+	$pendingInvitationId = $con->getOne("SELECT notificationId FROM notifications WHERE kind = ? AND !`read` AND userId = ? AND recordId = ?", [NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST, $user['userId'], $asset['modId']]);
+	$view->assign("transferownership", $pendingInvitationId);
 }
 
 cspAllowTinyMceComment();
@@ -455,66 +457,6 @@ function processTeamInvitation($asset, $user)
 			$con->Execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$invite['notificationId']]);
 
 			logAuditEvent(AUDIT_LOG_KIND_MOD_MEMBER_INVITE_RESOLVED, $asset['modId'], null, AUDIT_LOG_FLAG_REJECTED);
-
-			$con->completeTrans();
-
-			forceRedirectAfterPOST();
-			exit();
-	}
-}
-
-function processOwnershipTransfer($asset, $user)
-{
-	global $con, $view;
-
-	$pendingInvitationId = $con->getOne("SELECT notificationId FROM notifications WHERE kind = ? AND !`read` AND userId = ? AND recordId = ?", [NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST, $user['userId'], $asset['modId']]);
-	$view->assign("transferownership", $pendingInvitationId);
-	if(!$pendingInvitationId) return;
-
-
-	if(!isset($_POST['acceptownershiptransfer'])) return;
-
-	if(DB_READONLY) showReadonlyPage();
-
-	switch ($_POST['acceptownershiptransfer']) {
-		case 1:
-			$con->startTrans();
-
-			// swap owner and teammember that accepted in the teammembers table
-			$con->execute(<<<SQL
-				UPDATE modTeamMembers
-				SET userId = ?, canEdit = 1, created = ?
-				WHERE modId = ? AND userId = ?
-			SQL, [$asset['createdByUserId'], $asset['created'], $asset['modId'], $user['userId']]);
-			$con->execute('UPDATE assets SET createdByUserId = ? WHERE assetId = ?', [$user['userId'], $asset['assetId']]);
-			$con->execute(<<<SQL
-				UPDATE assets a
-				JOIN mods m ON m.modId = ?
-				JOIN modReleases r ON r.modId = m.modId AND r.assetId = a.assetId
-				set a.createdByUserId = ?
-			SQL, [$asset['modId'], $user['userId']]);
-
-			$con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$pendingInvitationId]);
-			// Send notification to the original author:
-			// Use the 31st bit of the modId to indicate success :PackedTransferSuccess
-			$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES ('.NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED.', ?, ?) ', [$asset['createdByUserId'], $asset['modId'] | (1 << 30)]);
-
-			logAuditEvent(AUDIT_LOG_KIND_MOD_CHANGE_OWNER_RESOLVED, $asset['modId'], null, AUDIT_LOG_FLAG_ACCEPTED);
-
-			$con->completeTrans();
-
-			forceRedirectAfterPOST();
-			exit();
-
-		case 0:
-			$con->startTrans();
-
-			$con->execute('UPDATE notifications SET `read` = 1 WHERE notificationId = ?', [$pendingInvitationId]);
-
-			// Send notification to the original author:
-			$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES ('.NOTIFICATION_MOD_OWNERSHIP_TRANSFER_RESOLVED.', ?, ?) ', [$asset['createdByUserId'], $asset['modId'] | (0 << 30)]); // :PackedTransferSuccess
-
-			logAuditEvent(AUDIT_LOG_KIND_MOD_CHANGE_OWNER_RESOLVED, $asset['modId'], null, AUDIT_LOG_FLAG_REJECTED);
 
 			$con->completeTrans();
 

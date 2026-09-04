@@ -247,6 +247,26 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 	- `403`: The authenticated user is not allowed to lock mods, or is currently restricted.
 	- `200`: Mod was successfully locked.
 
+### /api/v2/mods/{modid}/transfer `auth` `at`
+- `post`:
+	- Args:
+		- Path arg `{modid}`
+		- Post arg `newOwnerId`: The userId of the desired new owner. Needs to be a team member.
+		- Optional post arg: `immediate`: Moderators may transfer mods immedaitely, without notifications and the prompt for the recipient.
+		- Optional post arg: `previousOwnerHandling`: possible values: 'preserve', 'demote', 'remove'. Moderators may influence the membership and permissions of the old owner.
+	- `400`: Invalid action token or malformed request.
+	- `404`: Target mod or new owner does not exist.
+	- `403`: The authenticated user is not allowed to transfer this mod, or is currently restricted.
+	- `200`: Mod was successfully transferred (request was initiated).
+- `post`:
+	- Args:
+		- Path arg `{modid}`
+		- Post arg `accept`: boolean value indicating whetehr or not the current user accepts a transfer request.
+	- `400`: Invalid action token or malformed request.
+	- `404`: Target mod does not exist.
+	- `403`: The authenticated user is not currently invloved in a transfer request, or is currently restricted.
+	- `200`: Mod request was successfully processed.
+
 ### /api/v2/mods/{modid}/tags `auth` `at`
 - `post`:
 	- Args:

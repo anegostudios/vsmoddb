@@ -32,7 +32,7 @@
 	{if isset($assetserver) && str_starts_with($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
 
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery-1.11.1.min.js"></script>
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/chosen.jquery.min.js?v=4"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/chosen.jquery.min.js?v=5"></script>
 	{if isset($head)}{$head}{/if}
 </head>
 

@@ -198,7 +198,7 @@ function listMods()
 		$wheresql[] = "exists (select 1 from modCompatibleGameVersionsCached cgv where cgv.modId = `mod`.modId and cgv.gameVersion in (" . implode(",", $gamevers) . "))";
 	}
 
-	$limit = filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT, [ 'min_range' => 1 ]);
+	$limit = filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT, [ 'options' => [ 'min_range' => 1 ]]);
 	if($limit) $limitSql = "LIMIT $limit";
 
 
