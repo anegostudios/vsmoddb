@@ -259,9 +259,9 @@ switch($urlparts[1]) {
 				INSERT INTO auditLogs (kind, flags, referenceId, initiatorUserId)
 					SELECT ".AUDIT_LOG_KIND_MOD_CHANGE_OWNER_RESOLVED.", ".AUDIT_LOG_FLAG_ABORTED.", $modId, {$user['userId']}
 					FROM notifications
-					WHERE (kind, recordId, `read`) = (".NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST.", $modId, 0)
+					WHERE kind = ".NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST." AND recordId = $modId AND !`read`
 			");
-			$con->execute("UPDATE notifications SET `read` = 1 WHERE (kind, recordId, `read`) = (".NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST.", $modId, 0)");
+			$con->execute("UPDATE notifications SET `read` = 1 WHERE kind = ".NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST." AND recordId = $modId AND !`read`");
 
 			if($previousOwnerHandling === PREVIOUS_OWNER_HANDLING_REMOVE) {
 				// Remove the new owner from team members if the entry exists, but don't swap it with the old owner:
