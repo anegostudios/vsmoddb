@@ -201,9 +201,8 @@ function listMods()
 	$limit = filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT, [ 'options' => [ 'min_range' => 1 ]]);
 	if($limit) $limitSql = "LIMIT $limit";
 
-
-	$wheresql[] = "asset.statusId = 2";
-
+	global $user;
+	if((empty($user) || !canModerate(null, $user))) $wheresql[] = 'asset.statusId = 2';
 
 	$rows = $con->getAll("
 		select 
