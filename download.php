@@ -14,7 +14,7 @@ $file = $con->getRow(<<<SQL
 	WHERE f.fileId = ?
 SQL, [$fileId]);
 if(!$file) showErrorPage(HTTP_NOT_FOUND, 'File not found.');
-if($file['retractionReason']) showErrorPage(HTTP_GONE, '<h4>This release has been retracted. Reason:</h4>'.$file['retractionReason'], false, true);
+if($file['retractionReason'] && (empty($user) || !canModerate(null, $user))) showErrorPage(HTTP_GONE, '<h4>This release has been retracted. Reason:</h4>'.$file['retractionReason'], false, true);
 
 if(!DB_READONLY) {
 	// do download tracking
