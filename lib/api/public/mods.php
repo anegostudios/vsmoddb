@@ -305,7 +305,7 @@ switch($urlparts[0]) {
 									}
 								}
 								else if($releaseId = filter_var($urlparts[2], FILTER_VALIDATE_INT)) { // /mods/{modId}/releases/{releaseId}
-									$queryWhere = 'r.releaseId = '.$releaseId; // @security: $releaseId filtered to be int, therefore sql inert.
+									$queryWhere .= ' AND r.releaseId = '.$releaseId; // @security: $releaseId filtered to be int, therefore sql inert.
 								}
 								else {
 									fail(HTTP_BAD_REQUEST, 'Malformed releaseId.');
