@@ -484,6 +484,7 @@ else if(!empty($_POST['save'])) {
 }
 else if(!empty($_POST["delete"])) {
 	validateActionToken();
+	if(!canDeleteAsset($mod, $user)) showErrorPage(HTTP_FORBIDDEN, 'You are not allowed to delete this mod.', false, true);
 }
 
 //
