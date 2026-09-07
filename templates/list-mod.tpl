@@ -80,7 +80,6 @@
 			<select name="stati[]" multiple="true" noSearch="noSearch" style="width:18em;">
 				<option value="1"{if isset($selectedParams['stati'][1])} selected="selected"{/if}>Draft</option>
 				<option value="2"{if isset($selectedParams['stati'][2])} selected="selected"{/if}>Released</option>
-				<option value="3"{if isset($selectedParams['stati'][3])} selected="selected"{/if}>Status3</option>
 				<option value="4"{if isset($selectedParams['stati'][4])} selected="selected"{/if}>Locked</option>
 			</select>
 		</span>

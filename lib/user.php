@@ -339,4 +339,3 @@ function validateActionToken()
 const ROLE_ADMIN = 1;
 const ROLE_MODERATOR = 2;
 const ROLE_PLAYER = 3;
-const ROLE_PLAYER_COMMENTING_DISABLED = 4;

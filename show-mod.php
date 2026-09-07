@@ -229,7 +229,7 @@ foreach ($comments as $k => &$comment) {
 		$comment['flairCode'] = 'author';
 	}
 
-	if ($comment['roleCode'] != 'player' && $comment['roleCode'] != 'player_nc') {
+	if ($comment['roleCode'] != 'player') {
 		$comment['flairCode'] = $comment['roleCode'];
 	}
 

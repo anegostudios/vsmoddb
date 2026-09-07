@@ -1174,7 +1174,6 @@ const ASSETTYPE_RELEASE = 2;
 
 const STATUS_DRAFT = 1;
 const STATUS_RELEASED = 2;
-const STATUS_3 = 3;
 const STATUS_LOCKED = 4;
 
 /**

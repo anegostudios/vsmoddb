@@ -394,5 +394,4 @@ START TRANSACTION;
 INSERT INTO `roles` (`roleId`, `code`, `name`) VALUES (1, 'admin', 'Admin');
 INSERT INTO `roles` (`roleId`, `code`, `name`) VALUES (2, 'moderator', 'Moderator');
 INSERT INTO `roles` (`roleId`, `code`, `name`) VALUES (3, 'player', 'Player');
-INSERT INTO `roles` (`roleId`, `code`, `name`) VALUES (4, 'player_nc', 'Player (commenting disabled)');
 COMMIT;
