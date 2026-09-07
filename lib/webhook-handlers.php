@@ -1,4 +1,9 @@
 <?php
+/**
+ * @var array<string> $urlparts
+ * @var array<string, mixed> $config
+ * @var object $con
+ */
 
 if(count($urlparts) < 1) {
 	http_response_code(HTTP_BAD_REQUEST);
@@ -12,7 +17,7 @@ switch($urlparts[0]) {
 			exit();
 		}
 
-		if(!$_SERVER['REQUEST_METHOD'] === 'POST') {
+		if($_SERVER['REQUEST_METHOD'] !== 'POST') {
 			header('Allow: POST', true, HTTP_WRONG_METHOD);
 			exit();
 		}
