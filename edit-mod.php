@@ -60,7 +60,15 @@ if(isset($_GET['assetid'])) {
 		', [$mod['modId'], $user['userId'], $mod['modId']]);
 
 		// We always want the data if we can edit this so we can show the name in the revocation screen (and show that revocation screen).
-		$currentlyBeingTransferredTo = modCurrentlyBeingTransferredTo($mod['modId']);
+		$currentlyBeingTransferredTo = $con->getRow(<<<SQL
+			SELECT u.userId, u.name, n.notificationId
+			FROM notifications AS n
+			JOIN users u ON u.userId = n.userId
+			WHERE n.kind = ? AND n.recordId = ? AND !n.`read`
+		SQL, [NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST, $mod['modId']]) ?: [ 'userId' => 0 ];
+	}
+	else {
+		$currentlyBeingTransferredTo = [ 'userId' => 0 ];
 	}
 
 	$filesInOrder = $con->getAll(<<<SQL
@@ -101,7 +109,7 @@ else { // New mod
 		'created'         => date(SQL_DATE_FORMAT),
 	];
 	$canEditAsOwner = true;
-	$currentlyBeingTransferredTo = [];
+	$currentlyBeingTransferredTo = [ 'userId' => 0 ];
 	$filesInOrder = getHoveringFilesOfUser($user['userId'], ASSETTYPE_MOD);
 }
 
@@ -135,7 +143,7 @@ if(isset($_POST['revokenewownership'])) {
 	validateActionToken();
 	$oldMsgCount = count($messages);
 
-	if(!$currentlyBeingTransferredTo) {
+	if(!$currentlyBeingTransferredTo['userId']) {
 		addMessage(MSG_CLASS_ERROR, 'Ownership transfer revocation requested but this mod is not currently being transferred.');
 	}
 }
@@ -461,7 +469,7 @@ else if(!empty($_POST['save'])) {
 	if($oldModData['modId'] && $canEditAsOwner) { // Can only transfer if the mod already existed before this.
 		$newOwnerId = filter_input(INPUT_POST, 'newownerid', FILTER_VALIDATE_INT);
 		if($newOwnerId) {
-			if($currentlyBeingTransferredTo) {
+			if($currentlyBeingTransferredTo['userId']) {
 				addMessage(MSG_CLASS_ERROR, 'An invitation to transfer ownership has already been sent to '.($currentlyBeingTransferredTo['userId'] == $newOwnerId ? 'this user.' : "'{$currentlyBeingTransferredTo['name']}'."), true);
 			}
 			else if(!isTeamMember($mod['modId'], $newOwnerId)) {
@@ -499,7 +507,7 @@ if(isset($_POST['revokenewownership'])) {
 else if(!empty($_POST['save'])) {
 	if(count($messages) === $oldMsgCount) { // no errors occurred
 		if($mod['modId']) {
-			updateMod($oldModData, $mod, $filesInOrder, $newMembers, $newEditorMemberHashes);
+			updateMod($oldModData, $mod, $currentlyBeingTransferredTo, $filesInOrder, $newMembers, $newEditorMemberHashes);
 
 			setcookie('saved', $saveCookie, 0, '/'); // :GlobalSavedCookie
 			forceRedirectAfterPOST();
@@ -690,7 +698,7 @@ $view->assign('tags', $allTags);
 $view->assign('mod', $mod);
 $view->assign('asset', ['assetId' => $mod['assetId'], 'assetTypeId' => ASSETTYPE_MOD], null, true); //TODO(Rennorb) @cleanup: only here for the footer js / file upload code
 $view->assign('teamMembers', $teamMembers);
-if($canEditAsOwner && $currentlyBeingTransferredTo)  $view->assign("ownershipTransferUser", $currentlyBeingTransferredTo['name']);
+if($canEditAsOwner && $currentlyBeingTransferredTo['userId'])  $view->assign("ownershipTransferUser", $currentlyBeingTransferredTo['name']);
 $view->assign('files', $filesInOrder);
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_SUBMIT_MOD, null, true);
 $view->display('edit-mod');

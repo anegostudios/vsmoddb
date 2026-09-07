@@ -43,7 +43,7 @@ function createNewMod($mod, $filesInOrder, $newMembers, $newEditorMemberHashes)
 
 	updateModTags($modId, [], array_keys($mod['tags'])); // @perf: This could use a simpler path
 
-	updateModTeamMembers(['modId' => $modId, 'assetId' => $assetId], $newMembers, $newEditorMemberHashes);
+	updateModTeamMembers(['modId' => $modId, 'assetId' => $assetId], [ 'userId' => 0 ], $newMembers, $newEditorMemberHashes);
 
 	$ok = $con->completeTrans();
 
@@ -51,10 +51,13 @@ function createNewMod($mod, $filesInOrder, $newMembers, $newEditorMemberHashes)
 }
 
 /**
+ * @param array<string, mixed> $oldModData
+ * @param array<string, mixed> $mod
+ * @param array{userId:int, notificationId:int} $currentlyBeingTransferredTo
  * @param array<string, int> $newMembers
  * @param array<string, 1> $newEditorMemberHashes
  */
-function updateMod($oldModData, $mod, $filesInOrder, $newMembers, $newEditorMemberHashes)
+function updateMod($oldModData, $mod, $currentlyBeingTransferredTo, $filesInOrder, $newMembers, $newEditorMemberHashes)
 {
 	global $con, $user;
 
@@ -129,7 +132,7 @@ function updateMod($oldModData, $mod, $filesInOrder, $newMembers, $newEditorMemb
 	}
 	
 	if(canEditAsset($oldModData, $user, false)) {
-		updateModTeamMembers($mod, $newMembers, $newEditorMemberHashes);
+		updateModTeamMembers($mod, $currentlyBeingTransferredTo, $newMembers, $newEditorMemberHashes);
 
 		if($mod['createdByUserId'] != $oldModData['createdByUserId']) {
 			// Initiate ownership transfer:
@@ -196,10 +199,11 @@ function updateModTags($modId, $oldTags, $newTagsIds)
 
 /**
  * @param array{modId:int, assetId:int} $mod
+ * @param array{userId:int, notificationId:int} $currentlyBeingTransferredTo
  * @param array<string, int> $newMembers
  * @param array<string, 1> $newEditorMemberHashes
  */
-function updateModTeamMembers($mod, $newMembers, $newEditorMemberHashes)
+function updateModTeamMembers($mod, $currentlyBeingTransferredTo, $newMembers, $newEditorMemberHashes)
 {
 	global $con, $user;
 
@@ -236,6 +240,12 @@ function updateModTeamMembers($mod, $newMembers, $newEditorMemberHashes)
 		}
 
 		unset($oldMembers[$newMemberId]);
+	}
+
+	if(array_key_exists($currentlyBeingTransferredTo['userId'], $oldMembers)) {
+		$con->execute('UPDATE notifications SET `read` = 1 WHERE kind = '.NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST.' AND notificationId = '.$currentlyBeingTransferredTo['notificationId']);
+
+		array_push($logValues, AUDIT_LOG_KIND_MOD_CHANGE_OWNER_RESOLVED, null, AUDIT_LOG_FLAG_ABORTED | $logCommonFlags);
 	}
 
 	foreach ($oldMembers as $member) {
@@ -325,21 +335,6 @@ function deleteMod($mod)
 	logAuditEvent(AUDIT_LOG_KIND_MOD_DELETE, $modId);
 
 	return $con->completeTrans();
-}
-
-/**
- * @param int $modId
- * @return array{userId:int, name:string, notificationId:int} user - Empty if not being transferred.
- */
-function modCurrentlyBeingTransferredTo($modId)
-{
-	global $con;
-	return $con->getRow(<<<SQL
-		SELECT u.userId, u.name, n.notificationId
-		FROM notifications AS n
-		JOIN users u ON u.userId = n.userId
-		WHERE n.kind = ? AND n.recordId = ? AND !n.`read`
-	SQL, [NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST, $modId]);
 }
 
 /**
