@@ -93,7 +93,7 @@ unset($mod);
 
 $view->assign('latestMods', $latestMods);
 
-$lastestComments = $con->getAll('
+$latestComments = $con->getAll('
 	SELECT
 		c.assetId, a.name AS assetName,
 		c.commentId, c.text, c.created,
@@ -111,7 +111,7 @@ $lastestComments = $con->getAll('
 	LIMIT 20
 ');
 
-$view->assign('lastestComments', $lastestComments, null, true);
+$view->assign('latestComments', $latestComments, null, true);
 
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_HOME, null, true);
 $view->display("home.tpl");

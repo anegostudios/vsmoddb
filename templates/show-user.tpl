@@ -28,7 +28,7 @@
 {/if}
 
 {if !empty($mods)}
-	<h3>Mods {$shownUser['name']} contributed to</h3>
+	<h3>Mods {escapeHtml($shownUser['name'])} contributed to</h3>
 
 	<div class="mods">
 		{foreach from=$mods item=mod}{include file="list-mod-entry"}{/foreach}

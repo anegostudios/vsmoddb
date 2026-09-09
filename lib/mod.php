@@ -95,7 +95,7 @@ function updateMod($oldModData, $mod, $currentlyBeingTransferredTo, $filesInOrde
 	if($diff = createAuditLogDiff($oldModData['summary'], $mod['summary'])) array_push($logValues, AUDIT_LOG_KIND_MOD_CHANGE_SUMMARY, $diff, $logFlagsGeneral);
 	if($diff = createAuditLogDiff($oldModData['text'], $mod['text'])) array_push($logValues, AUDIT_LOG_KIND_MOD_CHANGE_DESCRIPTION, $diff, $logFlagsGeneral);
 	if($oldModData['category'] != $mod['category']) array_push($logValues, AUDIT_LOG_KIND_MOD_CHANGE_CATEGORY, createAuditLogDiff(stringifyCategory($oldModData['category']), stringifyCategory($mod['category'])), $logFlagsGeneral);
-	if($oldModData['statusId'] != $mod['statusId']) array_push($logValues, AUDIT_LOG_KIND_MOD_CHANGE_CATEGORY, createAuditLogDiff(stringifyStatus($oldModData['status']), stringifyStatus($mod['status'])), $logFlagsGeneral);
+	if($oldModData['statusId'] != $mod['statusId']) array_push($logValues, AUDIT_LOG_KIND_MOD_CHANGE_CATEGORY, createAuditLogDiff(stringifyStatus($oldModData['statusId']), stringifyStatus($mod['statusId'])), $logFlagsGeneral);
 
 	if($logValues) {
 		$logPlaceholders = substr(str_repeat("({$modId}, {$user['userId']}, ?, ?, ?),", count($logValues) / 3), 0, -1);

@@ -46,10 +46,10 @@ Cheers,<br>
 		</tr>
 	</thead>
 	<tbody>
-	{if count($lastestComments)}
-		{foreach from=$lastestComments item=comment}
+	{if count($latestComments)}
+		{foreach from=$latestComments item=comment}
 			<tr>
-				<td><a href="/show/mod/{$comment['assetId']}">{$comment['assetName']}</a></td>
+				<td><a href="/show/mod/{$comment['assetId']}">{escapeHtml($comment['assetName'])}</a></td>
 				<td class="textCol"><div onclick="location.href='/show/mod/{$comment['assetId']}#cmt-{$comment['commentId']}'">{$comment['text']}</div></td>
 				<td><a href="/show/mod/{$comment['assetId']}#comments">{$comment['username']}</a>{if $comment['isBanned']} <span style="color:red;white-space:nowrap;">[currently restricted]</span>{/if}</td>
 				<td><a href="/show/mod/{$comment['assetId']}#comments">{fancyDate($comment['created'])}</a></td>
