@@ -39,13 +39,12 @@ if(isset($_GET['assetid'])) {
 
 	if(!$mod) showErrorPage(HTTP_NOT_FOUND);
 
-	$mod['assetTypeId'] = ASSETTYPE_MOD;
-	if(!canEditAsset($mod, $user)) showErrorPage(HTTP_FORBIDDEN);
+	if(!canEditMod($mod, $user)) showErrorPage(HTTP_FORBIDDEN);
 
 	$mod['category'] = intval($mod['category']);
 	$mod['tags'] = $con->getAssoc('SELECT t.tagId, t.name, t.color, mt.votes FROM modTags mt JOIN tags t ON t.tagId = mt.tagId WHERE modId = ?', $mod['modId']);
 
-	$canEditAsOwner = canEditAsset($mod, $user, false);
+	$canEditAsOwner = canEditMod($mod, $user, false);
 	if($canEditAsOwner) {
 		$teamMembers = $con->getAll('
 			SELECT u.*, HEX(u.hash) AS hash, t.canEdit, 0 AS pending

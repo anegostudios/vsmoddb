@@ -30,7 +30,7 @@ if(!empty($_REQUEST['assetid'])) {
 
 	if($existingRelease) {
 		$targetMod = $con->getRow(<<<SQL
-			SELECT a.assetId, a.createdByUserId, a.assetTypeId, a.name, m.modId, m.category, m.uploadLimitOverwrite, m.urlAlias
+			SELECT a.assetId, a.createdByUserId, a.name, m.modId, m.category, m.uploadLimitOverwrite, m.urlAlias
 			FROM mods m
 			JOIN assets a ON a.assetId = m.assetId
 			WHERE m.modId = ?
@@ -40,7 +40,7 @@ if(!empty($_REQUEST['assetid'])) {
 // /edit/release/?modid=32  (add new release)
 else if(!empty($_REQUEST['modid'])) {
 	$targetMod = $con->getRow(<<<SQL
-		SELECT a.assetId, a.createdByUserId, a.assetTypeId, a.name, m.modId, m.category, m.uploadLimitOverwrite, m.urlAlias
+		SELECT a.assetId, a.createdByUserId, a.name, m.modId, m.category, m.uploadLimitOverwrite, m.urlAlias
 		FROM mods m
 		JOIN assets a ON a.assetId = m.assetId
 		WHERE m.modId = ?
@@ -49,7 +49,7 @@ else if(!empty($_REQUEST['modid'])) {
 
 //NOTE(Rennorb): Do as little work as possible before this permission check, but don't unnecessarily split queries.
 if(!$targetMod)   showErrorPage(HTTP_NOT_FOUND, 'Target mod was not found.');
-if(!canEditAsset($targetMod, $user))   showErrorPage(HTTP_FORBIDDEN);
+if(!canEditMod($targetMod, $user))   showErrorPage(HTTP_FORBIDDEN);
 
 //
 // Actions

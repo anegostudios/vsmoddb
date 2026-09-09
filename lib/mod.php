@@ -131,7 +131,7 @@ function updateMod($oldModData, $mod, $currentlyBeingTransferredTo, $filesInOrde
 		$con->execute("UPDATE files SET `order` = ? WHERE fileId = ?", [$i, $file['fileId']]);
 	}
 	
-	if(canEditAsset($oldModData, $user, false)) {
+	if(canEditMod($oldModData, $user, false)) {
 		updateModTeamMembers($mod, $currentlyBeingTransferredTo, $newMembers, $newEditorMemberHashes);
 
 		if($mod['createdByUserId'] != $oldModData['createdByUserId']) {

@@ -40,7 +40,7 @@ function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 
 	if($assetTypeId === ASSETTYPE_RELEASE) { // adding / editing mod releases
 		$mod = $con->getRow(<<<SQL
-			SELECT a.assetTypeId, a.assetId, a.createdByUserId, m.uploadLimitOverwrite
+			SELECT m.modId, a.createdByUserId, m.uploadLimitOverwrite
 			FROM mods m
 			JOIN assets a ON a.assetId = m.assetId
 			WHERE m.modId = ?
@@ -50,11 +50,14 @@ function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 			return array("status" => "error", "errormessage" => 'Asset does not exist (anymore)'); 
 		}
 
-		if (!canEditAsset($mod, $user)) {
+		if (!canEditMod($mod, $user)) {
 			return array("status" => "error", "errormessage" => 'Missing permissions to upload files to this asset. You may need to login again'); 
 		}
 
 		if($mod['uploadLimitOverwrite'] !== null) $limits['individualSize'] = $mod['uploadLimitOverwrite'];
+	}
+	else {
+		$mod = $con->getRow('SELECT m.modId, a.createdByUserId FROM mods m JOIN assets a ON a.assetId = m.assetId WHERE m.modId = ?', [$parentModId]);
 	}
 
 	if ($parentAssetId) { // Editing existing releases or adding mod images
@@ -64,13 +67,12 @@ function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 				return array("status" => "error", "errormessage" => 'Release has been retracted: '.textContent($release['reason'])); 
 			}
 		}
-		$asset = $con->getRow("select assetTypeId, assetId, createdByUserId from assets where assetId = ?", array($parentAssetId));
-		
-		if (!$asset) {
+
+		if (!$mod) {
 			return array("status" => "error", "errormessage" => 'Asset does not exist (anymore)'); 
 		}
 		
-		if (!canEditAsset($asset, $user)) {
+		if (!canEditMod($mod, $user)) {
 			return array("status" => "error", "errormessage" => 'Missing permissions to upload files to this asset. You may need to login again'); 
 		}
 	}

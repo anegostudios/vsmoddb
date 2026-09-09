@@ -95,7 +95,7 @@
 	<div class="tab-container">
 		<div class="tab-content description">
 			<div style="float: right; margin-bottom: 1em;">
-				{if isset($user) && canEditAsset($asset, $user)}
+				{if isset($user) && canEditMod($asset, $user)}
 					<a class="button large shine strikethrough-when-banned strikethrough-when-readonly" href="/edit/mod/?assetid={$asset['assetId']}">Edit</a>&nbsp;
 					<a class="button large shine strikethrough-when-banned strikethrough-when-readonly" href="/edit/release/?modid={$asset['modId']}">Add release</a>&nbsp;
 				{/if}
@@ -222,7 +222,7 @@
 
 		<div class="tab-content files">
 			<div style="float: right; margin-bottom: 1em;">
-				{if isset($user) && canEditAsset($asset, $user)}
+				{if isset($user) && canEditMod($asset, $user)}
 					<a class="button large shine strikethrough-when-banned strikethrough-when-readonly" href="/edit/release/?modid={$asset['modId']}">Add release</a>
 				{/if}
 			</div>
@@ -246,7 +246,7 @@
 					{foreach from=$releases item=release}
 						<tr data-assetid="{$release['assetId']}" {$release['retractionReason'] ? 'class="retracted"' : ''}>
 							<td>
-								{if isset($user) && (!$release['retractionReason'] || canModerate(null, $user)) && canEditAsset($asset, $user)}
+								{if isset($user) && (!$release['retractionReason'] || canModerate(null, $user)) && canEditMod($asset, $user)}
 									<a style="display:block;" href="/edit/release?assetid={$release['assetId']}">{formatSemanticVersion($release['version'])}</a>
 								{else}{formatSemanticVersion($release['version'])}{/if}
 							</td>

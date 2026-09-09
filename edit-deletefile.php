@@ -18,12 +18,18 @@ if (empty($_POST['fileid'])) {
 }
 
 $file = $con->getRow(<<<SQL
-	SELECT f.fileId, f.name, f.assetId, f.userId, f.cdnPath, d.hasThumbnail, a.assetTypeId, r.releaseId, rr.reason IS NOT NULL AS releaseRetracted
+	SELECT 
+		f.fileId, f.name, f.userId, f.cdnPath, d.hasThumbnail, r.releaseId, rr.reason IS NOT NULL AS releaseRetracted,
+		COALESCE(mr.modId, mf.modId) AS modId, am.createdByUserId,
+		f.assetId, a.assetTypeId -- for the file deletion function
 	FROM files f
-	LEFT JOIN fileImageData d ON d.fileId = f.fileId
 	LEFT JOIN assets a ON a.assetId = f.assetId
+	LEFT JOIN fileImageData d ON d.fileId = f.fileId
 	LEFT JOIN modReleases r ON r.assetId = f.assetId
 	LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
+	LEFT JOIN mods mf ON mf.assetId = f.assetId
+	LEFT JOIN mods mr ON mr.modId = r.modId
+	LEFT JOIN assets am ON am.assetId = COALESCE(mr.assetId, f.assetId)
 	WHERE f.fileId = ?
 SQL, [$_POST['fileid']]);
 
@@ -43,11 +49,8 @@ if ($file['releaseRetracted']) {
 }
 
 
-$assetId = $file['assetId'];
-
-if ($assetId) {
-	$asset = $con->getRow('SELECT assetId, createdByUserId, assetTypeId FROM assets WHERE assetId = ?', [$assetId]);
-	if (!canEditAsset($asset, $user)) {
+if ($file['modId']) {
+	if (!canEditMod($file, $user)) {
 		exit(json_encode(['status' => 'error', 'errormessage' => 'No privilege to delete files from this asset. You may need to login again'])); 
 	}
 

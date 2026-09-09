@@ -165,14 +165,13 @@ switch($urlparts[1]) {
 		if($transferAccepted === -1)  fail(HTTP_BAD_REQUEST, "Malformed parameter 'accepted'.");
 
 		$mod = $con->getRow("
-			SELECT m.assetId, a.createdByUserId, m.created, t.userId AS currentTransferUserId, t.name AS currentTransferUserName, n.notificationId
+			SELECT m.modId, m.assetId, a.createdByUserId, m.created, t.userId AS currentTransferUserId, t.name AS currentTransferUserName, n.notificationId
 			FROM mods m
 			JOIN assets a ON a.assetId = m.assetId
 			LEFT JOIN notifications AS n ON n.kind = ".NOTIFICATION_MOD_OWNERSHIP_TRANSFER_REQUEST." AND n.recordId = $modId AND !n.`read`
 			LEFT JOIN users t ON t.userId = n.userId
 			WHERE m.modId = $modId
 		"); // @security $modId is validate to be int, therefor sql inert
-		$mod['assetTypeId'] = ASSETTYPE_MOD;
 		if(!$mod)  fail(HTTP_NOT_FOUND);
 
 		if($transferAccepted !== null) {
@@ -209,7 +208,7 @@ switch($urlparts[1]) {
 			good();
 		}
 
-		if(!canEditAsset($mod, $user, false))  fail(HTTP_FORBIDDEN);
+		if(!canEditMod($mod, $user, false))  fail(HTTP_FORBIDDEN);
 
 		$bypassChecks = filter_input(INPUT_POST, 'immediate', FILTER_VALIDATE_BOOL);
 		if($bypassChecks && !canModerate(null, $user))  fail(HTTP_FORBIDDEN, 'Only moderators can immediately transfer mods without a notification.');
@@ -423,17 +422,17 @@ switch($urlparts[1]) {
 						validateActionTokenAPI();
 		
 						$prevData = $con->getRow(<<<SQL
-							SELECT r.modId, r.assetId, a.createdByUserId, rr.reason AS retractionReason, lastRetractedBy.roleId IN (?,?) AS retractedByModerator
+							SELECT r.modId, a.createdByUserId, rr.reason AS retractionReason, lastRetractedBy.roleId IN (?,?) AS retractedByModerator
 							FROM modReleases r
-							JOIN assets a ON a.assetId = r.assetId
+							JOIN mods m ON m.modId = r.modId
+							JOIN assets a ON a.assetId = m.assetId
 							LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
 							LEFT JOIN users lastRetractedBy ON lastRetractedBy.userId = rr.lastModifiedBy
 							WHERE r.releaseId = ?
 						SQL, [ROLE_ADMIN, ROLE_MODERATOR, $releaseId]);
 						if(!$prevData)   fail(HTTP_NOT_FOUND);
 
-						$prevData['assetTypeId'] = ASSETTYPE_RELEASE;
-						if(!canEditAsset($prevData, $user))   fail(HTTP_FORBIDDEN, 'You may not edit this release.');
+						if(!canEditMod($prevData, $user))   fail(HTTP_FORBIDDEN, 'You may not edit this release.');
 
 						if($modId !== $prevData['modId'])   fail(HTTP_BAD_REQUEST, 'Release does not belong to mod.');
 

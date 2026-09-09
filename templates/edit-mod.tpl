@@ -83,7 +83,7 @@
 			<textarea name="text" class="editor" data-editorname="text" style="width: 100%; height: auto;">{$mod['text']}</textarea>
 		</div>
 
-		{if $canEditTeamMembers = canEditAsset($mod, $user, false)}
+		{if $canEditTeamMembers = canEditMod($mod, $user, false)}
 			<h3 class="flex-fill">Team members</h3>
 
 			<div id="teammembers-box" class="editbox wide pending-markers">
@@ -225,7 +225,7 @@
 			</div>
 		</div>
 
-		{if $mod['assetId'] && canEditAsset($mod, $user, false)}
+		{if $mod['assetId'] && canEditMod($mod, $user, false)}
 			<h3 id='ownership-transfer' class="flex-fill">Ownership transfer</h3>
 
 			<div class="editbox wide">

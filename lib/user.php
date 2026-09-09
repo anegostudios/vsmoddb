@@ -94,42 +94,27 @@ function addMessage($class, $html, $escapeMessage = false)
 }
 
 /**
- * @param array{assetTypeId: int, assetId: int, createdByUserId: int} $asset
+ * @param array{modId: int, createdByUserId: int} $mod
  * @param array $user
  * @param bool  $includeTeam
  * @return bool
  */
-function canEditAsset($asset, $user, $includeTeam = true)
+function canEditMod($mod, $user, $includeTeam = true)
 {
 	global $con;
 
 	if(!isset($user['userId'])) return false;
-	if($user['userId'] == $asset['createdByUserId'] || $user['roleCode'] === 'admin' || $user['roleCode'] === 'moderator') return true;
+	if($user['userId'] == $mod['createdByUserId'] || $user['roleCode'] === 'admin' || $user['roleCode'] === 'moderator') return true;
 
 	$canEditAsTeamMember = false;
 
-	//TODO(Rennorb) @cleanup: Probably just split this into two versions, one for releases, one for mods.
-	if ($includeTeam && $asset['assetTypeId'] === ASSETTYPE_MOD) {
+	if ($includeTeam) {
 		$canEditAsTeamMember = $con->getOne(<<<SQL
 			SELECT 1 
 			FROM modTeamMembers t 
-			JOIN mods m ON m.modId = t.modId
-			WHERE assetId = ? AND t.userId = ? AND t.canEdit = 1
-		SQL, array($asset['assetId'], $user['userId']));
-	}
-	else if ($includeTeam && $asset['assetTypeId'] === ASSETTYPE_RELEASE) {
-		//NOTE(Rennorb): The second case checks if we are owner of the mod this release belongs to.
-		$canEditAsTeamMember = $con->getOne(<<<SQL
-				SELECT 1 
-				FROM modTeamMembers t 
-				JOIN modReleases r ON r.modId = t.modId
-				WHERE assetId = ? AND t.userId = ? AND t.canEdit = 1
-			union
-				SELECT 1
-				FROM mods m
-				JOIN modReleases r ON r.modId = m.modId AND r.assetId = ?
-				JOIN assets a ON a.assetId = m.assetId AND a.createdByUserId = ?
-		SQL, array($asset['assetId'], $user['userId'], $asset['assetId'], $user['userId']));
+			JOIN mods m ON m.modId = t.modId AND m.modId = ?
+			WHERE t.userId = ? AND t.canEdit = 1
+		SQL, array($mod['modId'], $user['userId']));
 	}
 
 	return $canEditAsTeamMember;
