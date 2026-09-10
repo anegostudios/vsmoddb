@@ -26,6 +26,8 @@ switch($urlparts[0]) {
 					if($modId === false)   fail(HTTP_BAD_REQUEST, 'Malformed id query param.');
 
 					if(count($urlparts) === 3) {
+						validateActionTokenAPI();
+
 						$newFlags = filter_input(INPUT_POST, 'new', FILTER_VALIDATE_INT);
 						if($newFlags === null)   fail(HTTP_BAD_REQUEST, 'Missing new settings value.');
 						if($newFlags === false)   fail(HTTP_BAD_REQUEST, 'Malformed new settings value.');
@@ -48,6 +50,8 @@ switch($urlparts[0]) {
 					switch($urlparts[3]) {
 						case 'unfollow':
 							validateMethod('POST');
+							validateActionTokenAPI();
+
 							$con->execute('DELETE FROM userFollowedMods WHERE modId = ? AND userId = ?', [$modId, $user['userId']]);
 							if($con->affected_rows()) {
 								$con->execute('UPDATE mods SET follows = follows - 1 WHERE modId = ?', [$modId]);

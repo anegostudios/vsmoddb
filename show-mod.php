@@ -433,6 +433,7 @@ function processTeamInvitation($asset, $user)
 	if (!isset($_POST['acceptteaminvite'])) return;
 
 	if(DB_READONLY) showReadonlyPage();
+	validateActionToken();
 
 	switch ($_POST['acceptteaminvite']) {
 		case 1:

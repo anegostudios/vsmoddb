@@ -376,12 +376,12 @@
 					$(this).toggleClass("on off");
 					$(".count", $(this)).text("" + (oldCount - 1));
 
-					promise = $.post(`/api/v2/settings/notifications/followed-mods/${modId}/unfollow`);
+					promise = $.post(`/api/v2/settings/notifications/followed-mods/${modId}/unfollow`, \{ 'at': actiontoken });
 				} else {
 					$(this).toggleClass("on off");
 					$(".count", $(this)).text("" + (oldCount + 1));
 
-					promise = $.post(`/api/v2/settings/notifications/followed-mods/${modId}`, \{ 'new': 1 /* @hardcoded */ });
+					promise = $.post(`/api/v2/settings/notifications/followed-mods/${modId}`, \{ 'new': 1 /* @hardcoded */, 'at': actiontoken });
 				}
 
 				promise.fail(jqXHR => {
