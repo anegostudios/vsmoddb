@@ -2,6 +2,7 @@
 
 include $config['basepath']. 'lib/recommend-release.php';
 include $config['basepath']. 'lib/moderation.php';
+include_once $config['basepath']. 'lib/relations.php';
 
 $assetId = $urlparts[2] ?? 0;
 
@@ -379,6 +380,18 @@ cspPushAllowedInlineHandlerHash('sha256-ro1cG9y3w13M1KSgaV9WpZDq3jSUi/S0hNEJ9yw3
 cspPushAllowedInlineHandlerHash('sha256-94NvHZFeRkm6w/lzsqG4nAxFmD5kBzGoK6eIsReP3v4='); // location.hash = 'tab-files'
 
 $view->assign('pagetitle', "{$asset['name']} - ");
+
+$relationsList = getRelationsForLatestReleaseOfMod(intval($asset['modId']));
+$relations = [
+	REL_REQUIRED     => [],
+	REL_OPTIONAL     => [],
+	REL_INCOMPATIBLE => [],
+	REL_TESTED_WITH  => [],
+];
+foreach ($relationsList as $rel) {
+	$relations[$rel['relationType']][] = $rel;
+}
+$view->assign('relations', $relations);
 
 $view->display("show-mod");
 

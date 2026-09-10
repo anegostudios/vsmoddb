@@ -1,5 +1,7 @@
 <?php
 
+include_once $config['basepath'].'lib/relations.php';
+
 /**
  * @security: Does not perform validation!
  * @param array{modId:int, type:int} $mod The mod the release is to be associated with.
@@ -26,6 +28,19 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	// attach hovering files
 	if($file['assetId'] == 0) {
 		$con->execute('UPDATE files SET assetId = ? WHERE fileId = ?', [$assetId, $file['fileId']]);
+	}
+
+	// Sync auto-derived relations from the parsed modinfo dependencies for this release.
+	$rawDependencies = $con->getOne('SELECT rawDependencies FROM modPeekResults WHERE fileId = ?', [$file['fileId']]);
+	syncAutoRelationsForRelease(intval($releaseId), $rawDependencies);
+
+	// Carry manual relations forward from the previous release of the same identifier (template autofill).
+	cloneManualRelationsFromPreviousRelease(intval($releaseId));
+
+	// Retro-link previously-orphan relations whose targetIdentifier matches this release's identifier.
+	$releaseIdentifier = $newData['identifier'] ?? null;
+	if ($releaseIdentifier) {
+		resolveDanglingTargets($releaseIdentifier, intval($mod['modId']));
 	}
 
 	$logInfo = 'v'.formatSemanticVersion($newData['version']);

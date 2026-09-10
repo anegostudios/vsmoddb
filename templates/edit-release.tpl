@@ -139,6 +139,13 @@
 				</li>
 			{/if}
 		</ol>
+
+		{if $release['assetId']}
+		<h3 class="flex-fill">Mod relations</h3>
+		<div class="editbox flex-fill">
+			{include file="edit-release-relations" autoRelations=$autoRelations manualRelations=$manualRelations}
+		</div>
+		{/if}
 	</form>
 
 	{if $release['assetId']} 

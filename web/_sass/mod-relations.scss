@@ -1,0 +1,221 @@
+// Public mod page relation display (4 sections in <dl class="infobox">)
+.mod-relations {
+	.mod-link {
+		&.unresolved {
+			color: var(--color-text-weak);
+			font-style: italic;
+			cursor: help;
+			border-bottom: 1px dotted;
+		}
+	}
+	&.incompatible .mod-link {
+		text-decoration: line-through;
+		opacity: 0.85;
+	}
+}
+.infobox dt.warn { color: #d63; }
+
+// Edit-mod relations editor
+.mod-relations-editor {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6em;
+	width: 100%;
+
+	// Each section mimics the .editbox visual (cream background, thin border, no rounded corners)
+	.rel-section {
+		border: solid 1px #CCC;
+		background: rgba(255, 255, 255, 0.25);
+		padding: 0.6em 0.8em;
+
+		.rel-section-header {
+			display: flex;
+			flex-direction: column;
+			gap: 0.1em;
+			margin-bottom: 0.5em;
+			padding-bottom: 0.4em;
+			border-bottom: 1px solid #CCC;
+
+			strong {
+				font-size: 1em;
+				color: var(--color-text);
+			}
+			.hint {
+				font-size: 0.82em;
+				color: var(--color-text-weak);
+			}
+		}
+	}
+
+	.rel-empty {
+		font-style: italic;
+		color: var(--color-text-weak);
+		padding: 0.2em 0;
+	}
+
+	.rel-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.3em;
+	}
+
+	// Auto section: read-only item with badge + target + version
+	.rel-auto-section .rel-item {
+		display: flex;
+		align-items: center;
+		gap: 0.6em;
+		padding: 0.3em 0.4em;
+
+		.rel-target { flex: 1; min-width: 8em; }
+		.rel-version {
+			font-size: 0.85em;
+			color: var(--color-text-weak);
+			min-width: 6em;
+			text-align: right;
+		}
+		.unresolved {
+			color: var(--color-text-weak);
+			font-style: italic;
+			cursor: help;
+			border-bottom: 1px dotted;
+		}
+		a {
+			color: var(--color-link);
+			&:hover { color: var(--color-link-active); }
+		}
+	}
+
+	// Color-coded type badges (auto section)
+	.rel-badge {
+		display: inline-block;
+		padding: 0.05em 0.6em;
+		font-size: 0.75em;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		min-width: 5em;
+		text-align: center;
+		color: white;
+		border: 1px solid transparent;
+
+		&.badge-required     { background: #4a6e9a; border-color: #3a5b80; }
+		&.badge-optional     { background: #7a7a7a; border-color: #5e5e5e; }
+		&.badge-incompatible { background: #a64545; border-color: #843636; }
+		&.badge-tested_with  { background: #5c8a5c; border-color: #4a6f4a; }
+	}
+
+	// Manual section: editable form rows with labeled fields
+	.manual-list .rel-item {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 0.4em 0.6em;
+		padding: 0.5em 0.6em;
+		background: rgba(255, 255, 255, 0.4);
+		border: 1px solid #CCC;
+		border-left: 4px solid #CCC;
+
+		&.rel-type-required     { border-left-color: #4a6e9a; }
+		&.rel-type-optional     { border-left-color: #7a7a7a; }
+		&.rel-type-incompatible { border-left-color: #a64545; }
+		&.rel-type-tested_with  { border-left-color: #5c8a5c; }
+
+		// New (unsaved) row gets a subtle tint instead of a dashed border to stay on-brand
+		&.rel-item-new {
+			background: rgba(255, 247, 220, 0.7);  // pale warm yellow, hints "new/draft"
+			border-color: #b89a55;
+		}
+	}
+
+	.rel-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15em;
+
+		&.rel-field-target { flex: 1; min-width: 10em; }
+		&.rel-field-type { min-width: 9em; }
+		&.rel-field-version { width: 7em; }
+
+		.rel-field-label {
+			font-size: 0.72em;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: var(--color-text-weak);
+		}
+
+		// Inputs/selects inherit the project's flat style from input.scss
+		input, select {
+			width: 100%;
+			margin: 0;
+		}
+	}
+
+	.rel-remove {
+		cursor: pointer;
+		user-select: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.6em;
+		height: 1.6em;
+		margin-bottom: 0.05em;
+		position: relative;
+		border: 1px solid transparent;
+
+		input[type=checkbox] {
+			position: absolute;
+			opacity: 0;
+			pointer-events: none;
+		}
+		.rel-remove-icon {
+			font-size: 1.3em;
+			line-height: 1;
+			color: var(--color-text-weak);
+		}
+		&:hover {
+			border-color: #a64545;
+			.rel-remove-icon { color: #a64545; }
+		}
+		input[type=checkbox]:checked ~ .rel-remove-icon {
+			color: #a64545;
+			font-weight: bold;
+		}
+	}
+
+	.rel-discard {
+		cursor: pointer;
+		background: transparent;
+		border: 1px solid transparent;
+		width: 1.6em;
+		height: 1.6em;
+		color: var(--color-text-weak);
+		font-size: 1.3em;
+		line-height: 1;
+		margin-bottom: 0.05em;
+		padding: 0;
+
+		&:hover {
+			color: #a64545;
+			border-color: #a64545;
+		}
+	}
+
+	// Existing rows marked for removal: faded + strikethrough on text inputs
+	.manual-list .rel-item:has(input[type=checkbox]:checked) {
+		opacity: 0.55;
+
+		.rel-target-input,
+		.rel-version-input {
+			text-decoration: line-through;
+		}
+	}
+
+	.rel-add-btn {
+		align-self: flex-start;
+		margin-top: 0.3em;
+		// Inherits .button-like style if explicit class added, but ensure flat look here
+	}
+}
