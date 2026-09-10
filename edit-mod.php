@@ -234,33 +234,39 @@ else if(!empty($_POST['save'])) {
 		addMessage(MSG_CLASS_ERROR, $reason);
 	}
 
-	// We don't want to revert the urls here, that would be rather inconvenient.
-	$url = $mod['homepageUrl'] = trim($_POST['homepageUrl']);
-	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
-		addMessage(MSG_CLASS_ERROR, 'Hompage Url is not valid.');
+	/**
+	 * @param array &$mod
+	 * @param string $varName
+	 * @param string $errorName
+	 * @return bool
+	 */
+	function validateUrl(&$mod, $varName, $errorName)
+	{
+		$ok = true;
 
-	$url = $mod['sourceCodeUrl'] = trim($_POST['sourceCodeUrl']);
-	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
-		addMessage(MSG_CLASS_ERROR, 'Source Code Url is not valid.');
+		$url = trim($_POST[$varName]);
+		if($url !== '') {
+			if(!str_contains($url, '://')) $url = 'https://'.$url;
 
-	$url = $mod['trailerVideoUrl'] = trim($_POST['trailerVideoUrl']);
-	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
-		addMessage(MSG_CLASS_ERROR, 'Trailer Video Url is not valid.');
-	else if ($url !== '') {
-		$mod['trailerVideoUrl'] = preg_replace('#//(?:www\.)youtube\.com#', '//www.youtube-nocookie.com', $url, 1);
+			if(filter_var($url, FILTER_VALIDATE_URL) === false || parse_url($url, PHP_URL_SCHEME) !== 'https') {
+				addMessage(MSG_CLASS_ERROR, $errorName.' is not valid.');
+				$ok = false;
+			}
+		}
+
+		// We don't want to revert the urls here, that would be rather inconvenient, so we reflect the input:
+		$mod[$varName] = $url;
+
+		return $ok;
 	}
 
-	$url = $mod['issueTrackerUrl'] = trim($_POST['issueTrackerUrl']);
-	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
-		addMessage(MSG_CLASS_ERROR, 'Issue Tracker Url is not valid.');
-
-	$url = $mod['wikiUrl'] = trim($_POST['wikiUrl']);
-	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
-		addMessage(MSG_CLASS_ERROR, 'Wiki Url is not valid.');
-
-	$url = $mod['donateUrl'] = trim($_POST['donateUrl']);
-	if($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false)
-		addMessage(MSG_CLASS_ERROR, 'Donate Url is not valid.');
+	validateUrl($mod, 'homepageUrl', 'Hompage Url');
+	validateUrl($mod, 'sourceCodeUrl', 'Source Code Url');
+	if(validateUrl($mod, 'trailerVideoUrl', 'Trailer Video Url') && $mod['trailerVideoUrl'])
+		$mod['trailerVideoUrl'] = preg_replace('#//(?:www\.)youtube\.com#', '//www.youtube-nocookie.com', $url, 1);
+	validateUrl($mod, 'issueTrackerUrl', 'Issue Tracker Url');
+	validateUrl($mod, 'wikiUrl', 'Wiki Url');
+	validateUrl($mod, 'donateUrl', 'Donate Url');
 
 
 	// Team Members:
