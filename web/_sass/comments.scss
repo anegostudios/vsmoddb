@@ -4,6 +4,14 @@
 
 	>.title {
 		padding: .25em;
+
+		a[href="#h"]::before {
+			content: 'hide';
+
+			@at-root .deleted#{&} {
+				content: 'unhide';
+			}
+		}
 	}
 
 	>.reference {

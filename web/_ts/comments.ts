@@ -307,14 +307,38 @@ function attachCommentHandlers() {
 	function clickHide(e : MouseEvent)
 	{
 		e.preventDefault();
-		if (confirm("Are you sure you want to hide this comment?")) {
-			const $comment = $(this).parents(".comment");
-			$comment.hide();
 
-			const commentId = $comment[0].id.split('-')[1];
-			const xhr = $.ajax({ url: `/api/v2/comments/${commentId}?at=`+actiontoken, method: 'DELETE'})
-			R.attachDefaultFailHandler(xhr, 'Failed to hide comment')
-				.fail(() => $comment.show()); // Make it visible again if we failed to delete it, so the user may retry.
+		const comment = $(this).parents(".comment")[0];
+		const isModerator = !!comment.querySelector('a[href^="/moderate/"]');
+		if(!comment.classList.contains('deleted')) {
+			if(confirm("Are you sure you want to hide this comment?")) {
+				if(isModerator) comment.classList.add('deleted');
+				else comment.style.display = 'none';
+	
+				const commentId = comment.id.split('-')[1];
+				const xhr = $.ajax({ url: `/api/v2/comments/${commentId}`, method: 'DELETE', data: { at: actiontoken }})
+				R.attachDefaultFailHandler(xhr, 'Failed to hide comment')
+					.fail(() => {
+						// Make it visible again if we failed to delete it, so the user may retry.
+						if(isModerator) comment.classList.remove('deleted');
+						else comment.style.display = '';
+					});
+			}
+		}
+		else if(isModerator) {
+			if(confirm("Are you sure you want to unhide this comment?")) {
+				comment.classList.remove('deleted');
+
+				comment.getElementsByClassName('ribbon-tr')[0].remove();
+	
+				const commentId = comment.id.split('-')[1];
+				const xhr = $.ajax({ url: `/api/v2/comments/${commentId}/unhide`, method: 'POST', data: { at: actiontoken }})
+				R.attachDefaultFailHandler(xhr, 'Failed to hide comment')
+					.fail(() => {
+						// Make it visible again if we failed to delete it, so the user may retry.
+						comment.classList.add('deleted');
+					});
+			}
 		}
 	}
 

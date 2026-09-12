@@ -304,6 +304,15 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 	- `403`: Active user is currently restricted or does not have permissions to delete the comment.
 	- `200`: Comment got deleted.
 
+### /api/v2/comments/{commentid}/unhide `auth` `at`
+- `post`:
+	- Args:
+		- Path arg `{commentid}`
+	- `400`: Invalid action token or malformed request.
+	- `404`: Target comment does not exist.
+	- `403`: Active user is currently restricted or does not have permissions to unhide the comment.
+	- `200`: Comment got unhidden.
+
 ### /api/v2/notifications `auth`
 - `get`: No args.
 	- `200`: Array of notification ids for the current user. May be empty.

@@ -72,22 +72,32 @@ switch($urlparts[1] ?? null) {
 		header('Location: /t/'.$requestId, true, HTTP_CREATED);
 		exit();
 
+	case 'unhide':
+		validateActionTokenAPI();
+		validateUserNotBanned();
+		if(!canModerate(null, $user)) fail(HTTP_FORBIDDEN, 'You may not unhide comments.');
+
+		$con->getRow('UPDATE comments SET deleted = 0 where commentId = '.$commentId); // @security: $commentId is filtered to be int, therefore sql inert.
+		if(!$con->affected_rows())  fail(HTTP_BAD_REQUEST, 'Unknown comment or comment is not hidden.');
+
+		good();
+
 	case null:
 		switch($_SERVER['REQUEST_METHOD']) {
 			case 'POST':
 				validateActionTokenAPI();
 				validateUserNotBanned();
 				validateContentType('text/html');
-		
-				$comment = $con->getRow('SELECT assetId, userId, text FROM comments WHERE commentId = ? AND !deleted', [$commentId]);
+
+				$comment = $con->getRow('SELECT assetId, userId, text, deleted FROM comments WHERE commentId = '.$commentId); // @security: $commentId is filtered to be int, therefore sql inert.
 				if(!$comment)  fail(HTTP_NOT_FOUND, 'Unknown commentid.');
-		
+
 				$wasModAction = $user['userId'] != $comment['userId'];
-				if($wasModAction && !canModerate(null, $user))  fail(HTTP_FORBIDDEN);
-		
+				if(($wasModAction || $comment['deleted']) && !canModerate(null, $user))  fail(HTTP_FORBIDDEN);
+
 				$commentHtml = trimHtml(sanitizeHtml(file_get_contents('php://input')));
 				if(!$commentHtml)  fail(HTTP_BAD_REQUEST, 'Comment must not be empty.');
-		
+
 				$textLen = strlen($commentHtml);
 				if($textLen > 65535) { // TEXT column max length in comments.text
 					$sizeKb = floor($textLen / 1024);
@@ -95,33 +105,37 @@ switch($urlparts[1] ?? null) {
 					if(str_contains($commentHtml, 'src="data:image')) $reason .= " You cannot paste large images directly. If you need a large image, upload it to an external site and link to that.";
 					fail(HTTP_BAD_REQUEST, $reason);
 				}
-		
+
 				$commentTextShort = mb_substr(textContent($commentHtml), 0, 255); // stored for comment replies
-		
+
 				$diff = createAuditLogDiff($comment['text'], $commentHtml);
-		
+
 				$con->startTrans();
 		
 				if($wasModAction) {
 					//TODO(Rennorb): Diff the strings and add the diff to the log.
 					$lastModAction = logModeratorAction($comment['userId'], $user['userId'], MODACTION_KIND_EDIT, $commentId, SQL_DATE_FOREVER, null);
-		
+
 					$con->execute('UPDATE comments SET text = ?, textShort = ?, lastModaction = ?, contentLastModified = NOW() WHERE commentId = ?', [$commentHtml, $commentTextShort, $lastModAction, $commentId]);
 				}
 				else {
 					$con->execute('UPDATE comments SET text = ?, textShort = ?, contentLastModified = NOW() WHERE commentId = ?', [$commentHtml, $commentTextShort, $commentId]);
 				}
-		
+
 				logAuditEvent(AUDIT_LOG_KIND_COMMENT_EDIT, $commentId, $diff, $wasModAction ? AUDIT_LOG_FLAG_MODACTION : 0);
 		
 				$con->completeTrans();
-		
+
 				good(['html' => postprocessCommentHtml($commentHtml)]);
-		
+
 			case 'DELETE':
-				validateActionTokenAPI();
 				validateUserNotBanned();
-		
+
+				list($_POST, $_) = request_parse_body();
+				if(!empty($_POST['at']) && empty($_REQUEST['at'])) $_REQUEST['at'] = $_POST['at'];
+
+				validateActionTokenAPI();
+
 				$comment = $con->getRow(<<<SQL
 					SELECT c.assetId, c.userId, a.createdByUserId AS modCreatedBy
 					FROM comments c
@@ -161,7 +175,7 @@ switch($urlparts[1] ?? null) {
 				$con->completeTrans();
 		
 				good();
-		
+
 			default:
 				header('Allow: POST, DELETE');
 				fail(HTTP_WRONG_METHOD, 'invalid method.');

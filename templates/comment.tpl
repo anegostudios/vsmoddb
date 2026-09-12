@@ -6,12 +6,12 @@
 			<span class="buttons strikethrough-when-banned strikethrough-when-readonly">
 				{if $comment["userId"] == $user["userId"]}
 					{if !$comment['deleted']}
-						(<a href="#r" onclick="return false;">respond</a>&nbsp;<a href="#e" onclick="return false;">edit</a>&nbsp;<a href="#h" onclick="return false;">hide</a>&nbsp;<a href="#p" onclick="return false;">report</a>)
+						(<a href="#r" onclick="return false;">respond</a>&nbsp;<a href="#e" onclick="return false;">edit</a>&nbsp;<a href="#h" onclick="return false;"></a>&nbsp;<a href="#p" onclick="return false;">report</a>)
 					{/if}
 				{elseif canModerate($comment['userId'], $user) && !($comment["userId"] == $user["userId"])}
-						(<a href="#r" onclick="return false;">respond</a>&nbsp;{if !$comment['deleted']}<a href="#e" onclick="return false;">edit</a>&nbsp;<a href="#h" onclick="return false;">delete</a>&nbsp;{/if}<a href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}">moderate user</a>&nbsp;<a href="#p" onclick="return false;">report</a>)</span>
+						(<a href="#r" onclick="return false;">respond</a>&nbsp;<a href="#e" onclick="return false;">edit</a>&nbsp;<a href="#h" onclick="return false;"></a>&nbsp;<a href="/moderate/user/{$comment['userHash']}?source-comment={$comment['commentId']}">moderate user</a>&nbsp;<a href="#p" onclick="return false;">report</a>)</span>
 				{elseif $asset['createdByUserId'] == $user['userId'] && !$comment['deleted']}
-						(<a href="#r" onclick="return false;">respond</a>&nbsp;<a href="#h" onclick="return false;">hide</a>&nbsp;<a href="#p" onclick="return false;">report</a>)
+						(<a href="#r" onclick="return false;">respond</a>&nbsp;<a href="#h" onclick="return false;"></a>&nbsp;<a href="#p" onclick="return false;">report</a>)
 				{else}
 						(<a href="#r" onclick="return false;">respond</a>&nbsp;<a href="#p" onclick="return false;">report</a>)
 				{/if}
