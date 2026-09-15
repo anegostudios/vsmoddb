@@ -49,7 +49,13 @@ if(!empty($filters['tags'])) {
 
 unset($filters);
 
-$strippedQuery = stripQueryParams(parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY), ['sortby', 'sortdir']);
+$query = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
+$params = array_map('escapeHtml', explode('&', $query));
+$params = array_filter($params, function($p) {
+	$pname = strchr($p, '=', true);
+	return !in_array($pname, ['sortby', 'sortdir']);
+});
+$strippedQuery = implode('&', $params);
 
 $fetchCursorJS = getNextFetchCursor($searchParams, $mods);
 
