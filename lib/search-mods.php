@@ -392,7 +392,6 @@ function queryModSearch($searchParams)
 				SQL; // @security: $idCursor and $score must be sql safe (validateModSearchInputs does that)
 
 				$value = $searchParams['filters']['text'];
-				$v = '%'.escapeStringForLikeQuery($value).'%';
 
 				array_push($sqlParams,
 					$value, $v, $v, // inputs for $matchScoreFormular
