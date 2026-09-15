@@ -475,7 +475,7 @@ function attachCommentHandlers() {
 <div id="cmt-${commentId}" class="editbox comment${responseDepth ? ' rsp' : ''}" data-order="${responseTargetOrder}" data-stamp="${Date.now()}"${responseDepth ? ' data-d="'+responseDepth+'"' : ''} data-cldn="0">
 	<div class="title">
 		<span><a style="text-decoration:none;" class="cmt-pinner" href="#cmt-${commentId}"><i class="bx bx-link-alt"></i></a> <a href="${userUrl}">${userName}</a>, just now</span>
-		<span class="buttons">(<a href="#r" onclick="return false;">respond</a>&nbsp;<a href="#e" onclick="return false;">edit</a>&nbsp;<a href="#h" onclick="return false;">hide</a>&nbsp;<a href="#p" onclick="return false;">report</a>)</span>
+		<span class="buttons">(<a href="#r" onclick="return false;">respond</a>&nbsp;<a href="#e" onclick="return false;">edit</a>&nbsp;<a href="#h" onclick="return false;"></a>&nbsp;<a href="#p" onclick="return false;">report</a>)</span>
 	</div>
 	<div class="body">${safeBody}</div>
 </div>
