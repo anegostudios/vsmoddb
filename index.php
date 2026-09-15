@@ -71,11 +71,13 @@ switch($urlparts[0]) { // :ReservedUrlPrefixes
 		array_shift($urlparts);
 		exit(require("lib/webhook-handlers.php"));
 
+	case 'cmd':
+		if(!DEBUG) break;
+		// fallthough
 	case 'list':
 	case 'show':
 	case 'edit':
 	case 'moderate':
-	case 'cmd':
 		// Try to compose filename from the first two segemnts of the url:
 		// edit/profile -> edit-profile.php 
 		$filename = implode("-", array_slice($urlparts, 0, 2)) . ".php";
