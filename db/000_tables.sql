@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `userId`            INT          NOT NULL AUTO_INCREMENT,
   `hash`              BINARY(10)   NOT NULL,
   `genAiTolerance`    TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `consentFlags`      TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `roleId`            INT          NOT NULL DEFAULT 3,
   `uid`               BINARY(18)   NOT NULL,
   `name`              VARCHAR(255) NOT NULL,

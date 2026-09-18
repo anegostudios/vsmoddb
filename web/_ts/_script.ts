@@ -9,5 +9,6 @@
 /// <reference path="jquery.are-you-sure.js" />
 /// <reference path="comments.ts" />
 /// <reference path="moderation.ts" />
+/// <reference path="consent.ts" />
 /// <reference path="on-dom-loaded.ts" />
 /// <reference path="ays-beforeunload-shim.js" />

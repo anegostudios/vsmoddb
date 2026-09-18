@@ -324,3 +324,20 @@ function validateActionToken()
 const ROLE_ADMIN = 1;
 const ROLE_MODERATOR = 2;
 const ROLE_PLAYER = 3;
+
+
+const COOKIE_NAME_CONSENT = 'consent';
+
+const CONSENT_DOWNLOAD = 1 << 0;
+const CONSENT_UPLOAD   = 1 << 1;
+CONST CONSENT__ALL = CONSENT_DOWNLOAD | CONSENT_UPLOAD;
+
+/**
+ * @param array $user
+ * @param int   $consentFlags
+ * @return bool
+ */
+function didConsentTo($user, $consentFlags)
+{
+	return ($user['consentFlags'] & $consentFlags) === $consentFlags;
+}

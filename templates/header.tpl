@@ -33,6 +33,13 @@
 
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery-1.11.1.min.js"></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/chosen.jquery.min.js?v=6"></script>
+
+	<script nonce="{$cspNonce}">
+		window.user={if !empty($user)}\{hash:"<?= $user['hash'] ?>",at:"<?= $user['actionToken'] ?>",consentFlags:0}
+		{else}\{hash:null,at:null,consentFlags:0}
+		{/if};
+	</script>
+
 	{if isset($head)}{$head}{/if}
 </head>
 

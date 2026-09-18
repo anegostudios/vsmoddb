@@ -357,6 +357,25 @@
 	</dialog>
 	{/if}
 
+	{if empty($user) || !didConsentTo($user, CONSENT_DOWNLOAD)}
+	<dialog id="download-consent-mdl" closedby="any">
+		<form class="with-buttons-bottom text-section" method="dialog" autocomplete="off" data-method="PATCH" action="/api/v2/settings/consent">
+			<h1>Transparency</h1>
+			<p>By downloading a mod you consent to our <a href="/terms" target="_blank">Terms of Use</a>.</p>
+			<p>We tell you this specifically because we want to make sure you are aware that we cannot validate every mod, and you are responsible for any damages you might incur by installing or loading mods.</p>
+
+			<p>This prompt will not be shown to you again{if empty($user)} (for the current browser session){/if} if you proceed.</p>
+			
+			<input type="hidden" name="at" value="{$user['actionToken'] ?? null}">
+			<input type="hidden" name="grant" value="<?= CONSENT_DOWNLOAD ?>">
+			<div class="buttons">
+				<button class="button large shine btn-submit" onclick="return false;">Proceed</button>
+				<button class="button large shine" style="margin-left:auto;" formmethod="dialog">Cancel</button>
+			</div>
+		</form>
+	</dialog>
+	{/if}
+
 
 {include file="comments"}
 
@@ -416,6 +435,14 @@
 						window.location.reload();
 					});
 			});
+
+			{if !didConsentTo($user, CONSENT_DOWNLOAD)}
+				window.user.consentFlags = {$user['consentFlags']};
+				attachConsentPromptDownload();
+			{/if}
+		{else}
+			window.user.consentFlags = parseInt($.cookie('<?= COOKIE_NAME_CONSENT ?>')) || 0;
+			if(!didConsentTo(window.user, <?= CONSENT_DOWNLOAD ?>)) attachConsentPromptDownload();
 		{/if}
 
 		attachCommentHandlers();

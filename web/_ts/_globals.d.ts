@@ -17,3 +17,14 @@ interface jqXHR extends XMLHttpRequest {
 
 // Silence tinymce linter complaints
 declare const tinyMCE : any;
+
+interface User {
+	hash         : string|null,
+	at           : string|null,
+	consentFlags : number,
+}
+
+
+interface Window { // extend global window interface
+	user : User,
+}

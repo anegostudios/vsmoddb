@@ -12,7 +12,7 @@ function fail($statuscode, $data = null)
 }
 
 /** Validates that the script was called using the correct HTTP method and `fail`s with an error if it was not.
- * @param 'PUT'|'GET'|'POST'|'DELETE' $allowedMethod
+ * @param 'PUT'|'GET'|'POST'|'PATCH'|'DELETE' $allowedMethod
  */
 function validateMethod($allowedMethod)
 {
@@ -33,6 +33,13 @@ function validateContentType($allowedType)
 	else if($_SERVER['CONTENT_TYPE'] !== $allowedType) {
 		fail(HTTP_BAD_REQUEST, "This endpoint does not support requests of Content-Type '{$_SERVER['CONTENT_TYPE']}'. Try again using '$allowedType'.");
 	}
+}
+
+function parseRequestBody()
+{
+	global $_GET, $_POST, $_FILES;
+	list($_POST, $_FILES) = request_parse_body();
+	$_REQUEST = array_merge($_GET, $_POST);
 }
 
 if(DB_READONLY) {

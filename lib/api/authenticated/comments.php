@@ -15,10 +15,7 @@ switch($urlparts[1] ?? null) {
 	case 'report':
 		validateMethod('PUT');
 		validateUserNotBanned();
-
-		list($_POST, $_) = request_parse_body();
-		if(!empty($_POST['at']) && empty($_REQUEST['at'])) $_REQUEST['at'] = $_POST['at'];
-
+		parseRequestBody();
 		validateActionTokenAPI();
 
 		require $config['basepath'] . 'lib/moderation.php';
@@ -130,10 +127,7 @@ switch($urlparts[1] ?? null) {
 
 			case 'DELETE':
 				validateUserNotBanned();
-
-				list($_POST, $_) = request_parse_body();
-				if(!empty($_POST['at']) && empty($_REQUEST['at'])) $_REQUEST['at'] = $_POST['at'];
-
+				parseRequestBody();
 				validateActionTokenAPI();
 
 				$comment = $con->getRow(<<<SQL

@@ -295,10 +295,7 @@ switch($urlparts[1]) {
 	case 'report':
 		validateMethod('PUT');
 		validateUserNotBanned();
-
-		list($_POST, $_) = request_parse_body();
-		if(!empty($_POST['at']) && empty($_REQUEST['at'])) $_REQUEST['at'] = $_POST['at'];
-
+		parseRequestBody();
 		validateActionTokenAPI();
 
 		require $config['basepath'] . 'lib/moderation.php';
@@ -371,10 +368,8 @@ switch($urlparts[1]) {
 						good($modData['uploadLimitOverwrite']);
 
 					case 'PUT':
-						list($_POST, $_) = request_parse_body();
-						if(!empty($_POST['at']) && empty($_REQUEST['at'])) $_REQUEST['at'] = $_POST['at'];
-
 						validateUserNotBanned();
+						parseRequestBody();
 						validateActionTokenAPI();
 						if(!canModerate(null, $user)) fail(HTTP_FORBIDDEN);
 
@@ -414,10 +409,7 @@ switch($urlparts[1]) {
 				switch($urlparts[3]) {
 					case 'retraction':
 						validateMethod('PUT');
-
-						list($_POST, $_) = request_parse_body();
-						if(!empty($_POST['at']) && empty($_REQUEST['at'])) $_REQUEST['at'] = $_POST['at'];
-
+						parseRequestBody();
 						validateUserNotBanned();
 						validateActionTokenAPI();
 		
@@ -571,10 +563,7 @@ switch($urlparts[1]) {
 		}
 		if(count($urlparts) === 4 && $urlparts[3] === 'vote') { // {modid}/tags/{tagid}/vote
 			validateMethod('PUT');
-
-			list($_POST, $_) = request_parse_body();
-			if(!empty($_POST['at']) && empty($_REQUEST['at'])) $_REQUEST['at'] = $_POST['at'];
-
+			parseRequestBody();
 			validateUserNotBanned();
 			validateActionTokenAPI();
 

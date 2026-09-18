@@ -1,7 +1,10 @@
 <?php
 
-/** @var array $user */
-/** @var array<string> $urlparts */
+/**
+ * @var array $user
+ * @var object $con
+ * @var array<string> $urlparts
+ */
 
 switch($urlparts[0]) {
 	case 'gen-ai':
@@ -13,6 +16,18 @@ switch($urlparts[0]) {
 		//NOTE(Rennorb): 0 means "don't care".
 
 		$con->execute("UPDATE users SET genAiTolerance = $tolerance WHERE userId = {$user['userId']}"); // @security: $tolerance is validated to be int, $user['userId'] comes form the database and is int, therefore sql inert.
+
+		good();
+
+	case 'consent':
+		validateMethod('PATCH');
+		parseRequestBody();
+		validateActionTokenAPI();
+
+		$newFlags = filter_input(INPUT_POST, 'grant', FILTER_VALIDATE_INT, [ 'options' => [ 'min' => 0 ] ]);
+		if(!$newFlags || ($newFlags & ~CONSENT__ALL))  fail(HTTP_BAD_REQUEST, 'Malformed consent flags.');
+
+		$con->execute("UPDATE users SET consentFlags = consentFlags | $newFlags WHERE userId = {$user['userId']}"); // @security: $newFlags is validated to be int, $user['userId'] comes form the database and is int, therefore sql inert.
 
 		good();
 
