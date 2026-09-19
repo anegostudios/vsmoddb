@@ -360,7 +360,7 @@
 	{if empty($user) || !didConsentTo($user, CONSENT_DOWNLOAD)}
 	<dialog id="download-consent-mdl" closedby="any">
 		<form class="with-buttons-bottom text-section" method="dialog" autocomplete="off" data-method="PATCH" action="/api/v2/settings/consent">
-			<h1>Transparency</h1>
+			<h1>Disclaimer</h1>
 			<p>By downloading a mod you consent to our <a href="/terms" target="_blank">Terms of Use</a>.</p>
 			<p>We tell you this specifically because we want to make sure you are aware that we cannot validate every mod, and you are responsible for any damages you might incur by installing or loading mods.</p>
 
