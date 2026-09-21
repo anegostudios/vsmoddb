@@ -157,10 +157,10 @@ $trailerEmbedUrl = null;
 $trailerThumbUrl = null;
 if (!empty($asset['trailerVideoUrl'])) {
 	if (preg_match('#youtu(?:be(?:-nocookie)?\.\w{2,3}(?:/embed/|.+?v=)|\.be/)([\w-]+)#', $asset['trailerVideoUrl'], $m)) {
-		$trailerEmbedUrl = "https://www.youtube-nocookie.com/embed/{$m[1]}";
+		$trailerEmbedUrl = "https://www.youtube-nocookie.com/embed/{$m[1]}?enablejsapi=1&fs=0";
 		$trailerThumbUrl = "https://img.youtube.com/vi/{$m[1]}/mqdefault.jpg";
 	} elseif (preg_match('#vimeo\.com/(\d+)#', $asset['trailerVideoUrl'], $m)) {
-		$trailerEmbedUrl = "https://player.vimeo.com/video/{$m[1]}";
+		$trailerEmbedUrl = "https://player.vimeo.com/video/{$m[1]}?dnt=1&badge=0&fullscreen=0";
 		$trailerThumbUrl = "https://vumbnail.com/{$m[1]}.jpg";
 	}
 	else {

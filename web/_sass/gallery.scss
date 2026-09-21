@@ -89,9 +89,7 @@
 
 			@at-root .gallery:hover > .viewport > .ctrl { opacity: 1; }
 
-			@at-root .is-fullscreen#{&} {
-				opacity: 1;
-			}
+			@at-root .gallery.is-fullscreen:not(.video) > .viewport > .ctrl { opacity: 1; }
 		}
 
 		/* Arrows — transparent full-height hit areas, icon via ::after */
@@ -99,10 +97,13 @@
 			position: absolute;
 
 			top: 0;
-			bottom: 0;
-			height: 100%; // ? why is this needed
+			height: 100%;
 
 			width: 50%;
+			@at-root .gallery.video > .viewport > .arr {
+				width: 5rem; // thinner arrows so the user doesn't accidentally click them when trying to pres play
+				height: calc(100% - 4rem); // leave some space for player controls to interact with
+			}
 
 			&::after {
 				content: '';

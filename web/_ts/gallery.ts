@@ -1,18 +1,18 @@
 function initGallery() : void
 {
-	const wrapEl = document.querySelector<HTMLElement>('.gallery')!;
-	if(!wrapEl) return;
+	const galleryWrapperEl = document.getElementsByClassName('gallery')[0] as HTMLElement;
+	if(!galleryWrapperEl) return;
 
-	const stageEl = wrapEl.querySelector<HTMLElement>('.stage')!;
+	const stageEl = galleryWrapperEl.getElementsByClassName('stage')[0] as HTMLElement;
 
 	const slidesEls = stageEl.children;
 	if(slidesEls.length === 0) return;
 
 	function toggleGalleryFullscreen() : void
 	{
-		if(!wrapEl.classList.contains('is-fullscreen')) {
+		if(!galleryWrapperEl.classList.contains('is-fullscreen')) {
 			stageEl.style.scrollBehavior = 'instant';
-			wrapEl.classList.add('is-fullscreen');
+			galleryWrapperEl.classList.add('is-fullscreen');
 
 			document.body.style.overflow = 'hidden';
 			stageEl.scrollLeft = stageEl.scrollLeft;
@@ -22,7 +22,7 @@ function initGallery() : void
 		}
 		else {
 			stageEl.style.scrollBehavior = 'instant';
-			wrapEl.classList.remove('is-fullscreen');
+			galleryWrapperEl.classList.remove('is-fullscreen');
 
 			document.body.style.overflow = '';
 			stageEl.scrollLeft = stageEl.scrollLeft;
@@ -33,7 +33,7 @@ function initGallery() : void
 	}
 
 	window.addEventListener('popstate', (e) => {
-		if(!wrapEl.classList.contains('is-fullscreen')) return;
+		if(!galleryWrapperEl.classList.contains('is-fullscreen')) return;
 
 		history.pushState(null, null, document.URL); // Cooked way to prevent the back button form actually navigating in fullscreen.
 		toggleGalleryFullscreen();
@@ -45,17 +45,17 @@ function initGallery() : void
 	document.addEventListener('keydown', (e : KeyboardEvent) => {
 		switch(e.key) {
 			case 'Escape':
-				if(wrapEl.classList.contains('is-fullscreen'))
+				if(galleryWrapperEl.classList.contains('is-fullscreen'))
 					toggleGalleryFullscreen();
 				break;
 
 			case 'ArrowLeft':
-				if(wrapEl.classList.contains('is-fullscreen'))
+				if(galleryWrapperEl.classList.contains('is-fullscreen'))
 					if(current > 0) goTo(current - 1);
 				break;
 
 			case 'ArrowRight':
-				if(wrapEl.classList.contains('is-fullscreen'))
+				if(galleryWrapperEl.classList.contains('is-fullscreen'))
 					if(current < slidesEls.length - 1) goTo(current + 1);
 				break;
 		}
@@ -63,7 +63,7 @@ function initGallery() : void
 
 	let userInteracted = false;
 
-	wrapEl.querySelector<HTMLElement>('.fullscreen')!
+	galleryWrapperEl.getElementsByClassName('fullscreen')[0]
 		.addEventListener('click', () => {
 			userInteracted = true;
 			toggleGalleryFullscreen();
@@ -71,18 +71,21 @@ function initGallery() : void
 
 	if(slidesEls.length < 2) return;
 
-	const viewportEl = wrapEl.querySelector<HTMLElement>('.viewport')!;
+	const viewportEl = galleryWrapperEl.getElementsByClassName('viewport')[0] as HTMLElement;
 
-	const prevButtonEl = wrapEl.querySelector<HTMLElement>('.prev')!;
-	const nextButtonEl = wrapEl.querySelector<HTMLElement>('.next')!;
-	const navStripEl = wrapEl.querySelector('nav')!;
-	const selectionIndicatorEl = navStripEl.querySelector<HTMLElement>('.indicator')!;
+	const prevButtonEl = galleryWrapperEl.getElementsByClassName('prev')[0] as HTMLElement;
+	const nextButtonEl = galleryWrapperEl.getElementsByClassName('next')[0] as HTMLElement;
+	const navStripEl = galleryWrapperEl.querySelector('nav')!;
+	const selectionIndicatorEl = navStripEl.getElementsByClassName('indicator')[0] as HTMLElement;
 
 	// Arrow navigation
 	function updateNavArrows() : void
 	{
 		prevButtonEl.style.display = current === 0 ? 'none' : '';
 		nextButtonEl.style.display = current === slidesEls.length - 1 ? 'none' : '';
+
+		// Shrink arrows when showing the video:
+		galleryWrapperEl.classList.toggle('video', slidesEls[current].firstElementChild!.nodeName === "IFRAME");
 	}
 
 	function updateSelectionIndicator() : void
@@ -90,11 +93,76 @@ function initGallery() : void
 		selectionIndicatorEl.style.transform = `translateX(${current * (2 + 64)}px)`; // 2 px gap between thumbs :ThumbGap
 	}
 
+	function maybePausePlayer() : void
+	{
+		const iframe = slidesEls[current].firstElementChild as HTMLIFrameElement;
+		if(iframe.nodeName !== 'IFRAME') return;
+
+		const src = iframe.src;
+		if(src.startsWith('https://www.youtube-nocookie.com/embed/')) {
+			iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+		}
+		else if(src.startsWith('https://player.vimeo.com/video/')) {
+			iframe.contentWindow?.postMessage('{"method":"pause"}', '*');
+		}
+		else {
+			console.info("Don't know how to pause '"+src+"', sorry.");
+		}
+	}
+
+	// Set up callbacks to recognize if a user started playing a video (needs to stop auto-panning):
+	{
+		window.addEventListener('message', e => {
+			if(e.origin === 'https://www.youtube-nocookie.com') {
+				if(!e.data) return;
+				const data = JSON.parse(e.data);
+	
+				if(data.event === 'onStateChange') {
+					userInteracted = true;
+				}
+			}
+			else if(e.origin === "https://player.vimeo.com") {
+				if(!e.data) return;
+				const data = JSON.parse(e.data);
+
+				if(data.event === 'play') {
+					userInteracted = true;
+				}
+			}
+		});
+
+		let i = 0;
+		for(const wrapperEl of slidesEls) {
+			const iframe = wrapperEl.firstElementChild as HTMLIFrameElement;
+			if(iframe.nodeName !== 'IFRAME') continue;
+
+			const src = iframe.src;
+			if(src.startsWith('https://www.youtube-nocookie.com/embed/')) {
+				iframe.addEventListener('load', () => {
+					iframe.contentWindow!.postMessage(`{"event":"listening","id":"${i}","channel":"widget"}`, '*');
+					iframe.contentWindow!.postMessage(`{"event":"command","id":"${i}","channel":"widget","func":"addEventListener","args":["onStateChange"]}`, '*');
+				});
+			}
+			else if(src.startsWith("https://player.vimeo.com/video/")) {
+				iframe.addEventListener('load', () => {
+					iframe.contentWindow!.postMessage(`{"method":"addEventListener","value":"play"}`, '*');
+				});
+			}
+			else {
+				console.info("Don't know how to subscribe to play events for '"+src+"', sorry.");
+			}
+
+			i++;
+		}
+	}
+
 	const storageKey = 'gallery-' + location.pathname;
 
 	let isTriggeredScroll = false;
 	function goTo(idx : number) : void
 	{
+		maybePausePlayer();
+
 		current = idx;
 		isTriggeredScroll = true;
 		sessionStorage.setItem(storageKey, String(idx));
@@ -124,6 +192,11 @@ function initGallery() : void
 		userInteracted = true;
 		goTo(parseInt(btnEl.dataset.i!, 10));
 	});
+
+	// hovering should pause auto-pan:
+	let currentlyHoveringViewport = false;
+	galleryWrapperEl.addEventListener('mouseenter', () => currentlyHoveringViewport = true);
+	galleryWrapperEl.addEventListener('mouseleave', () => currentlyHoveringViewport = false);
 
 	// Drag-to-pan
 	let dragStartX = 0;
@@ -183,6 +256,8 @@ function initGallery() : void
 
 		const idx = Math.round(stageEl.scrollLeft / stageEl.offsetWidth);
 		if(idx !== current) {
+			maybePausePlayer();
+
 			current = idx;
 
 			updateSelectionIndicator();
@@ -199,6 +274,8 @@ function initGallery() : void
 
 	// Auto-play: advance every 5s until user interacts
 	const autoplay = setInterval(() => {
+		if(currentlyHoveringViewport) return;
+
 		if(userInteracted) {
 			clearInterval(autoplay);
 			return;
