@@ -82,7 +82,7 @@ if(fms) fms.addEventListener('change', e => \{
 	const newFlags = targetBitState ? (oldFlags | targetBitMask) : (oldFlags & ~targetBitMask);
 	trEl.dataset.flags = newFlags;
 
-	const xhr = $.post('/api/v2/settings/notifications/followed-mods/'+targetModId, \{ 'new': newFlags })
+	const xhr = $.post('/api/v2/settings/notifications/followed-mods/'+targetModId, \{ new: newFlags, at: window.user.at })
 	R.attachDefaultFailHandler(xhr, 'Failed to change notification setting', () => \{
 		e.target.checked = !targetBitState; // reset setting on error
 		const oldFlags = parseInt(trEl.dataset.flags); // can't reuse outer oldSetting, other bits might have changed in the meantime
