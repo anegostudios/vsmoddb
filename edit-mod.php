@@ -3,6 +3,7 @@
 /**
  * @var array  $config
  * @var object $con
+ * @var object $view
  * @var array  $messages
  */
 
@@ -263,7 +264,7 @@ else if(!empty($_POST['save'])) {
 	validateUrl($mod, 'homepageUrl', 'Hompage Url');
 	validateUrl($mod, 'sourceCodeUrl', 'Source Code Url');
 	if(validateUrl($mod, 'trailerVideoUrl', 'Trailer Video Url') && $mod['trailerVideoUrl'])
-		$mod['trailerVideoUrl'] = preg_replace('#//(?:www\.)youtube\.com#', '//www.youtube-nocookie.com', $url, 1);
+		$mod['trailerVideoUrl'] = preg_replace('#//(?:www\.)youtube\.com#', '//www.youtube-nocookie.com', $mod['trailerVideoUrl'], 1);
 	validateUrl($mod, 'issueTrackerUrl', 'Issue Tracker Url');
 	validateUrl($mod, 'wikiUrl', 'Wiki Url');
 	validateUrl($mod, 'donateUrl', 'Donate Url');
