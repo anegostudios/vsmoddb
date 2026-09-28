@@ -1,6 +1,6 @@
 <?php
 
-include_once $config['basepath'] . 'lib/modinfo.php';
+require_once(SRC_ROOT.'/lib/modinfo.php');
 
 /**
  * @param array $file

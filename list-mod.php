@@ -1,6 +1,6 @@
 <?php
 
-include($config["basepath"] . "lib/search-mods.php");
+require(SRC_ROOT.'/lib/search-mods.php');
 
 if(isset($_GET['paging'])) {
 	if($paramError = validateModSearchInputs($searchParams, true)) {

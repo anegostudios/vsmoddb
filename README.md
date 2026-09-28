@@ -5,12 +5,6 @@ Repository for https://mods.vintagestory.at
 
 # VS Mod DB API Docs
 
-## Format
-
-Request: Normal GET requests
-
-Response: Json. Every response contains a *statuscode* property which uses [HTTP Error Codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) to denote success/failure of a request.
-
 ## URLS
 
 *Api base url*
@@ -27,6 +21,10 @@ Always respect the full uris returned by the api.
 ## Interfaces
 
 ## V1
+
+Request: Normal GET requests  
+Response format: Json.  
+Every response contains a *statuscode* property which uses [HTTP Error Codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) to denote success/failure of a request.
 
 ### /api/tags
 List all mod tags
@@ -390,8 +388,8 @@ Requirements:
 
 Steps:
 - add `127.0.0.1 mods.vintagestory.stage` to your hosts file (this has to be a different domain from `vintagestory.at`, because that domain uses HSTS and so a self signed cert will not be deemed acceptable by browsers)
-- run `docker compose up -d` inside [docker/](docker)
-- edit [config.php](lib/config.php) to match the settings in [dockerdocker-compose.yml](docker/docker-compose.yml)
+- create and set up `lib/config.priv.php` to match the (database) settings in [docker/docker-compose.yml](docker/docker-compose.yml). See `lib/config.php` for comments and available options.
+- run `docker compose up -d` inside `docker/`
 
 Result:
 - [https://mods.vintagestory.stage/](https://mods.vintagestory.stage/)

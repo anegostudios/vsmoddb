@@ -2,23 +2,23 @@
 header('Content-Type: text/html; charset=utf-8');
 header('X-Frame-Options: DENY');
 
-global $config, $con, $view;
+global $con, $view;
 
-include($config["basepath"] . "lib/ErrorHandler.php");
+require(SRC_ROOT.'/lib/ErrorHandler.php');
 if(!defined("TESTING")) ErrorHandler::setupErrorHandling(); // TODO(Rennorb) @cleanup: Change this into "detaching" when testing instead of always checking for testing mode.
 
 
-include($config["basepath"] . "lib/timezones.php");
-include($config["basepath"] . "lib/View.php");
-include($config["basepath"] . "lib/img.php");
-include($config["basepath"] . "lib/3rdparty/adodb5/adodb-exceptions.inc.php");
-include($config["basepath"] . "lib/3rdparty/adodb5/adodb.inc.php");
+require(SRC_ROOT.'/lib/timezones.php');
+require(SRC_ROOT.'/lib/View.php');
+require(SRC_ROOT.'/lib/img.php');
+require(SRC_ROOT.'/lib/3rdparty/adodb5/adodb-exceptions.inc.php');
+require(SRC_ROOT.'/lib/3rdparty/adodb5/adodb.inc.php');
 
-include($config["basepath"] . "lib/fileupload.php");
-include($config["basepath"] . "lib/version.php");
+require(SRC_ROOT.'/lib/fileupload.php');
+require(SRC_ROOT.'/lib/version.php');
 
 //mysqli_report(MYSQLI_REPORT_ERROR);
-$con = createADOConnection($config);
+$con = createADOConnection();
 $view = new View();
 
 $ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;
@@ -177,16 +177,21 @@ function forceArrayOfInts($var, $filterInsteadOfFail = false)
 	return $filterInsteadOfFail ? [] : false;
 }
 
-/** Returns the last element without moving the array internal pointer (unlike end()). */
+/** Returns the last element without moving the array internal pointer (unlike end()).
+ * @param array $array
+ */
 function last($array)
 {
 	return $array[count($array) - 1];
 }
 
+/**
+ * @param string $text
+ * @return string
+ */
 function sanitizeHtml($text)
 {
-	global $config;
-	include_once($config["basepath"] . "lib/3rdparty/htmLawed.php");
+	include_once(SRC_ROOT.'/lib/3rdparty/htmLawed.php');
 
 	// Extremely rudimentary check to not ingest expanded spoilers after editing a comment, but good enough for that case.
 	$text = str_replace('class="spoiler-toggle expanded"', 'class="spoiler-toggle"', $text);
@@ -209,7 +214,7 @@ function sanitizeHtml($text)
 // <iframe width="560" height="315" src="https://www.youtube.com/embed/AmQV7QwjCac?si=iJaNM5nzTf4s7FHX" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 /**
- * @param string $element_name
+ * @param string $elementName
  * @param array<string, string>|0 $attributes  zero in case of closing tag
  * @return string post-filter html according to the tag. Must produce opening / closing tags according to the attributes param.
  */
@@ -257,11 +262,11 @@ function _htmLawed_sanitize_node($elementName, $attributes = 0) {
 
 
 
-function createADOConnection($config, $persistent = true)
+function createADOConnection()
 {
 	$con = ADONewConnection("mysqli");
 
-	$result = $con->NConnect($config["databasehost"], $config["databaseuser"], $config["databasepassword"], $config["database"]);
+	$result = $con->NConnect(DB_HOST, DB_USER, DB_PASS, DB_DATABASE);
 
 	if (!$result) {
 		throw new Exception("Error connecting to database. " . $con->_errorMsg);
@@ -983,14 +988,14 @@ function splitOffExtension($path, &$out_noext, &$out_ext)
 
 
 // Loads after other function deffinitions so we can use them during global userstate init.
-include($config["basepath"] . "lib/user.php");
+require(SRC_ROOT.'/lib/user.php');
 
 
 if(CDN == 'bunny') {
-	include($config["basepath"] . "lib/cdn/bunny.php");
+	require(SRC_ROOT.'/lib/cdn/bunny.php');
 }
 else {
-	include($config["basepath"] . "lib/cdn/none.php");
+	require(SRC_ROOT.'/lib/cdn/none.php');
 }
 
 
@@ -1178,7 +1183,7 @@ function stringifyStatus($status)
 
 if(!defined('INPUT_REQUEST')) define('INPUT_REQUEST', 99);
 
-include($config["basepath"] . "lib/upload-limits.php");
+require(SRC_ROOT.'/lib/upload-limits.php');
 
 /** @return bool */
 function isTouchPlatform()

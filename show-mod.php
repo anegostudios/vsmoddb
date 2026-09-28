@@ -1,7 +1,7 @@
 <?php
 
-include $config['basepath']. 'lib/recommend-release.php';
-include $config['basepath']. 'lib/moderation.php';
+require(SRC_ROOT.'/lib/recommend-release.php');
+require(SRC_ROOT.'/lib/moderation.php');
 
 $assetId = $urlparts[2] ?? 0;
 

@@ -197,7 +197,7 @@ function queryModSearchForModCards($searchParams)
  */
 function queryModSearch($searchParams)
 {
-	global $con, $user, $config;
+	global $con, $user;
 
 	$joinClauses = '';
 	$whereClauses = '';
@@ -209,7 +209,7 @@ function queryModSearch($searchParams)
 	$havingClauses = '';
 
 	if(!empty($user['genAiTolerance'])) {
-		require($config['basepath'].'lib/moderation.php');
+		require(SRC_ROOT.'/lib/moderation.php');
 
 		$joinClauses = 'LEFT JOIN moderationRequests req ON req.referenceId = m.modId AND (req.kind, req.category) = ('.MOD_REQUEST_KIND_REPORT_MOD.', '.REPORT_CATEGORY_MOD_LOW_EFFORT_AI.') AND resolved IS NULL ';
 		$havingClauses = 'HAVING COUNT(req.requestId) < '.$user['genAiTolerance']; // @security: $user['genAiTolerance'] comes from the database and is numeric, therefore sql inert.

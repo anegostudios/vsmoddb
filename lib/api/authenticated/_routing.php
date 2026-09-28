@@ -24,26 +24,26 @@ function validateActionTokenAPI()
 switch($urlparts[0]) {
 	case 'notifications':
 		array_shift($urlparts);
-		include(__DIR__ . '/notifications.php');
+		require(__DIR__ . '/notifications.php');
 		break;
 
 	case 'settings':
 		array_shift($urlparts);
-		include(__DIR__ . '/settings.php');
+		require(__DIR__ . '/settings.php');
 		break;
 
 	case 'comments':
 		array_shift($urlparts);
-		include(__DIR__ . '/comments.php');
+		require(__DIR__ . '/comments.php');
 		break;
 
 	case 'mods':
 		array_shift($urlparts);
-		include(__DIR__ . '/mods.php');
+		require(__DIR__ . '/mods.php');
 		break;
 
 	case 'game-versions':
 		array_shift($urlparts);
-		include(__DIR__ . '/game-versions.php');
+		require(__DIR__ . '/game-versions.php');
 		break;
 }

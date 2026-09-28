@@ -60,7 +60,7 @@ if ($file['modId']) {
 	}
 }
 
-include_once $config['basepath'].'lib/file.php';
+require_once(SRC_ROOT.'/lib/file.php');
 
 tryDeleteFiles([$file]);
 

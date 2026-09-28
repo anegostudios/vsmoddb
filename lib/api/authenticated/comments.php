@@ -1,7 +1,6 @@
 <?php
 
 /** @var array $user */
-/** @var array $config */
 /** @var object $con */
 
 if(empty($urlparts)) {
@@ -18,7 +17,7 @@ switch($urlparts[1] ?? null) {
 		parseRequestBody();
 		validateActionTokenAPI();
 
-		require $config['basepath'] . 'lib/moderation.php';
+		require(SRC_ROOT.'/lib/moderation.php');
 
 		$category = filter_input(INPUT_POST, 'category', FILTER_VALIDATE_INT, [ 'options' => [ 'min' => 0, 'max' => 3 ]]); // :MaxReportCategoryComment
 		if($category === null)  fail(HTTP_BAD_REQUEST, 'Missing category.');
@@ -37,7 +36,7 @@ switch($urlparts[1] ?? null) {
 		$previousRequest = $con->getRow(
 			"SELECT requestId, resolved
 			 FROM moderationRequests WHERE (referenceId, kind, category, initiatorUserId) = ($commentId, ".MOD_REQUEST_KIND_REPORT_COMMENT.", $category, {$user['userId']}) 
-			   AND (resolved IS NULL OR resolved >= DATE_SUB(NOW(), INTERVAL ".COMMENT_REPORT_DEDUPLICATION_TIMESPAN.' DAY))'
+			   AND (resolved IS NULL OR resolved >= DATE_SUB(NOW(), INTERVAL ".COMMENT_REPORT_DEDUPLICATION_TS_DAYS.' DAY))'
 		); // @security: $modId, $category and $user['userId'] are all validated to be int, therefore sql inert.
 
 		if($previousRequest) {

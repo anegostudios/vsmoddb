@@ -67,7 +67,7 @@ function good($data = null, $flags = 0)
 	exit(($data !== null) ? json_encode($data, $flags) : '{}'); //TODO(Rennorb)  @cleanup: switch this to HTTP_NO_CONTENT if empty
 }
 
-include($config["basepath"] . "lib/api/public/_routing.php");
-include($config["basepath"] . "lib/api/authenticated/_routing.php");
+require(SRC_ROOT.'/lib/api/public/_routing.php');
+require(SRC_ROOT.'/lib/api/authenticated/_routing.php');
 
 fail(HTTP_NOT_FOUND);

@@ -18,5 +18,5 @@ function good($data, $statuscode = "200")
 }
 
 
-include "functions.php";
-include "logic.php";
+require "functions.php";
+require "logic.php";

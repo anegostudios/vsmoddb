@@ -29,7 +29,7 @@
 
 	<link nonce="{$cspNonce}" href="/web/css/style.css?version=111" rel="stylesheet" type="text/css">
 
-	{if isset($assetserver) && str_starts_with($assetserver, 'http')}<link rel="dns-prefetch" href="{$assetserver}" />{/if}
+	<? if(!empty(CDN_ASSETSERVER_BASE_URL) && str_starts_with(CDN_ASSETSERVER_BASE_URL, 'http')): ?><link rel="dns-prefetch" href="<?= CDN_ASSETSERVER_BASE_URL ?>" /><? endif; ?>
 
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery-1.11.1.min.js"></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/chosen.jquery.min.js?v=6"></script>

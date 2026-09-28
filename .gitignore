@@ -8,8 +8,11 @@
 *.txt
 etc
 db/backup.sql
+# legacy
 lib/config.db.priv.php
+# legacy
 lib/config.dev.php
+lib/config.priv.php
 *.cache
 *.css.map
 *.js.map

@@ -16,7 +16,7 @@ class Data extends \Exception {
 function fail($statuscode) { throw new Data(true, ['statuscode' => $statuscode]); }
 function good($data) { $data['statuscode'] = '200'; throw new Data(false, $data); }
 
-include $config['basepath']. 'lib/api/v1/functions.php';
+require(SRC_ROOT.'/lib/api/v1/functions.php');
 
 function isStringOrNull($val) {
 	return is_null($val) || is_string($val);
@@ -24,7 +24,7 @@ function isStringOrNull($val) {
 
 function apiGet($endpoint, $queryParams = [])
 {
-	global $urlparts, /* used in the api handler */ $con, $config;
+	global $urlparts, /* used in the api handler */ $con;
 	$urlparts = is_array($endpoint) ? $endpoint : [$endpoint];
 
 	foreach($queryParams as $k => $v) {
@@ -32,7 +32,7 @@ function apiGet($endpoint, $queryParams = [])
 	}
 
 	try {
-		include $config['basepath']. 'lib/api/v1/logic.php';
+		require(SRC_ROOT.'/lib/api/v1/logic.php');
 	}
 	catch(Data $d) {
 		return $d;

@@ -16,16 +16,9 @@ class View {
 	var $templatedir = "";
 	var $compiledir = "";
 	
-	private $viewfilename;
-	
-	var $config;
-	
 	function __construct() {
-		global $website, $config;
-		
-		$this->templatedir = $config["basepath"] . "/templates/";
-		$this->compiledir = $config["basepath"] . "/templates_c/";
-		$this->config = $GLOBALS['config'];
+		$this->templatedir = SRC_ROOT.'/templates/';
+		$this->compiledir = SRC_ROOT.'/templates_c/';
 	}
 	
 	function assign($name, $value, $defaultvalue = null, $unfiltered = false) {

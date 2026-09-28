@@ -1,13 +1,12 @@
 <?php
 /** @var object $con */
 /** @var object $view */
-/** @var array $config */
 /** @var array<string> $urlparts */
 
 if(empty($user['userId']))   showErrorPage(HTTP_UNAUTHORIZED);
 if(!canModerate(null, $user))   showErrorPage(HTTP_FORBIDDEN);
 
-require($config['basepath'].'lib/moderation.php');
+require(SRC_ROOT.'/lib/moderation.php');
 
 ///
 /// Mods

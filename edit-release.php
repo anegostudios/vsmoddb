@@ -5,7 +5,7 @@ if (empty($user))   showErrorPage(HTTP_UNAUTHORIZED);
 if ($user['isBanned'])  showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
 
 
-include($config['basepath'] . 'lib/edit-release.php');
+require(SRC_ROOT.'/lib/edit-release.php');
 
 $existingRelease = null;
 $targetMod = null;

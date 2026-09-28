@@ -3,7 +3,6 @@
 /**
  * @var object $con
  * @var array $user
- * @var array $config
  * @var array<string> $urlparts
  */
 
@@ -229,7 +228,7 @@ switch($urlparts[1]) {
 			}
 		}
 
-		require_once($config['basepath'].'lib/mod.php');
+		require_once(SRC_ROOT.'/lib/mod.php');
 
 		if(!$bypassChecks) {
 			if($mod['currentTransferUserId']) {
@@ -298,7 +297,7 @@ switch($urlparts[1]) {
 		parseRequestBody();
 		validateActionTokenAPI();
 
-		require $config['basepath'] . 'lib/moderation.php';
+		require(SRC_ROOT.'/lib/moderation.php');
 
 		$category = filter_input(INPUT_POST, 'category', FILTER_VALIDATE_INT, [ 'options' => [ 'min' => 0, 'max' => 9 ]]); // :MaxReportCategoryMod
 		if($category === null)  fail(HTTP_BAD_REQUEST, 'Missing category.');
@@ -317,7 +316,7 @@ switch($urlparts[1]) {
 		$previousRequest = $con->getRow(
 			"SELECT requestId, resolved
 			 FROM moderationRequests WHERE (referenceId, kind, category, initiatorUserId) = ($modId, ".MOD_REQUEST_KIND_REPORT_MOD.", $category, {$user['userId']}) 
-			   AND (resolved IS NULL OR resolved >= DATE_SUB(NOW(), INTERVAL ".MOD_REPORT_DEDUPLICATION_TIMESPAN.' DAY))'
+			   AND (resolved IS NULL OR resolved >= DATE_SUB(NOW(), INTERVAL ".MOD_REPORT_DEDUPLICATION_TS_DAYS.' DAY))'
 		); // @security: $modId, $category and $user['userId'] are all validated to be int, therefore sql inert.
 
 		if($previousRequest) {
@@ -435,7 +434,7 @@ switch($urlparts[1]) {
 
 						if(empty(textContent($reasonHtml))) fail(HTTP_BAD_REQUEST, 'Missing reason.');
 
-						include($config['basepath'] . 'lib/edit-release.php');
+						require(SRC_ROOT.'/lib/edit-release.php');
 
 						$con->startTrans();
 

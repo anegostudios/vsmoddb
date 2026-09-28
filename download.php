@@ -21,7 +21,7 @@ if(!DB_READONLY) {
 	$identifier = [$fileId, $_SERVER['REMOTE_ADDR']];
 
 	$lastDownload = $con->getOne('SELECT UNIX_TIMESTAMP(lastDownload) FROM fileDownloadTracking WHERE (fileId, ipAddress) = (?, ?) ORDER BY lastDownload DESC LIMIT 1', $identifier);
-	if (!$lastDownload || (time() - $lastDownload) > DOWNLOAD_DEDUPLICATION_TIMESPAN) {
+	if (!$lastDownload || (time() - $lastDownload) > DOWNLOAD_DEDUPLICATION_TS_SECS) {
 		$con->startTrans();
 
 		$con->execute('INSERT INTO fileDownloadTracking (fileId, ipAddress) VALUES (?, ?)', $identifier);

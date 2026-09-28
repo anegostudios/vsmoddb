@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @var array  $config
  * @var object $con
  * @var object $view
  * @var array  $messages
@@ -9,7 +8,7 @@
 
 if(DB_READONLY) showReadonlyPage();
 
-include_once $config['basepath'].'lib/mod.php';
+require_once(SRC_ROOT.'/lib/mod.php');
 
 const SAVE_MSG_DEFAULT = '1';
 const SAVE_MSG_REVERTED = '2';

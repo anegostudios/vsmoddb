@@ -1,20 +1,16 @@
 <?php
 
-header_remove('X-Powered-By');
+require(__DIR__.'/lib/config.php');
 
-$config = array();
-$config["basepath"] = getcwd() . '/';
-include("lib/config.php");
-
-// The none cdn does request handling for assets directly, so it needs ty bypass this check.
-if(CDN === 'none') include("lib/core.php");
+// The none cdn does request handling for assets directly, so it needs to bypass this check.
+if(CDN === 'none') require(SRC_ROOT.'/lib/core.php');
 
 if (!empty($_SERVER['HTTP_ACCEPT']) && $_SERVER['REQUEST_METHOD'] == "GET") {
 	if(!str_contains($_SERVER['HTTP_ACCEPT'], "text/html") && !str_contains($_SERVER['HTTP_ACCEPT'], "application/json") && $_SERVER['HTTP_ACCEPT'] != "*/*") exit("not an image");
 }
 
 // This is the more desirable point to initialize.
-if(CDN !== 'none') include("lib/core.php");
+if(CDN !== 'none') require(SRC_ROOT.'/lib/core.php');
 
 
 
@@ -30,15 +26,15 @@ if($urlparts[0] === 'api') { // :ReservedUrlPrefixes
 	array_shift($urlparts);
 	if(count($urlparts) > 0 && $urlparts[0] === 'v2') {
 		array_shift($urlparts);
-		include("lib/api/v2.php");
+		require(SRC_ROOT.'/lib/api/v2.php');
 	}
 	else {
-		include("lib/api/v1/entry.php");
+		require(SRC_ROOT.'/lib/api/v1/entry.php');
 	}
 	exit();
 }
 
-include("lib/csp.php");
+require(SRC_ROOT.'/lib/csp.php');
 
 
 //TODO(Rennorb) @cleanup @perf: Move view initialization here, after api branch.
@@ -46,7 +42,6 @@ include("lib/csp.php");
 //NOTE(Rennorb): Technically we should only count the public mods, but in reality this probably doesn't matter for production and just counting all mods makes the query simpler.
 $view->assign('totalModCount', $con->getOne('SELECT COUNT(*) from mods'), null, true);
 $view->assign('headerHighlight', null, null, true);
-$view->assign("assetserver", $config['assetserver']);
 
 if(DB_READONLY) addMessage(MSG_CLASS_OK.' permanent', 'We are currently in readonly mode. All editing is disabled, but you can still browse and download.');
 

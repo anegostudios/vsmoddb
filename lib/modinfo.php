@@ -13,9 +13,7 @@
  */
 function modpeek($filepath, &$modInfo)
 {
-	global $config;
-
-	$args = ['dotnet', $config['basepath'] . 'util/modpeek.dll', '-p', $filepath];
+	$args = ['dotnet', SRC_ROOT.'/util/modpeek.dll', '-p', $filepath];
 	$modpeek = proc_open($args, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, sys_get_temp_dir());
 
 

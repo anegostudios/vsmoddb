@@ -1,6 +1,6 @@
 <?php
 
-include_once $config['basepath'].'lib/file.php';
+require_once(SRC_ROOT.'/lib/file.php');
 
 const RESERVED_URL_PREFIXES = ['api', 'home', 'terms', 'accountsettings', 'login', 'logout', 'edit-uploadfile', 'edit-deletefile', 'download', 'notifications', 'updateversiontags', 'notification', 'list', 'show', 'edit', 'moderate', 'cmd', 't', 'webhooks']; // :ReservedUrlPrefixes
 

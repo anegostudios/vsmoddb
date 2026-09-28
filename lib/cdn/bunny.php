@@ -5,14 +5,14 @@
 
 /* Config options: 
 
-$config["assetserver"] = "https://abcd.b-cdn.net";
+CDN_ASSETSERVER_BASE_URL = "https://abcd.b-cdn.net";
 // storage.bunnycdn.com = de
 // otherwise {uk, ny, la, sg, se, br, jh}.storage.bunnycdn.com
-$config["bunnyendpoint"] = "storage.bunnycdn.com";
-$config["bunnyzone"] = "abcd";
-$config["bunnyzoneid"] = "12345"; // for log processing
-$config["bunnykey"] = "aaaaaaaa-bbbb-cccc-dddddddddddd-eeee-ffff";
-$config["bunnyapikey"] = "aaaaaaaa-bbbb-cccc-ddddddddddddxxxxxxxxxxxxxxxxxx-eeee-ffff"; // for log processing
+BUNNY_ENDPOINT = "storage.bunnycdn.com";
+BUNNY_ZONE = "abcd";
+BUNNY_ZONEID = "12345"; // for log processing
+BUNNY_KEY = "aaaaaaaa-bbbb-cccc-dddddddddddd-eeee-ffff";
+BUNNY_APIKEY = "aaaaaaaa-bbbb-cccc-ddddddddddddxxxxxxxxxxxxxxxxxx-eeee-ffff"; // for log processing
 
 */
 
@@ -56,9 +56,7 @@ function generateCdnFileBasenameWithPath($userId, $localPath, $originalFileBasen
  * @return array{error : false|string}
  */
 function uploadToCdn($localPath, $cdnPath) {
-	global $config;
-
-	$url = "https://{$config['bunnyendpoint']}/{$config['bunnyzone']}/{$cdnPath}";
+	$url = "https://".BUNNY_ENDPOINT."/".BUNNY_ZONE."/{$cdnPath}";
 
 	$curl = curl_init();
 	curl_setopt_array($curl, [
@@ -68,7 +66,7 @@ function uploadToCdn($localPath, $cdnPath) {
 		CURLOPT_INFILE => fopen($localPath, 'rb'),
 		CURLOPT_INFILESIZE => filesize($localPath),
 		CURLOPT_HTTPHEADER => [
-			"AccessKey: {$config['bunnykey']}",
+			'AccessKey: '.BUNNY_KEY,
 			'Content-Type: application/octet-stream',
 		],
 	]);
@@ -92,9 +90,7 @@ function uploadToCdn($localPath, $cdnPath) {
  * @return null|array{error:string}
  */
 function deleteFromCdn($cdnPath) {
-	global $config;
-
-	$url = "https://{$config['bunnyendpoint']}/{$config['bunnyzone']}/{$cdnPath}";
+	$url = "https://".BUNNY_ENDPOINT."/".BUNNY_ZONE."/{$cdnPath}";
 
 	$curl = curl_init();
 	curl_setopt_array($curl, [
@@ -102,7 +98,7 @@ function deleteFromCdn($cdnPath) {
 		CURLOPT_CUSTOMREQUEST => 'DELETE',
 		CURLOPT_RETURNTRANSFER => true,
 		CURLOPT_HTTPHEADER => [
-			"AccessKey: {$config['bunnykey']}",
+			'AccessKey: '.BUNNY_KEY,
 		],
 	]);
 
@@ -136,23 +132,21 @@ function formatCdnUrl($file, $filenamePostfix = '') {
  * Formats a "normal" url to the file.
  * This url is meant to be used for in-browser resources, e.g. a image to be placed onto a page, as compared to a download link for that image.
  * 
- * @param string|array{cdnPath: string} $file Either a file database row or the cdnpath directly;
+ * @param string $cdnPath 
  * @param string $filenamePostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */
 function formatCdnUrlFromCdnPath($cdnPath, $filenamePostfix = '') {
-	global $config;
-
 	if($filenamePostfix) {
 		splitOffExtension($cdnPath, $pathNoExt, $ext);
 		if($ext === '') {
-			return "{$config['assetserver']}/{$cdnPath}{$filenamePostfix}"; // should never happen in reality, but just in case
+			return CDN_ASSETSERVER_BASE_URL."/{$cdnPath}{$filenamePostfix}"; // should never happen in reality, but just in case
 		}
 
-		return "{$config['assetserver']}/{$pathNoExt}{$filenamePostfix}.{$ext}";
+		return CDN_ASSETSERVER_BASE_URL."/{$pathNoExt}{$filenamePostfix}.{$ext}";
 	}
 	else {
-		return "{$config['assetserver']}/{$cdnPath}";
+		return CDN_ASSETSERVER_BASE_URL."/{$cdnPath}";
 	}
 }
 
@@ -164,10 +158,8 @@ function formatCdnUrlFromCdnPath($cdnPath, $filenamePostfix = '') {
  * @return string
  */
 function formatCdnDownloadUrl($file) {
-	global $config;
-
 	// dl -> used for download name in edge rules
-	return "{$config['assetserver']}/{$file['cdnPath']}?dl={$file['name']}";
+	return CDN_ASSETSERVER_BASE_URL."/{$file['cdnPath']}?dl={$file['name']}";
 }
 
 
@@ -176,12 +168,12 @@ function formatCdnDownloadUrl($file) {
  */
 function bunny_pullLogsAndUpdateDownloadNumbers($date)
 {
-	global $con, $config;
+	global $con;
 
-	$curl = curl_init("https://logging.bunnycdn.com/".$date->format('m-d-y')."/{$config['bunnyzoneid']}.log");
+	$curl = curl_init("https://logging.bunnycdn.com/".$date->format('m-d-y')."/".BUNNY_ZONEID.".log");
 	curl_setopt_array($curl, [
 		CURLOPT_RETURNTRANSFER => true,
-		CURLOPT_HTTPHEADER => [ 'AccessKey: '.$config['bunnyapikey'] ],
+		CURLOPT_HTTPHEADER => [ 'AccessKey: '.BUNNY_APIKEY ],
 	]);
 
 	$response = curl_exec($curl);

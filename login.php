@@ -19,7 +19,7 @@ $profileRequestContext = stream_context_create([
 		"content" => http_build_query(['sessionkey' => $sessionToken]),
 	],
 ]);
-$response = file_get_contents("https://{$config['authserver']}/webprofile", false, $profileRequestContext);
+$response = file_get_contents('https://'.AUTHSERVER_BASE_URL.'/webprofile', false, $profileRequestContext);
 $response = json_decode($response, true);
 
 

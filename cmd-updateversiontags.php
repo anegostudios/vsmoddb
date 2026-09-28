@@ -1,14 +1,7 @@
 <?php
 
-chdir(dirname(__FILE__));
-
-$config = array();
-$config["basepath"] = getcwd() . '/';
-$_SERVER["SERVER_NAME"] = "mods.vintagestory.at";
-$_SERVER["REQUEST_URI"] = "";
-define("DEBUG", 1);
-include("lib/config.php");
-include("lib/core.php");
+require(__DIR__.'/lib/config.php');
+require(SRC_ROOT.'/lib/core.php');
 if(DB_READONLY) {
 	http_response_code(HTTP_SERVICE_UNAVAILABLE);
 	exit();

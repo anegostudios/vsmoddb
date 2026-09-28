@@ -41,7 +41,7 @@ foreach ($userMods as &$mod) {
 unset($mod);
 
 if (canModerate($shownUser, $user)) {
-	require $config['basepath'] . 'lib/moderation.php';
+	require(SRC_ROOT.'/lib/moderation.php');
 
 	$logs = $con->getAll("
 		SELECT l.created, l.kind, l.flags, l.referenceId,

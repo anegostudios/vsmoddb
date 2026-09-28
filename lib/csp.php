@@ -1,6 +1,6 @@
 <?php
 
-$cspNonce = md5($config['noncesalt'].time());
+$cspNonce = md5(CSP_SALT.time());
 global $_csp, $_cspInlineHashes;
 $_csp = [
 	// Scripts, styles, images and fetching that does not carry this nonce is not allowed by default.

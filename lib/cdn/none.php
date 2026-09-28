@@ -43,9 +43,7 @@ function uploadToCdn($localPath, $cdnPath) {
  * @return null|array{error:string}
  */
 function deleteFromCdn($cdnPath) {
-	global $config;
-
-	$ok = @unlink($config['basepath']."files/$cdnPath");
+	$ok = @unlink(SRC_ROOT."/files/$cdnPath");
 	
 	return ['error' => $ok ? false : 'Unknown error during file removal.'];
 }
@@ -56,7 +54,7 @@ function deleteFromCdn($cdnPath) {
  * This url is meant to be used for in-browser resources, e.g. a image to be placed onto a page, as compared to a download link for that image.
  * 
  * @param array{cdnPath: string} $file A file database row
- * @param string $filenamepostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
+ * @param string $filenamePostfix a postfix applied to the file basename. Can be used to format thumbnail urls.
  * @return string
  */
 function formatCdnUrl($file, $filenamePostfix = '') {
@@ -66,8 +64,7 @@ function formatCdnUrl($file, $filenamePostfix = '') {
 	$trace = debug_backtrace(0, 2);
 	$caller = $trace[0]['file'];
 	if(str_ends_with($caller, 'edit-mod.php')) {
-		global $config;
-		return $config['basepath'].'files/'.substr($url, 8 /* /cdnfile */);
+		return SRC_ROOT.'/files/'.substr($url, 8 /* /cdnfile */);
 	}
 
 	return $url;
@@ -120,7 +117,7 @@ function formatCdnDownloadUrl($file) {
 {
 	$path_parts = explode('/', substr(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), 1), 2);
 	if($path_parts[0] === 'cdndl') {
-		$filepath = $config["basepath"] . "files/" . urldecode($path_parts[1]); // easy path traversal, we don't care. :NoneCDN_NoSecurity
+		$filepath = SRC_ROOT.'/files/'.urldecode($path_parts[1]); // easy path traversal, we don't care. :NoneCDN_NoSecurity
 		
 		// copy paste from the old dl code
 		header('Content-Description: File Transfer');
@@ -136,7 +133,7 @@ function formatCdnDownloadUrl($file) {
 		exit();
 	}
 	else if($path_parts[0] === 'cdnfile') {
-		$filepath = $config["basepath"] . "files/" . urldecode($path_parts[1]); // easy path traversal, we don't care. :NoneCDN_NoSecurity
+		$filepath = SRC_ROOT.'/files/'.urldecode($path_parts[1]); // easy path traversal, we don't care. :NoneCDN_NoSecurity
 
 		$type = mime_content_type($filepath);
 		header('Content-Type: '.$type);

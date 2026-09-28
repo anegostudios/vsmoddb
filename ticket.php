@@ -3,11 +3,10 @@
 /** @var object $con */
 /** @var object $view */
 /** @var array $messages */
-/** @var array $config */
 
 if(empty($user['userId']))   showErrorPage(HTTP_UNAUTHORIZED);
 
-require($config['basepath'].'lib/moderation.php');
+require(SRC_ROOT.'/lib/moderation.php');
 
 $requestId = intval($urlparts[1]);
 if(!$requestId)   showErrorPage(HTTP_BAD_REQUEST, 'Missing or malformed request id.');

@@ -1,7 +1,6 @@
 <?php
 /**
  * @var array<string> $urlparts
- * @var array<string, mixed> $config
  * @var object $con
  */
 
@@ -33,7 +32,7 @@ switch($urlparts[0]) {
 			echo 'Missing secret.';
 			exit();
 		}
-		if($_SERVER['HTTP_X_SECRET'] !== $config['wh-secret-gv']) {
+		if($_SERVER['HTTP_X_SECRET'] !== WH_SECRET_GV) {
 			http_response_code(HTTP_FORBIDDEN);
 			echo 'Wrong secret.';
 			exit();

@@ -1,7 +1,6 @@
 <?php
 /** @var object $con */
 /** @var object $view */
-/** @var array $config */
 /** @var array<string> $urlparts */
 
 if(empty($user['userId']))   showErrorPage(HTTP_UNAUTHORIZED);
@@ -10,7 +9,7 @@ if(empty($urlparts[2]))   showErrorPage(HTTP_NOT_FOUND);
 $targetUserHash = $urlparts[2];
 if(($targetUserHash !== 'self' && !ctype_xdigit($targetUserHash)))   showErrorPage(HTTP_NOT_FOUND);
 
-require($config['basepath'].'lib/moderation.php');
+require(SRC_ROOT.'/lib/moderation.php');
 
 if($targetUserHash === 'self' || $targetUserHash === $user['hash']) {
 	$shownUser = $user;

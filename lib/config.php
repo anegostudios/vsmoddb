@@ -1,7 +1,6 @@
 <?php
-global $config;
 
-$config["authserver"] = "auth.vintagestory.at";
+define('SRC_ROOT', dirname(__DIR__));
 
 /**
  * @param string $name
@@ -12,52 +11,42 @@ function _define_default($name, $default)
 	if(!defined($name)) define($name, $default);
 }
 
-// For local development purposes create lib/config.dev.php and put your config in there. That file is automatically ignored by version control.
+// To complete the setup, create lib/config.priv.php and put your config in there. That file is automatically ignored by version control.
 // Have a look at lib/cdn/bunny.php for relevant CDN config options.
 
-// If you want to set up a local installation, I recommend
-// adding "127.0.0.1	mods.vintagestory.stage"  to your hosts file
-if (str_contains($_SERVER["SERVER_NAME"], "mods.vintagestory.stage")) {
-	$filepath = $config["basepath"] . "lib/config.dev.php";
-	if (file_exists($filepath)) {
-		include($filepath);
-	} else {
-		define("CDN", "none");
-		$config["assetserver"] = "";
-		$config["database"] = "moddb";
-		$config["databasehost"] = "db";
-		$config["databaseuser"] = "vsmoddb";
-		$config["databasepassword"] = "vsmoddb";
-	}
-	$config['noncesalt'] = 'xzy';
+// If you want to set up a local installation, I recommend adding "127.0.0.1 mods.vintagestory.stage" to your hosts file.
 
-	_define_default("DEBUG", 1);
-	_define_default("DEBUGUSER", 1);
-
-	_define_default("MOD_SEARCH_INITIAL_RESULTS", 10);
-	_define_default("MOD_SEARCH_PAGE_SIZE", 10);
-
-	_define_default("DOWNLOAD_DEDUPLICATION_TIMESPAN", 60); // seconds
-} else {
-	$config["database"] = "moddb";
-	define("CDN", "bunny");
-
-	// Added this way so I can .gitignore this file.
-	$filepath = $config["basepath"] . "lib/config.db.priv.php";
-	if (file_exists($filepath)) {
-		include($filepath);
-	}
-
-	_define_default("DEBUG", 0);
-	define("DEBUGUSER", 0);
-
-	_define_default("MOD_SEARCH_INITIAL_RESULTS", 200);
-	_define_default("MOD_SEARCH_PAGE_SIZE", 200);
-
-	_define_default("DOWNLOAD_DEDUPLICATION_TIMESPAN", 24*3600); // seconds
+if (!file_exists(__DIR__.'/config.priv.php')) {
+	exit("See '".SRC_ROOT."/lib/config.php' and create '".SRC_ROOT."/lib/config.priv.php'.");
 }
 
-_define_default("DB_READONLY", false);
+/** Required defines in .priv:
+ * 
+ * string      DB_HOST
+ * string      DB_DATABASE
+ * string      DB_USER
+ * string|null DB_PASS
+ * string      CSP_SALT
+ * 
+ * string      WH_SECRET_GV (if you want the gameversion creation webhook to work)
+ */
+require(__DIR__.'/config.priv.php');
+
+_define_default('DEBUG', 0);
+_define_default('DEBUGUSER', 0);
+_define_default('DB_READONLY', false);
+
+_define_default('CDN', 'none');
+_define_default('CDN_ASSETSERVER_BASE_URL', '');
+
+_define_default('AUTHSERVER_BASE_URL', 'auth.vintagestory.at');
+
+_define_default("MOD_SEARCH_INITIAL_RESULTS", 200);
+_define_default("MOD_SEARCH_PAGE_SIZE", 200);
+
+_define_default("DOWNLOAD_DEDUPLICATION_TS_SECS", 24*3600);
+
+
 
 _define_default('DISABLE_USER_TAGS', true);
 define("TAG_MODAUTHOR_VOTES", 1); // Not yet fully implemented, keep this at one.
@@ -67,9 +56,9 @@ _define_default("TAG_HIDE_THRESHOLD", -20);
 _define_default("MOD_SEARCH_VALIDATE_LIMIT_MIN", 1);
 _define_default("MOD_SEARCH_VALIDATE_LIMIT_MAX", 20);
 
-_define_default("MOD_REPORT_DEDUPLICATION_TIMESPAN", 7); // days
+_define_default("MOD_REPORT_DEDUPLICATION_TS_DAYS", 7); // days
 _define_default("MOD_REPORT_LIMIT_PER_WEEK", 10); // counts open and dismissed reports, but not accepted ones.
 _define_default("MOD_REPORT_LIMIT_LOW_EFFORT_WEIGHT", .1); // The amount of reports a "low effort ai" report is counted as for the sake of rate limiting.
 
-_define_default("COMMENT_REPORT_DEDUPLICATION_TIMESPAN", 7); // days
+_define_default("COMMENT_REPORT_DEDUPLICATION_TS_DAYS", 7); // days
 _define_default("COMMENT_REPORT_LIMIT_PER_WEEK", 50); // counts open and dismissed reports, but not accepted ones.
