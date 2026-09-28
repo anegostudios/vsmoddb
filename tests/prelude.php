@@ -3,5 +3,5 @@
 $_SERVER["REQUEST_URI"] = "/";
 define("TESTING", 1);
 
-require(SRC_ROOT.'/lib/config.php');
+require(dirname(__DIR__).'/lib/config.php');
 require(SRC_ROOT.'/lib/core.php');

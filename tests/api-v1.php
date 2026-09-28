@@ -75,6 +75,11 @@ final class ApiV1Test extends TestCase {
 	/** @test */
 	public function mods() : void
 	{
+		global $user; if(!empty($user)) {
+			$user['userId'] = 0;
+			$user['roleCode'] = 'test'; // fix for the test to not give draft mods that don't match the api test criteria.
+		}
+
 		$data = apiGet('mods');
 		$this->assertFalse($data->fail);
 		$this->assertEquals('200', $data->data['statuscode']);

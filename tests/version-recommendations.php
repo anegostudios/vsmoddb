@@ -2,7 +2,7 @@
 
 require_once('prelude.php');
 
-require_once(SRC_ROOT.'lib/recommend-release.php');
+require_once(SRC_ROOT.'/lib/recommend-release.php');
 
 function mkRelease($version, $gameVersions)
 {
