@@ -17,7 +17,7 @@
 		<a class="button large shine moderator strikethrough-when-readonly" href="/moderate/user/{$shownUser['hash']}">Moderate User</a>&nbsp;
 	{/if}
 	{if canEditProfile($shownUser, $user)}
-		<a class="button large shine strikethrough-when-readonly" href="/edit/profile/{$shownUser['hash']}">Edit</a>
+		<a class="button large shine strikethrough-when-readonly strikethrough-when-banned" href="/edit/profile/{$shownUser['hash']}">Edit</a>
 	{/if}
 </div>
 
