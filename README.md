@@ -397,11 +397,16 @@ Result:
 - [Adminer instance](http://localhost:8080)
 - mysql 3306 is exposed
 
-Note: the mysql container is set up to automatically execute the provided [DB structure + sample data](db/tables.sql).
+> **Note**  
+> the mysql container is set up to automatically execute the provided [DB structure](db/000_tables.sql) + [sample data](db/999_sampledata.sql).
 
-Note: in staging environments you can append `?showas=<id>` to any url to load the page the user with that id. This can be used debugging and testing role related features. 
+> **Note**  
+> in staging environments you can define `DEBUGUSER` to the id of the user you want to impersonate. This might be useful for debugging and testing role related features. 
 
 ## Compiling styles
+> **Note**  
+> The `builder` container will automatically recompile styles and update cache-busting hashes for you if it is running. This section is only for documentation purposes.
+
 We are now using [Sass](https://sass-lang.com/), mostly just to combine multiple stylesheets into one and minify them.
 
 You can either download the standalone version of sass for your os, or install it globally into the [node package manager](https://www.npmjs.com/) via `npm install -g sass`. 
@@ -410,9 +415,12 @@ To compile the styles into one file run the command for your method of installat
 - standalone: `sass --style=compressed --update web/_sass/_style.scss:web/css/style.css`
 - npm: `npx sass --style=compressed --update web/_sass/_style.scss:web/css/style.css` (simply prepend `npx`)
 
-If you add the `-w` argument to this command, sass will continue running after the first compile instead of terminating, and watch for changes to the soruce files, which will trigger a automatic recompile.
+If you add the `-w` argument to this command, sass will continue running after the first compile instead of terminating, and watch for changes to the source files, which will trigger a automatic recompile.
 
 ## Compiling scripts
+> **Note**  
+> The `builder` container will automatically recompile scripts and update cache-busting hashes for you if it is running. This section is only for documentation purposes.
+
 We are now using [typescript](https://www.typescriptlang.org) in combination with [rollup](https://rollupjs.org/), mostly just to combine multiple scripts into one and minify them.
 
 Both of these want to be installed globally into the [node package manager](https://www.npmjs.com/) via `npm install -g typescript terser`.
