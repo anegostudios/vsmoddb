@@ -130,13 +130,13 @@ switch($urlparts[1]) {
 			SELECT m.assetId, a.createdByUserId
 			FROM mods m
 			JOIN assets a ON a.assetId = m.assetId
-			WHERE m.modId = ?
-		SQL, [$modId]);
+			WHERE m.modId = $modId
+		SQL); // @security: $modId is validated to be int, therefore sql inert. 
 		if(!$modData) fail(HTTP_NOT_FOUND);
 
 		$con->startTrans();
-		// @security: assetid comes from the db and is an int, therefore sql inert. 
-		$con->execute('UPDATE assets SET statusId = '.STATUS_LOCKED.' WHERE assetId = '.$modData['assetId']);
+
+		$con->execute('UPDATE mods SET `status` = '.MOD_STATUS_LOCKED.' WHERE modId = '.$modId);
 		logAuditEvent(AUDIT_LOG_KIND_MOD_CHANGE_STATUS, $modId, $reason, AUDIT_LOG_FLAG_MODACTION);
 
 		logModeratorAction($modData['createdByUserId'], $user['userId'], MODACTION_KIND_LOCK, $modId, SQL_DATE_FOREVER, $reason);
@@ -296,8 +296,6 @@ switch($urlparts[1]) {
 		validateUserNotBanned();
 		parseRequestBody();
 		validateActionToken();
-
-		require(SRC_ROOT.'/lib/moderation.php');
 
 		$category = filter_input(INPUT_POST, 'category', FILTER_VALIDATE_INT, [ 'options' => [ 'min' => 0, 'max' => 9 ]]); // :MaxReportCategoryMod
 		if($category === null)  fail(HTTP_BAD_REQUEST, 'Missing category.');

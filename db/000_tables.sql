@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS `assets` (
   `assetId`         INT          NOT NULL AUTO_INCREMENT,
   `createdByUserId` INT          NOT NULL,
   `editedByUserId`  INT              NULL,
-  `statusId`        INT          NOT NULL,
   `assetTypeId`     INT          NOT NULL,
   `name`            VARCHAR(255) CHARACTER SET utf8mb4 NULL,
   `text`            TEXT CHARACTER SET utf8mb4 NULL,
@@ -108,6 +107,7 @@ CREATE TABLE IF NOT EXISTS `modPeekResults` (
   `side`               ENUM('Universal', 'Server', 'Client') NULL,
   `requiredOnServer`   BOOLEAN,
   `requiredOnClient`   BOOLEAN,
+  `capabilities`       INT1 UNSIGNED NOT NULL,
   `networkVersion`     BIGINT UNSIGNED NOT NULL,
   `description`        TEXT CHARACTER SET utf8mb4 NULL,
   `iconPath`           VARCHAR(255)        NULL,
@@ -115,7 +115,8 @@ CREATE TABLE IF NOT EXISTS `modPeekResults` (
   `rawAuthors`         TEXT CHARACTER SET utf8mb4 NULL,
   `rawContributors`    TEXT CHARACTER SET utf8mb4 NULL,
   `rawBackgroundPaths` TEXT CHARACTER SET utf8mb4 NULL,
-  `rawDependencies`    TEXT                NULL,
+  `rawDependencies`    TEXT CHARACTER SET latin1 NULL,
+  `rawReflections`     TEXT CHARACTER SET latin1 NULL,
   PRIMARY KEY (`fileId`),
   CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
 );
@@ -128,14 +129,6 @@ CREATE TABLE IF NOT EXISTS `modPeekResults` (
 --   CONSTRAINT `fileId` FOREIGN KEY (`fileId`) REFERENCES `files`(`fileId`) ON UPDATE CASCADE ON DELETE CASCADE
 -- )
 --;
-
-CREATE TABLE IF NOT EXISTS `status` (
-  `statusId` INT          NOT NULL AUTO_INCREMENT,
-  `code`     VARCHAR(255) NOT NULL,
-  `name`     VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`statusId`)
-);
-
 
 CREATE TABLE IF NOT EXISTS `comments` (
   `commentId`           INT       NOT NULL AUTO_INCREMENT,
@@ -203,7 +196,8 @@ CREATE TABLE IF NOT EXISTS `mods` (
   `trendingPoints`        INT          NOT NULL DEFAULT 0,
   `comments`              INT          NOT NULL DEFAULT 0,
   `side`                  ENUM('client', 'server', 'both') NULL,
-  `category`              TINYINT UNSIGNED NOT NULL,
+  `category`              TIN1 UNSIGNED NOT NULL,
+  `status`                INT1 UNSIGNED NOT NULL,
   `uploadLimitOverwrite`  INT              NULL,
   `lastReleased`          DATETIME         NULL,
   `created`               DATETIME     NOT NULL DEFAULT NOW(),
@@ -249,6 +243,7 @@ CREATE TABLE IF NOT EXISTS `modReleases` (
   `modId`        INT             NOT NULL,
   `identifier`   VARCHAR(255)        NULL, -- TODO
   `version`      BIGINT UNSIGNED NOT NULL,
+  `status`       INT1 UNSIGNED   NOT NULL,
   `detailText`   TEXT                NULL,
   `created`      DATETIME        NOT NULL DEFAULT NOW(),
   `lastModified` TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -384,12 +379,6 @@ CREATE TABLE IF NOT EXISTS `moderationRequests` (
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
-
-START TRANSACTION;
-INSERT INTO `status` (`statusId`, `code`, `name`) VALUES (1, 'draft', 'Draft');
-INSERT INTO `status` (`statusId`, `code`, `name`) VALUES (2, 'published', 'Published');
-INSERT INTO `status` (`statusId`, `code`, `name`) VALUES (4, 'locked', 'Locked');
-COMMIT;
 
 START TRANSACTION;
 INSERT INTO `roles` (`roleId`, `code`, `name`) VALUES (1, 'admin', 'Admin');

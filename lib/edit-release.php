@@ -3,7 +3,7 @@
 /**
  * @security: Does not perform validation!
  * @param array{modId:int, type:int} $mod The mod the release is to be associated with.
- * @param array{text:string, identifier?:string, version:int} $newData
+ * @param array{text:string, identifier?:string, version:int, status:int} $newData
  * @param int[] $newCompatibleGameVersions
  * @param array{assetId:int, fileId:int} $file
  * @return int The assetId of the newly created release. Zero on failure, very unlikely to fail.
@@ -15,12 +15,12 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	$con->startTrans();
 
 	$con->execute(<<<SQL
-		INSERT INTO assets (assetTypeId, numSaved, statusId, created, text, createdByUserId, editedByUserId)
-		VALUES(2, 1, 2, NOW(), ?, ?, ?)
+		INSERT INTO assets (assetTypeId, numSaved, created, text, createdByUserId, editedByUserId)
+		VALUES(2, 1, NOW(), ?, ?, ?)
 	SQL, [$newData['text'], $user['userId'], $user['userId']]);
 	$assetId = $con->insert_ID();
 	
-	$con->execute('INSERT INTO modReleases (modId, assetId, identifier, version) VALUES(?, ?, ?, ?)', [$mod['modId'], $assetId, $newData['identifier'] ?? NULL, $newData['version']]);
+	$con->execute('INSERT INTO modReleases (modId, assetId, identifier, `version`, `status`) VALUES(?, ?, ?, ?, ?)', [$mod['modId'], $assetId, $newData['identifier'] ?? NULL, $newData['version'], $newData['status']]);
 	$releaseId = $con->insert_ID();
 
 	// attach hovering files
@@ -30,18 +30,30 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 
 	$logInfo = 'v'.formatSemanticVersion($newData['version']);
 
+	$requiresReview = false;
 	if(($mod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
 		$folded = implode(',', array_map(fn($v) => "($releaseId, $v)", $newCompatibleGameVersions));
 		// @security: Version numbers and releaseIds are numeric and therefore SQL Inert.
 		$con->execute("INSERT INTO modReleaseCompatibleGameVersions (releaseId, gameVersion) VALUES $folded");
 
 		$logInfo .= " for {$newData['identifier']} with compatible game versions ".formatGrammaticallyCorrectEnumeration(array_map('formatSemanticVersion', $newCompatibleGameVersions));
+
+		if($newData['status'] == RELEASE_STATUS_AWAITING_REVIEW) {
+			$requiresReview = true;
+
+			$logInfo .= ' requiring manual review';
+
+			$con->execute("INSERT INTO moderationRequests (referenceId, kind, category, initiatorUserId, request, requestSearchable) 
+				VALUES ($releaseId, ".MOD_REQUEST_KIND_MANUAL_REVIEW.", 0, {$user['userId']}, '', '')");
+		}
 	}
 
 	logAuditEvent(AUDIT_LOG_KIND_RELEASE_CREATE, $releaseId, $logInfo);
 
-	updateGameVersionsCached($mod['modId']);
-	$con->execute('UPDATE mods set lastReleased = NOW() WHERE modId = ?', [$mod['modId']]);
+	if(!$requiresReview) {
+		updateGameVersionsCached($mod['modId']);
+		$con->execute('UPDATE mods set lastReleased = NOW() WHERE modId = ?', [$mod['modId']]);
+	}
 
 	$con->Execute("
 		INSERT INTO notifications (userId, kind, recordId)

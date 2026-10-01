@@ -17,8 +17,6 @@ switch($urlparts[1] ?? null) {
 		parseRequestBody();
 		validateActionToken();
 
-		require(SRC_ROOT.'/lib/moderation.php');
-
 		$category = filter_input(INPUT_POST, 'category', FILTER_VALIDATE_INT, [ 'options' => [ 'min' => 0, 'max' => 3 ]]); // :MaxReportCategoryComment
 		if($category === null)  fail(HTTP_BAD_REQUEST, 'Missing category.');
 		if($category === false)  fail(HTTP_BAD_REQUEST, 'Malformed category.');

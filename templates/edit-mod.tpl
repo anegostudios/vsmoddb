@@ -37,9 +37,9 @@
 
 		<div class="editbox short">
 			<label><abbr title="Only mods with Status 'Published' are publicly visible">Status</abbr></label>
-			<select name="statusId"{if $mod['statusId'] == STATUS_LOCKED && !canModerate(null, $user)} disabled="true"{/if} noSearch="noSearch">
+			<select name="status"{if $mod['status'] == MOD_STATUS_LOCKED && !canModerate(null, $user)} disabled="true"{/if} noSearch="noSearch">
 				{foreach from=$stati item=name key=status}
-					<option value="{$status}"{if $mod['statusId'] == $status} selected="selected"{/if}>{$name}</option>
+					<option value="{$status}"{if $mod['status'] == $status} selected="selected"{/if}>{$name}</option>
 				{/foreach}
 			</select>
 		</div>
@@ -280,7 +280,7 @@
 {/if}
 
 <div class="buttons">
-	<a class="button large submit shine" href="javascript:submitForm(0)">{if $mod['statusId'] != STATUS_LOCKED || canModerate(null, $user)}Save{else}Request Review{/if}</a>
+	<a class="button large submit shine" href="javascript:submitForm(0)">{if $mod['status'] != MOD_STATUS_LOCKED || canModerate(null, $user)}Save{else}Request Review{/if}</a>
 
 	{if canModerate(null, $user) && $mod['modId']}
 		<button class="button large shine moderator" style="height:unset;" data-opens-dialog="lock-mdl" onclick="return false;">Lock Mod...</button>

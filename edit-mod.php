@@ -28,7 +28,7 @@ if(isset($_GET['assetid'])) {
 
 	// @security: $assetId is known to be an integer and therefore sql inert.
 	$mod = $con->getRow(<<<SQL
-		SELECT m.modId, m.assetId, a.name, m.urlAlias, m.summary, a.text, a.statusId, m.category, m.side, a.createdByUserId, HEX(author.hash) as createdByUserHash,
+		SELECT m.modId, m.assetId, a.name, m.urlAlias, m.summary, a.text, m.status, m.category, m.side, a.createdByUserId, HEX(author.hash) as createdByUserHash,
 			m.homepageUrl, m.sourceCodeUrl, m.trailerVideoUrl, m.issueTrackerUrl, m.wikiUrl, m.donateUrl, m.created,
 			m.cardLogoFileId, fileDb.cdnPath AS logoCdnPath,
 			m.embedLogoFileId, fileExternal.cdnPath AS logoCdnPathExternal,
@@ -88,7 +88,7 @@ else { // New mod
 		'assetId'         => 0,
 		'modId'           => 0,
 		'assetTypeId'     => ASSETTYPE_MOD,
-		'statusId'        => STATUS_DRAFT,
+		'status'          => MOD_STATUS_DRAFT,
 		'category'        => CATEGORY_NOT_SPECIFIED,
 		'side'            => 'both',
 		'name'            => '',
@@ -115,11 +115,11 @@ else { // New mod
 }
 
 $stati = [
-	STATUS_DRAFT     => 'Draft',
-	STATUS_RELEASED  => 'Published',
-	//STATUS_LOCKED    => 'Locked',
+	MOD_STATUS_DRAFT     => 'Draft',
+	MOD_STATUS_RELEASED  => 'Published',
+	//MOD_STATUS_LOCKED    => 'Locked',
 ];
-if($mod['statusId'] == STATUS_LOCKED) $stati[STATUS_LOCKED] = 'Locked';
+if($mod['status'] == MOD_STATUS_LOCKED) $stati[MOD_STATUS_LOCKED] = 'Locked';
 
 $modCategories = [
 	// CATEGORY_NOT_SPECIFIED skipped, it's not a valid input
@@ -155,16 +155,16 @@ else if(!empty($_POST['save'])) {
 	// This way they don't have to re-input everything, and can just adjust their input.
 	$oldModData = $mod;
 
-	$mod['statusId'] = intval($_POST['statusId']);
-	if(!in_array($mod['statusId'], array_keys($stati), true)) {
+	$mod['status'] = intval($_POST['status']);
+	if(!in_array($mod['status'], array_keys($stati), true)) {
 		addMessage(MSG_CLASS_WARN, "The new status is not valid and has been reset.");
-		$mod['statusId'] = $oldModData['statusId'];
+		$mod['status'] = $oldModData['status'];
 	}
-	if($oldModData['statusId'] == STATUS_LOCKED) {
-		if($mod['statusId'] !== STATUS_LOCKED) {
+	if($oldModData['status'] == MOD_STATUS_LOCKED) {
+		if($mod['status'] !== MOD_STATUS_LOCKED) {
 			if(!canModerate(null, $user)) {
 				addMessage(MSG_CLASS_ERROR, "Only moderators may change the state of a locked mod.");
-				$mod['statusId'] = STATUS_LOCKED;
+				$mod['status'] = MOD_STATUS_LOCKED;
 			}
 		}
 	}
@@ -463,9 +463,9 @@ else if(!empty($_POST['save'])) {
 	$saveCookie = SAVE_MSG_DEFAULT;
 
 	// Don't release without files:
-	if($mod['statusId'] === STATUS_RELEASED) {
+	if($mod['status'] === MOD_STATUS_RELEASED) {
 		if(!$oldModData['modId'] || !$con->getOne('SELECT releaseId FROM modReleases WHERE modId = ?', [$mod['modId']])) {
-			$mod['statusId'] = STATUS_DRAFT;
+			$mod['status'] = MOD_STATUS_DRAFT;
 			// Using a cookie here because the message needs to be displayed at the next load of the page after the bounce.
 			// No message here, as this would get picked up as a hard error.
 			$saveCookie = SAVE_MSG_REVERTED;
@@ -546,7 +546,7 @@ else if(!empty($_POST['delete'])) {
 
 switch($_COOKIE['saved'] ?? '') {
 	case SAVE_MSG_DEFAULT: {
-		if($mod['statusId'] == STATUS_LOCKED && !canModerate(null, $user)) {
+		if($mod['status'] == MOD_STATUS_LOCKED && !canModerate(null, $user)) {
 			addMessage(MSG_CLASS_OK, "Submitted for review!");
 		}
 		else {
@@ -577,7 +577,7 @@ switch($_COOKIE['saved'] ?? '') {
 }
 
 
-if($mod['statusId'] == STATUS_LOCKED) {
+if($mod['status'] == MOD_STATUS_LOCKED) {
 	$lockInfo = $con->getRow('
 		SELECT rec.reason, n.notificationId
 		FROM moderationRecords rec
@@ -655,8 +655,6 @@ unset($file);
 // Filling out fields for preview card
 {
 	$mod['hasLegacyLogo'] = false;
-	// In theory this could be problematic because it might mismatch with the id, but the 'code' is not actually used by the editor.
-	$mod['statusCode']    = 'draft';
 	$mod['dbPath']        = '#';
 	$mod['downloads']     = 123456;
 	$mod['comments']      = 123456;

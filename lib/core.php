@@ -404,6 +404,7 @@ const AUDIT_LOG_KIND_RELEASE_CHANGE_COMPAT      = 29;
 const AUDIT_LOG_KIND_RELEASE_CHANGE_FILE        = 30; // legacy
 const AUDIT_LOG_KIND_RELEASE_CHANGE_CHANGELOG   = 31;
 const AUDIT_LOG_KIND_RELEASE_CHANGE_RETRACTION  = 32;
+const AUDIT_LOG_KIND_RELEASE_CHANGE_STATUS      = 33;
 //...
 const AUDIT_LOG_KIND_COMMENT_CREATE      = 40;
 const AUDIT_LOG_KIND_COMMENT_DELETE      = 41;
@@ -1162,9 +1163,9 @@ function stringifyCategory($category)
 const ASSETTYPE_MOD = 1;
 const ASSETTYPE_RELEASE = 2;
 
-const STATUS_DRAFT = 1;
-const STATUS_RELEASED = 2;
-const STATUS_LOCKED = 4;
+const MOD_STATUS_DRAFT = 1;
+const MOD_STATUS_RELEASED = 2;
+const MOD_STATUS_LOCKED = 4;
 
 /**
  * @param int $status
@@ -1173,13 +1174,49 @@ const STATUS_LOCKED = 4;
 function stringifyStatus($status)
 {
 	switch($status) {
-		case STATUS_DRAFT:    return 'Draft';
-		case STATUS_RELEASED: return 'Releasesd';
-		case STATUS_LOCKED:   return 'Locked';
+		case MOD_STATUS_DRAFT:    return 'Draft';
+		case MOD_STATUS_RELEASED: return 'Releasesd';
+		case MOD_STATUS_LOCKED:   return 'Locked';
 		default: return strval($status);
 	}
 }
 
+/**
+ * @param int $status
+ * @return string
+ */
+function stringifyModStatusInternal($status)
+{
+	switch($status) {
+		case MOD_STATUS_DRAFT:    return 'draft';
+		case MOD_STATUS_RELEASED: return 'releasesd';
+		case MOD_STATUS_LOCKED:   return 'locked';
+		default: return strval($status);
+	}
+}
+
+
+const RELEASE_STATUS_AWAITING_REVIEW  = 1;
+const RELEASE_STATUS_AWAITING_CHANGES = 2;
+const RELEASE_STATUS_RELEASED         = 3;
+const RELEASE_STATUS_RETRACTED        = 4;
+const RELEASE_STATUS_NOT_ACCEPTABLE   = 5;
+
+/**
+ * @param int $status
+ * @return string
+ */
+function stringifyReleaseStatus($status)
+{
+	switch($status) {
+		case RELEASE_STATUS_AWAITING_REVIEW:  return 'Awaiting Review';
+		case RELEASE_STATUS_AWAITING_CHANGES: return 'Awaiting Changes';
+		case RELEASE_STATUS_RELEASED:         return 'Released';
+		case RELEASE_STATUS_RETRACTED:        return 'Retracted';
+		case RELEASE_STATUS_NOT_ACCEPTABLE:   return 'Not Acceptable';
+		default: return strval($status);
+	}
+}
 
 if(!defined('INPUT_REQUEST')) define('INPUT_REQUEST', 99);
 

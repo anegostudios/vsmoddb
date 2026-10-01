@@ -13,18 +13,16 @@ if (empty($userHash) || empty($shownUser = getUserByHash($userHash))) {
 	exit();
 }
 
-$sqlWhereExt = (isset($user) && $shownUser['userId'] == $user['userId']) || canModerate($shownUser, $user) ? '' : ' and a.statusId = 2'; // show drafts if owner or mod
+$sqlWhereExt = (isset($user) && $shownUser['userId'] == $user['userId']) || canModerate($shownUser, $user) ? '' : ' and m.status = '.MOD_STATUS_RELEASED; // show drafts if owner or mod
 $userMods = $con->getAll("
 	SELECT
-		a.assetId, a.name, a.createdByUserId, a.statusId,
+		a.assetId, a.name, a.createdByUserId, m.status,
 		m.modId, m.urlAlias, m.summary, m.downloads, m.comments, m.created,
 		logo.cdnPath AS logoCdnPath,
-		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
-		s.code AS statusCode
+		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo
 	FROM
 		assets a
 		JOIN mods m ON m.assetId = a.assetId
-		LEFT JOIN status s ON s.statusId = a.statusId
 		LEFT JOIN files AS logo ON logo.fileId = m.cardLogoFileId
 		LEFT JOIN modTeamMembers t ON t.modId = m.modId
 	WHERE
@@ -41,8 +39,6 @@ foreach ($userMods as &$mod) {
 unset($mod);
 
 if (canModerate($shownUser, $user)) {
-	require(SRC_ROOT.'/lib/moderation.php');
-
 	$logs = $con->getAll("
 		SELECT l.created, l.kind, l.flags, l.referenceId,
 		COALESCE(l.info, c.textShort, IF(l.kind = ".AUDIT_LOG_KIND_REPORT_RESOLVE.", req.resolution, req.request)) AS info,

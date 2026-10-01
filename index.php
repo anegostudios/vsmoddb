@@ -11,8 +11,13 @@ if (!empty($_SERVER['HTTP_ACCEPT']) && $_SERVER['REQUEST_METHOD'] == "GET") {
 
 // This is the more desirable point to initialize.
 if(CDN !== 'none') require(SRC_ROOT.'/lib/core.php');
-
-
+/**
+ * @var array  $user
+ * @var array  $messages
+ * @var object $view
+ * @var object $con
+ */
+require(SRC_ROOT.'/lib/moderation.php');
 
 $urlpath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $urlpath = trim($urlpath, " \n\r\t\v\0/"); // Strip spaces and slashes from start / end.
@@ -21,6 +26,10 @@ if(empty($urlpath))  $urlpath = 'home';
 // @security: Filter out directory traversal segments.
 // Just discard them completely, they are not used in any actual application.
 $urlparts = array_filter(explode('/', $urlpath), fn($s) => !str_starts_with($s, '.'));
+
+///
+/// API routes
+///
 
 if($urlparts[0] === 'api') { // :ReservedUrlPrefixes
 	array_shift($urlparts);
@@ -34,8 +43,37 @@ if($urlparts[0] === 'api') { // :ReservedUrlPrefixes
 	exit();
 }
 
+///
+/// Now the non-API routes
+///
+
 require(SRC_ROOT.'/lib/core-frontend.php');
 require(SRC_ROOT.'/lib/csp.php');
+
+$view->assignRefUnfiltered('messages', $messages);
+
+if(!empty($user)) {
+	loadNotifications(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) == '/notifications'); // @cleanup
+
+	$view->assign('user', $user);
+
+	if($user['isBanned']) {
+		$until = formatDateWhichMightBeForever(parseSqlDateTime($user['bannedUntil']), 'M jS Y, H:i:s', 'further notice');
+		$messages[] = [
+			'class' => 'bg-error text-error permanent',
+			'html'  => <<<HTML
+				<h3 style='text-align: center;'>You are currently banned until {$until}.</h3>
+				<p>
+					<h4 style='margin-bottom: 0.25em;'>Reason:</h4>
+					<blockquote>{$user['banReason']}</blockquote>
+				</p>
+			HTML
+		];
+	}
+}
+else {
+	$view->assign("notificationcount", 0);
+}
 
 
 //TODO(Rennorb) @cleanup @perf: Move view initialization here, after api branch.

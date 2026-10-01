@@ -21,34 +21,24 @@
 }
 
 #reports-wrapper {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: nowrap;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+	grid-template-rows: auto;
 	gap: 2em;
 
 	>* {
-		flex: 0 0 calc(50% - 1em);
-
 		>:last-child {
 			overflow-y: auto;
 			max-height: 100vh;
-		}
-	}
 
-	@media (max-width: 1050px)  {
-		flex-direction: column;
-
-		>* {
-			flex: unset;
-
-			>:last-child {
+			@media (max-width: 1050px)  {
 				max-height: 50vh;
 			}
 		}
 	}
 }
 
-#reported-mods,
+.attached-to-mod,
 #reported-comments {
 	display: flex;
 	flex-direction: column;
@@ -79,7 +69,7 @@
 	}
 }
 
-#reported-mods>*>:first-child {
+.attached-to-mod>*>:first-child {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: nowrap;
