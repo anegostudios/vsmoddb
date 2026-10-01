@@ -35,7 +35,7 @@
 	</form>
 {/if}
 
-<div class="edit-asset mod-{$asset['statusCode']}">
+<div class="edit-asset mod-{stringifyModStatusInternal($asset['status'])}">
 	<h2>
 		<span>
 		{if $asset['category'] === CATEGORY_SERVER_TWEAK}
@@ -49,12 +49,12 @@
 		</span>
 	</h2>
 
-	{if $asset['statusCode']=='draft'}
+	{if $asset['status'] == MOD_STATUS_DRAFT}
 		<div class="showmod-draftnotice">
 			<h2 style="margin-bottom: 0;">Draft</h2>
 			<small>Set to published to be listed. A draft mod is still visible to everyone via direct link</small>
 		</div>
-	{elseif $asset['statusCode']=='locked'}
+	{elseif $asset['status'] == MOD_STATUS_LOCKED}
 		<div class="showmod-draftnotice" style="color:#e00">
 			<h2 style="margin-bottom: 0;">Locked&nbsp;<i class="ico alert"></i></h2>
 			<small>This mod has been locked by a moderator. The author may edit their mod to address existing issues.</small>

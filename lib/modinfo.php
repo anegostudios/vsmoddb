@@ -1,5 +1,37 @@
 <?php
 
+const MOD_CAP_REFLECTION              = 1 << 0;
+const MOD_CAP_LOAD_LIBRARY            = 1 << 1;
+const MOD_CAP_DIRECT_FILE_ACCESS      = 1 << 2;
+const MOD_CAP_DIRECT_NETWORK_ACCESS   = 1 << 3;
+const MOD_CAP_WIN32_ACCESS            = 1 << 4;
+const MOD_CAP_UNMANAGED_MEMORY_ACCESS = 1 << 5;
+// Only 8 bits for now, needs to be in sync with modpeek
+
+const MOD_CAPS_REQUIRING_REVIEW = MOD_CAP_REFLECTION | MOD_CAP_LOAD_LIBRARY | MOD_CAP_DIRECT_FILE_ACCESS | MOD_CAP_DIRECT_NETWORK_ACCESS | MOD_CAP_WIN32_ACCESS | MOD_CAP_UNMANAGED_MEMORY_ACCESS;
+
+/**
+ * @param int $caps
+ * @return string
+ */
+function formatModCapabilities($caps)
+{
+	$strs = [];
+	for($bit = 1; $bit < (1 << 8); $bit <<= 1) {
+		switch($caps & $bit) {
+			case MOD_CAP_REFLECTION:              $strs[] = 'Reflection';              break;
+			case MOD_CAP_LOAD_LIBRARY:            $strs[] = 'Load Library';            break;
+			case MOD_CAP_DIRECT_FILE_ACCESS:      $strs[] = 'Direct File Access';      break;
+			case MOD_CAP_DIRECT_NETWORK_ACCESS:   $strs[] = 'Direct Network Access';   break;
+			case MOD_CAP_WIN32_ACCESS:            $strs[] = 'Win32 Access';            break;
+			case MOD_CAP_UNMANAGED_MEMORY_ACCESS: $strs[] = 'Unmanaged Memory Access'; break;
+			case 0: break;
+			default: $strs[] = '?Bit '.$bit; break;
+		}
+	}
+	return $strs ? formatGrammaticallyCorrectEnumeration($strs) : 'None';
+}
+
 //NOTE(Rennorb): The documentation for ModDependencies specified that the version marks the 'minimum version' of the dependency!
 // https://github.com/anegostudios/vsapi/blob/master/Common/API/ModDependency.cs
 // The modinfo array therefore contains dependencies with version 0 for instances where the version was not specified or set to '*'.
@@ -8,7 +40,7 @@
 /**
  * @param string $filepath
  * @param array &$modInfo
- * @param-out array{'id':string|null, 'name':string|null, 'version':int, 'type':'Theme'|'Content'|'Code'|null, 'side':'Universal'|'Client'|'Server'|null, 'requiredOnClient':bool, 'requiredOnServer':bool, 'networkVersion':int, 'description':string|null, 'rawAuthors':string|null, 'rawContributors':string|null, 'website':string|null, 'iconPath':string|null, 'rawBackgroundPaths': string|null, 'rawDependencies':string|null, 'errors':string|null} $modInfo
+ * @param-out array{'id':string|null, 'name':string|null, 'version':int, 'type':'Theme'|'Content'|'Code'|null, 'side':'Universal'|'Client'|'Server'|null, 'requiredOnClient':bool, 'requiredOnServer':bool, 'networkVersion':int, 'capabilities':int, 'description':string|null, 'rawAuthors':string|null, 'rawContributors':string|null, 'website':string|null, 'iconPath':string|null, 'rawBackgroundPaths': string|null, 'rawDependencies':string|null, 'rawReflections': string|null, 'errors':string|null} $modInfo
  * @return bool false on error
  */
 function modpeek($filepath, &$modInfo)
@@ -24,7 +56,7 @@ function modpeek($filepath, &$modInfo)
 	// So we do the thing every other framework also does... a sleep loop while polling the exit status.
 	// I think this is acceptable, because this only really triggers for file uploads which are a reasonably rare occurrence, and the sleeping should only trigger in some cases.
 	// Would still like to not have to do this, but there doesn't seem to be another way for now.
-	//NOTE(Rennorb): On windows, you cannot really test this issue, because steams are blocking (which you cannot change)
+	//NOTE(Rennorb): On windows, you cannot really test this issue, because streams are blocking (which you cannot change)
 	// and the stream_get_contents calls will only release once the process has already exited.
 	$info = ''; $errors = '';
 	do {
@@ -51,6 +83,7 @@ function modpeek($filepath, &$modInfo)
 		'requiredOnServer'   => false,
 		'requiredOnClient'   => false,
 		'networkVersion'     => 0,
+		'capabilities'       => 0,
 		'description'        => null,
 		'website'            => null,
 		'iconPath'           => null,
@@ -58,6 +91,7 @@ function modpeek($filepath, &$modInfo)
 		'rawContributors'    => null,
 		'rawBackgroundPaths' => null,
 		'rawDependencies'    => null,
+		'rawReflections'     => null,
 		'errors'             => trim($errors) ?: null
 	];
 
@@ -85,6 +119,9 @@ function modpeek($filepath, &$modInfo)
 			case 'Dependencies': $modInfo['rawDependencies'] = $rawValue ?: null; break;
 
 			case 'BackgroundPaths': $modInfo['rawBackgroundPaths'] = $rawValue ?: null; break;
+
+			case 'Capabilities': $modInfo['capabilities'] = hexdec(strstr($rawValue, ' ', true)); break;
+			case 'Reflections': $modInfo['rawReflections'] = $rawValue ?: null; break;
 		}
 	}
 
@@ -92,7 +129,7 @@ function modpeek($filepath, &$modInfo)
 }
 
 /** Deserializes 'rawAuthors', 'rawContributors' and 'rawDependencies' into array fields 'authors', 'contributors' and 'dependencies'.
-  * @param array{'id':string|null, 'name':string|null, 'version':int, 'networkVersion':int, 'description':string|null, 'rawAuthors':string|null, 'authors':string[], 'rawContributors':string|null, 'contributors':string[], 'website':string|null, 'rawDependencies':string|null, 'dependencies':array{string:int}, 'errors':string|null} &$modInfo
+  * @param array{'id':string|null, 'name':string|null, 'version':int, 'networkVersion':int, 'description':string|null, 'rawAuthors':string|null, 'authors':string[], 'rawContributors':string|null, 'contributors':string[], 'website':string|null, 'rawDependencies':string|null, 'dependencies':array{string:int}, 'rawReflections':string|null, 'reflections':array{int:string}, 'errors':string|null} &$modInfo
  */
 function deserializeModInfoArrayFields(&$modInfo)
 {
@@ -119,6 +156,11 @@ function deserializeModInfoArrayFields(&$modInfo)
 	$modInfo['backgroundPaths'] = $modInfo['rawBackgroundPaths']
 		// Unescape escaped names here     ',\ '  -> ', '
 		? array_map(fn($n) => str_replace(',\ ', ', ', $n), explode(', ', $modInfo['rawBackgroundPaths']))
+		: [];
+
+	$modInfo['reflections'] = $modInfo['rawReflections']
+		// Unescape escaped names here     ',\ '  -> ', '
+		? array_map(fn($n) => str_replace(',\ ', ', ', $n), explode(', ', $modInfo['rawReflections']))
 		: [];
 }
 

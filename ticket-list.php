@@ -9,8 +9,6 @@ if(empty($urlparts[2]))   showErrorPage(HTTP_NOT_FOUND);
 $targetUserHash = $urlparts[2];
 if(($targetUserHash !== 'self' && !ctype_xdigit($targetUserHash)))   showErrorPage(HTTP_NOT_FOUND);
 
-require(SRC_ROOT.'/lib/moderation.php');
-
 if($targetUserHash === 'self' || $targetUserHash === $user['hash']) {
 	$shownUser = $user;
 }

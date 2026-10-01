@@ -39,7 +39,7 @@ $selectedParams = [
 	'majorversion' => $filters['majorversion'] ?? '',
 	'gameversions' => !empty($filters['gameversions']) ? array_flip($filters['gameversions']) : [],
 	'tags'  => [],
-	'stati' => !empty($filters['stati']) ? array_flip($filters['stati']) : [ STATUS_RELEASED => true, STATUS_LOCKED => true ],
+	'stati' => !empty($filters['stati']) ? array_flip($filters['stati']) : [ MOD_STATUS_RELEASED => true, MOD_STATUS_LOCKED => true ],
 ];
 
 if(!empty($filters['tags'])) {

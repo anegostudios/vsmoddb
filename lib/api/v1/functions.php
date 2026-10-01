@@ -12,7 +12,7 @@ function listMod($modid)
 		SQL, array($modid));
 	}
 
-	$row = $con->getRow(<<<SQL
+	$row = $con->getRow("
 		select 
 			asset.assetId,
 			asset.name,
@@ -28,9 +28,8 @@ function listMod($modid)
 			left join files as logoFileExternal on (`mod`.embedLogoFileId = logoFileExternal.fileId)
 			left join files as logoFileDb on (`mod`.cardLogoFileId = logoFileDb.fileId)
 		where
-			asset.statusId = 2
-			and modId = ?
-	SQL, array($modid));
+			modId = ? AND mod.status = ".MOD_STATUS_RELEASED."
+	", array($modid));
 
 	if (empty($row)) fail("404");
 
@@ -202,7 +201,7 @@ function listMods()
 	if($limit) $limitSql = "LIMIT $limit";
 
 	global $user;
-	if((empty($user) || !canModerate(null, $user))) $wheresql[] = 'asset.statusId = 2';
+	if((empty($user) || !canModerate(null, $user))) $wheresql[] = 'mod.status = '.MOD_STATUS_RELEASED;
 
 	$rows = $con->getAll("
 		select 

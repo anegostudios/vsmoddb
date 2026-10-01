@@ -37,29 +37,6 @@ const NOTIFICATION_ONEOFF_MALFORMED_RELEASE = 64 + 0; // :LegacyMalformedModInfo
 
 global $messages;
 $messages = [];
-$view->assignRefUnfiltered('messages', $messages);
-
-if (!empty($user)) {
-	loadNotifications(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) == '/notifications'); // @cleanup
-
-	$view->assign('user', $user);
-
-	if($user['isBanned']) {
-		$until = formatDateWhichMightBeForever(parseSqlDateTime($user['bannedUntil']), 'M jS Y, H:i:s', 'further notice');
-		$messages[] = [
-			'class' => 'bg-error text-error permanent',
-			'html'  => <<<HTML
-				<h3 style='text-align: center;'>You are currently banned until {$until}.</h3>
-				<p>
-					<h4 style='margin-bottom: 0.25em;'>Reason:</h4>
-					<blockquote>{$user['banReason']}</blockquote>
-				</p>
-			HTML
-		];
-	}
-} else {
-	$view->assign("notificationcount", 0);
-}
 
 
 /** @param string $hash Hexadecimal user hash.
@@ -118,13 +95,13 @@ function canEditMod($mod, $user, $includeTeam = true)
 }
 
 /**
- * @param array{createdByUserId:int, statusId:int} $asset
- * @param array{userId:int, roleCode:string}         $user    the permission source
+ * @param array{createdByUserId:int, status:int} $asset
+ * @param array{userId:int, roleCode:string}     $user    the permission source
  */
 function canDeleteAsset($asset, $user)
 {
 	return isset($user['userId']) && (
-		   ($user['userId'] == $asset['createdByUserId'] && $asset['statusId'] != STATUS_LOCKED)
+		   ($user['userId'] == $asset['createdByUserId'] && $asset['status'] != MOD_STATUS_LOCKED)
 		|| $user['roleCode'] == 'admin' || $user['roleCode'] == 'moderator'
 	);
 }
@@ -165,6 +142,7 @@ function loadNotifications($loadAll)
 	$warningIds = [];
 	$userIds = [];
 	$releaseAssetIds = [];
+	$requestIds = [];
 
 	foreach($notifications as $notification) {
 		$recordId = $notification['recordId'];
@@ -190,6 +168,9 @@ function loadNotifications($loadAll)
 				break;
 			case NOTIFICATION_WARNING_ACKNOWLEDGED:
 				$userIds[$recordId] = true;
+				break;
+			case NOTIFICATION_REQUEST_RESOLVED:
+				$requestIds[$recordId] = true;
 				break;
 			case NOTIFICATION_ONEOFF_MALFORMED_RELEASE:
 				$releaseAssetIds[$recordId] = true;
@@ -221,6 +202,11 @@ function loadNotifications($loadAll)
 	if($releaseAssetIds) {
 		$ids = implode(',', array_keys($releaseAssetIds));
 		$releaseModNames = $con->getAssoc("SELECT r.assetId, a.name FROM modReleases r JOIN mods m ON m.modId = r.modId JOIN assets a ON a.assetId = m.assetId WHERE r.assetId IN ($ids)");
+	}
+
+	if($requestIds) {
+		$ids = implode(',', array_keys($requestIds));
+		$requests = $con->getAssoc("SELECT requestId, kind, stateFlags FROM moderationRequests WHERE requestId IN ($ids)");
 	}
 
 
@@ -295,7 +281,35 @@ function loadNotifications($loadAll)
 				break;
 
 			case NOTIFICATION_REQUEST_RESOLVED:
-				$notification['text'] = "Your request #{$recordId} got resolved.";
+				$request = $requests[$recordId];
+				switch($request['kind']) {
+					case MOD_REQUEST_KIND_REPORT_MOD:
+						$verb = ($request['stateFlags'] & MOD_REQUEST_FLAG_WONTFIX | MOD_REQUEST_FLAG_SPAM) ? 'dismissed' : 'addressed';
+						$notification['text'] = "Your mod report #{$recordId} has been $verb.";
+						break;
+
+					case MOD_REQUEST_KIND_REPORT_COMMENT:
+						$verb = ($request['stateFlags'] & MOD_REQUEST_FLAG_WONTFIX | MOD_REQUEST_FLAG_SPAM) ? 'dismissed' : 'addressed';
+						$notification['text'] = "Your comment report #{$recordId} has been $verb.";
+						break;
+
+					case MOD_REQUEST_KIND_MANUAL_REVIEW:
+						if($request['stateFlags'] & MOD_REQUEST_FLAG_SPAM) {
+							$notification['text'] = "After manual review (#{$recordId}) your release has not been deemed acceptable.";
+						}
+						else if($request['stateFlags'] & MOD_REQUEST_FLAG_WONTFIX) {
+							$notification['text'] = "After manual review (#{$recordId}) changes have been requested for your release to be accepted.";
+						}
+						else {
+							$notification['text'] = "Your release has been accepted after manual review (#{$recordId}).";
+						}
+						break;
+
+					default:
+					$verb = ($request['stateFlags'] & MOD_REQUEST_FLAG_WONTFIX | MOD_REQUEST_FLAG_SPAM) ? 'dismissed' : 'solved';
+						$notification['text'] = "Your request #{$recordId} got $verb.";
+						break;
+				}
 				break;
 
 			case NOTIFICATION_ONEOFF_MALFORMED_RELEASE:

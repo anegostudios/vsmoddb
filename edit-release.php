@@ -1,4 +1,12 @@
 <?php
+
+/**
+ * @var array|null $user
+ * @var object $con
+ * @var object $view
+ * @var array $messages
+ */
+
 if(DB_READONLY) showReadonlyPage();
 
 if (empty($user))   showErrorPage(HTTP_UNAUTHORIZED);
@@ -61,7 +69,7 @@ if($existingRelease && $existingRelease['retractionReason']) {
 else if(!empty($_POST['save'])) {
 	validateActionToken();
 
-	$oldMsgCount = count($messages /* global */);
+	$oldMsgCount = count($messages);
 	$newData = [];
 
 	//
@@ -71,7 +79,7 @@ else if(!empty($_POST['save'])) {
 	//TODO(Rennorb) @cleanup @correctness: Attach files on save instead of on upload.
 	if($existingRelease) {
 		$currentFiles = $con->getAll(<<<SQL
-			SELECT f.assetId, f.fileId, mpr.modIdentifier, mpr.modVersion
+			SELECT f.assetId, f.fileId, mpr.modIdentifier, mpr.modVersion, mpr.capabilities
 			FROM files f
 			LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
 			WHERE f.assetId = ?
@@ -80,7 +88,7 @@ else if(!empty($_POST['save'])) {
 	else {
 		// hovering files
 		$currentFiles = $con->getAll(<<<SQL
-			SELECT f.assetId, f.fileId, mpr.modIdentifier, mpr.modVersion, mpr.errors
+			SELECT f.assetId, f.fileId, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.errors
 			FROM files f
 			LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
 			WHERE f.assetId IS NULL AND f.assetTypeId = 2 AND f.userId = ?
@@ -90,6 +98,8 @@ else if(!empty($_POST['save'])) {
 			addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$currentFiles[0]['errors'], true);
 			$pushedErrorForCurrentFile = true;
 		}
+
+		$newData['status'] = RELEASE_STATUS_RELEASED;
 	}
 	/** @var array{'assetId':int, 'fileId':int, 'modIdentifier':string|null, 'modVersion':string|null}[] $currentFiles */
 
@@ -116,6 +126,7 @@ else if(!empty($_POST['save'])) {
 						'fileId'             => $processedFile['fileid'],
 						'modIdentifier'      => $processedFile['modid'],
 						'modVersion'         => $processedFile['modversion'],
+						'capabilities'       => $processedFile['capabilities'],
 					];
 				}
 			}
@@ -189,6 +200,13 @@ else if(!empty($_POST['save'])) {
 		if(!$newCompatibleGameVersions) {
 			addMessage(MSG_CLASS_ERROR, 'Missing compatible game versions.');
 		}
+
+		// If the release itself is ok, but the caps are extensive, hold the release for review:
+		if(count($messages) === $oldMsgCount && $currentFiles) {
+			if($currentFiles[0]['capabilities'] & MOD_CAPS_REQUIRING_REVIEW) {
+				$newData['status'] = RELEASE_STATUS_AWAITING_REVIEW;
+			}
+		}
 	}
 	else {
 		// Non-mods must have their version manually entered.
@@ -206,7 +224,7 @@ else if(!empty($_POST['save'])) {
 		}
 	}
 
-	if(count($messages /* global */) === $oldMsgCount) { // no errors occurred
+	if(count($messages) === $oldMsgCount) { // no errors occurred
 		//
 		// Save
 		//
@@ -237,8 +255,9 @@ else if(!empty($_POST['save'])) {
 
 if($existingRelease) {
 	$files = $con->getAll(<<<SQL
-		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
+		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize, mpr.capabilities
 		FROM files f
+		LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
 		LEFT JOIN fileImageData i ON i.fileId = f.fileId
 		WHERE f.assetId = ?
 	SQL, [$existingRelease['assetId']]);
@@ -249,7 +268,7 @@ if($existingRelease) {
 else {
 	// hovering files
 	$files = $con->getAll(<<<SQL
-		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize, mpr.modIdentifier, mpr.modVersion, mpr.rawDependencies, mpr.errors
+		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize, mpr.modIdentifier, mpr.modVersion, mpr.rawDependencies, mpr.errors, mpr.capabilities
 		FROM files f
 		LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
 		LEFT JOIN fileImageData i ON i.fileId = f.fileId
@@ -258,6 +277,9 @@ else {
 
 	if(!$pushedErrorForCurrentFile && !empty($files[0]['errors'])) {
 		addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$files[0]['errors'], true);
+	}
+	if($files && $files[0]['capabilities'] & MOD_CAPS_REQUIRING_REVIEW) {
+		addMessage(MSG_CLASS_WARN, 'This mod uses potentially dangerous features of the dotnet runtime, and will require manual review.<br>A request for review will be submitted for you automatically after completing the release.', false);
 	}
 }
 

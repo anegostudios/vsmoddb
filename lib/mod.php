@@ -16,8 +16,8 @@ function createNewMod($mod, $filesInOrder, $newMembers, $newEditorMemberHashes)
 	$con->startTrans();
 	
 	$con->execute(
-		'INSERT INTO assets (createdByUserId, statusId, assetTypeId, name, text) VALUES (?,?,?,?,?)',
-		[$user['userId'], $mod['statusId'], ASSETTYPE_MOD, $mod['name'], $mod['text']]
+		'INSERT INTO assets (createdByUserId, assetTypeId, name, text) VALUES (?,?,?,?)',
+		[$user['userId'], ASSETTYPE_MOD, $mod['name'], $mod['text']]
 	);
 	$assetId = intval($con->Insert_ID());
 
@@ -25,12 +25,12 @@ function createNewMod($mod, $filesInOrder, $newMembers, $newEditorMemberHashes)
 		INSERT INTO mods
 			(assetId, urlAlias, cardLogoFileId, embedLogoFileId, 
 			homepageUrl, sourceCodeUrl, trailerVideoUrl, issueTrackerUrl, wikiUrl, donateUrl,
-			summary, descriptionSearchable, side, category)
-		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+			summary, descriptionSearchable, side, category, `status`)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 	SQL, [
 		$assetId, $mod['urlAlias'], $mod['cardLogoFileId'], $mod['embedLogoFileId'],
 		$mod['homepageUrl'], $mod['sourceCodeUrl'], $mod['trailerVideoUrl'], $mod['issueTrackerUrl'], $mod['wikiUrl'], $mod['donateUrl'],
-		$mod['summary'], textContent($mod['text']), $mod['side'], $mod['category']
+		$mod['summary'], textContent($mod['text']), $mod['side'], $mod['category'], $mod['status']
 	]);
 	$modId = intval($con->Insert_ID());
 	logAuditEvent(AUDIT_LOG_KIND_MOD_CREATE, $modId);
@@ -66,8 +66,8 @@ function updateMod($oldModData, $mod, $currentlyBeingTransferredTo, $filesInOrde
 	$con->startTrans();
 	
 	$con->execute(
-		'UPDATE assets SET statusId = ?, name = ?, text = ?, editedByUserId = ?, numSaved = numSaved + 1 WHERE assetId = ?',
-		[$mod['statusId'], $mod['name'], $mod['text'], $user['userId'], $mod['assetId']]
+		'UPDATE assets SET `status` = ?, `name` = ?, `text` = ?, editedByUserId = ?, numSaved = numSaved + 1 WHERE assetId = ?',
+		[$mod['status'], $mod['name'], $mod['text'], $user['userId'], $mod['assetId']]
 	);
 	$con->execute(<<<SQL
 		UPDATE mods
@@ -95,7 +95,7 @@ function updateMod($oldModData, $mod, $currentlyBeingTransferredTo, $filesInOrde
 	if($diff = createAuditLogDiff($oldModData['summary'], $mod['summary'])) array_push($logValues, AUDIT_LOG_KIND_MOD_CHANGE_SUMMARY, $diff, $logFlagsGeneral);
 	if($diff = createAuditLogDiff($oldModData['text'], $mod['text'])) array_push($logValues, AUDIT_LOG_KIND_MOD_CHANGE_DESCRIPTION, $diff, $logFlagsGeneral);
 	if($oldModData['category'] != $mod['category']) array_push($logValues, AUDIT_LOG_KIND_MOD_CHANGE_CATEGORY, createAuditLogDiff(stringifyCategory($oldModData['category']), stringifyCategory($mod['category'])), $logFlagsGeneral);
-	if($oldModData['statusId'] != $mod['statusId']) array_push($logValues, AUDIT_LOG_KIND_MOD_CHANGE_CATEGORY, createAuditLogDiff(stringifyStatus($oldModData['statusId']), stringifyStatus($mod['statusId'])), $logFlagsGeneral);
+	if($oldModData['status'] != $mod['status']) array_push($logValues, AUDIT_LOG_KIND_MOD_CHANGE_CATEGORY, createAuditLogDiff(stringifyStatus($oldModData['status']), stringifyStatus($mod['status'])), $logFlagsGeneral);
 
 	if($logValues) {
 		$logPlaceholders = substr(str_repeat("({$modId}, {$user['userId']}, ?, ?, ?),", count($logValues) / 3), 0, -1);
@@ -103,8 +103,8 @@ function updateMod($oldModData, $mod, $currentlyBeingTransferredTo, $filesInOrde
 	}
 
 
-	if($oldModData['statusId'] == STATUS_LOCKED) {
-		if($mod['statusId'] != STATUS_LOCKED) {
+	if($oldModData['status'] == MOD_STATUS_LOCKED) {
+		if($mod['status'] != MOD_STATUS_LOCKED) {
 			// Send unlock notification to the modder:
 			$con->execute("INSERT INTO notifications (kind, recordId, userId) values (?, ?, ?)", [NOTIFICATION_MOD_UNLOCKED, $modId, $mod['createdByUserId']]);
 			

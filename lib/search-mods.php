@@ -168,7 +168,7 @@ function validateModSearchInputs(&$outParams, $trimText)
 		if($s !== null) $outParams['filters']['stati'] = $s;
 	}
 	else {
-		$outParams['filters']['stati'] = [STATUS_RELEASED];
+		$outParams['filters']['stati'] = [MOD_STATUS_RELEASED];
 	}
 
 	return null;
@@ -209,8 +209,6 @@ function queryModSearch($searchParams)
 	$havingClauses = '';
 
 	if(!empty($user['genAiTolerance'])) {
-		require(SRC_ROOT.'/lib/moderation.php');
-
 		$joinClauses = 'LEFT JOIN moderationRequests req ON req.referenceId = m.modId AND (req.kind, req.category) = ('.MOD_REQUEST_KIND_REPORT_MOD.', '.REPORT_CATEGORY_MOD_LOW_EFFORT_AI.') AND resolved IS NULL ';
 		$havingClauses = 'HAVING COUNT(req.requestId) < '.$user['genAiTolerance']; // @security: $user['genAiTolerance'] comes from the database and is numeric, therefore sql inert.
 	}
@@ -327,9 +325,9 @@ function queryModSearch($searchParams)
 
 			case 'stati':
 				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
-				$foldedIds = implode(',', array_map('intval', $value));
-				// @security: $foldedIds only contains numbers, and is therefore sql inert.
-				$whereClauses .= "a.statusId IN ($foldedIds)";
+				$foldedStati = implode(',', array_map('intval', $value));
+				// @security: $foldedStati only contains numbers, and is therefore sql inert.
+				$whereClauses .= "m.status IN ($foldedStati)";
 				break;
 
 			case 'category':
@@ -431,16 +429,15 @@ function queryModSearch($searchParams)
 			m.comments,
 			m.side,
 			m.category,
+			m.status,
 			m.lastReleased,
 			l.cdnPath AS logoCdnPath,
 			l.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 			c.name AS `from`,
-			s.code AS statusCode,
 			f.userId AS following
 		FROM mods m
 		JOIN assets a ON a.assetId = m.assetId
 		LEFT JOIN users c ON c.userId = a.createdByUserId
-		LEFT JOIN status s ON s.statusId = a.statusId
 		LEFT JOIN userFollowedMods f ON f.modId = m.modId and f.userId = $currentUserId
 		LEFT JOIN files l ON l.fileId = m.cardLogoFileId
 		$joinClauses

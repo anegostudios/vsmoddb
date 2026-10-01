@@ -159,12 +159,14 @@ function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 
 	if($assetTypeId === ASSETTYPE_RELEASE) {
 		$ok = modpeek($localPath, $modInfo);
-		$con->Execute('INSERT INTO modPeekResults (fileId, errors, modIdentifier, modVersion, type, side, requiredOnClient, requiredOnServer, networkVersion, description, website, iconPath, rawAuthors, rawContributors, rawBackgroundPaths, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-			[$fileId, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['side'], $modInfo['requiredOnClient'], $modInfo['requiredOnServer'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['iconPath'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawBackgroundPaths'], $modInfo['rawDependencies']]
+		$con->Execute('INSERT INTO modPeekResults (fileId, errors, modIdentifier, modVersion, type, side, requiredOnClient, requiredOnServer, networkVersion, capabilities, description, website, iconPath, rawAuthors, rawContributors, rawBackgroundPaths, rawDependencies, rawReflections) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+			[$fileId, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['side'], $modInfo['requiredOnClient'], $modInfo['requiredOnServer'], $modInfo['networkVersion'], $modInfo['capabilities'], $modInfo['description'], $modInfo['website'], $modInfo['iconPath'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawBackgroundPaths'], $modInfo['rawDependencies'], $modInfo['rawReflections']]
 		);
 
 		$minCompat = findMinCompatibleGameVersion($modInfo['rawDependencies']);
 		if($minCompat !== null) $data['gameversiondep'] = $minCompat;
+
+		$data['requiresReview'] = boolval($modInfo['capabilities'] & MOD_CAPS_REQUIRING_REVIEW);
 
 		// array{modparse:'error', parsemsg:string}|array{modparse:'ok', modid:string, modversion:int}
 		if($ok) {

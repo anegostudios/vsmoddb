@@ -1,4 +1,4 @@
-<div class="mod {$mod['statusCode']}{if $mod['hasLegacyLogo']} legacy{/if}">
+<div class="mod {stringifyModStatusInternal($mod['status'])}{if $mod['hasLegacyLogo']} legacy{/if}">
 	<a href="{$mod['dbPath']}">
 		<img src="{empty($mod['logoCdnPath']) ? '/web/img/mod-default.png' : formatCdnUrlFromCdnPath($mod['logoCdnPath'])}" alt="Mod Thumbnail" loading="lazy">
 	</a>
@@ -22,5 +22,5 @@
 	</div>
 
 	{if time()-strtotime($mod['created']) < 10*24*3600}<span class="ribbon-tr" style="background: #ffe300">New!</span>{/if}
-	{if $mod['statusCode'] === 'draft'}<span class="ribbon-tr d2" style="background: #ccc">Draft</span>{/if}
+	{if $mod['status'] == MOD_STATUS_DRAFT}<span class="ribbon-tr d2" style="background: #ccc">Draft</span>{/if}
 </div>
