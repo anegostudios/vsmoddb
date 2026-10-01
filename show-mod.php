@@ -1,7 +1,6 @@
 <?php
 
 require(SRC_ROOT.'/lib/recommend-release.php');
-require(SRC_ROOT.'/lib/moderation.php');
 
 $assetId = $urlparts[2] ?? 0;
 
@@ -33,17 +32,16 @@ $asset = $con->getRow("
 		m.comments,
 		m.side,
 		m.category,
+		m.status,
 		m.lastReleased,
 		logo.cdnPath AS logoUrl, ST_X(ld.size) AS logoWidth, ST_Y(ld.size) AS logoHeight,
 		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 		HEX(creator.hash) AS creatorHash,
-		creator.name AS creatorName,
-		s.code AS statusCode
+		creator.name AS creatorName
 	FROM 
 		assets a
 		JOIN mods m ON m.assetId = a.assetId
 		LEFT JOIN users creator ON creator.userId = a.createdByUserId
-		LEFT JOIN status s ON s.statusId = a.statusId
 		LEFT JOIN files AS logo ON logo.fileId = m.embedLogoFileId
 		LEFT JOIN fileImageData ld ON ld.fileId = logo.fileId
 	WHERE

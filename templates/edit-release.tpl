@@ -12,7 +12,7 @@
 		<span>
 			<a href="{formatModPath($mod)}#tab-files">{$mod["name"]}</a>
 		</span> / 
-		<span>{$release['assetId'] ? 'Edit Release' : 'Add new Release'}</span>
+		<span>{$release['assetId'] ? ($release['status'] == RELEASE_STATUS_AWAITING_REVIEW ? 'Edit Release (Awaiting Review)' : 'Edit Release') : 'Add new Release'}</span>
 	</h2>
 
 	<form method="post" name="form1" enctype="multipart/form-data" autocomplete="off" class="flex-list are-you-sure">
@@ -167,8 +167,13 @@
 
 <div class="buttons">
 	{if !$release['retractionReason']}
-		<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
-		<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
+		{if !$release['assetId'] && $files && ($files[0]['capabilities'] & MOD_CAPS_REQUIRING_REVIEW)}
+			<a class="button large submit shine btn-submit" href="javascript:submitForm(0)">Submit for Review</a>
+			<a class="button large submit shine btn-submit" href="javascript:submitForm(1)">Submit for Review + Back</a>
+		{else}
+			<a class="button large submit shine btn-submit" href="javascript:submitForm(0)">Save</a>
+			<a class="button large submit shine btn-submit" href="javascript:submitForm(1)">Save + Back</a>
+		{/if}
 	{/if}
 
 	{if $release['assetId']}
@@ -255,6 +260,16 @@
 					}
 					labelEl.textContent = `${c} Version${c !== 1 ? 's' : ''} Selected`;
 					R.addMessage(MSG_CLASS_OK, `Automatically selected ${c} compatible game version${c !== 1 ? 's' : ''}.`, false);
+				}
+				var buttons = document.getElementsByClassName('btn-submit');
+				if(file.requiresReview) \{
+					R.addMessage(MSG_CLASS_WARN, 'This mod uses potentially dangerous features of the dotnet runtime, and will require manual review.<br>A request for review will be submitted for you automatically after completing the release.', false);
+					buttons[0].textContent = 'Submit for Review';
+					buttons[1].textContent = 'Submit for Review + Back';
+				}
+				else \{
+					buttons[0].textContent = 'Save';
+					buttons[1].textContent = 'Save + Back';
 				}
 			}
 		}

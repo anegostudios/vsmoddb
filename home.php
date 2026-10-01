@@ -3,15 +3,13 @@
 if (!empty($user)) {
 	$ownMods = $con->getAll("
 		SELECT
-			a.assetId, a.name, a.created, a.statusId, a.createdByUserId,
+			a.assetId, a.name, a.created, m.status, a.createdByUserId,
 			m.modId, m.urlAlias, m.summary, m.downloads, m.comments,
 			logo.cdnPath AS logoCdnPath,
-			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
-			s.code AS statusCode
+			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo
 		FROM
 			assets a
 			JOIN mods m ON m.assetId = a.assetId
-			LEFT JOIN status s ON s.statusId = a.statusId
 			LEFT JOIN files AS logo ON logo.fileId = m.cardLogoFileId
 			LEFT JOIN modTeamMembers tm ON tm.modId = m.modId
 		WHERE
@@ -33,7 +31,7 @@ if (!empty($user)) {
 	//TODO(Rennorb) @cleanup
 	$followedMods = $con->getAll("
 		SELECT
-			a.assetId, a.name, a.created, a.statusId, a.createdByUserId,
+			a.assetId, a.name, a.created, m.status, a.createdByUserId,
 			m.modId, m.urlAlias, m.summary, m.downloads, m.comments,
 			logo.cdnPath AS logoCdnPath,
 			logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
@@ -42,19 +40,16 @@ if (!empty($user)) {
 			rd.version AS releaseVersion
 		FROM
 			assets a
-			JOIN mods m ON m.assetId = a.assetId
+			JOIN mods m ON m.assetId = a.assetId AND m.status = ".MOD_STATUS_RELEASED."
 			JOIN users u ON u.userId = a.createdByUserId
 			JOIN userFollowedMods f ON f.modId = m.modId AND f.userId = ?
 			LEFT JOIN files AS logo ON logo.fileId = m.cardLogoFileId
 			LEFT JOIN modReleases rd ON rd.releaseId = (SELECT releaseId FROM modReleases WHERE modId = m.modId ORDER BY created DESC LIMIT 1)
-		WHERE
-			a.statusId = ".STATUS_RELEASED."
 		ORDER BY
 			releaseDate DESC
 	", [$user['userId']]);
 
 	foreach($followedMods as &$mod) {
-		$mod['statusCode'] = 'published';
 		$mod['dbPath'] = formatModPath($mod);
 	}
 	unset($mod);
@@ -67,26 +62,22 @@ if (!empty($user)) {
 
 $latestMods = $con->getAll("
 	SELECT
-		a.assetId, a.name, a.created, a.statusId, a.createdByUserId,
+		a.assetId, a.name, a.created, m.status, a.createdByUserId,
 		m.modId, m.urlAlias, m.summary, m.downloads, m.comments, m.category,
 		logo.cdnPath AS logoCdnPath,
 		logo.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
 		u.name AS `from`
 	FROM
 		assets a
-		join mods m ON m.assetId = a.assetId
+		join mods m ON m.assetId = a.assetId AND m.status = ".MOD_STATUS_RELEASED." AND m.category != ".CATEGORY_SERVER_TWEAK." AND m.created > DATE_SUB(NOW(), INTERVAL 30 DAY)
 		join users u ON u.userId = a.createdByUserId
 		left join files AS logo ON logo.fileId = m.cardLogoFileId
-	WHERE
-		a.statusId = ".STATUS_RELEASED." AND m.category != ".CATEGORY_SERVER_TWEAK."
-		AND m.created > DATE_SUB(NOW(), INTERVAL 30 DAY)
 	ORDER BY
 		a.created DESC
 	LIMIT 10
 ");
 
 foreach($latestMods as &$mod) {
-	$mod['statusCode'] = 'published';
 	$mod['dbPath'] = formatModPath($mod);
 }
 unset($mod);
@@ -101,10 +92,10 @@ $latestComments = $con->getAll('
 	FROM
 		comments c
 		join users u ON u.userId = c.userId
+		join mods m ON m.assetId = c.assetId AND m.status = '.MOD_STATUS_RELEASED.'
 		join assets a ON a.assetId = c.assetId
 	WHERE
-		a.statusId = '.STATUS_RELEASED.'
-		AND !c.deleted
+		!c.deleted
 		AND c.created > DATE_SUB(NOW(), INTERVAL 14 DAY)
 	ORDER BY
 		c.created DESC

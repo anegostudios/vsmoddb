@@ -1,7 +1,10 @@
 <?php
-/** @var array $reportedMods */
-/** @var array $reportedComments */
-/** @var array $user */
+/** 
+ * @var array $user
+ * @var array $reportedMods
+ * @var array $reportedComments
+ * @var array $reviewRequestedMods
+ */
 ?>{include file="header"}
 
 <h2 style="margin-bottom: .5em;">
@@ -11,7 +14,7 @@
 <div id="reports-wrapper">
 	<div>
 		<h3 style="margin-bottom: .5em;">Reported Mods:</h3>
-		<div id="reported-mods">
+		<div class="attached-to-mod">
 		<? foreach($reportedMods as $mod): ?>
 			<div>
 				<a href="<?= formatModPath($mod) ?>" target="_blank">
@@ -67,6 +70,39 @@
 					<div>
 						<h3>Nothing here.</h3>
 						<p>No reports here.</p>
+					</div>
+				</div>
+			</div>
+		<? endif; ?>
+		</div>
+	</div>
+
+	<div>
+		<h3 style="margin-bottom: .5em;">Manual Review Requests:</h3>
+		<div class="attached-to-mod">
+		<? foreach($reviewRequestedMods as $mod): ?>
+			<div>
+				<a href="<?= formatModPath($mod) ?>" target="_blank">
+					<img src="<?= empty($mod['logoCdnPath']) ? '/web/img/mod-default.png' : escapeHtml(formatCdnUrlFromCdnPath($mod['logoCdnPath'])) ?>" alt="Mod Thumbnail" loading="lazy" />
+					<div>
+						<h3><?= escapeHtml($mod['name']) ?></h3>
+						<p><?= escapeHtml($mod['summary']) ?></p>
+					</div>
+				</a>
+				<div class="ticket-list">
+				<? foreach($mod['requests'] as $request): ?>
+					<a href="/t/<?= $request['requestId'] ?>" target="_blank">
+						<h4><?= formatSemanticVersion($request['version']) ?></h4>
+					</a>
+				<? endforeach; ?>
+				</div>
+			</div>
+		<? endforeach; if(empty($reviewRequestedMods)): ?>
+			<div>
+				<div>
+					<div>
+						<h3>Nothing here.</h3>
+						<p>No requests here.</p>
 					</div>
 				</div>
 			</div>

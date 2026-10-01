@@ -244,13 +244,7 @@ switch($urlparts[0]) {
 			case 'releases': // /mods/{modId}/releases
 				switch($_SERVER['REQUEST_METHOD']) {
 					case 'GET':
-						$modExists = $con->getOne("
-							SELECT 1
-							FROM mods m
-							JOIN assets a ON a.assetId = m.assetId AND a.statusId = ".STATUS_RELEASED."
-							WHERE modId = $modId
-						"); // @security $modId is validated to be int, therefore sql inert.
-
+						$modExists = $con->getOne("SELECT 1 FROM mods WHERE modId = $modId AND `status` = ".MOD_STATUS_RELEASED); // @security $modId is validated to be int, therefore sql inert.
 						if(!$modExists)   fail(HTTP_NOT_FOUND, 'Mod not found or not released.');
 
 

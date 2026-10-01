@@ -44,12 +44,14 @@ const REPORT_CATEGORIES_COMMENT = [
 
 const MOD_REQUEST_KIND_REPORT_MOD     = 1;
 const MOD_REQUEST_KIND_REPORT_COMMENT = 2;
+const MOD_REQUEST_KIND_MANUAL_REVIEW  = 3;
 
 // 8 bit
 //const MOD_REQUEST_FLAG_ASSIGNED = 1 << 0;
-const MOD_REQUEST_FLAG_SPAM     = 1 << 5;
-const MOD_REQUEST_FLAG_WONTFIX  = 1 << 6;
-const MOD_REQUEST_FLAG_CLOSED   = 1 << 7;
+const MOD_REQUEST_FLAG_USER_ACTION_REQUIRED = 1 << 4;
+const MOD_REQUEST_FLAG_SPAM                 = 1 << 5;
+const MOD_REQUEST_FLAG_WONTFIX              = 1 << 6;
+const MOD_REQUEST_FLAG_CLOSED               = 1 << 7;
 
 
 /**
@@ -62,6 +64,7 @@ function stringifyModerationRequestStateForUser($flags)
 	if($flags & MOD_REQUEST_FLAG_WONTFIX) $result = 'Wont Fix';
 	else if($flags & MOD_REQUEST_FLAG_SPAM) $result = 'Closed';
 	else if($flags & MOD_REQUEST_FLAG_CLOSED) $result = 'Solved';
+	else if($flags & MOD_REQUEST_FLAG_USER_ACTION_REQUIRED) $result = 'User Action Required';
 	return $result;
 }
 
@@ -75,6 +78,7 @@ function stringifyModerationRequestState($flags)
 	if($flags & MOD_REQUEST_FLAG_WONTFIX) $result = 'Wont Fix';
 	else if($flags & MOD_REQUEST_FLAG_SPAM) $result = 'Spam';
 	else if($flags & MOD_REQUEST_FLAG_CLOSED) $result = 'Solved';
+	else if($flags & MOD_REQUEST_FLAG_USER_ACTION_REQUIRED) $result = 'User Action Required';
 	return $result;
 }
 
@@ -108,6 +112,9 @@ function stringifyModerationRequestKind($request)
 				case REPORT_CATEGORY_OTHER:                  return 'Comment Report';
 			}
 			break;
+
+		case MOD_REQUEST_KIND_MANUAL_REVIEW:
+			return 'Request for manual review';
 	}
 	return "{$request['kind']} - {$request['category']}"; // fallback
 }
@@ -142,6 +149,9 @@ function stringifyModerationRequestCategory($request)
 				case REPORT_CATEGORY_OTHER:                  return 'Other';
 			}
 			break;
+
+		case MOD_REQUEST_KIND_MANUAL_REVIEW:
+			return 'Manual Review Request';
 	}
 	return "{$request['kind']} - {$request['category']}"; // fallback
 }

@@ -7,8 +7,6 @@ if(empty($user['userId']))   showErrorPage(HTTP_UNAUTHORIZED);
 if(!canModerate(null, $user))   showErrorPage(HTTP_FORBIDDEN);
 validateUserNotBanned();
 
-require(SRC_ROOT.'/lib/moderation.php');
-
 ///
 /// Mods
 ///
@@ -71,9 +69,38 @@ foreach($commentReports as $report) {
 
 usort($reportedComments, fn($a, $b) => -(count($a['reports']) <=> count($b['reports']))); // sort by report count descending
 
+///
+/// Review Requests
+///
+
+$reviewRequests = $con->getAll("
+	SELECT req.requestId, r.modId, r.releaseId, r.version
+	FROM moderationRequests req
+	JOIN modReleases r ON r.releaseId = req.referenceId
+	WHERE req.kind = ".MOD_REQUEST_KIND_MANUAL_REVIEW." AND (~req.stateFlags & ".MOD_REQUEST_FLAG_CLOSED.")
+	ORDER BY r.modId, r.version
+");
+
+$requestedModsIds = array_unique(array_column($reviewRequests, 'modId'), SORT_NUMERIC);
+$foldedModIds = implode(',', $requestedModsIds);
+
+$reviewRequestedMods = $requestedModsIds ? $con->getAssoc(<<<SQL
+	SELECT m.modId, a.assetId, m.urlAlias, a.name, m.summary, f.cdnPath AS logoCdnPath
+	FROM mods m
+	JOIN assets a ON a.assetId = m.assetId
+	LEFT JOIN files f ON f.fileId = m.cardLogoFileId
+	WHERE m.modId IN ($foldedModIds)
+SQL) : [];
+
+
+foreach($reviewRequests as $request) {
+	$reviewRequestedMods[$request['modId']]['requests'][] = $request;
+}
+
 /// Done
 
 $view->assign('pagetitle', 'Open Moderation Requests - ');
 $view->assign('reportedMods', $reportedMods, null, true);
 $view->assign('reportedComments', $reportedComments, null, true);
+$view->assign('reviewRequestedMods', $reviewRequestedMods, null, true);
 $view->display('ticket-list-for-moderators');

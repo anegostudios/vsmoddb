@@ -194,6 +194,12 @@ case AUDIT_LOG_KIND_RELEASE_CHANGE_RETRACTION: ?>
 	<? break;
 
 
+case AUDIT_LOG_KIND_RELEASE_CHANGE_STATUS: ?>
+	<td>Changed Status</td>
+	<td class="info"><?= stringifyReleaseStatus($logEntry['flags'] >> 1) ?></td>
+		<? break;
+
+
 case AUDIT_LOG_KIND_COMMENT_CREATE: ?>
 <td>Created Comment</td>
 <td class="info"><?= escapeHtml($logEntry['info']) ?></td>
