@@ -40,7 +40,7 @@ switch($urlparts[1]) {
 
 				$responseTo = filter_input(INPUT_GET, 'response-to', FILTER_VALIDATE_INT);
 				if($responseTo) {
-					$responseTarget = $con->getRow('SELECT COALESCE(conversationRoot, commentId) AS conversationRoot, responseDepth, userId FROM comments WHERE commentId = ?', [$responseTo]);
+					$responseTarget = $con->getRow("SELECT COALESCE(conversationRoot, commentId) AS conversationRoot, responseDepth, userId FROM comments WHERE commentId = $responseTo AND assetId = $assetId");
 					if(!$responseTarget)  fail(HTTP_NOT_FOUND, 'Unknown response-to id.');
 				}
 				else {
