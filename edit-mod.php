@@ -8,6 +8,10 @@
 
 if(DB_READONLY) showReadonlyPage();
 
+if (empty($user)) showErrorPage(HTTP_UNAUTHORIZED);
+if (!$user['roleId']) showErrorPage(HTTP_FORBIDDEN);
+if ($user['isBanned'])  showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
+
 require_once(SRC_ROOT.'/lib/mod.php');
 
 const SAVE_MSG_DEFAULT = '1';
@@ -79,8 +83,6 @@ if(isset($_GET['assetid'])) {
 	SQL, [$mod['assetId']]);
 }
 else { // New mod
-	if (empty($user)) showErrorPage(HTTP_UNAUTHORIZED);
-
 	$assetId = 0;
 	$mod = [
 		'assetId'         => 0,
