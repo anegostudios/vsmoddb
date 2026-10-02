@@ -287,9 +287,10 @@ CREATE TABLE IF NOT EXISTS `roles` (
 
 CREATE TABLE IF NOT EXISTS `fileDownloadTracking` (
   `ipAddress`    INET6        NOT NULL,
+  `userId`       INT          NOT NULL,
   `fileId`       INT          NOT NULL,
   `lastDownload` DATETIME     NOT NULL DEFAULT NOW(),
-  INDEX `identifier` (`fileId`, `ipAddress`, `lastDownload`),
+  INDEX `identifier` (`fileId`, `ipAddress`, `userId`, `lastDownload`),
   INDEX `lastDownload` (`lastDownload`)
 );
 

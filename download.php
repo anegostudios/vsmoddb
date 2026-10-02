@@ -18,13 +18,13 @@ if($file['retractionReason'] && (empty($user) || !canModerate(null, $user))) sho
 
 if(!DB_READONLY) {
 	// do download tracking
-	$identifier = [$fileId, $_SERVER['REMOTE_ADDR']];
+	$identifier = [$fileId, $_SERVER['REMOTE_ADDR'], $user['userId'] ?? 0];
 
-	$lastDownload = $con->getOne('SELECT UNIX_TIMESTAMP(lastDownload) FROM fileDownloadTracking WHERE (fileId, ipAddress) = (?, ?) ORDER BY lastDownload DESC LIMIT 1', $identifier);
+	$lastDownload = $con->getOne('SELECT UNIX_TIMESTAMP(lastDownload) FROM fileDownloadTracking WHERE (fileId, ipAddress, userId) = (?, ?, ?) ORDER BY lastDownload DESC LIMIT 1', $identifier);
 	if (!$lastDownload || (time() - $lastDownload) > DOWNLOAD_DEDUPLICATION_TS_SECS) {
 		$con->startTrans();
 
-		$con->execute('INSERT INTO fileDownloadTracking (fileId, ipAddress) VALUES (?, ?)', $identifier);
+		$con->execute('INSERT INTO fileDownloadTracking (fileId, ipAddress, userId) VALUES (?, ?, ?)', $identifier);
 
 		$con->execute('UPDATE files SET downloads = downloads + 1 WHERE fileId = ?', [$fileId]);
 		if($file['modId']) {

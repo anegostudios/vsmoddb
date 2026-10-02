@@ -211,7 +211,7 @@ function bunny_pullLogsAndUpdateDownloadNumbers($date)
 		$countAsSeparateDownload = false;
 		if (!$lastDownload) {
 			$countAsSeparateDownload = true;
-			$con->Execute('INSERT INTO fileDownloadTracking (lastUpdate, fileId, ipAddress) VALUES (?, ?, ?)', [$date, $fileId, $remoteip]);
+			$con->Execute('INSERT INTO fileDownloadTracking (lastUpdate, fileId, ipAddress, userId) VALUES (?, ?, ?, 0)', [$date, $fileId, $remoteip]);
 		} else if ($time - $lastDownload > 24*3600) {
 			$countAsSeparateDownload = true;
 			$con->Execute('UPDATE fileDownloadTracking SET lastDownload = ? WHERE fileId = ? and ipAddress = ?', [$date, $fileId, $remoteip]);
