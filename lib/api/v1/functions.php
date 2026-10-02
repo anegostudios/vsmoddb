@@ -116,6 +116,7 @@ function listMod($modid)
 		"trailervideourl" => $row['trailerVideoUrl'],
 		"issuetrackerurl" => $row['issueTrackerUrl'],
 		"wikiurl"         => $row['wikiUrl'],
+		"donateurl"       => $row['donateUrl'],
 		"downloads"       => intval($row['downloads']),
 		"follows"         => intval($row['follows']),
 		"trendingpoints"  => intval($row['trendingPoints']),
