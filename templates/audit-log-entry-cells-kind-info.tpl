@@ -112,6 +112,18 @@ case AUDIT_LOG_KIND_MOD_CHANGE_CATEGORY: ?>
 	<? break;
 
 
+case AUDIT_LOG_KIND_MOD_API_TOKEN_CREATE: ?>
+<td>Created API Token</td>
+<td class="info"><?= escapeHtml($logEntry['info']) ?></td>
+	<? break;
+
+
+case AUDIT_LOG_KIND_MOD_API_TOKEN_REVOKE: ?>
+<td>Revoked API Token</td>
+<td class="info"><?= escapeHtml($logEntry['info']) ?></td>
+	<? break;
+
+
 case AUDIT_LOG_KIND_MOD_MEMBER_INVITE_INITIATED: ?>
 <td>Invited Team Member</td>
 <td class="info"><?= escapeHtml($logEntry['info']) ?></td>
@@ -147,7 +159,7 @@ case AUDIT_LOG_KIND_MOD_MEMBER_REMOVED: ?>
 
 
 case AUDIT_LOG_KIND_RELEASE_CREATE: ?>
-<td>Created Release</td>
+<td>Created Release<?= ($logEntry['flags'] & AUDIT_LOG_FLAG_VIA_API_TOKEN) ? ' (via API token)' : '' ?></td>
 <td class="info"><?= escapeHtml($logEntry['info']) ?></td>
 	<? break;
 

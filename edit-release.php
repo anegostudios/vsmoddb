@@ -153,31 +153,9 @@ else if(!empty($_POST['save'])) {
 			$newData['identifier'] = $currentFiles[0]['modIdentifier'];
 			$newData['version']    = $currentFiles[0]['modVersion'];
 
-			if (in_array($newData['identifier'], ["game", "creative", "survival"])) { // Reserve special mod ids
-				addMessage(MSG_CLASS_ERROR, "This modid ('{$newData['identifier']}') is reserved.");
-			}
-			else {
-				$sqlIgnoreExistingRelease = $existingRelease ? "r.releaseId != {$existingRelease['releaseId']} AND" : ''; // @security $existingRelease['releaseId'] comes from the database and is numeric, therefore sql inert.
-				$inUseBy = $con->getRow(<<<SQL
-					SELECT a.assetId, r.modId, r.version, m.assetId as modAssetId, m.urlAlias
-					FROM modReleases r
-					JOIN assets a ON a.assetId = r.assetId
-					JOIN mods m ON m.modId = r.modId
-					WHERE $sqlIgnoreExistingRelease r.identifier = ? AND (r.modId != ? || r.version = ?)
-					LIMIT 1
-				SQL, [$newData['identifier'], $targetMod['modId'], $newData['version']]);
-
-				if ($inUseBy) {
-					if($inUseBy['modId'] == $targetMod['modId'] && $inUseBy['version'] == $newData['version']) {
-						$rv = formatSemanticVersion(intval($newData['version']));
-						addMessage(MSG_CLASS_ERROR, "This version ($rv) of the mod has already been released (<a href='/edit/release/?assetid={$inUseBy['assetId']}'>link</a>).");
-					}
-					else {
-						$mid = escapeHtml($newData['identifier']);
-						$mpath = formatModPath(['urlAlias' => $inUseBy['urlAlias'], 'assetId' => $inUseBy['modAssetId']]);
-						addMessage(MSG_CLASS_ERROR, "This modid ('$mid') is already in use by another mod (<a href='$mpath' target='_blank'>link</a>).");
-					}
-				}
+			$identityValidation = validateGameModReleaseIdentity($targetMod, $newData['identifier'], $newData['version'], $existingRelease['releaseId'] ?? null);
+			if(!$identityValidation['ok']) {
+				addMessage(MSG_CLASS_ERROR, $identityValidation['errorHtml']);
 			}
 		}
 
@@ -279,11 +257,16 @@ foreach($allGameVersions as &$gameVersion) {
 unset($gameVersion);
 
 
+// Only release kinds reference the releaseId, other kinds with the same referenceId are about unrelated entities (e.g. a mod with that id).
+$releaseLogKinds = implode(',', [
+	AUDIT_LOG_KIND_RELEASE_CREATE, AUDIT_LOG_KIND_RELEASE_RETRACT, AUDIT_LOG_KIND_RELEASE_CHANGE_IDENTIFIER, AUDIT_LOG_KIND_RELEASE_CHANGE_VERSION,
+	AUDIT_LOG_KIND_RELEASE_CHANGE_COMPAT, AUDIT_LOG_KIND_RELEASE_CHANGE_FILE, AUDIT_LOG_KIND_RELEASE_CHANGE_CHANGELOG, AUDIT_LOG_KIND_RELEASE_CHANGE_RETRACTION,
+]);
 $auditLogs = $existingRelease ? $con->getAll(<<<SQL
 	SELECT l.kind, l.info, l.created, u.name AS username, l.flags
 	FROM auditLogs l
 	JOIN users u ON u.userId = l.initiatorUserId
-	WHERE l.referenceId = {$existingRelease['releaseId']}
+	WHERE l.referenceId = {$existingRelease['releaseId']} AND l.kind IN ($releaseLogKinds)
 	ORDER BY l.created DESC
 	LIMIT 20
 SQL) : [];

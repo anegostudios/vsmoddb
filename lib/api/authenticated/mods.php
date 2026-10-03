@@ -4,6 +4,7 @@
  * @var object $con
  * @var array $user
  * @var array<string> $urlparts
+ * @var array|null $apiToken
  */
 
 const PREVIOUS_OWNER_HANDLING_PRESERVE = 0;
@@ -263,7 +264,7 @@ switch($urlparts[1]) {
 
 			if($previousOwnerHandling === PREVIOUS_OWNER_HANDLING_REMOVE) {
 				// Remove the new owner from team members if the entry exists, but don't swap it with the old owner:
-				$con->execute("DELETE FROM modTeamMembers WHERE userId = $newOwnerId");
+				$con->execute("DELETE FROM modTeamMembers WHERE modId = $modId AND userId = $newOwnerId");
 			}
 			else {
 				$canEdit = $previousOwnerHandling === PREVIOUS_OWNER_HANDLING_PRESERVE ? 1 : 0;
@@ -281,6 +282,11 @@ switch($urlparts[1]) {
 			}
 
 			$con->execute("UPDATE assets SET createdByUserId = $newOwnerId WHERE assetId = {$mod['assetId']}");
+
+			if($previousOwnerHandling !== PREVIOUS_OWNER_HANDLING_PRESERVE) {
+				// The previous owner lost their edit rights, so their api tokens must not start working again if they get them back later.
+				revokeModApiTokensOfUser($modId, $mod['createdByUserId']);
+			}
 			
 			logAuditEvent(AUDIT_LOG_KIND_MOD_CHANGE_OWNER_INITIATED, $modId, "{$mod['createdByUserId']}");
 			logAuditEvent(AUDIT_LOG_KIND_MOD_CHANGE_OWNER_RESOLVED, $modId, null, AUDIT_LOG_FLAG_ACCEPTED);
@@ -349,7 +355,23 @@ switch($urlparts[1]) {
 		header('Location: /t/'.$requestId, true, HTTP_CREATED);
 		exit();
 
+	case 'api-tokens': // /mods/{modid}/api-tokens[/{tokenid}]
+		// @security: Token management is session only. The router already enforces this, but check again.
+		if(!empty($apiToken))  fail(HTTP_FORBIDDEN);
+
+		require(__DIR__.'/mod-api-tokens.php');
+		break;
+
 	case 'releases':
+		if(count($urlparts) === 2) { // POST /mods/{modid}/releases (GET is handled in the public router)
+			validateMethod('POST');
+			// @security: Api token only endpoint. The router already enforces this, but the handler relies on it so check again.
+			if(empty($apiToken))  fail(HTTP_UNAUTHORIZED, 'This endpoint requires an api token (Authorization: Bearer <token>).');
+
+			require(__DIR__.'/mod-release-upload.php');
+			break;
+		}
+
 		switch($urlparts[2]) {
 			case 'upload-limit':
 				if(count($urlparts) !== 3)   fail(HTTP_BAD_REQUEST);
@@ -434,7 +456,7 @@ switch($urlparts[1]) {
 
 						if(empty(textContent($reasonHtml))) fail(HTTP_BAD_REQUEST, 'Missing reason.');
 
-						require(SRC_ROOT.'/lib/edit-release.php');
+						require_once(SRC_ROOT.'/lib/edit-release.php');
 
 						$con->startTrans();
 

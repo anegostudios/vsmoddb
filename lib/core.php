@@ -389,6 +389,8 @@ const AUDIT_LOG_KIND_MOD_CHANGE_STATUS          = 13;
 const AUDIT_LOG_KIND_MOD_CHANGE_UPLOAD_LIMIT    = 14;
 const AUDIT_LOG_KIND_MOD_CHANGE_LINK            = 15;
 const AUDIT_LOG_KIND_MOD_CHANGE_CATEGORY        = 16;
+const AUDIT_LOG_KIND_MOD_API_TOKEN_CREATE       = 17; // info = token name
+const AUDIT_LOG_KIND_MOD_API_TOKEN_REVOKE       = 18; // info = token name
 //...
 const AUDIT_LOG_KIND_MOD_MEMBER_INVITE_INITIATED   = 20;
 const AUDIT_LOG_KIND_MOD_MEMBER_INVITE_CHANGED     = 21;
@@ -432,6 +434,8 @@ const AUDIT_LOG_FLAG_ABORTED               = 0b10 << 1;
 const AUDIT_LOG_FLAGS_MASK_RESOLUTION      = 0b11 << 1;
 // invites:
 const AUDIT_LOG_FLAG_WITH_EDIT_PERMISSIONS = 1 << 7;
+// release create:
+const AUDIT_LOG_FLAG_VIA_API_TOKEN         = 1 << 3; // the release was created using a mod api token
 // mod link change:
 const AUDIT_LOG_FLAG_LINK_CHANGE_HOMEPAGE = 0b000 << 5;
 const AUDIT_LOG_FLAG_LINK_CHANGE_SOURCE   = 0b001 << 5;
@@ -1041,6 +1045,7 @@ const HTTP_NOT_FOUND             = 404;
 const HTTP_WRONG_METHOD          = 405;
 const HTTP_CONFLICT              = 409;
 const HTTP_GONE                  = 410;
+const HTTP_PAYLOAD_TOO_LARGE     = 413;
 const HTTP_TOO_MANY_REQUESTS     = 429;
 const HTTP_INTERNAL_ERROR        = 500;
 const HTTP_NOT_IMPLEMENTED       = 501;
@@ -1184,6 +1189,7 @@ function stringifyStatus($status)
 if(!defined('INPUT_REQUEST')) define('INPUT_REQUEST', 99);
 
 require(SRC_ROOT.'/lib/upload-limits.php');
+require(SRC_ROOT.'/lib/api-tokens.php');
 
 /** @return bool */
 function isTouchPlatform()
