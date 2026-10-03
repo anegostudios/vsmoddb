@@ -263,7 +263,7 @@ switch($urlparts[1]) {
 
 			if($previousOwnerHandling === PREVIOUS_OWNER_HANDLING_REMOVE) {
 				// Remove the new owner from team members if the entry exists, but don't swap it with the old owner:
-				$con->execute("DELETE FROM modTeamMembers WHERE userId = $newOwnerId");
+				$con->execute("DELETE FROM modTeamMembers WHERE modId = $modId AND userId = $newOwnerId");
 			}
 			else {
 				$canEdit = $previousOwnerHandling === PREVIOUS_OWNER_HANDLING_PRESERVE ? 1 : 0;
