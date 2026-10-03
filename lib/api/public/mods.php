@@ -8,11 +8,7 @@ const ERROR_SPEC_NOT_FOUND             = 4041;
 const ERROR_RELEASE_RETRACTED          = 4101;
 const ERROR_RELEASE_RETRACTED_FORCED   = 4102;
 
-function canIgnoreRetraction($release)
-{
-	// Allow overwriting retractions only if it wasn't recrated by a moderator, unless that moderator is also the mod owner:
-	return ($release['retractedByRoleId'] !== ROLE_ADMIN && $release['retractedByRoleId'] !== ROLE_MODERATOR) || $release['retractedByUserId'] === $release['createdByUserId'];
-}
+require_once(SRC_ROOT.'/lib/edit-release.php'); // canIgnoreRetraction(), getApiRelease()
 
 switch($urlparts[0]) {
 	case 'install-information':
@@ -311,43 +307,8 @@ switch($urlparts[0]) {
 									fail(HTTP_BAD_REQUEST, 'Malformed releaseId.');
 								}
 
-								$release = $con->getRow(<<<SQL
-									SELECT r.releaseId, r.identifier, r.version, UNIX_TIMESTAMP(r.created) AS created,
-										f.fileId, f.name,
-										rr.reason AS retractionReason, ru.roleId AS retractedByRoleId, rr.lastModifiedBy AS retractedByUserId, a.createdByUserId,
-										GROUP_CONCAT(cgv.gameVersion ORDER BY cgv.gameVersion DESC SEPARATOR ';') AS compatibleGameVersions
-									FROM modReleases r
-									JOIN assets a ON a.assetId = r.assetId
-									LEFT JOIN files f ON f.assetId = r.assetId
-									LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
-									LEFT JOIN users ru ON ru.userId = rr.lastModifiedBy
-									LEFT JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
-									WHERE $queryWhere
-									GROUP BY r.releaseId
-									ORDER BY r.version DESC
-									LIMIT 1
-								SQL, $queryParams);
-
-								if(!$release) fail(HTTP_NOT_FOUND, 'Release not found.');
-
-								$response = [
-									'releaseId'  => intval($release['releaseId']),
-									'identifier' => $release['identifier'],
-									'version'    => formatSemanticVersion(intval($release['version'])),
-									'compatibleGameVersions' => $release['compatibleGameVersions']
-										? array_map(fn($v) => formatSemanticVersion(intval($v)), explode(';', $release['compatibleGameVersions']))
-										: [],
-									'created'    => intval($release['created']),
-								];
-
-								if($release['retractionReason']) {
-									$response['retractionReason'] = $release['retractionReason'];
-								}
-
-								if(!$release['retractionReason'] || canIgnoreRetraction($release)) {
-									$response['fileName'] = $release['name'];
-									$response['fileUrl']  = $release['fileId'] ? formatDownloadTrackingUrl($release) : null;
-								}
+								$response = getApiRelease($queryWhere, $queryParams);
+								if(!$response) fail(HTTP_NOT_FOUND, 'Release not found.');
 
 								good($response);
 
