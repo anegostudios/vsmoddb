@@ -85,7 +85,7 @@ INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, na
 INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, name, text) VALUES (1,1,2,1,'Example Mod 8', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>');
 INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, name, text) VALUES (1,1,2,1,'Example Mod 9', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>');
 INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, name, text) VALUES (1,1,2,1,'Example Mod 10', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>');
-INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, name, text) VALUES (1,1,1,1,'Example Mod 11', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>');
+INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, name, text) VALUES (1,1,2,1,'Example Mod 11', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>');
 INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, name, text) VALUES (1,1,1,1,'Example Mod 12', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>');
 INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, name, text) VALUES (1,1,1,1,'Example Mod 13', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>');
 INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, name, text) VALUES (1,1,1,1,'Example Mod 14', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>');
@@ -110,6 +110,18 @@ INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, na
 COMMIT;
 
 -- -----------------------------------------------------
+-- Data for table `moddb`.`modReleases`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `moddb`;
+INSERT INTO `assets` (assetId, createdByUserId, editedByUserId, statusId, assetTypeId, text) VALUES (32, 1, 1, 2, 2, '<p>Initial release.</p>');
+INSERT INTO `modReleases` (releaseId, assetId, modId, identifier, version) VALUES (1, 32, 11, 'maltiezcrossbows', 0x000100000000ffff); -- 'v1.0.0'
+INSERT INTO `modReleaseCompatibleGameVersions` (releaseId, gameVersion) VALUES (1, 0x000100120001ffff); -- 'v1.18.1'
+INSERT INTO `files` (assetId, assetTypeId, userId, name, cdnPath, size, `order`) VALUES (32, 2, 1, 'maltiezcrossbows_1.0.0.zip', 'example/maltiezcrossbows_1.0.0.zip', 1024, 0);
+
+COMMIT;
+
+-- -----------------------------------------------------
 -- Data for table `moddb`.`moderationRecords`
 -- -----------------------------------------------------
 START TRANSACTION;
@@ -125,8 +137,8 @@ COMMIT;
 START TRANSACTION;
 USE `moddb`;
 
-INSERT INTO  `comments` (assetId, userId, text) VALUES (1, 2, 'normal comment');
-INSERT INTO  `comments` (assetId, userId, text) VALUES (1, 2, 'ok comment');
-INSERT INTO  `comments` (assetId, userId, text, lastModaction, deleted) VALUES (1, 2, 'bad comment', 1, 1);
+INSERT INTO  `comments` (assetId, userId, text, textShort) VALUES (1, 2, 'normal comment', 'normal comment');
+INSERT INTO  `comments` (assetId, userId, text, textShort) VALUES (1, 2, 'ok comment', 'ok comment');
+INSERT INTO  `comments` (assetId, userId, text, textShort, lastModaction, deleted) VALUES (1, 2, 'bad comment', 'bad comment', 1, 1);
 
 COMMIT;
