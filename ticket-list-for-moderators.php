@@ -5,6 +5,7 @@
 
 if(empty($user['userId']))   showErrorPage(HTTP_UNAUTHORIZED);
 if(!canModerate(null, $user))   showErrorPage(HTTP_FORBIDDEN);
+validateUserNotBanned();
 
 require(SRC_ROOT.'/lib/moderation.php');
 

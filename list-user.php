@@ -5,7 +5,9 @@
  * @var array? $user
  */
 
-if($user['roleCode'] !== 'admin' && $user['roleCode'] !== 'moderator') showErrorPage(HTTP_FORBIDDEN);
+if(empty($user)) showErrorPage(HTTP_UNAUTHORIZED);
+if(!canModerate(null, $user)) showErrorPage(HTTP_FORBIDDEN);
+validateUserNotBanned();
 
 $searchParameters = [
 	"name" => $_GET["name"] ?? '',

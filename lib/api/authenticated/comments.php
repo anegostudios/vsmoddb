@@ -15,7 +15,7 @@ switch($urlparts[1] ?? null) {
 		validateMethod('PUT');
 		validateUserNotBanned();
 		parseRequestBody();
-		validateActionTokenAPI();
+		validateActionToken();
 
 		require(SRC_ROOT.'/lib/moderation.php');
 
@@ -69,7 +69,7 @@ switch($urlparts[1] ?? null) {
 		exit();
 
 	case 'unhide':
-		validateActionTokenAPI();
+		validateActionToken();
 		validateUserNotBanned();
 		if(!canModerate(null, $user)) fail(HTTP_FORBIDDEN, 'You may not unhide comments.');
 
@@ -81,7 +81,7 @@ switch($urlparts[1] ?? null) {
 	case null:
 		switch($_SERVER['REQUEST_METHOD']) {
 			case 'POST':
-				validateActionTokenAPI();
+				validateActionToken();
 				validateUserNotBanned();
 				validateContentType('text/html');
 
@@ -127,7 +127,7 @@ switch($urlparts[1] ?? null) {
 			case 'DELETE':
 				validateUserNotBanned();
 				parseRequestBody();
-				validateActionTokenAPI();
+				validateActionToken();
 
 				$comment = $con->getRow(<<<SQL
 					SELECT c.assetId, c.userId, a.createdByUserId AS modCreatedBy

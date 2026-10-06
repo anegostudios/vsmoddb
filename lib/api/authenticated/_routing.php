@@ -15,7 +15,7 @@ function validateUserNotBanned()
 }
 
 /** Validates the action token within the request and `fail`s with a error it is not. */
-function validateActionTokenAPI()
+function validateActionToken()
 {
 	global $user;
 	if(!isset($_REQUEST['at']) || $user['actionToken'] != $_REQUEST['at'])  fail(HTTP_FORBIDDEN, ['error' => 'Invalid action token. Need to log in again?']);

@@ -32,6 +32,7 @@ $ticket['stateFlags'] = intval($ticket['stateFlags']); // ... ffs mysqli
 
 if(!empty($_POST['resolution'])) {
 	validateActionToken();
+	validateUserNotBanned();
 	if(!canModerate(null, $user))   showErrorPage(HTTP_FORBIDDEN);
 
 	$oldMsgCount = count($messages);

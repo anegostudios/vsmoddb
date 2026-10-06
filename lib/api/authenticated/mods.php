@@ -26,7 +26,7 @@ switch($urlparts[1]) {
 
 			case 'PUT':
 				validateUserNotBanned();
-				validateActionTokenAPI();
+				validateActionToken();
 				validateContentType('text/html');
 
 				$modData = $con->getRow(<<<SQL
@@ -119,7 +119,7 @@ switch($urlparts[1]) {
 	case 'lock':
 		validateMethod('POST');
 		validateUserNotBanned();
-		validateActionTokenAPI();
+		validateActionToken();
 		if(!canModerate(null, $user)) fail(HTTP_FORBIDDEN);
 
 		$reason = $_POST['reason'] ?? '';
@@ -154,7 +154,7 @@ switch($urlparts[1]) {
 	case 'transfer':
 		validateMethod('POST');
 		validateUserNotBanned();
-		validateActionTokenAPI();
+		validateActionToken();
 
 		$newOwnerId = filter_input(INPUT_POST, 'newOwnerId', FILTER_VALIDATE_INT, [ 'options' => [ 'min_range' => 1 ]]);
 		$transferAccepted = isset($_POST['accept']) ? (filter_input(INPUT_POST, 'accept', FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? -1) : null;
@@ -295,7 +295,7 @@ switch($urlparts[1]) {
 		validateMethod('PUT');
 		validateUserNotBanned();
 		parseRequestBody();
-		validateActionTokenAPI();
+		validateActionToken();
 
 		require(SRC_ROOT.'/lib/moderation.php');
 
@@ -357,7 +357,7 @@ switch($urlparts[1]) {
 				switch($_SERVER['REQUEST_METHOD']) {
 					case 'GET':
 						validateUserNotBanned();
-						validateActionTokenAPI();
+						validateActionToken();
 						if(!canModerate(null, $user)) fail(HTTP_FORBIDDEN);
 
 						//NOTE(Rennorb): Can't use getOne here because there would be no difference between 'not found' and 'no overwrite'.
@@ -369,7 +369,7 @@ switch($urlparts[1]) {
 					case 'PUT':
 						validateUserNotBanned();
 						parseRequestBody();
-						validateActionTokenAPI();
+						validateActionToken();
 						if(!canModerate(null, $user)) fail(HTTP_FORBIDDEN);
 
 						if(empty($_POST['limit'])) $newLimit = null;
@@ -410,7 +410,7 @@ switch($urlparts[1]) {
 						validateMethod('PUT');
 						parseRequestBody();
 						validateUserNotBanned();
-						validateActionTokenAPI();
+						validateActionToken();
 		
 						$prevData = $con->getRow(<<<SQL
 							SELECT r.modId, a.createdByUserId, rr.reason AS retractionReason, lastRetractedBy.roleId IN (?,?) AS retractedByModerator
@@ -493,7 +493,7 @@ switch($urlparts[1]) {
 		if(count($urlparts) === 2) {
 			validateMethod('POST');
 			validateUserNotBanned();
-			validateActionTokenAPI();
+			validateActionToken();
 
 			$tags = filter_input(INPUT_POST, 'tags', FILTER_UNSAFE_RAW, FILTER_FORCE_ARRAY);
 			if($tags === null) fail(HTTP_BAD_REQUEST, 'Missing post param tags.');
@@ -564,7 +564,7 @@ switch($urlparts[1]) {
 			validateMethod('PUT');
 			parseRequestBody();
 			validateUserNotBanned();
-			validateActionTokenAPI();
+			validateActionToken();
 
 			$tagId = filter_var($urlparts[2], FILTER_VALIDATE_INT);
 			if($tagId === false) fail(HTTP_BAD_REQUEST, 'Malformed query param tagid.');

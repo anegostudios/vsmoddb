@@ -1,11 +1,9 @@
 <?php
 if(DB_READONLY) showReadonlyPage();
 
-if (empty($user)) {
-	header('Location: /login');
-	exit();
-}
-if ($user['roleCode'] !== 'admin' && $user['roleCode'] !== 'moderator') showErrorPage(HTTP_FORBIDDEN);
+if(empty($user))   showErrorPage(HTTP_UNAUTHORIZED);
+if(!canModerate(null, $user))  showErrorPage(HTTP_FORBIDDEN);
+validateUserNotBanned();
 
 $tagId = $_REQUEST['tagid'] ?? 0;
 

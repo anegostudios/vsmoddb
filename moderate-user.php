@@ -2,15 +2,18 @@
 if(DB_READONLY) showReadonlyPage();
 
 $userToken = $urlparts[2] ?? null;
-if(empty($userToken)) showErrorPage(HTTP_BAD_REQUEST, 'Missing usertoken.');
+if(empty($userToken)) showErrorPage(HTTP_BAD_REQUEST, 'Missing user hash.');
 
-$targetUser = getUserByHash($userToken, $con);
+validateUserNotBanned();
+
+$targetUser = getUserByHash($userToken);
 if(empty($targetUser)) showErrorPage(HTTP_NOT_FOUND, 'User not found.');
 
 if(!canModerate($targetUser, $user)) showErrorPage(HTTP_FORBIDDEN);
 
 if(isset($_POST['submit']) && $_POST['submit'] == 'ban') {
 	validateActionToken();
+
 	$postData = filter_input_array(INPUT_POST, [
 		'modreason' => ['filter' => FILTER_CALLBACK, 'options' => 'sanitizeHtml'],
 		'forever'   => FILTER_VALIDATE_BOOLEAN,

@@ -8,7 +8,7 @@ $shownUser = getUserByHash($userHash);
 if (empty($shownUser)) showErrorPage(HTTP_NOT_FOUND, 'User not found.');
 
 if (!canEditProfile($shownUser, $user)) showErrorPage(HTTP_FORBIDDEN);
-if ($user['isBanned'])  showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
+validateUserNotBanned();
 
 if (!empty($_POST['save'])) {
 	validateActionToken();

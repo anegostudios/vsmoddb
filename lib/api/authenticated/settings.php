@@ -22,7 +22,7 @@ switch($urlparts[0]) {
 	case 'consent':
 		validateMethod('PATCH');
 		parseRequestBody();
-		validateActionTokenAPI();
+		validateActionToken();
 
 		$newFlags = filter_input(INPUT_POST, 'grant', FILTER_VALIDATE_INT, [ 'options' => [ 'min' => 0 ] ]);
 		if(!$newFlags || ($newFlags & ~CONSENT__ALL))  fail(HTTP_BAD_REQUEST, 'Malformed consent flags.');
@@ -41,7 +41,7 @@ switch($urlparts[0]) {
 					if($modId === false)   fail(HTTP_BAD_REQUEST, 'Malformed id query param.');
 
 					if(count($urlparts) === 3) {
-						validateActionTokenAPI();
+						validateActionToken();
 
 						$newFlags = filter_input(INPUT_POST, 'new', FILTER_VALIDATE_INT);
 						if($newFlags === null)   fail(HTTP_BAD_REQUEST, 'Missing new settings value.');
@@ -65,7 +65,7 @@ switch($urlparts[0]) {
 					switch($urlparts[3]) {
 						case 'unfollow':
 							validateMethod('POST');
-							validateActionTokenAPI();
+							validateActionToken();
 
 							$con->execute('DELETE FROM userFollowedMods WHERE modId = ? AND userId = ?', [$modId, $user['userId']]);
 							if($con->affected_rows()) {

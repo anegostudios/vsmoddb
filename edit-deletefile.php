@@ -9,7 +9,7 @@ if (empty($user)) {
 	exit();
 }
 if (!$user['roleId']) showErrorPage(HTTP_FORBIDDEN);
-if ($user['isBanned'])  showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
+validateUserNotBanned();
 
 validateActionToken();
 

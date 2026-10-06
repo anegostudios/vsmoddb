@@ -10,8 +10,7 @@ if (empty($user)) {
 }
 
 if (!$user['roleId']) showErrorPage(HTTP_FORBIDDEN);
-
-if ($user['isBanned']) showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
+validateUserNotBanned();
 
 if (!empty($_POST['upload']) && !empty($_FILES['file'])) {
 	if (empty($_REQUEST['assettypeid'])) {

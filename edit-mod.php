@@ -10,7 +10,7 @@ if(DB_READONLY) showReadonlyPage();
 
 if (empty($user)) showErrorPage(HTTP_UNAUTHORIZED);
 if (!$user['roleId']) showErrorPage(HTTP_FORBIDDEN);
-if ($user['isBanned'])  showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
+validateUserNotBanned();
 
 require_once(SRC_ROOT.'/lib/mod.php');
 

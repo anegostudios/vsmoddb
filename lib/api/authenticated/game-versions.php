@@ -15,7 +15,7 @@ switch(count($urlparts)) {
 				if(empty($_POST['new'])) fail(HTTP_BAD_REQUEST);
 
 				if($user['roleCode'] !== 'admin') fail(HTTP_FORBIDDEN);
-				validateActionTokenAPI();
+				validateActionToken();
 				validateUserNotBanned();
 
 				$newVersion = compileSemanticVersion($_POST['new']);
@@ -53,7 +53,7 @@ switch(count($urlparts)) {
 		switch($_SERVER['REQUEST_METHOD']) {
 			case 'DELETE':
 				if($user['roleCode'] !== 'admin') fail(HTTP_FORBIDDEN);
-				validateActionTokenAPI();
+				validateActionToken();
 				validateUserNotBanned();
 
 				$targetVersion = compileSemanticVersion($urlparts[0]);

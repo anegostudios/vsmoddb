@@ -34,6 +34,7 @@ if($urlparts[0] === 'api') { // :ReservedUrlPrefixes
 	exit();
 }
 
+require(SRC_ROOT.'/lib/core-frontend.php');
 require(SRC_ROOT.'/lib/csp.php');
 
 
