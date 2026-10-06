@@ -9,4 +9,4 @@ ENV TERM xterm
 
 WORKDIR /app
 
-ENTRYPOINT ../builder.sh
+ENTRYPOINT /builder.sh

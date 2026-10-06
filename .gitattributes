@@ -1,0 +1,2 @@
+# make sure sh files are always LS regardless of OS, breaks docker on windows otherwise.
+*.sh	text eol=lf
