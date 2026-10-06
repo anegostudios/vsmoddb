@@ -6,7 +6,7 @@ BEGIN
 
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='mod' AND COLUMN_NAME='lastreleased' AND COLUMN_KEY = '') ) THEN
     ALTER TABLE `mod` MODIFY `downloads` INT NOT NULL DEFAULT 0;
     UPDATE `mod` SET comments = 0 WHERE comments IS NULL;

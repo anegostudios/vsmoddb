@@ -6,7 +6,6 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 
 
 START TRANSACTION;
-USE `moddb`;
 INSERT INTO `gameVersions` (`version`, sortIndex) VALUES (0x000100110004ffff, 0); -- 'v1.17.4'
 INSERT INTO `gameVersions` (`version`, sortIndex) VALUES (0x000100120001ffff, 1); -- 'v1.18.1'
 INSERT INTO `gameVersions` (`version`, sortIndex) VALUES (0x000100120002c001, 2); -- 'v1.18.2-rc1'
@@ -18,7 +17,6 @@ COMMIT;
 -- Data for table `moddb`.`users`
 -- -----------------------------------------------------
 START TRANSACTION;
-USE `moddb`;
 INSERT INTO `users` (userId, hash, roleId, uid, name, email, actionToken, sessionToken, sessionValidUntil, timezone, lastOnline)              VALUES (1, UNHEX(SUBSTRING(SHA2(CONCAT(1, NOW()), 512), 1, 20)), 3, '1', 'Example User'  , '1+void@localhost', '1', '1', DATE_ADD(NOW(), INTERVAL 14 DAY), '(GMT) London', NOW());
 INSERT INTO `users` (userId, hash, roleId, uid, name, email, actionToken, sessionToken, sessionValidUntil, timezone, lastOnline, bannedUntil) VALUES (2, UNHEX(SUBSTRING(SHA2(CONCAT(2, NOW()), 512), 1, 20)), 3, '2', 'Evil User'     , '2+void@localhost', '2', '2', DATE_ADD(NOW(), INTERVAL 14 DAY), '(GMT) London', NOW(), '9999-12-31');
 INSERT INTO `users` (userId, hash, roleId, uid, name, email, actionToken, sessionToken, sessionValidUntil, timezone, lastOnline)              VALUES (3, UNHEX(SUBSTRING(SHA2(CONCAT(3, NOW()), 512), 1, 20)), 2, '3', 'Moderator User', '3+void@localhost', '3', '3', DATE_ADD(NOW(), INTERVAL 14 DAY), '(GMT) London', NOW());
@@ -34,7 +32,6 @@ COMMIT;
 -- Data for table `moddb`.`mods`
 -- -----------------------------------------------------
 START TRANSACTION;
-USE `moddb`;
 INSERT INTO `mods` (assetId, urlAlias, summary, side, category, lastReleased) VALUES ( 1, 'examplemodone',    'Some Summary.', 'both',   1, CURRENT_TIMESTAMP);
 INSERT INTO `mods` (assetId, urlAlias, summary, side, category, lastReleased) VALUES ( 2, 'examplemodtwo',    'Some Summary.', 'both',   1, CURRENT_TIMESTAMP);
 INSERT INTO `mods` (assetId, urlAlias, summary, side, category, lastReleased) VALUES ( 3, 'examplemodthree',  'Some Summary.', 'both',   1, CURRENT_TIMESTAMP);
@@ -74,7 +71,6 @@ COMMIT;
 -- Data for table `moddb`.`assets`
 -- -----------------------------------------------------
 START TRANSACTION;
-USE `moddb`;
 INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, name, text) VALUES (2,1,2,1,'Example Mod 1', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>');
 INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, name, text) VALUES (1,1,4,1,'Example Mod 2', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>');
 INSERT INTO `assets` (createdByUserId, editedByUserId, statusId, assetTypeId, name, text) VALUES (1,1,2,1,'Example Mod 3 loooonnng name name name name', '<p style="text-align: center;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque leo sem, ultrices vel enim vel, pretium fringilla nisi. Nunc ac massa hendrerit, semper est sed, blandit eros. Sed at placerat lorem, viverra lacinia nibh. Mauris eu nunc a augue rhoncus pharetra ac eu nulla. Fusce elementum sapien sit amet sapien pellentesque, eget porttitor quam eleifend. Maecenas imperdiet justo dolor, id bibendum purus ornare vel. Morbi commodo porttitor nisi, sed finibus eros blandit eget. Nulla quis rhoncus urna.</p>');
@@ -113,7 +109,6 @@ COMMIT;
 -- Data for table `moddb`.`moderationRecords`
 -- -----------------------------------------------------
 START TRANSACTION;
-USE `moddb`;
 INSERT INTO  `moderationRecords` (targetUserId, kind, recordId, until, moderatorId, reason) VALUES (2, 2, 2, '9999-12-31', 3, '');
 INSERT INTO  `moderationRecords` (targetUserId, kind, recordId, until, moderatorId, reason) VALUES (2, 1, 3, '9999-12-31', 3, 'Comment: bad comment');
 
@@ -123,10 +118,9 @@ COMMIT;
 -- Data for table `moddb`.`comments`
 -- -----------------------------------------------------
 START TRANSACTION;
-USE `moddb`;
 
-INSERT INTO  `comments` (assetId, userId, text) VALUES (1, 2, 'normal comment');
-INSERT INTO  `comments` (assetId, userId, text) VALUES (1, 2, 'ok comment');
-INSERT INTO  `comments` (assetId, userId, text, lastModaction, deleted) VALUES (1, 2, 'bad comment', 1, 1);
+INSERT INTO  `comments` (assetId, userId, text, textShort) VALUES (1, 2, 'normal comment', 'normal comment');
+INSERT INTO  `comments` (assetId, userId, text, textShort) VALUES (1, 2, 'ok comment', 'ok comment');
+INSERT INTO  `comments` (assetId, userId, text, textShort, lastModaction, deleted) VALUES (1, 2, 'bad comment', 'bad comment', 1, 1);
 
 COMMIT;

@@ -5,7 +5,7 @@ DELIMITER $$
 CREATE OR REPLACE PROCEDURE upgrade_database()
 BEGIN
 
-IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='comments' AND COLUMN_NAME='responseTo') ) THEN
 	ALTER TABLE `comments` ADD COLUMN `responseTo` INT NULL AFTER `assetId`;
 	ALTER TABLE `comments` ADD COLUMN `conversationRoot` INT NULL AFTER `responseTo`;

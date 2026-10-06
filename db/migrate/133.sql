@@ -5,7 +5,7 @@ DELIMITER $$
 CREATE OR REPLACE PROCEDURE upgrade_database()
 BEGIN
 
-IF NOT EXISTS( (SELECT * FROM information_schema.STATISTICS WHERE TABLE_SCHEMA='moddb' AND
+IF NOT EXISTS( (SELECT * FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='fileDownloadTracking' AND COLUMN_NAME='ipAddress' and INDEX_NAME='identifier') ) THEN
 
 ALTER TABLE `fileDownloadTracking`

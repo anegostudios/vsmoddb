@@ -5,7 +5,7 @@ DELIMITER $$
 CREATE OR REPLACE PROCEDURE upgrade_database()
 BEGIN
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='modReleases' AND COLUMN_NAME='retractionReason') ) THEN
 	CREATE TABLE `modReleaseRetractions` (
 		`releaseId`      INT       NOT NULL,

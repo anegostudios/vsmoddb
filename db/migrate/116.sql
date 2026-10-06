@@ -4,7 +4,7 @@ CREATE OR REPLACE PROCEDURE upgrade_database()
 BEGIN
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='follow') ) THEN
     ALTER TABLE `follow` CHANGE COLUMN `modid` `modId` INT NOT NULL;
     ALTER TABLE `follow` CHANGE COLUMN `userid` `userId` INT NOT NULL;
@@ -20,7 +20,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `follow` RENAME TO `userFollowedMods`;
 END IF;
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='teammember') ) THEN
     ALTER TABLE `teammember` CHANGE COLUMN `teammemberid` `teamMemberId` INT NOT NULL AUTO_INCREMENT;
     ALTER TABLE `teammember` CHANGE COLUMN `modid` `modId` INT NOT NULL;
@@ -38,7 +38,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `teammember` RENAME TO `modTeamMembers`;
 END IF;
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='downloadip') ) THEN
     ALTER TABLE `downloadip` CHANGE COLUMN `ipaddress` `ipAddress` VARCHAR(255) NOT NULL;
     ALTER TABLE `downloadip` CHANGE COLUMN `fileid` `fileId` INT NOT NULL;
@@ -54,7 +54,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 END IF;
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='notification') ) THEN
     ALTER TABLE `notification` CHANGE COLUMN `notificationid` `notificationId` INT NOT NULL AUTO_INCREMENT;
     DELETE FROM `notification` WHERE `userid` IS NULL;
@@ -70,13 +70,13 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `notification` RENAME TO `notifications`;
 END IF;
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='language') ) THEN
     DROP TABLE `language`;
 END IF;
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='role') ) THEN
     ALTER TABLE `role` CHANGE COLUMN `roleid` `roleId` INT NOT NULL AUTO_INCREMENT;
     ALTER TABLE `role` MODIFY COLUMN `code` VARCHAR(255) NOT NULL;
@@ -91,7 +91,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `role` RENAME TO `roles`;
 END IF;
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='changelog') ) THEN
     ALTER TABLE `changelog` CHANGE COLUMN `changelogid` `changelogId` INT NOT NULL AUTO_INCREMENT;
 
@@ -116,13 +116,13 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `changelog` RENAME TO `changelogs`;
 END IF;
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='tagtype') ) THEN
     DROP TABLE `tagtype`;
 END IF;
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='tag') ) THEN
     ALTER TABLE `tag` CHANGE COLUMN `tagid` `tagId` INT NOT NULL AUTO_INCREMENT;
     
@@ -151,7 +151,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `tag` RENAME TO `tags`;
 END IF;
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='assettag') ) THEN
     ALTER TABLE `assettag` DROP COLUMN `assettagid`;
 
@@ -183,7 +183,7 @@ END IF;
 
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='comment') ) THEN
     ALTER TABLE `comment` CHANGE COLUMN `commentid` `commentId` INT NOT NULL AUTO_INCREMENT;
 
@@ -217,7 +217,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 END IF;
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='user') ) THEN
     ALTER TABLE `user` CHANGE COLUMN `userid` `userId` INT NOT NULL AUTO_INCREMENT;
 
@@ -285,7 +285,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 END IF;
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='status') ) THEN
     ALTER TABLE `status` CHANGE COLUMN `statusid` `statusId` INT NOT NULL AUTO_INCREMENT;
 
@@ -299,7 +299,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     -- ALTER TABLE `status` RENAME TO `status`;
 END IF;
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='moderationrecord') ) THEN
     ALTER TABLE `moderationrecord` CHANGE COLUMN `actionid` `actionId` INT NOT NULL AUTO_INCREMENT;
 
@@ -328,7 +328,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 END IF;
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='release') ) THEN
     ALTER TABLE `release` CHANGE COLUMN `releaseid` `releaseId` INT NOT NULL AUTO_INCREMENT;
 
@@ -365,7 +365,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
     ALTER TABLE `release` RENAME TO `modReleases`;
 END IF;
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='file') ) THEN
     UPDATE `file` f JOIN asset a ON a.assetid = f.assetid SET f.assettypeid = a.assettypeid; 
     UPDATE `file` f1 
@@ -436,7 +436,7 @@ END IF;
 DROP TABLE IF EXISTS `assettype`;
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='asset') ) THEN
     ALTER TABLE `asset` CHANGE COLUMN `assetid` `assetId` INT NOT NULL AUTO_INCREMENT;
 
@@ -472,7 +472,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 END IF;
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='mod') ) THEN
     ALTER TABLE `mod` CHANGE COLUMN `modid` `modId` INT NOT NULL AUTO_INCREMENT;
 
@@ -530,7 +530,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 END IF;
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='GameVersions') ) THEN
  ALTER TABLE `ModPeekResult` RENAME TO `modPeekResults`;
  ALTER TABLE `GameVersions` RENAME TO `gameVersions`;

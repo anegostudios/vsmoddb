@@ -5,7 +5,7 @@ DELIMITER $$
 CREATE OR REPLACE PROCEDURE upgrade_database()
 BEGIN
 
-IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='modReleases' AND COLUMN_NAME='retractionReason') ) THEN
 	ALTER TABLE `modReleases` ADD COLUMN `retractionReason` TEXT CHARACTER SET utf8mb4 NULL AFTER `detailText`;
 END IF;

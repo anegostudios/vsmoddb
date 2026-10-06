@@ -11,7 +11,7 @@ BEGIN
 END;
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND TABLE_NAME='teammembers'
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND TABLE_NAME='teammembers'
   AND COLUMN_NAME='transferownership') ) THEN
   START TRANSACTION;
     -- these should already exist, but just in case we create invite notifications for non-accepted teammembers before dropping the 'accepted' column

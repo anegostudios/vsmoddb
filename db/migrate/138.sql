@@ -18,7 +18,7 @@ DELIMITER $$
 CREATE OR REPLACE PROCEDURE upgrade_database()
 BEGIN
 
-IF EXISTS( (SELECT * FROM information_schema.STATISTICS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='changelogs') ) THEN
 
 RENAME TABLE `changelogs` TO `_changelogs`; -- delete once migration is completely done.

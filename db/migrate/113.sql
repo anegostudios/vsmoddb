@@ -7,7 +7,7 @@ BEGIN
 
 
 
-IF NOT EXISTS( (SELECT * FROM information_schema.STATISTICS WHERE TABLE_SCHEMA='moddb' AND
+IF NOT EXISTS( (SELECT * FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='comment' AND COLUMN_NAME='created' and INDEX_NAME='created') ) THEN
  ALTER TABLE `comment` ADD INDEX `created`(`created`);
 END IF;

@@ -18,7 +18,7 @@ DROP PROCEDURE IF EXISTS upgrade_database $$
 CREATE PROCEDURE upgrade_database()
 BEGIN
 
-IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND TABLE_NAME='file'
+IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND TABLE_NAME='file'
 	AND COLUMN_NAME='hasthumbnail') ) THEN
 		ALTER TABLE moddb.file ADD hasthumbnail BOOL NOT NULL DEFAULT 0 AFTER `type`; -- could maybe be merged with type
 END IF;
@@ -111,13 +111,13 @@ CREATE PROCEDURE upgrade_database()
 BEGIN
 
 
-IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND TABLE_NAME='file'
+IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND TABLE_NAME='file'
 	AND COLUMN_NAME='cdnpath') ) THEN
 		ALTER TABLE moddb.file  RENAME COLUMN thumbnailfilename to cdnpath;
     ALTER TABLE moddb.file ADD INDEX `cdnpathidx` (`cdnpath`); -- used for fast download pingback
 END IF;
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND TABLE_NAME='mod'
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND TABLE_NAME='mod'
 	AND COLUMN_NAME='logofilename') ) THEN
 		ALTER TABLE moddb.mod  DROP COLUMN logofilename;
 END IF;
@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`modpeek_result` (
   PRIMARY KEY (`fileid`))
 ENGINE = InnoDB;
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND TABLE_NAME='release'
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND TABLE_NAME='release'
 	AND COLUMN_NAME='detectedmodidstr') ) THEN
     -- transfer over the modpeek info
     INSERT INTO modpeek_result (fileid, created, detectedmodidstr, detectedmodversion)

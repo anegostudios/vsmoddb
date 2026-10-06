@@ -5,7 +5,7 @@ DELIMITER $$
 CREATE OR REPLACE PROCEDURE upgrade_database()
 BEGIN
 
-IF NOT EXISTS( (SELECT * FROM information_schema.STATISTICS WHERE TABLE_SCHEMA='moddb' AND
+IF NOT EXISTS( (SELECT * FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='notifications' AND INDEX_NAME='userid_read_created') ) THEN
 
   CREATE INDEX userid_read_created ON notifications(userId, `read`, created);

@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS `ModReleaseCompatibleGameVersions` (
 ENGINE = InnoDB;
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='modversioncached') ) THEN
  START TRANSACTION;
     ALTER TABLE `modversioncached` ADD COLUMN `gameVersion` BIGINT UNSIGNED NOT NULL;
@@ -132,7 +132,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
 END IF;
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='majormodversioncached') ) THEN
  START TRANSACTION;
     DELETE FROM `majormodversioncached` WHERE majorversionid IS NULL; -- there are some dead entries that wll cause issues when adding the PK
@@ -182,7 +182,7 @@ IF EXISTS( (SELECT 1 FROM `tag` WHERE `assettypeid` = 2) ) THEN
   COMMIT;
 END IF;
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='release' AND COLUMN_NAME='modversion' AND DATA_TYPE='varchar') ) THEN
  START TRANSACTION;
     ALTER TABLE `release` CHANGE COLUMN `modversion` `_modversion` VARCHAR(50) NULL;
@@ -204,7 +204,7 @@ IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' 
   COMMIT;
 END IF;
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='modpeek_result' AND COLUMN_NAME='detectedmodversion' AND DATA_TYPE='varchar') ) THEN
  START TRANSACTION;
     ALTER TABLE `modpeek_result` CHANGE COLUMN `detectedmodversion` `_detectedmodversion` VARCHAR(255);

@@ -5,7 +5,7 @@ DELIMITER $$
 CREATE OR REPLACE PROCEDURE upgrade_database()
 BEGIN
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='notifications' AND COLUMN_NAME='kind' and DATA_TYPE='enum') ) THEN
 	ALTER TABLE `notifications` ADD COLUMN `kind_` TINYINT NULL AFTER `kind`;
 	UPDATE `notifications`

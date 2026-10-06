@@ -6,7 +6,7 @@ BEGIN
 
 
 
-IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='mod' AND COLUMN_NAME='logofileid') ) THEN
     ALTER TABLE moddb.`mod` CHANGE COLUMN logofileid cardlogofileid INT NULL;
     ALTER TABLE moddb.`mod` ADD embedlogofileid INT NULL AFTER cardlogofileid;

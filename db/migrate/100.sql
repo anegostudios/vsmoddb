@@ -5,7 +5,7 @@ CREATE PROCEDURE upgrade_database()
 BEGIN
 
 
-IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND TABLE_NAME='user'
+IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND TABLE_NAME='user'
 	AND COLUMN_NAME='banneduntil') ) THEN
 		ALTER TABLE moddb.user ADD banneduntil DATETIME NULL;
 END IF;
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `moddb`.`moderationrecord` (
 ENGINE = InnoDB;
 
 
-IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND TABLE_NAME='comment'
+IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND TABLE_NAME='comment'
 	AND COLUMN_NAME='lastmodaction') ) THEN
 		ALTER TABLE moddb.comment ADD lastmodaction INT NULL;
 		ALTER TABLE moddb.comment ADD deleted BOOL NOT NULL DEFAULT 0;

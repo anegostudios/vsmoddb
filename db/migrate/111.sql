@@ -7,7 +7,7 @@ BEGIN
 
 
 
-IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='moddb' AND
+IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=(SELECT DATABASE()) AND
  TABLE_NAME='moderationrecord' AND COLUMN_NAME='recordid') ) THEN
   INSERT INTO `status` (`statusid`, `code`, `name`, `created`, `sortorder`)
     VALUES (4, 'locked', 'Locked', NOW(), 4);
