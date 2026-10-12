@@ -48,7 +48,7 @@ $ok = $con->execute(<<<SQL
     ) + 
     (
         (COALESCE(c1.comments,  0) + $smoothingBias)
-      / (COALESCE(c2.comments, 0)  + $smoothingBias)
+      / (COALESCE(c2.comments,  0) + $smoothingBias)
     ) * 5 - 6
   )
 SQL);

@@ -315,9 +315,10 @@ function queryModSearch($searchParams)
 					case 'c': $value = 'Code'; break;
 					default: assert(false, "Invalid kind: $value");
 				}
+				$statusFilter = (!empty($user) && canModerate(null, $user)) ? '' : "AND r.status = ".RELEASE_STATUS_RELEASED;
 				//TODO(Rennorb) @cleanup @legacy: Old mods don't have this information set, they wont match this filter.
 				$joinClauses .= <<<SQL
-					JOIN modReleases r ON r.modId = m.modId
+					JOIN modReleases r ON r.modId = m.modId $statusFilter
 					JOIN files fi ON fi.assetId = r.assetId
 					JOIN modPeekResults mpr on mpr.fileId = fi.fileId AND mpr.type = '$value'
 				SQL; // @security: $value can only be one of the specified strings, therefore its sql inert.

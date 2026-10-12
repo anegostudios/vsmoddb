@@ -244,7 +244,7 @@
 				<tbody>
 				{if !empty($releases)}
 					{foreach from=$releases item=release}
-						<tr data-assetid="{$release['assetId']}" {$release['retractionReason'] ? 'class="retracted"' : ''}>
+						<tr data-assetid="{$release['assetId']}" {$release['status'] != RELEASE_STATUS_RELEASED ? 'class="'.stringifyReleaseStatusInternal($release['status']).'"' : ''}>
 							<td>
 								{if isset($user) && (!$release['retractionReason'] || canModerate(null, $user)) && canEditMod($asset, $user)}
 									<a style="display:block;" href="/edit/release?assetid={$release['assetId']}">{formatSemanticVersion($release['version'])}</a>
@@ -264,11 +264,13 @@
 							<td>{if !empty($release['file'])}{intval($release['file']['downloads'])}{/if}</td>
 							<td>{fancyDate($release['created'])}</td>
 							<td>{if $release['text'] || $release['retractionReason']}<label for="cl-trigger-{$release['assetId']}" class="button square cl-trigger">Show</label>{else}Empty{/if}</td>
-							{if !$release['retractionReason']}
+							{if $release['status'] === RELEASE_STATUS_RELEASED}
 								<td>{if !empty($release['file'])}<a class="button square ico-button mod-dl" href="{formatDownloadTrackingUrl($release['file'])}">{escapeHtml($release['file']['name'])}</a>{/if}</td>
-							{if $shouldShowOneClickInstall}<td>{if !empty($release['identifier'])}{include file="button-one-click-install"}{/if}</td>{/if}
+								{if $shouldShowOneClickInstall}<td>{if !empty($release['identifier'])}{include file="button-one-click-install"}{/if}</td>{/if}
+							{elseif $release['status'] === RELEASE_STATUS_RETRACTED}
+								<td {if $shouldShowOneClickInstall}colspan="2"{/if}><?= stringifyReleaseStatus($release['status']) ?></td>
 							{else}
-								<td {if $shouldShowOneClickInstall} colspan="2"{/if}>Release Retracted</td>
+								<td {if $shouldShowOneClickInstall}colspan="2"{/if}><a href="/t/{$release['requestId']}" target="_blank"><?= stringifyReleaseStatus($release['status']) ?></a></td>
 							{/if}
 						</tr>
 						{if $release['text'] || $release['retractionReason']}

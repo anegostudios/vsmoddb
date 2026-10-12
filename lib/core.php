@@ -266,6 +266,8 @@ function createADOConnection()
 {
 	$con = ADONewConnection("mysqli");
 
+	$con->setConnectionParameter(MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1); // Return number types from queries, don't return strings for everything.
+
 	$result = $con->NConnect(DB_HOST, DB_USER, DB_PASS, DB_DATABASE);
 
 	if (!$result) {
@@ -421,6 +423,7 @@ const AUDIT_LOG_KIND_FILE_DELETE        = 66;
 //...
 const AUDIT_LOG_KIND_REPORT_CREATE        = 70;
 const AUDIT_LOG_KIND_REPORT_RESOLVE       = 71;
+const AUDIT_LOG_KIND_REPORT_REOPEN        = 72;
 //...
 // AUDIT_LOG_KIND_MAX = 256
 
@@ -1214,6 +1217,22 @@ function stringifyReleaseStatus($status)
 		case RELEASE_STATUS_RELEASED:         return 'Released';
 		case RELEASE_STATUS_RETRACTED:        return 'Retracted';
 		case RELEASE_STATUS_NOT_ACCEPTABLE:   return 'Not Acceptable';
+		default: return strval($status);
+	}
+}
+
+/**
+ * @param int $status
+ * @return string
+ */
+function stringifyReleaseStatusInternal($status)
+{
+	switch($status) {
+		case RELEASE_STATUS_AWAITING_REVIEW:  return 'awaiting-review';
+		case RELEASE_STATUS_AWAITING_CHANGES: return 'awaiting-changes';
+		case RELEASE_STATUS_RELEASED:         return 'released';
+		case RELEASE_STATUS_RETRACTED:        return 'retracted';
+		case RELEASE_STATUS_NOT_ACCEPTABLE:   return 'not-acceptable';
 		default: return strval($status);
 	}
 }

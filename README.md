@@ -381,6 +381,19 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 	- `404`: The specified version does not exist.
 	- `200`: Successfully deleted the specified game-version.
 
+### /api/v2/tickets/{requestId}
+- `post`: `auth` `at`
+	- Args:
+		- Path arg `{requestId}`
+		- Post arg `message`: The raw html message
+		- Optional post arg `newState`: Either `solved`, `requireAction`, `wontFix`, `open` or `spam`. Spam does not require a message.
+		  Posting `open` to a request will reopen a ticket or indicate that the required action has been performed.
+		- Optional post arg `sendNotification`: Moderators may choose wether or not a notification is sent to the reporter.
+	- `400`: Argument is malformed or missing.
+	- `403`: Active user is currently restricted or does not have permissions to interact with the request.
+	- `404`: The specified request does not exist.
+	- `200`: Successfully posted new message to the ticket.
+
 # Development setup
 Requirements:
 - [Docker](https://www.docker.com/)
