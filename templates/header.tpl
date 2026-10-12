@@ -27,7 +27,7 @@
 	<link nonce="{$cspNonce}" href="/web/js/tinymce/skins/ui/oxide/content.min.css?v=2" as="style">
 	<link nonce="{$cspNonce}" href="/web/css/editor_content.css?ver=4" as="style">
 
-	<link nonce="{$cspNonce}" href="/web/css/style.css?v=40245af2fa2561bd245b593e1b58e7fb" rel="stylesheet" type="text/css">
+	<link nonce="{$cspNonce}" href="/web/css/style.css?v=cad87ea9294803b0a6d4d3885142b34e" rel="stylesheet" type="text/css">
 
 	<? if(!empty(CDN_ASSETSERVER_BASE_URL) && str_starts_with(CDN_ASSETSERVER_BASE_URL, 'http')): ?><link rel="dns-prefetch" href="<?= CDN_ASSETSERVER_BASE_URL ?>" /><? endif; ?>
 

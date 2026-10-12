@@ -55,29 +55,35 @@ const MOD_REQUEST_FLAG_CLOSED               = 1 << 7;
 
 
 /**
+ * @param int $requestKind
  * @param int $flags
  * @return string
  */
-function stringifyModerationRequestStateForUser($flags)
+function _stringifyModerationRequestStateForUser($requestKind, $flags)
 {
 	$result = 'Open';
-	if($flags & MOD_REQUEST_FLAG_WONTFIX) $result = 'Wont Fix';
-	else if($flags & MOD_REQUEST_FLAG_SPAM) $result = 'Closed';
-	else if($flags & MOD_REQUEST_FLAG_CLOSED) $result = 'Solved';
+	if($flags & MOD_REQUEST_FLAG_WONTFIX) $result = $requestKind === MOD_REQUEST_KIND_MANUAL_REVIEW ? 'Rejected' : 'Wont Fix';
+	else if($flags & MOD_REQUEST_FLAG_SPAM) $result = $requestKind === MOD_REQUEST_KIND_MANUAL_REVIEW ? 'Rejected' : 'Closed';
+	else if($flags & MOD_REQUEST_FLAG_CLOSED) $result = $requestKind === MOD_REQUEST_KIND_MANUAL_REVIEW ? 'Granted' : 'Solved';
 	else if($flags & MOD_REQUEST_FLAG_USER_ACTION_REQUIRED) $result = 'User Action Required';
 	return $result;
 }
 
 /**
+ * @param int $requestKind
  * @param int $flags
  * @return string
  */
-function stringifyModerationRequestState($flags)
+function stringifyModerationRequestState($requestKind, $flags)
 {
+	global $user;
+	if(canModerate(null, $user)) return _stringifyModerationRequestStateForUser($requestKind, $flags);
+	
+	// else
 	$result = 'Open';
-	if($flags & MOD_REQUEST_FLAG_WONTFIX) $result = 'Wont Fix';
-	else if($flags & MOD_REQUEST_FLAG_SPAM) $result = 'Spam';
-	else if($flags & MOD_REQUEST_FLAG_CLOSED) $result = 'Solved';
+	if($flags & MOD_REQUEST_FLAG_WONTFIX) $result = $requestKind === MOD_REQUEST_KIND_MANUAL_REVIEW ? 'Rejected' : 'Wont Fix';
+	else if($flags & MOD_REQUEST_FLAG_SPAM) $result = $requestKind === MOD_REQUEST_KIND_MANUAL_REVIEW ? 'Rejected' : 'Spam';
+	else if($flags & MOD_REQUEST_FLAG_CLOSED) $result = $requestKind === MOD_REQUEST_KIND_MANUAL_REVIEW ? 'Granted' : 'Solved';
 	else if($flags & MOD_REQUEST_FLAG_USER_ACTION_REQUIRED) $result = 'User Action Required';
 	return $result;
 }
@@ -157,3 +163,6 @@ function stringifyModerationRequestCategory($request)
 }
 
 
+
+const REPORT_EVENT_CHANGE_STAUS = 1;
+const REPORT_EVENT_MESSAGE      = 2;

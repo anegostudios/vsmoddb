@@ -21,20 +21,22 @@ $pushedErrorForCurrentFile = false; // This is here so we can push the errors ev
 
 // /edit/release/?assetid=32 (edit existing release)
 if(!empty($_REQUEST['assetid'])) {
-	$existingRelease = $con->getRow(<<<SQL
+	$existingRelease = $con->getRow("
 		SELECT a.assetId, a.text, a.numSaved, r.*,
 			createdBy.name AS createdByUsername,
 			lastEditedBy.name AS lastEditedByUsername,
 			rr.reason AS retractionReason,
-			lastRetractedBy.roleId IN (?,?) AS retractedByModerator
+			lastRetractedBy.roleId IN (?,?) AS retractedByModerator,
+			mr.requestId
 		FROM modReleases r
 		JOIN assets a ON a.assetId = r.assetId
 		LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
 		LEFT JOIN users createdBy ON createdBy.userId = a.createdbyuserid
 		LEFT JOIN users lastEditedBy ON lastEditedBy.userId = a.editedbyuserid
 		LEFT JOIN users lastRetractedBy ON lastRetractedBy.userId = rr.lastModifiedBy
+		LEFT JOIN moderationRequests mr ON mr.kind = ".MOD_REQUEST_KIND_MANUAL_REVIEW." AND mr.referenceId = r.releaseId
 		WHERE r.assetId = ?
-	SQL, [ROLE_ADMIN, ROLE_MODERATOR, $_REQUEST['assetid']]);
+	", [ROLE_ADMIN, ROLE_MODERATOR, $_REQUEST['assetid']]);
 
 	if($existingRelease) {
 		$targetMod = $con->getRow(<<<SQL
@@ -63,10 +65,7 @@ if(!canEditMod($targetMod, $user))   showErrorPage(HTTP_FORBIDDEN);
 // Actions
 //
 
-if($existingRelease && $existingRelease['retractionReason']) {
-	addMessage(MSG_CLASS_WARN.' permanent', "This release has been retracted!");
-}
-else if(!empty($_POST['save'])) {
+if(!$existingRelease && !empty($_POST['save'])) {
 	validateActionToken();
 
 	$oldMsgCount = count($messages);
@@ -254,6 +253,10 @@ else if(!empty($_POST['save'])) {
 //
 
 if($existingRelease) {
+	switch($existingRelease['status']) {
+		case RELEASE_STATUS_AWAITING_CHANGES: addMessage(MSG_CLASS_WARN.' permanent', "The reviewer has requested changes to this release."); break;
+	}
+
 	$files = $con->getAll(<<<SQL
 		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize, mpr.capabilities
 		FROM files f

@@ -12,7 +12,7 @@
 		<span>
 			<a href="{formatModPath($mod)}#tab-files">{$mod["name"]}</a>
 		</span> / 
-		<span>{$release['assetId'] ? ($release['status'] == RELEASE_STATUS_AWAITING_REVIEW ? 'Edit Release (Awaiting Review)' : 'Edit Release') : 'Add new Release'}</span>
+		<span>{$release['assetId'] ? 'Edit Release' : 'Add new Release'}</span>
 	</h2>
 
 	<form method="post" name="form1" enctype="multipart/form-data" autocomplete="off" class="flex-list are-you-sure">
@@ -166,25 +166,48 @@
 </div>
 
 <div class="buttons">
-	{if !$release['retractionReason']}
-		{if !$release['assetId'] && $files && ($files[0]['capabilities'] & MOD_CAPS_REQUIRING_REVIEW)}
+	<? if($release['assetId']) \{
+		switch($release['status']) \{
+			case RELEASE_STATUS_AWAITING_REVIEW: ?>
+				<div class="bg-warning" style="width:100%;text-align: center;"><a href="/t/<?= $release['requestId'] ?>">Currently awaiting review<a>, cannot be edited.</div>
+				<? break;
+
+			case RELEASE_STATUS_AWAITING_CHANGES: ?>
+				<a class="button large submit shine btn-submit" href="javascript:submitForm(0)">Submit Changes</a>
+				<a class="button large submit shine btn-submit" href="javascript:submitForm(1)">Submit Changes + Back</a>
+				<? break;
+
+			case RELEASE_STATUS_RELEASED: ?>
+				<a class="button large submit shine btn-submit" href="javascript:submitForm(0)">Save</a>
+				<a class="button large submit shine btn-submit" href="javascript:submitForm(1)">Save + Back</a>
+				<button class="button large btndelete shine" style="margin-left:auto;padding:.25em;" data-opens-dialog="retract-mdl" onclick="return false;">Retract Release</button>
+				<? break;
+
+			case RELEASE_STATUS_RETRACTED:
+				if(!$release['retractedByModerator'] || canModerate(null, $user)): ?>
+					<a class="button large submit shine btn-submit" href="javascript:submitForm(0)">Save</a>
+					<a class="button large submit shine btn-submit" href="javascript:submitForm(1)">Save + Back</a>
+					<button class="button large btndelete shine" style="margin-left:auto;padding:.25em;" data-opens-dialog="retract-mdl" onclick="return false;">Update Retraction Message</button>
+				<? else: ?>
+					<div class="bg-warning" style="width:100%;text-align: center;">Release retracted by moderator, cannot be edited.</div>
+				<? endif;
+				break;
+
+			case RELEASE_STATUS_NOT_ACCEPTABLE: ?>
+				<div class="bg-warning" style="width:100%;text-align: center;"><a href="/t/<?= $release['requestId'] ?>">Deemed unacceptable</a>, cannot be edited.</div>
+				<? break;
+		}
+	}
+	else \{
+		if($files && ($files[0]['capabilities'] & MOD_CAPS_REQUIRING_REVIEW)): ?>
 			<a class="button large submit shine btn-submit" href="javascript:submitForm(0)">Submit for Review</a>
 			<a class="button large submit shine btn-submit" href="javascript:submitForm(1)">Submit for Review + Back</a>
-		{else}
+		<? else: ?>
 			<a class="button large submit shine btn-submit" href="javascript:submitForm(0)">Save</a>
 			<a class="button large submit shine btn-submit" href="javascript:submitForm(1)">Save + Back</a>
-		{/if}
-	{/if}
-
-	{if $release['assetId']}
-		{if !$release['retractionReason'] || !$release['retractedByModerator'] || canModerate(null, $user)}
-			<button class="button large btndelete shine" style="margin-left:auto;padding:.25em;" data-opens-dialog="retract-mdl" onclick="return false;">{$release['retractionReason'] ? 'Update Retraction Message' : 'Retract Release'}</button>
-		{else}
-			<div class="bg-warning" style="width:100%;text-align: center;">Release retracted by moderator, cannot be edited.</div>
-		{/if}
-	{else}
+		<? endif; ?>
 		<div class="flex-spacer not-mobile"></div>
-	{/if}
+	<? } ?>
 </div>
 
 {if $release['assetId']}

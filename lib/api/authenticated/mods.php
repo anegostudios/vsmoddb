@@ -425,6 +425,13 @@ switch($urlparts[1]) {
 
 						if($modId !== $prevData['modId'])   fail(HTTP_BAD_REQUEST, 'Release does not belong to mod.');
 
+						switch($prevData['status']) {
+							case RELEASE_STATUS_RELEASED:
+							case RELEASE_STATUS_RETRACTED:
+								break; /* ok */
+
+							default:   fail(HTTP_BAD_REQUEST, 'This release is in a state where it cannot be retracted.');
+						}
 						// Moderators can overwrite retraction reasons.
 						if($prevData['retractedByModerator'] && !canModerate(null, $user))   fail(HTTP_BAD_REQUEST, 'This release is already retracted.');
 
@@ -460,15 +467,14 @@ switch($urlparts[1]) {
 								(
 									SELECT r.created
 									FROM modReleases r
-									LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
-									WHERE r.modId = m.modId AND rr.reason IS NULL
+									WHERE r.modId = m.modId AND r.status = ?
 									ORDER BY r.created DESC
 									LIMIT 1
 								),
 								m.created
 							)
 							WHERE m.modId = ?;
-						SQL, [$modId]);
+						SQL, [RELEASE_STATUS_RELEASED, $modId]);
 
 						$logFlags = canModerate(null, $user) ? AUDIT_LOG_FLAG_MODACTION : 0; // @correctness: this needs to filter out team members.
 						if(!$prevData['retractionReason']) {

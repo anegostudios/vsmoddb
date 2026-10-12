@@ -5,11 +5,7 @@ function listMod($modid)
 	global $con;
 
 	if ($modid != "" . intval($modid)) {
-		$modid = $con->getOne(<<<SQL
-			SELECT r.modId FROM modReleases r
-			LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
-			WHERE r.identifier = ? AND rr.reason IS NULL
-		SQL, array($modid));
+		$modid = $con->getOne("SELECT modId FROM modReleases WHERE identifier = ? AND status = ".RELEASE_STATUS_RELEASED, array($modid));
 	}
 
 	$row = $con->getRow("
@@ -50,11 +46,10 @@ function listMod($modid)
 		join assets a on a.assetId = r.assetId
 		left join files f on f.assetId = r.assetId
 		left join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
-		left join modReleaseRetractions rr on rr.releaseId = r.releaseId
-		where modId = ? AND rr.reason IS NULL
+		where modId = ? AND r.status = ?
 		group by r.releaseId
 		order by r.created desc
-	SQL, array($row['modId']));
+	SQL, array($row['modId'], RELEASE_STATUS_RELEASED));
 
 	$releases = array();
 	foreach ($rrows as $release) {
@@ -225,13 +220,11 @@ function listMods()
 			mods `mod` 
 			join assets asset on (`mod`.assetId = asset.assetId)
 			join users user on (asset.createdByUserId = user.userId)
-			left join modReleases r on r.modId = `mod`.modId
-			left join modReleaseRetractions rr on rr.releaseId = r.releaseId
+			left join modReleases r on r.modId = `mod`.modId AND r.status = ".RELEASE_STATUS_RELEASED."
 			left join files as logofileExternal on logofileExternal.fileId = mod.embedLogoFileId
 			left join modTags mt on mt.modId = mod.modId and mt.votes >= 0
 			left join tags t on t.tagId = mt.tagId
-		where rr.reason is null
-		" . (count($wheresql) ? " and " . implode(" and ", $wheresql) : "") . "
+		" . (count($wheresql) ? " where " . implode(" and ", $wheresql) : "") . "
 		group by `mod`.modId
 		order by $orderBy $orderDirection
 		$limitSql
@@ -300,8 +293,7 @@ function listOutOfDateMods($currentModVersions) {
 		from modReleases r
 		join modReleaseCompatibleGameVersions cgv on cgv.releaseId = r.releaseId
 		left join files f on f.assetId = r.assetId
-		left join modReleaseRetractions rr on rr.releaseId = r.releaseId
-		where r.identifier in ($modIdStrParams) and rr.reason is null
+		where r.identifier in ($modIdStrParams) and r.status = ".RELEASE_STATUS_RELEASED."
 		group by r.releaseId
 		order by r.identifier, r.version desc
 	", $modIdStrs);

@@ -12,7 +12,7 @@ validateUserNotBanned();
 ///
 
 $modReports = $con->getAll("
-	SELECT requestId, kind, category, referenceId,
+	SELECT requestId, kind, category, referenceId, stateFlags,
 		IF(LENGTH(requestSearchable) > 256, CONCAT(SUBSTR(requestSearchable, 1, 256), '...'), requestSearchable) AS requestSearchable
 	FROM moderationRequests
 	WHERE kind = ".MOD_REQUEST_KIND_REPORT_MOD." AND category != ".REPORT_CATEGORY_MOD_LOW_EFFORT_AI." AND (~stateFlags & ".MOD_REQUEST_FLAG_CLOSED.") 
@@ -43,7 +43,7 @@ usort($reportedMods, fn($a, $b) => -(count($a['reports']) <=> count($b['reports'
 
 
 $commentReports = $con->getAll("
-	SELECT requestId, kind, category, referenceId,
+	SELECT requestId, kind, category, referenceId, stateFlags,
 		IF(LENGTH(requestSearchable) > 256, CONCAT(SUBSTR(requestSearchable, 1, 256), '...'), requestSearchable) AS requestSearchable
 	FROM moderationRequests
 	WHERE kind = ".MOD_REQUEST_KIND_REPORT_COMMENT." AND (~stateFlags & ".MOD_REQUEST_FLAG_CLOSED.") 
@@ -74,7 +74,7 @@ usort($reportedComments, fn($a, $b) => -(count($a['reports']) <=> count($b['repo
 ///
 
 $reviewRequests = $con->getAll("
-	SELECT req.requestId, r.modId, r.releaseId, r.version
+	SELECT req.requestId, r.modId, r.releaseId, r.version, req.stateFlags
 	FROM moderationRequests req
 	JOIN modReleases r ON r.releaseId = req.referenceId
 	WHERE req.kind = ".MOD_REQUEST_KIND_MANUAL_REVIEW." AND (~req.stateFlags & ".MOD_REQUEST_FLAG_CLOSED.")

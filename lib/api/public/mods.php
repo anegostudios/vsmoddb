@@ -14,6 +14,11 @@ function canIgnoreRetraction($release)
 	return ($release['retractedByRoleId'] !== ROLE_ADMIN && $release['retractedByRoleId'] !== ROLE_MODERATOR) || $release['retractedByUserId'] === $release['createdByUserId'];
 }
 
+/**
+ * @var object $con
+ * @var array<string> $urlparts
+ */
+
 switch($urlparts[0]) {
 	case 'install-information':
 		validateMethod('GET');
@@ -70,8 +75,6 @@ switch($urlparts[0]) {
 			fail(HTTP_BAD_REQUEST, ['error' => 'All requested ids are malformed.', 'data' => $result]);
 		}
 
-		$VERSION_MASK_PRERELEASE = VERSION_MASK_PRERELEASE;
-
 		//NOTE(Rennorb): The trick to selecting all requested mods at once here is to form two almost identical queries, 
 		// then join them onto each other under the condition that the second one finds a higher version than the first.
 		// This is not possible for the highest version in the first query, so we can then filter for null in the second query
@@ -84,7 +87,7 @@ switch($urlparts[0]) {
 
 			if($gameVersion) {
 				// Complicated path with upgrade recommendations:
-				$releases = $con->execute(<<<SQL
+				$releases = $con->execute("
 					SELECT 
 						r0.identifier, f0.fileId, f0.name, rr0.reason AS retractionReason,
 						ru0.roleId AS retractedByRoleId, rr0.lastModifiedBy AS retractedByUserId, a0.createdByUserId,
@@ -101,7 +104,7 @@ switch($urlparts[0]) {
 						FROM modReleases r1
 						JOIN modReleaseCompatibleGameVersions cgv1 ON cgv1.releaseId = r1.releaseId AND cgv1.gameVersion = $gameVersion
 						LEFT JOIN modReleaseRetractions rr1 ON rr1.releaseId = r1.releaseId
-						WHERE rr1.reason IS NULL AND (r1.version & $VERSION_MASK_PRERELEASE) = 0xffff
+						WHERE r1.status = ".RELEASE_STATUS_RELEASED." AND (r1.version & ".VERSION_MASK_PRERELEASE.") = 0xffff
 					) r1 ON r1.modId = r0.modId AND r1.version > r0.version
 
 					LEFT JOIN (
@@ -109,13 +112,13 @@ switch($urlparts[0]) {
 						FROM modReleases r2
 						JOIN modReleaseCompatibleGameVersions cgv2 ON cgv2.releaseId = r2.releaseId AND cgv2.gameVersion = $gameVersion
 						LEFT JOIN modReleaseRetractions rr2 ON rr2.releaseId = r2.releaseId
-						WHERE rr2.reason IS NULL AND (r2.version & $VERSION_MASK_PRERELEASE) = 0xffff
+						WHERE r2.status = ".RELEASE_STATUS_RELEASED." AND (r2.version & ".VERSION_MASK_PRERELEASE.") = 0xffff
 					) r2 ON r2.modId = r1.modId AND r2.version > r1.version
 
-					WHERE r2.version IS NULL AND
-
-					(r0.identifier, r0.version) IN ($placeholders)
-				SQL, $knownVersionQueryParams);
+					WHERE r2.version IS NULL
+						AND r0.status IN (".RELEASE_STATUS_RELEASED.", ".RELEASE_STATUS_RETRACTED.")
+						AND (r0.identifier, r0.version) IN ($placeholders)
+				", $knownVersionQueryParams);
 
 				foreach($releases as $release) {
 					$r = &$result[$release['identifier']];
@@ -146,7 +149,7 @@ switch($urlparts[0]) {
 			}
 			else {
 				// Simple path, no recommends:
-				$releases = $con->execute(<<<SQL
+				$releases = $con->execute("
 					SELECT 
 						r0.identifier, f0.fileId, f0.name, rr0.reason as retractionReason,
 						ru0.roleId AS retractedByRoleId, rr0.lastModifiedBy AS retractedByUserId, a0.createdByUserId
@@ -158,7 +161,8 @@ switch($urlparts[0]) {
 					LEFT JOIN users ru0 ON ru0.userId = rr0.lastModifiedBy
 
 					WHERE (r0.identifier, r0.version) IN ($placeholders)
-				SQL, $knownVersionQueryParams);
+						AND r0.status IN (".RELEASE_STATUS_RELEASED.", ".RELEASE_STATUS_RETRACTED.")
+				", $knownVersionQueryParams);
 				foreach($releases as $release) {
 					$r = &$result[$release['identifier']];
 
@@ -189,7 +193,7 @@ switch($urlparts[0]) {
 			// Never recommend retracted releases.
 			$placeholders = substr(str_repeat('?,', count($unknownVersionQueryParams)), 0, -1);
 
-			$releases = $con->execute(<<<SQL
+			$releases = $con->execute("
 				SELECT 
 					r1.identifier, f1.fileId, f1.name,
 					r1.version as recommendedUpgrade
@@ -199,7 +203,7 @@ switch($urlparts[0]) {
 					FROM modReleases r1
 					JOIN modReleaseCompatibleGameVersions cgv1 ON cgv1.releaseId = r1.releaseId AND cgv1.gameVersion = $gameVersion
 					LEFT JOIN modReleaseRetractions rr1 ON rr1.releaseId = r1.releaseId
-					WHERE rr1.reason IS NULL AND (r1.version & $VERSION_MASK_PRERELEASE) = 0xffff AND
+					WHERE r1.status = ".RELEASE_STATUS_RELEASED." AND (r1.version & ".VERSION_MASK_PRERELEASE.") = 0xffff AND
 					r1.identifier IN ($placeholders)
 				) r1
 
@@ -208,14 +212,15 @@ switch($urlparts[0]) {
 					FROM modReleases r2
 					JOIN modReleaseCompatibleGameVersions cgv2 ON cgv2.releaseId = r2.releaseId AND cgv2.gameVersion = $gameVersion
 					LEFT JOIN modReleaseRetractions rr2 ON rr2.releaseId = r2.releaseId
-					WHERE rr2.reason IS NULL AND (r2.version & $VERSION_MASK_PRERELEASE) = 0xffff
+					WHERE r2.status = ".RELEASE_STATUS_RELEASED." AND (r2.version & ".VERSION_MASK_PRERELEASE.") = 0xffff
 				) r2 ON r2.modId = r1.modId AND r2.version > r1.version
 
 				LEFT JOIN files f1 ON f1.assetId = r1.assetId
 				LEFT JOIN modReleaseRetractions rr1 ON rr1.releaseId = r1.releaseId
 
 				WHERE r2.version IS NULL
-			SQL, $unknownVersionQueryParams);
+					AND r0.status IN (".RELEASE_STATUS_RELEASED.", ".RELEASE_STATUS_RETRACTED.")
+			", $unknownVersionQueryParams);
 
 			foreach($releases as $release) {
 				$r = &$result[$release['identifier']];
@@ -253,7 +258,7 @@ switch($urlparts[0]) {
 								// list endpoint /mods/{modId}/releases
 
 								$queryJoins = '';
-								$queryWhere = 'r.modId = '.$modId; // @security: $modId is validated to be int, therefore sql inert.
+								$queryWhere = 'r.status = '.RELEASE_STATUS_RELEASED.' AND r.modId = '.$modId; // @security: $modId is validated to be int, therefore sql inert.
 
 								if(boolval($_GET['ignore-retractions'] ?? false)) {
 									// Allow overwriting retractions only if it wasn't recrated by a moderator, unless that moderator is also the mod owner:
@@ -268,7 +273,6 @@ switch($urlparts[0]) {
 									SELECT r.releaseId, r.identifier, r.version,
 										rr.reason AS retractionReason
 									FROM modReleases r
-									LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
 									$queryJoins
 									WHERE $queryWhere
 									ORDER BY r.version DESC
@@ -286,6 +290,8 @@ switch($urlparts[0]) {
 								$queryWhere = 'r.modId = '.$modId; // @security: $modId filtered to be int, therefore sql inert.
 								$queryParams = [];
 
+								$queryWhereStatus = ' AND r.status = '.RELEASE_STATUS_RELEASED;
+
 								if($urlparts[2] === 'latest') { // /mods/{modId}/releases/latest
 									//NOTE(Rennorb): The latest release is already selected by the order by clause if we don't specify a releaseId in the where clause.
 
@@ -295,7 +301,7 @@ switch($urlparts[0]) {
 									}
 
 									if(!boolval($_GET['ignore-retractions'] ?? false)) {
-										$queryWhere .= ' AND (rr.reason IS NULL OR (ru.roleId != '.ROLE_ADMIN.' AND ru.roleId != '.ROLE_MODERATOR.') OR rr.lastModifiedBy = a.createdByUserId)'; // a copy of canIgnoreRetraction in sql
+										$queryWhereStatus = ' AND (r.status = '.RELEASE_STATUS_RELEASED.' OR (r.status = '.RELEASE_STATUS_RETRACTED.' AND ((ru.roleId != '.ROLE_ADMIN.' AND ru.roleId != '.ROLE_MODERATOR.') OR rr.lastModifiedBy = a.createdByUserId)))'; // a copy of canIgnoreRetraction in sql
 									}
 								}
 								else if($releaseId = filter_var($urlparts[2], FILTER_VALIDATE_INT)) { // /mods/{modId}/releases/{releaseId}
@@ -304,6 +310,8 @@ switch($urlparts[0]) {
 								else {
 									fail(HTTP_BAD_REQUEST, 'Malformed releaseId.');
 								}
+
+								$queryWhere .= $queryWhereStatus;
 
 								$release = $con->getRow(<<<SQL
 									SELECT r.releaseId, r.identifier, r.version, UNIX_TIMESTAMP(r.created) AS created,
