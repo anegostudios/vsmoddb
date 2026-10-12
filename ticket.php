@@ -16,7 +16,7 @@ if(!$requestId)   showErrorPage(HTTP_BAD_REQUEST, 'Missing or malformed request 
 $queryFilterOwnTickets = canModerate(null, $user) ? '' : ' AND r.initiatorUserId = '.$user['userId']; // @security: $user['userId'] comes form the database and is int, therefore sql inert.
 //TODO(Rennorb) @cleanup: probably split this into two calls, where the second one is different based in the kind. This is turning into a mess.
 $ticket = $con->getRow("
-	SELECT r.requestId, r.kind, r.category, r.request, r.resolution, r.stateFlags, r.initiatorUserId, r.referenceId, COALESCE(`mod`.modId, modc.modId) AS modId, am.assetId, am.name AS modName,
+	SELECT r.requestId, r.kind, r.category, r.requestEvt, r.resolutionEvt, r.stateFlags, r.initiatorUserId, r.referenceId, COALESCE(`mod`.modId, modc.modId) AS modId, am.assetId, am.name AS modName,
 		i.name AS `initiatorName`, HEX(i.hash) AS `initiatorHash`, 
 		m.name AS `resolverName`, HEX(m.hash) AS `resolverHash`,
 		rel.assetId AS releaseAssetId, rel.version, mpr.capabilities
@@ -34,8 +34,16 @@ $ticket = $con->getRow("
 "); // @security: $requestId is validated to be int, therefore sql inert.
 if(!$ticket)   showErrorPage(HTTP_NOT_FOUND, 'Moderation Request not found.');
 
-$ticket['stateFlags'] = intval($ticket['stateFlags']); // ... ffs mysqli
-$ticket['capabilities'] = intval($ticket['capabilities']); // ... ffs mysqli
+$events = $con->getAssoc("
+	SELECT e.eventId, e.kind, e.created, e.data, e.userId, HEX(u.hash) AS userHash, u.name AS userName, m.text
+	FROM moderationRequestEvents e
+	LEFT JOIN moderationRequestMessages m ON e.kind = ".REPORT_EVENT_MESSAGE." AND m.eventId = e.eventId
+	LEFT JOIN users u ON u.userId = e.userId
+	WHERE e.requestId = $requestId
+	ORDER BY e.created ASC, e.eventId ASC
+");
+
+$ticket['events'] = $events;
 
 if(!empty($_POST['resolution'])) {
 	validateActionToken();
@@ -69,7 +77,7 @@ if(!empty($_POST['resolution'])) {
 		case 'wontfix':
 			$newState = MOD_REQUEST_FLAG_CLOSED | MOD_REQUEST_FLAG_WONTFIX;
 			$logFlags = AUDIT_LOG_FLAG_WONT_FIX;
-			$newReleaseState = RELEASE_STATUS_NOT_ACCEPTABLE;
+			$newReleaseState = RELEASE_STATUS_NOT_ACCEPTABLE; // unreachable
 			$reason = trimHtml(sanitizeHtml($_POST['reason']));
 			if(!$reason)  addMessage(MSG_CLASS_ERROR, 'Please provide a reason.');
 			break;
@@ -110,6 +118,7 @@ if(!empty($_POST['resolution'])) {
 	}
 }
 
+cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/api/v2/tickets/{$requestId}");
 cspAllowTinyMceComment();
 
 $view->assign('pagetitle', "Moderation request #{$ticket['requestId']} - ");

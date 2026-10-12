@@ -268,6 +268,8 @@ function deleteMod($mod)
 {
 	global $con;
 
+	showErrorPage(HTTP_FORBIDDEN); //TODO(Rennorb) @cleanup: make this nicer. for now just stop deletion.
+
 	// @security: Make sure these ids are inert so we can use them directly in the queries
 	// -> no need to prepare all those delete queries and wrangle multiple bind parameters.
 	$modId = intval($mod['modId']);

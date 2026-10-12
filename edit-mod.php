@@ -464,7 +464,7 @@ else if(!empty($_POST['save'])) {
 
 	// Don't release without files:
 	if($mod['status'] === MOD_STATUS_RELEASED) {
-		if(!$oldModData['modId'] || !$con->getOne('SELECT releaseId FROM modReleases WHERE modId = ?', [$mod['modId']])) {
+		if(!$oldModData['modId'] || !$con->getOne('SELECT releaseId FROM modReleases WHERE modId = ? AND `status` = '.RELEASE_STATUS_RELEASED, [$mod['modId']])) {
 			$mod['status'] = MOD_STATUS_DRAFT;
 			// Using a cookie here because the message needs to be displayed at the next load of the page after the bounce.
 			// No message here, as this would get picked up as a hard error.

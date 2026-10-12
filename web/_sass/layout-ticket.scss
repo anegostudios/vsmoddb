@@ -4,8 +4,45 @@
 		color: var(--color-text-weak);
 	}
 
-	>div>h3 {
+	>div>h2 {
 		margin-bottom: 1em;
+	}
+
+	#event-stack {
+		display: flex;
+		flex-direction: column;
+		flex-wrap: nowrap;
+
+		>*{
+			&:not(:last-child) {
+				border-bottom: solid var(--color-border) 1px;
+				margin-bottom: .25em;
+				padding-bottom: .25em;
+			}
+
+			&.request, &.resolution {
+				border-left: solid var(--color-border) 1px;
+				padding-left: .25em;
+
+				&::before {
+					font-size: large;
+					font-weight: bold;
+				}
+			}
+
+			&.request::before {
+				content: 'Request:';
+			}
+
+			&.resolution {
+				margin-top: -.25em; // move it up so the border aligns nicely with the line between elements
+				padding-top: .25em;
+
+				&::before {
+					content: 'Resolution:';
+				}
+			}
+		}
 	}
 
 	.buttons {

@@ -156,23 +156,21 @@ function updateGameVersionsCached($modId)
 	$con->execute('DELETE FROM modCompatibleMajorGameVersionsCached WHERE modId = ?', [$modId]);
 
 	// @security: modId is numeric and therefore SQL inert.
-	$con->execute(<<<SQL
+	$con->execute("
 		INSERT INTO modCompatibleGameVersionsCached (modId, gameVersion)
 		SELECT DISTINCT $modId, cgv.gameVersion
 		FROM modReleases r
 		JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
-		LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
-		where r.modId = $modId AND rr.reason IS NULL
-	SQL);
+		where r.modId = $modId AND r.status = ".RELEASE_STATUS_RELEASED."
+	");
 
-	$con->execute(<<<SQL
+	$con->execute("
 		INSERT INTO modCompatibleMajorGameVersionsCached (modId, majorGameVersion)
 		SELECT DISTINCT $modId, cgv.gameVersion & 0xffffffff00000000 -- :VERSION_MASK_PRIMARY
 		FROM modReleases r
 		JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
-		LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
-		where r.modId = $modId AND rr.reason IS NULL
-	SQL);
+		where r.modId = $modId AND r.status = ".RELEASE_STATUS_RELEASED."
+	");
 
 	$con->completeTrans();
 }

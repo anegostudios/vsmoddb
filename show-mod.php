@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * @var object $con
+ * @var object $view
+ * @var array|null $user
+ */
+
 require(SRC_ROOT.'/lib/recommend-release.php');
 
 $assetId = $urlparts[2] ?? 0;
@@ -242,6 +248,16 @@ unset($comment);
 
 $view->assign("comments", $comments, null, true);
 
+if((!empty($user) && canEditMod($asset, $user))) {
+	$statusFilter =  '';
+	$ticketJoin = 'LEFT JOIN moderationRequests mr ON mr.kind = '.MOD_REQUEST_KIND_MANUAL_REVIEW.' AND referenceId = r.releaseId';
+	$ticketSelect = ', mr.requestId';
+}
+else {
+	$statusFilter = 'AND r.status IN ('.RELEASE_STATUS_RELEASED.', '.RELEASE_STATUS_RETRACTED.')';
+	$ticketJoin = '';
+	$ticketSelect = '';
+}
 $releases = $con->getAll(<<<SQL
 	SELECT
 		r.*,
@@ -249,15 +265,17 @@ $releases = $con->getAll(<<<SQL
 		a.text,
 		GROUP_CONCAT(cgv.gameVersion ORDER BY cgv.gameVersion ASC SEPARATOR ',') AS compatibleGameVersions,
 		GROUP_CONCAT(gv.sortIndex   ORDER BY cgv.gameVersion ASC SEPARATOR ',') AS compatibleGameVersionsIndices
+		$ticketSelect
 	FROM modReleases r
 	JOIN assets a ON a.assetId = r.assetId
 	LEFT JOIN modReleaseCompatibleGameVersions cgv ON cgv.releaseId = r.releaseId
 	LEFT JOIN gameVersions gv ON gv.version = cgv.gameVersion
 	LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
-	WHERE modId = ?
+	$ticketJoin
+	WHERE modId = {$asset['modId']} $statusFilter
 	GROUP BY r.releaseId
 	ORDER BY r.version DESC, MAX(cgv.gameVersion) DESC, r.created DESC
-SQL, [$asset['modId']]);
+SQL);
 
 $releaseFiles = [];
 if(count($releases)) {

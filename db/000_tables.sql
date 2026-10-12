@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS `mods` (
   `trendingPoints`        INT          NOT NULL DEFAULT 0,
   `comments`              INT          NOT NULL DEFAULT 0,
   `side`                  ENUM('client', 'server', 'both') NULL,
-  `category`              TIN1 UNSIGNED NOT NULL,
+  `category`              INT1 UNSIGNED NOT NULL,
   `status`                INT1 UNSIGNED NOT NULL,
   `uploadLimitOverwrite`  INT              NULL,
   `lastReleased`          DATETIME         NULL,
@@ -365,15 +365,34 @@ CREATE TABLE IF NOT EXISTS `moderationRequests` (
 	`referenceId`      INT           NOT NULL,
 	`initiatorUserId`  INT           NOT NULL,
 	`resolverUserId`   INT           NOT NULL DEFAULT 0,
-	`request`          TEXT          NOT NULL,
-  `requestSearchable`TEXT          NOT NULL,
-	`resolution`       TEXT              NULL,
+	`requestEvt`       INT               NULL,
+	`resolutionEvt`    INT               NULL,
 	`created`          DATETIME      NOT NULL DEFAULT NOW(),
   `resolved`         DATETIME          NULL,
   PRIMARY KEY (`requestId`),
   INDEX `reference` (`referenceId`, `kind`, `category`),
   INDEX `initiator` (`initiatorUserId`, `created`, `referenceId`, `kind`, `category`),
   INDEX `dedupe` (`referenceId`, `kind`, `category`, `initiatorUserId`, `resolved`)
+);
+
+CREATE TABLE IF NOT EXISTS `moderationRequestEvents` (
+  `eventId`     INT           NOT NULL AUTO_INCREMENT,
+  `requestId`   INT           NOT NULL,
+  `userId`      INT           NOT NULL,
+  `kind`        INT1 UNSIGNED NOT NULL,
+  `data`        INT           NOT NULL,
+  `created`     DATETIME      NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (`eventId`),
+  INDEX `query` (`requestId`, `created`),
+  CONSTRAINT `FK_mrevents_request` FOREIGN KEY (`requestId`) REFERENCES `moderationRequests`(`requestId`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `FK_mrevents_user` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS `moderationRequestMessages` (
+  `eventId`        INT      NOT NULL,
+  `text`           TEXT     NOT NULL,
+  `textSearchable` TEXT     NOT NULL,
+  CONSTRAINT `FK_mrmessages_event` FOREIGN KEY (`eventId`) REFERENCES `moderationRequestEvents`(`eventId`) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 SET SQL_MODE=@OLD_SQL_MODE;

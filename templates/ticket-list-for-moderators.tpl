@@ -25,10 +25,10 @@
 					</div>
 				</a>
 				<div class="ticket-list">
-				<? foreach($mod['reports'] as $ticket): ?>
-					<a href="/t/<?= $ticket['requestId'] ?>" target="_blank">
-						<h4><?= stringifyModerationRequestCategory($ticket) ?></h4>
-						<div><?= escapeHtml($ticket['requestSearchable']) ?></div>
+				<? foreach($mod['reports'] as $report): ?>
+					<a href="/t/<?= $report['requestId'] ?>" target="_blank">
+						<h4><?= stringifyModerationRequestCategory($report) ?> <span class="tag"><?= stringifyModerationRequestState(MOD_REQUEST_KIND_REPORT_COMMENT, $report['stateFlags']) ?></span></h4>
+						<div><?= escapeHtml($report['requestSearchable']) ?></div>
 					</a>
 				<? endforeach; ?>
 				</div>
@@ -56,10 +56,10 @@
 					<p class="text-weak">On <?= escapeHtml($comment['modName']) ?>, By <a href="/show/user/<?= $comment['userHash'] ?>" target="_blank"><?= escapeHtml($comment['userName']) ?></a></p>
 				</div>
 				<div class="ticket-list">
-				<? foreach($comment['reports'] as $ticket): ?>
-					<a href="/t/<?= $ticket['requestId'] ?>" target="_blank">
-						<h4><?= stringifyModerationRequestCategory($ticket) ?></h4>
-						<div><?= escapeHtml($ticket['requestSearchable']) ?></div>
+				<? foreach($comment['reports'] as $report): ?>
+					<a href="/t/<?= $report['requestId'] ?>" target="_blank">
+						<h4><?= stringifyModerationRequestCategory($report) ?> <span class="tag"><?= stringifyModerationRequestState(MOD_REQUEST_KIND_REPORT_COMMENT, $report['stateFlags']) ?></span></h4>
+						<div><?= escapeHtml($report['requestSearchable']) ?></div>
 					</a>
 				<? endforeach; ?>
 				</div>
@@ -92,7 +92,7 @@
 				<div class="ticket-list">
 				<? foreach($mod['requests'] as $request): ?>
 					<a href="/t/<?= $request['requestId'] ?>" target="_blank">
-						<h4><?= formatSemanticVersion($request['version']) ?></h4>
+						<h4><?= formatSemanticVersion($request['version']) ?> <span class="tag"><?= stringifyModerationRequestState(MOD_REQUEST_KIND_MANUAL_REVIEW, $request['stateFlags']) ?></span></h4>
 					</a>
 				<? endforeach; ?>
 				</div>
