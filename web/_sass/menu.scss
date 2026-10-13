@@ -168,5 +168,19 @@
 			left: unset;
 			right: 0px;
 		}
+
+		&.mod-browse>nav {
+			min-width: 12em;
+		
+			a {
+				display: block;
+				text-decoration: none;
+				color: inherit;
+				
+				&.active {
+					background-color: rgba(255, 255, 255, 0.25);
+				}
+			}
+		}
 	}
 }

@@ -109,7 +109,7 @@ function validateModSearchInputs(&$outParams, $trimText)
 		$outParams['filters']['category'] = $rCat;
 	}
 	else {
-		$outParams['filters']['category'] = 'a'; // default to no server tweaks
+		$outParams['filters']['category'] = 'm'; // default to game mods
 	}
 
 	if(!empty($_REQUEST['t'])) {
@@ -216,6 +216,10 @@ function queryModSearch($searchParams)
 	}
 
 	$orderBy = VALID_ORDER_BY_COLUMNS[$searchParams['order'][0]][0].' '.$searchParams['order'][1];
+
+	if(!isset($searchParams['filters']['category'])) {
+		$searchParams['filters']['category'] = 'm';
+	}
 
 	foreach($searchParams['filters'] as $name => $value) {
 		switch($name) {
@@ -335,8 +339,8 @@ function queryModSearch($searchParams)
 			case 'category':
 				switch($value) {
 					case 'a':
-						$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
-						$whereClauses .= 'm.category != '.CATEGORY_SERVER_TWEAK;
+						// see all
+						// TODO: "See all" tab.
 						break 2;
 
 					case 'm': $value = CATEGORY_GAME_MOD; break;

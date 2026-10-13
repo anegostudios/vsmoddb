@@ -78,7 +78,13 @@ unset($version);
 
 cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/list/mod {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/ {$_SERVER['HTTP_HOST']}/api/v2/tags/by-name/");
 
-$view->assign('headerHighlight', $selectedParams['category'] === 's' ? HEADER_HIGHLIGHT_TWEAKS : HEADER_HIGHLIGHT_MODS, null, true);
+$headerHighlight = HEADER_HIGHLIGHT_MODS;
+if($selectedParams['category'] === 's') $headerHighlight = HEADER_HIGHLIGHT_TWEAKS;
+if($selectedParams['category'] === 'l') $headerHighlight = HEADER_HIGHLIGHT_LIBRARY;
+if($selectedParams['category'] === 'e') $headerHighlight = HEADER_HIGHLIGHT_EXTERNAL_TOOL;
+if($selectedParams['category'] === 'o') $headerHighlight = HEADER_HIGHLIGHT_OTHER;
+
+$view->assign('headerHighlight', $headerHighlight, null, true );
 $view->assign('selectedParams', $selectedParams, null, true);
 $view->assign('strippedQuery', $strippedQuery, null, true);
 $view->assign('fetchCursorJS', $fetchCursorJS, null, true);
