@@ -102,7 +102,7 @@ function validateModSearchInputs(&$outParams, $trimText)
 
 	if(!empty($_REQUEST['c'])) {
 		$rCat = $_REQUEST['c'];
-		if(!in_array($rCat, ['m', 's', 'e', 'o'], true)) {
+		if(!in_array($rCat, ['m', 's', 'e', 'o', 'l', 'a'], true)) {
 			return "Invalid category: '$rCat'.";
 		}
 
@@ -341,6 +341,7 @@ function queryModSearch($searchParams)
 
 					case 'm': $value = CATEGORY_GAME_MOD; break;
 					case 's': $value = CATEGORY_SERVER_TWEAK; break;
+					case 'l': $value = CATEGORY_LIBRARY; break;
 					case 'e': $value = CATEGORY_EXTERNAL_TOOL; break;
 					case 'o': $value = CATEGORY_OTHER; break;
 					default: assert(false, "Invalid category: $value");

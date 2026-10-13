@@ -10,6 +10,12 @@
 		<span>
 		{if $mod['category'] == CATEGORY_SERVER_TWEAK}
 			<a href="/list/mod?c=s">Server Tweaks</a>
+		{elseif $mod['category'] == CATEGORY_LIBRARY}
+			<a href="/list/mod?c=l">Library</a>
+		{elseif $mod['category'] == CATEGORY_EXTERNAL_TOOL}
+			<a href="/list/mod?c=e">External tools</a>
+		{elseif $mod['category'] == CATEGORY_OTHER}
+			<a href="/list/mod?c=o">Others</a>
 		{else}
 			<a href="/list/mod">Mods</a>
 		{/if}

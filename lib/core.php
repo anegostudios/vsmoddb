@@ -1141,8 +1141,9 @@ const CATEGORY_NOT_SPECIFIED = 0; // Used to force the user to select something,
 const CATEGORY_GAME_MOD      = 1;
 const CATEGORY_EXTERNAL_TOOL = 2;
 const CATEGORY_OTHER         = 3;
+const CATEGORY_LIBRARY       = 4;
 const CATEGORY_SERVER_TWEAK  = CATEGORY_GAME_MOD | (1 << 7);
-
+// TODO: Future category: Compatibility_patch, Translation.
 
 /**
  * @param int $category
@@ -1155,6 +1156,7 @@ function stringifyCategory($category)
 		case CATEGORY_EXTERNAL_TOOL: return 'External Tool';
 		case CATEGORY_OTHER:         return 'Other';
 		case CATEGORY_SERVER_TWEAK:  return 'Server Tweak';
+		case CATEGORY_LIBRARY:       return 'Library';
 		default: return strval($category);
 	}
 }

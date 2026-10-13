@@ -40,6 +40,12 @@
 		<span>
 		{if $asset['category'] === CATEGORY_SERVER_TWEAK}
 			<a href="/list/mod?c=s">Server Tweaks</a>
+		{elseif $asset['category'] === CATEGORY_LIBRARY}
+			<a href="/list/mod?c=l">Libraries</a>
+		{elseif $asset['category'] === CATEGORY_EXTERNAL_TOOL}
+			<a href="/list/mod?c=e">External tools</a>
+		{elseif $asset['category'] === CATEGORY_OTHER}
+			<a href="/list/mod?c=o">Others</a>
 		{else}
 			<a href="/list/mod">Mods</a>
 		{/if}
