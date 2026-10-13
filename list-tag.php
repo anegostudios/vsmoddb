@@ -6,8 +6,12 @@ cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/api/v2/game-versions {$_S
 cspPushAllowedInlineHandlerHash('sha256-ACiiR9Pq4vOFtqhzTGFgHTXHnUnOEGCMCKPo/Hys5tE='); // addVersionPrompt()
 cspPushAllowedInlineHandlerHash('sha256-OV/BCQXzN5T2ARKxgGtnfxHIee+D1qxtNG9wGGJf0Iw='); // clickDelete(event)
 
-$view->assign("columns", array(array("cssclassname" => "", "code" => "name", "title" => "Name"), array("cssclassname" => "", "code" => "color", "title" => "Color", "datatype" => "colo
-r")));
+$view->assign("columns", array(
+	array("cssclassname" => "", "code" => "name", "title" => "Name"),
+	array("cssclassname" => "", "code" => "kind", "title" => "Kind"),
+	array("cssclassname" => "", "code" => "text", "title" => "Description"),
+	array("cssclassname" => "", "code" => "modCount", "title" => "Mods"),
+	array("cssclassname" => "", "code" => "color", "title" => "Color", "datatype" => "color")));
 $view->assign("entrycode", "tag");
 $view->assign("entryplural", "Tags");
 $view->assign("entrysingular", "Tag");
@@ -19,8 +23,21 @@ if (!empty($_GET["saved"])) {
 	addMessage(MSG_CLASS_OK, 'Tag saved.');
 }
 
-
-$view->assign('rows', $con->getAll("SELECT *, LPAD(HEX(color), 8, '0') AS color FROM tags ORDER BY kind, name"));
+// Get all tags, with mods count
+$tags = $con->getAll("SELECT
+		tag.tagId,
+		tag.parentTagId,
+		tag.name,
+		tag.text,
+		tag.kind,
+		LPAD(HEX(tag.color), 8, '0') AS color,
+		COUNT(DISTINCT CASE WHEN modTag.votes >= 0 THEN modTag.modId END) AS modCount
+	FROM tags tag
+	LEFT JOIN modTags modTag ON modTag.tagId = tag.tagId
+	GROUP BY tag.tagId
+	ORDER BY tag.name
+");
+$view->assign('rows', sortTagsAsTree($tags));
 
 
 $gameVersionStrings = $con->getCol('SELECT version FROM gameVersions ORDER BY version DESC');

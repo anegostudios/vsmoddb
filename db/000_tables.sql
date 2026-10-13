@@ -174,6 +174,7 @@ CREATE TABLE IF NOT EXISTS `auditLogs` (
 
 CREATE TABLE IF NOT EXISTS `tags` (
   `tagId`        INT          NOT NULL AUTO_INCREMENT,
+  `parentTagId`  INT          NULL DEFAULT NULL,
   `kind`         TINYINT      NOT NULL,
   `name`         VARCHAR(255) CHARACTER SET utf8mb4 NOT NULL,
   `text`         TEXT         CHARACTER SET utf8mb4 NOT NULL,
@@ -181,7 +182,9 @@ CREATE TABLE IF NOT EXISTS `tags` (
   `created`      DATETIME     NOT NULL DEFAULT NOW(),
   `lastModified` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`tagId`),
-  UNIQUE INDEX `name` (`name`)
+  UNIQUE INDEX `name` (`name`),
+  INDEX `parentTagId` (`parentTagId`),
+  CONSTRAINT `FK_tags_parentTagId` FOREIGN KEY (`parentTagId`) REFERENCES `tags`(`tagId`) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 

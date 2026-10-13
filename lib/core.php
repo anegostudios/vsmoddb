@@ -1135,6 +1135,30 @@ const HEADER_HIGHLIGHT_OTHER         = 10;
 
 const TAG_KIND_PREDEFINED   = 2;
 const TAG_KIND_USER_DEFINED = 3;
+function sortTagsAsTree($tags)
+{
+	// Group tags by their parent. Tags without a parent go to index 0.
+	$subtagsByParentId = [];
+	foreach($tags as $tag) {
+		$parentId = intval($tag['parentTagId']);
+		$subtagsByParentId[$parentId][] = $tag;
+	}
+
+	$sortedTags = [];
+	appendSubtags($sortedTags, $subtagsByParentId, 0, 0);
+	
+	return $sortedTags;
+}
+
+// push each tag to a new array, with a 'depth' value. Children are listed right after their parent.
+function appendSubtags(&$sortedTags, $subtagsByParentId, $parentId, $depth)
+{
+	foreach($subtagsByParentId[$parentId] ?? [] as $tag) {
+		$tag['depth'] = $depth;
+		$sortedTags[] = $tag;
+		appendSubtags($sortedTags, $subtagsByParentId, intval($tag['tagId']), $depth + 1);
+	}
+}
 
 // A game mod and server tweak share a lot of logic.
 // CATEGORY_GAME_MOD & CATEGORY__MASK === CATEGORY_SERVER_TWEAK & CATEGORY__MASK

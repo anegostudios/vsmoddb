@@ -18,7 +18,13 @@
 		{if !empty($rows)}
 			{foreach from=$rows item=row}
 				<tr>
-					<td><a href="/edit/tag?tagid={$row['tagId']}">{$row['name']}</a></td>
+					<td class="tag-tree-name" style="--tag-depth: {$row['depth']};">
+						{if $row['depth'] > 0}<span class="tag-tree-branch" aria-hidden="true">└</span>{/if}
+						<a href="/edit/tag?tagid={$row['tagId']}">{$row['name']}</a>
+					</td>
+					<td>{$row['kind']}</td>
+					<td>{$row['text']}</td>
+					<td><a href="/list/mod?tagids[]={$row['tagId']}">{$row['modCount']}</a></td>
 					<td><a href="/edit/tag?tagid={$row['tagId']}"><span style="display: inline-block; vertical-align: bottom; height: 1.2em; aspect-ratio: 1; background-color: #{$row['color']}"></span> {$row['color']}</a></td>
 				</tr>
 			{/foreach}
