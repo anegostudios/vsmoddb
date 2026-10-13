@@ -224,7 +224,7 @@ function attachTagVoteButtons(tagsContainerEl : HTMLElement, addTagModalEl : HTM
 
 					// Ok, this is a tag that is new (to us). Add it clientside:
 					const linkEl = R.make<HTMLAnchorElement>('a', tag.name);
-					linkEl.href = '/list/mod?tagids[]='+tagId;
+					linkEl.href = '/list/mod?tg='+tagId;
 
 					const tagEl = R.make('span.tag', linkEl, R.make('span.add'), R.make('span.rem'));
 					tagEl.style.backgroundColor = tag.color;

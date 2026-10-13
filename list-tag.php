@@ -26,18 +26,19 @@ if (!empty($_GET["saved"])) {
 // Get all tags, with mods count
 $tags = $con->getAll("SELECT
 		tag.tagId,
-		tag.parentTagId,
+		tag.parentTagId IS NOT NULL AS depth,
 		tag.name,
 		tag.text,
 		tag.kind,
 		LPAD(HEX(tag.color), 8, '0') AS color,
 		COUNT(DISTINCT CASE WHEN modTag.votes >= 0 THEN modTag.modId END) AS modCount
 	FROM tags tag
+	LEFT JOIN tags p ON p.tagId = tag.parentTagId
 	LEFT JOIN modTags modTag ON modTag.tagId = tag.tagId
 	GROUP BY tag.tagId
-	ORDER BY tag.name
+	ORDER BY COALESCE(p.name, tag.name), tag.parentTagId IS NOT NULL, tag.name
 ");
-$view->assign('rows', sortTagsAsTree($tags));
+$view->assign('rows', $tags);
 
 
 $gameVersionStrings = $con->getCol('SELECT version FROM gameVersions ORDER BY version DESC');

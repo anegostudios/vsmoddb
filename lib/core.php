@@ -1135,40 +1135,16 @@ const HEADER_HIGHLIGHT_OTHER         = 10;
 
 const TAG_KIND_PREDEFINED   = 2;
 const TAG_KIND_USER_DEFINED = 3;
-function sortTagsAsTree($tags)
-{
-	// Group tags by their parent. Tags without a parent go to index 0.
-	$subtagsByParentId = [];
-	foreach($tags as $tag) {
-		$parentId = intval($tag['parentTagId']);
-		$subtagsByParentId[$parentId][] = $tag;
-	}
-
-	$sortedTags = [];
-	appendSubtags($sortedTags, $subtagsByParentId, 0, 0);
-	
-	return $sortedTags;
-}
-
-// push each tag to a new array, with a 'depth' value. Children are listed right after their parent.
-function appendSubtags(&$sortedTags, $subtagsByParentId, $parentId, $depth)
-{
-	foreach($subtagsByParentId[$parentId] ?? [] as $tag) {
-		$tag['depth'] = $depth;
-		$sortedTags[] = $tag;
-		appendSubtags($sortedTags, $subtagsByParentId, intval($tag['tagId']), $depth + 1);
-	}
-}
 
 // A game mod and server tweak share a lot of logic.
 // CATEGORY_GAME_MOD & CATEGORY__MASK === CATEGORY_SERVER_TWEAK & CATEGORY__MASK
-const CATEGORY__MASK = 0b01111111;
+const CATEGORY__MASK = 0b00011111;
 
 const CATEGORY_NOT_SPECIFIED = 0; // Used to force the user to select something, not a valid value in the db.
 const CATEGORY_GAME_MOD      = 1;
 const CATEGORY_EXTERNAL_TOOL = 2;
 const CATEGORY_OTHER         = 3;
-const CATEGORY_LIBRARY       = 4;
+const CATEGORY_LIBRARY       = CATEGORY_GAME_MOD | (1 << 6);
 const CATEGORY_SERVER_TWEAK  = CATEGORY_GAME_MOD | (1 << 7);
 // TODO: Future category: Compatibility_patch, Translation.
 
