@@ -18,35 +18,46 @@ if(isset($_GET['paging'])) {
 	exit();
 }
 
-
-
 if($paramError = validateModSearchInputs($searchParams, true)) {
 	addMessage(MSG_CLASS_ERROR, $paramError, true);
 }
+
 $searchParams['limit'] = MOD_SEARCH_INITIAL_RESULTS;
+
 $mods = queryModSearchForModCards($searchParams);
 
 $filters = &$searchParams['filters'];
+$flipFilter = fn($filter) => [
+	'in' => array_flip($filter['in']),
+	'ex' => array_flip($filter['ex']),
+	'inCount' => count($filter['in']),
+	'exCount' => count($filter['ex']),
+	'count' => count($filter['in']) + count($filter['ex']),
+];
+$noFilter = ['in' => [], 'ex' => []];
 $selectedParams = [
 	'order'   => $searchParams['order'],
-	'side'    => $filters['side'] ?? '',
-	'type'    => $filters['type'] ?? '',
 	'category'=> $filters['category'] ?? '',
 	'text'    => escapeHtml($filters['text'] ?? ''),
 	'contributor' => !empty($filters['contributor'])
-		? [$filters['contributor'], $con->getOne('SELECT `name` FROM users WHERE `hash` = UNHEX(?)', [$filters['contributor']])]
-		: [],
-	'majorversion' => $filters['majorversion'] ?? '',
-	'gameversions' => !empty($filters['gameversions']) ? array_flip($filters['gameversions']) : [],
-	'tags'  => [],
-	'stati' => !empty($filters['stati']) ? array_flip($filters['stati']) : [ STATUS_RELEASED => true, STATUS_LOCKED => true ],
+		? [
+			'hash' => $filters['contributor'],
+			'name' => escapeHtml($con->getOne('SELECT `name` FROM users WHERE `hash` = UNHEX(?)', [$filters['contributor']])),
+			'count' => 1,
+			'inCount' => 1,
+			'exCount' => 0
+		]
+		: [
+			'count' => 0,
+			'inCount' => 0,
+			'exCount' => 0
+		],
+	'gameversions' => $flipFilter($filters['gameversions'] ?? $noFilter),
+	'tags'  => $flipFilter($filters['tags']  ?? $noFilter),
+	'sides' => $flipFilter($filters['sides'] ?? $noFilter),
+	'types' => $flipFilter($filters['types'] ?? $noFilter),
+	'stati' => $flipFilter($filters['stati'] ?? $noFilter),
 ];
-
-if(!empty($filters['tags'])) {
-	$foldedTagIds = implode(',', $filters['tags']); // @security: $filters['tags'] are filtered to be integers, therefore sql inert.
-	$selectedParams['tags'] = $con->getAll("SELECT tagId, `name`, `text` FROM tags WHERE tagId IN ($foldedTagIds) ORDER BY `name`");
-}
-
 unset($filters);
 
 $query = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
@@ -60,10 +71,13 @@ $strippedQuery = implode('&', $params);
 $fetchCursorJS = getNextFetchCursor($searchParams, $mods);
 
 $gameVersions = $con->getAll('SELECT `version` FROM gameVersions ORDER BY `version` desc');
+$gameVersionOptions = [];
 $majorGameVersions = [];
 foreach($gameVersions as &$version) {
 	$version['version'] = intval($version['version']);
 	$version['name'] = formatSemanticVersion($version['version']);
+	// Shape for list-mod-filter template
+	$gameVersionOptions[$version['version']] = ['label' => $version['name'], 'value' => $version['name']];
 
 	$majorVersion = $version['version'] & VERSION_MASK_PRIMARY;
 	foreach($majorGameVersions as $mv) {
@@ -74,7 +88,6 @@ foreach($gameVersions as &$version) {
 	$majorGameVersions[] = ['version' => $majorVersion, 'name' => substr(formatSemanticVersion($majorVersion), 0, -2)];
 }
 unset($version);
-
 
 cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/list/mod {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/ {$_SERVER['HTTP_HOST']}/api/v2/tags/by-name/");
 
@@ -89,7 +102,34 @@ $view->assign('selectedParams', $selectedParams, null, true);
 $view->assign('strippedQuery', $strippedQuery, null, true);
 $view->assign('fetchCursorJS', $fetchCursorJS, null, true);
 $view->assign('sortOptions', VALID_ORDER_BY_COLUMNS, null, true);
-$view->assign('gameVersions', $gameVersions);
+$view->assign('gameVersionOptions', $gameVersionOptions);
 $view->assign('majorGameVersions', $majorGameVersions);
 $view->assign('mods', $mods);
+
+
+// fetch all tags for the tag filter sidebar.
+$tagOptions = array_column(
+	$con->getAll(<<<SQL
+		SELECT t.tagId, t.name AS label, t.parentTagId IS NOT NULL AS sub
+		FROM tags t
+		LEFT JOIN tags p ON p.tagId = t.parentTagId
+		ORDER BY COALESCE(p.name, t.name), t.parentTagId IS NOT NULL, t.name
+		SQL),
+	null,
+	'tagId'
+);
+
+$view->assign('tagOptions', $tagOptions);
+$view->assign('sideOptions', MOD_LIST_FILTER_SIDES);
+$view->assign('typeOptions', MOD_LIST_FILTER_TYPES);
+$view->assign('statusOptions', MOD_LIST_FILTER_STATI);
+
+$tagsListExpanded = ($_COOKIE['modlist_tags_expanded'] ?? '') === '1';
+$view->assign('tagsListExpanded', $tagsListExpanded, null, true);
+
+if (canModerate(null, $user)) {
+	// Default status filter for moderators
+	$view->assign( 'moderatorDefaultStatiString', STATUS_RELEASED . ',' . STATUS_LOCKED, null, true);
+}
+
 $view->display('list-mod');

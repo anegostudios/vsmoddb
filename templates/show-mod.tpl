@@ -150,7 +150,7 @@
 				<dd class="tags">
 					{if $hiddenTagsCount > 0}<input type="checkbox" id="more-tags-trigger" autocomplete="off" />{/if}
 					{foreach from=$tags item=tag key=i}
-					<a href="/list/mod?tagids[]={$tag['tagId']}" class="tag{if $tag['votes'] < TAG_DOWNVOTED_THRESHOLD} downvoted hidden{elseif $i >= 8} hidden{/if}" style="background-color:{$tag['color']}" title="{$tag['text']}">{$tag['name']}</a>
+					<a href="/list/mod?tg={$tag['tagId']}" class="tag{if $tag['votes'] < TAG_DOWNVOTED_THRESHOLD} downvoted hidden{elseif $i >= 8} hidden{/if}" style="background-color:{$tag['color']}" title="{$tag['text']}">{$tag['name']}</a>
 					{/foreach}
 				</dd>
 				{else}
@@ -158,7 +158,7 @@
 					{if $hiddenTagsCount > 0}<input type="checkbox" id="more-tags-trigger" autocomplete="off" />{/if}
 					{foreach from=$tags item=tag key=i}
 					<span class="tag{if $tag['votes'] < TAG_DOWNVOTED_THRESHOLD} downvoted hidden{elseif $i >= 8} hidden{/if}" style="background-color:{$tag['color']}" title="{$tag['text']}" data-tagid="{$tag['tagId']}" data-vote="{$tag['vote'] ?? 0}">
-						<a href="/list/mod?tagids[]={$tag['tagId']}">{$tag['name']}</a><span class="add"></span><span class="rem"></span>
+						<a href="/list/mod?tg={$tag['tagId']}">{$tag['name']}</a><span class="add"></span><span class="rem"></span>
 					</span>
 					{/foreach}
 					{if $hiddenTagsCount > 0}<label for="more-tags-trigger">{$hiddenTagsCount}</label>{/if}
@@ -263,7 +263,7 @@
 								<div class="tags">
 								{foreach from=$release['compatibleGameVersionsFolded'] item=versionStr}
 									{if str_contains($versionStr, ' - ')}<span class="tag">{$versionStr}</span>
-									{else}<a href="/list/mod?gv[]={$versionStr}" class="tag" rel="tag">{$versionStr}</a>{/if}
+									{else}<a href="/list/mod?gv={$versionStr}" class="tag" rel="tag">{$versionStr}</a>{/if}
 								{/foreach}
 								</div>
 							</td>{/if}

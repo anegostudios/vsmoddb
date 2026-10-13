@@ -10,16 +10,81 @@ const VALID_ORDER_BY_COLUMNS = [
 	'created'           => ['m.created'       , 'Recently added'  , 'First added'     ],
 ];
 
+const MOD_LIST_FILTER_SIDES = [
+	'both'   => ['label' => 'Both'],
+	'client' => ['label' => 'Client side mod'],
+	'server' => ['label' => 'Server side mod'],
+];
+
+const MOD_LIST_FILTER_TYPES = [
+	'v' => ['label' => 'Theme Pack (purely visual)', 'peek' => 'Theme'],
+	'd' => ['label' => 'Content Mod',                 'peek' => 'Content'],
+	'c' => ['label' => 'Code Mod',                    'peek' => 'Code'],
+];
+
+const MOD_LIST_FILTER_STATI = [
+	STATUS_DRAFT    => ['label' => 'Draft'],
+	STATUS_RELEASED => ['label' => 'Released'],
+	STATUS_LOCKED   => ['label' => 'Locked'],
+];
+
+/** Reads a filter param where excluded values are prefixed with '-'. If a value is both included and excluded, it is included.
+ * @param string $searchParamKey
+ * @param callable $validateFn function that receives the value of a search param item without the '-' prefix, returns the validated value, or null if invalid.
+ * @return array{in:array, ex:array}|false false if any value is invalid.
+ */
+function parseIncludeExcludeParam($searchParamKey, $validateFn)
+{
+	$rawValue = $_REQUEST[$searchParamKey];
+	if(is_string($rawValue)) {
+		$searchParamValue = explode(',', $rawValue);
+	}
+	elseif(is_array($rawValue)) {
+		$searchParamValue = $rawValue; // support old URL
+	}
+	else {
+		return false;
+	}
+
+	$include = [];
+	$exclude = [];
+	
+	foreach($searchParamValue as $item) {
+		if(!is_string($item)) return false;
+		$item = trim($item);
+		if($item === '') continue;
+
+		$isExclude = str_starts_with($item, '-');
+
+		// Validation is different for every search params.
+		// The validation is delegated to $validateFn(), passed in validateModSearchInputs().
+		$value = $validateFn($isExclude ? substr($item, 1) : $item);
+		if($value === null) return false;
+
+		if($isExclude) $exclude[] = $value;
+		else $include[] = $value;
+	}
+
+	// Making sure every item is unique, and if one is present in both, $include wins.
+	$include = array_unique($include);
+	$exclude = array_diff(array_unique($exclude), $include);
+	
+	return ['in' => $include, 'ex' => $exclude];
+}
+
 /** Validates current GET/POST inputs and creates a filter params object.
  * @param string|array{
  *  order:array{0:string, 1:'asc'|'desc'},
  *  filters:array{
  *   text?:string,
- *   tags?:int[],
- *   'contributor'?:int,
- *   'side'?:'client'|'server'|'both',
- *   gameversions?:int[],
- *   stati?:int[],
+ *   category?:'m'|'s'|'l'|'e'|'o'|'a',
+ *   tags?:array{in:int[], ex:int[]},
+ *   sides?:array{in:string[], ex:string[]},
+ *   types?:array{in:string[], ex:string[]},
+ *   stati?:array{in:int[], ex:int[]},
+ *   contributor?:string,
+ *   gameversions?:array{in:int[], ex:int[]},
+ *   majorversion?:int,
  *  },
  *  limit:int,
  *  cursor:array{0:mixed, 1:int}
@@ -65,12 +130,9 @@ function validateModSearchInputs(&$outParams, $trimText)
 		$outParams['filters']['text'] = !$trimText ? $_REQUEST['text'] : preg_replace('/\s+/', ' ', trim($_REQUEST['text']));
 	}
 
-	if(!empty($_REQUEST['tagids'])) {
-		$tags = forceArrayOfInts($_REQUEST['tagids']);
-		if($tags === false) {
-			$f = print_r($_REQUEST['tagids'], true);
-			return "Invalid tagids: $f.";
-		}
+	if(!empty($_REQUEST['tg'])) {
+		$tags = parseIncludeExcludeParam('tg', fn($v) => ctype_digit($v) && $v !== '0' ? intval($v) : null);
+		if($tags === false) return 'Invalid tg: '.print_r($_REQUEST['tg'], true);
 		$outParams['filters']['tags'] = $tags;
 	}
 
@@ -81,23 +143,11 @@ function validateModSearchInputs(&$outParams, $trimText)
 		}
 		$outParams['filters']['contributor'] = $contributorHash;
 	}
-	else if(!empty($_REQUEST['userid'])) { // @legacy
-		$contributorId = intval($_REQUEST['userid']);
-		if(!$contributorId) {
-			return "Invalid userid: '{$_REQUEST['userid']}'.";
-		}
-		global $con;
-		$contributorHash = $con->getOne("SELECT hash FROM users WHERE userId = $contributorId"); // @security: $contributorId is known to be an integer, therefore sql inert.
-		$outParams['filters']['contributor'] = $contributorHash;
-	}
 
-	if(!empty($_REQUEST['side'])) {
-		$rSide = $_REQUEST['side'];
-		if(!in_array($rSide, ['client', 'server', 'both'], true)) {
-			return "Invalid side: '$rSide'.";
-		}
-
-		$outParams['filters']['side'] = $rSide;
+	if(!empty($_REQUEST['sd'])) {
+		$sides = parseIncludeExcludeParam('sd', fn($v) => array_key_exists($v, MOD_LIST_FILTER_SIDES) ? $v : null);
+		if($sides === false) return 'Invalid sd: '.print_r($_REQUEST['sd'], true);
+		$outParams['filters']['sides'] = $sides;
 	}
 
 	if(!empty($_REQUEST['c'])) {
@@ -113,22 +163,16 @@ function validateModSearchInputs(&$outParams, $trimText)
 	}
 
 	if(!empty($_REQUEST['t'])) {
-		$rType = $_REQUEST['t'];
-		if(!in_array($rType, ['v', 'd', 'c'], true)) {
-			return "Invalid type: '$rType'.";
-		}
+		$types = parseIncludeExcludeParam('t', fn($v) => array_key_exists($v, MOD_LIST_FILTER_TYPES) ? $v : null);
+		if($types === false) return 'Invalid t: '.print_r($_REQUEST['t'], true);
+		$outParams['filters']['types'] = $types;
 
-		$outParams['filters']['type'] = $rType;
-		$outParams['filters']['category'] = 'm'; // force the mod type to mod, since we are looking for a specific kind of mod
+		if(!in_array($outParams['filters']['category'], ['m', 'l'], true)) $outParams['filters']['category'] = 'm';
 	}
-
-	if(!empty($_REQUEST['gv']) || !empty($_REQUEST['gameversions'])) {
-		$rawGameversions = !empty($_REQUEST['gv']) ? $_REQUEST['gv'] : $_REQUEST['gameversions'];
-		$gameversions = array_filter(array_map('compileSemanticVersion', $rawGameversions));
-		if(count($gameversions) !== count($rawGameversions)) {
-			$f = print_r($rawGameversions, true);
-			return "Invalid gameversions: $f.";
-		}
+	
+	if(!empty($_REQUEST['gv'])) {
+		$gameversions = parseIncludeExcludeParam('gv', fn($v) => compileSemanticVersion($v) ?: null);
+		if($gameversions === false) return 'Invalid gv: '.print_r($_REQUEST['gv'], true);
 		$outParams['filters']['gameversions'] = $gameversions;
 	}
 
@@ -160,15 +204,15 @@ function validateModSearchInputs(&$outParams, $trimText)
 
 	global $user;
 	if(canModerate(null, $user)) {
-		$s = getInputArrayOfInts(INPUT_REQUEST, 'stati');
-		if($s === false) {
-			return "Invalid stati: {$_REQUEST['stati']}";
+		$outParams['filters']['stati'] = ['in' => [STATUS_RELEASED, STATUS_LOCKED], 'ex' => []]; // default for moderators
+		if(!empty($_REQUEST['st'])) {
+			$stati = parseIncludeExcludeParam('st', fn($v) => ctype_digit($v) && array_key_exists(intval($v), MOD_LIST_FILTER_STATI) ? intval($v) : null);
+			if($stati === false) return 'Invalid st: '.print_r($_REQUEST['st'], true);
+			$outParams['filters']['stati'] = $stati;
 		}
-
-		if($s !== null) $outParams['filters']['stati'] = $s;
 	}
 	else {
-		$outParams['filters']['stati'] = [STATUS_RELEASED];
+		$outParams['filters']['stati'] = ['in' => [STATUS_RELEASED], 'ex' => []]; // locked to "released" for players
 	}
 
 	return null;
@@ -176,7 +220,7 @@ function validateModSearchInputs(&$outParams, $trimText)
 
 /** Execute a search query based on the provided search params.
  *  Params MUST BE SQL SAFE (with exception of the 'text' filter)!
- * @param string|array{order:array{0:string, 1:'asc'|'desc'}, filters:array{text?:string, tags?:int[], 'a.createdbyuserid'?:int, 'side'?:'client'|'server'|'both', gameversions?:int[]}, limit:int, cursor:array{0:mixed, 1:int}} $searchParams Params created from validateInputs MUST BE SQL SAFE!
+ * @param array $searchParams Params created from validateModSearchInputs. MUST BE SQL SAFE!
  * @return array
  */
 function queryModSearchForModCards($searchParams)
@@ -207,12 +251,15 @@ function queryModSearch($searchParams)
 	// This is the index in the params array where the next join param goes.
 	$joinParamsOffset = 0;
 	$havingClauses = '';
+	$joinsMultiplyRows = false;
 
 	if(!empty($user['genAiTolerance'])) {
 		require(SRC_ROOT.'/lib/moderation.php');
 
 		$joinClauses = 'LEFT JOIN moderationRequests req ON req.referenceId = m.modId AND (req.kind, req.category) = ('.MOD_REQUEST_KIND_REPORT_MOD.', '.REPORT_CATEGORY_MOD_LOW_EFFORT_AI.') AND resolved IS NULL ';
 		$havingClauses = 'HAVING COUNT(req.requestId) < '.$user['genAiTolerance']; // @security: $user['genAiTolerance'] comes from the database and is numeric, therefore sql inert.
+
+		$joinsMultiplyRows = true;
 	}
 
 	$orderBy = VALID_ORDER_BY_COLUMNS[$searchParams['order'][0]][0].' '.$searchParams['order'][1];
@@ -284,11 +331,21 @@ function queryModSearch($searchParams)
 				break;
 
 			case 'tags':
-				$joinClauses .= 'JOIN modTags t ON t.modId = m.modId AND t.tagId IN ('.implode(',', $value).') AND t.votes >= 0 '; // @security: $value must be sql safe (validateModSearchInputs does that)
+				// @security: $value only contains integers, therefore sql inert.
+				if($value['in']) {
+					$joinClauses .= 'JOIN modTags t ON t.modId = m.modId AND t.tagId IN ('.implode(',', $value['in']).') AND t.votes >= 0 ';
+					$joinsMultiplyRows = true;
+				}
+				if($value['ex']) {
+					$joinClauses .= 'LEFT JOIN modTags tex ON tex.modId = m.modId AND tex.tagId IN ('.implode(',', $value['ex']).') AND tex.votes >= 0 ';
+					$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+					$whereClauses .= 'tex.modId IS NULL';
+				}
 				break;
 
 			case 'gameversions':
-				$joinClauses .= 'JOIN modCompatibleGameVersionsCached mcv ON mcv.modId = m.modId AND mcv.gameVersion IN ('.implode(',', $value).') '; // @security: $value must be sql safe (validateModSearchInputs does that)
+				$joinClauses .= 'JOIN modCompatibleGameVersionsCached mcv ON mcv.modId = m.modId AND mcv.gameVersion IN ('.implode(',', $value['in']).') ';
+				$joinsMultiplyRows = true;
 				break;
 
 			case 'majorversion':
@@ -303,37 +360,61 @@ function queryModSearch($searchParams)
 				array_splice($sqlParams, $joinParamsOffset, 0, $value);
 				$joinParamsOffset++;
 
-				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE '; // direct author
+				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
 				$whereClauses .= "(c.hash = UNHEX(?) OR tm.userId IS NOT NULL)";
 				$sqlParams[] = $value;
 				break;
 
-			case 'side':
-				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
-				$whereClauses .= "m.side = ?";
-				$sqlParams[] = $value;
+			case 'sides':
+				// @security: $value only contains keys of MOD_LIST_FILTER_SIDES, therefore sql inert.
+				if($value['in']) {
+					$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+					$whereClauses .= "m.side IN ('".implode("','", $value['in'])."')";
+				}
+				if($value['ex']) {
+					$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+					$whereClauses .= "m.side NOT IN ('".implode("','", $value['ex'])."')";
+				}
 				break;
 
-			case 'type':
-				switch($value) {
-					case 'v': $value = 'Theme'; break;
-					case 'd': $value = 'Content'; break;
-					case 'c': $value = 'Code'; break;
-					default: assert(false, "Invalid kind: $value");
+			case 'types':
+				// @security: peek names come from MOD_LIST_FILTER_TYPES, therefore sql inert.
+				$toPeekList = fn($codes) => "'".implode("','", array_map(fn($code) => MOD_LIST_FILTER_TYPES[$code]['peek'], $codes))."'";
+				if($value['in']) {
+					$peekList = $toPeekList($value['in']);
+					$joinClauses .= <<<SQL
+						JOIN modReleases r ON r.modId = m.modId
+						JOIN files fi ON fi.assetId = r.assetId
+						JOIN modPeekResults mpr ON mpr.fileId = fi.fileId AND mpr.type IN ($peekList)
+
+					SQL;
+					$joinsMultiplyRows = true;
 				}
-				//TODO(Rennorb) @cleanup @legacy: Old mods don't have this information set, they wont match this filter.
-				$joinClauses .= <<<SQL
-					JOIN modReleases r ON r.modId = m.modId
-					JOIN files fi ON fi.assetId = r.assetId
-					JOIN modPeekResults mpr on mpr.fileId = fi.fileId AND mpr.type = '$value'
-				SQL; // @security: $value can only be one of the specified strings, therefore its sql inert.
+				if($value['ex']) {
+					$peekList = $toPeekList($value['ex']);
+					$joinClauses .= <<<SQL
+						LEFT JOIN (
+							modReleases rex
+							JOIN files fiex ON fiex.assetId = rex.assetId
+							JOIN modPeekResults mprex ON mprex.fileId = fiex.fileId AND mprex.type IN ($peekList)
+						) ON rex.modId = m.modId
+
+					SQL;
+					$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+					$whereClauses .= 'rex.releaseId IS NULL';
+				}
 				break;
 
 			case 'stati':
-				$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
-				$foldedIds = implode(',', array_map('intval', $value));
-				// @security: $foldedIds only contains numbers, and is therefore sql inert.
-				$whereClauses .= "a.statusId IN ($foldedIds)";
+				// @security: $value only contains integers, therefore sql inert.
+				if($value['in']) {
+					$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+					$whereClauses .= 'a.statusId IN ('.implode(',', $value['in']).')';
+				}
+				if($value['ex']) {
+					$whereClauses .= $whereClauses ? ' AND ' : 'WHERE ';
+					$whereClauses .= 'a.statusId NOT IN ('.implode(',', $value['ex']).')';
+				}
 				break;
 
 			case 'category':
@@ -415,8 +496,8 @@ function queryModSearch($searchParams)
 	$currentUserId = $user['userId'] ?? 0;
 
 	// Only filter joins (tags, gameversions, type) can multiply rows; base joins all hit PK/UNIQUE.
-	$dedup = $joinClauses ? 'DISTINCT' : '';
-	$groupBy = $joinClauses ? 'GROUP BY m.modId' : '';
+	$dedup = $joinsMultiplyRows ? 'DISTINCT' : '';
+	$groupBy = $joinsMultiplyRows ? 'GROUP BY m.modId' : '';
 
 	return $con->getAll("
 		SELECT $dedup

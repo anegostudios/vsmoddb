@@ -44,8 +44,10 @@ if ($save) {
 	}
 }
 else if ($delete) {
-	showErrorPage(HTTP_FORBIDDEN, 'Deleting a tag is now forbidden.');
-	exit(); 
+	if ($user['roleCode'] !== 'admin') showErrorPage(HTTP_FORBIDDEN);
+	$con->execute('DELETE FROM tags WHERE tagId = ?', [$tagId]);
+	header('Location: /list/tag?deleted=1');
+	exit();
 }
 
 if ($tagId) {
