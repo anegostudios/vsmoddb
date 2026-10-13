@@ -44,9 +44,8 @@ if ($save) {
 	}
 }
 else if ($delete) {
-	$con->execute('DELETE FROM tags WHERE tagId = ?', [$tagId]);
-	header('Location: /list/tag?deleted=1');
-	exit();
+	showErrorPage(HTTP_FORBIDDEN, 'Deleting a tag is now forbidden.');
+	exit(); 
 }
 
 if ($tagId) {

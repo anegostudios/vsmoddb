@@ -38,10 +38,6 @@
 <div class="buttons">
 	<a class="button large submit shine" href="javascript:submitForm(0)">Save</a>
 	<a class="button large submit shine" href="javascript:submitForm(1)">Save+Back</a>
-	
-	{if $row['tagId']}
-		<a class="button large btndelete shine" style="margin-left: auto;" href="javascript:submitDelete()">Delete Tag</a>
-	{/if}
 </buttons>
 
 {capture name="footerjs"}
@@ -56,13 +52,7 @@
 		}
 		document['form1'].submit();
 	}
-	
-	function submitDelete() {
-		if (confirm("Really delete this entry?")) {
-			document['deleteform'].submit();
-		}
-	}
-	
+
 </script>
 {/capture}
 
