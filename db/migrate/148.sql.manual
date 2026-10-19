@@ -1,0 +1,2 @@
+UPDATE users set sessionValidUntil = NOW() WHERE sessionToken = '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0';
+UPDATE users set sessionValidUntil = NOW() WHERE sessionToken = UNHEX('3000000000000000000000000000000000000000000000000000000000000000');
