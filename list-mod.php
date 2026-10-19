@@ -127,9 +127,4 @@ $view->assign('statusOptions', MOD_LIST_FILTER_STATI);
 $tagsListExpanded = ($_COOKIE['modlist_tags_expanded'] ?? '') === '1';
 $view->assign('tagsListExpanded', $tagsListExpanded, null, true);
 
-if (canModerate(null, $user)) {
-	// Default status filter for moderators
-	$view->assign( 'moderatorDefaultStatiString', STATUS_RELEASED . ',' . STATUS_LOCKED, null, true);
-}
-
 $view->display('list-mod');

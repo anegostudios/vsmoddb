@@ -1,10 +1,5 @@
 $breakingPoint: 768px;
 
-$filterRoles: (
-	in: (hue: 120, saturation: 35%, hover: 75%, icon: 'v'),
-	ex: (hue: 0, saturation: 45%, hover: 78%, icon: 'x'),
-);
-
 // Using a mask allows us to change the color at will
 // used for search, the chevrons, and the include/exclude filters
 @mixin icon-mask($url) {
@@ -180,6 +175,9 @@ $filterRoles: (
 		font-size: .875rem;
 		font-weight: bold;
 		transition: all .3s ease-in-out;
+
+		&.in { background: hsl(var(--c-filter-badge-in) 60%); }
+		&.ex { background: hsl(var(--c-filter-badge-ex) 60%); }
 	}
 
 	.reset[hidden], .badge[hidden] {
@@ -230,6 +228,7 @@ $filterRoles: (
 		display: flex;
 		align-items: center;
 		margin: 0;
+		height: 1.75rem;
 
 		&.sub {
 			padding-left: 1.25rem;
@@ -248,18 +247,19 @@ $filterRoles: (
 			}
 		}
 
-		&.in i, &.ex i {
+		input:checked~* i {
 			display: flex;
 		}
 
-		button {
+		>input[type="checkbox"] {
+			display: none;
+		}
+
+		>label {
 			display: flex;
 			align-items: center;
 			min-width: 0;
-			padding: 0;
 			overflow: hidden;
-			border: 0;
-			background: transparent;
 			text-align: left;
 			white-space: nowrap;
 			cursor: pointer;
@@ -268,21 +268,35 @@ $filterRoles: (
 				background: rgba(0, 0, 0, .2);
 			}
 
-			&[data-role="in"] {
+			flex: 1;
+
+			>:first-child {
 				flex: 1;
+				min-width: 0;
+				padding-left: .5rem;
+				overflow: hidden;
+				font-size: .875rem;
+				text-overflow: ellipsis;
+			}
+
+			i::before {
+				background-color: hsl(var(--c-filter-badge-in) 30%);
+				@include icon-mask('/web/img/v_icon.svg');
 			}
 		}
 
-		.label {
-			flex: 1;
-			min-width: 0;
-			padding-left: .5rem;
-			overflow: hidden;
-			font-size: .875rem;
-			text-overflow: ellipsis;
+		>button {
+			padding: 0;
+			background: transparent;
+			border: none;
+			cursor: pointer;
+
+			i::before {
+				background-color: hsl(var(--c-filter-badge-ex) 30%);
+				@include icon-mask('/web/img/x_icon.svg');
+			}
 		}
 
-		// Include/Exclude icon background
 		i {
 			display: none;
 			align-items: center;
@@ -291,7 +305,6 @@ $filterRoles: (
 			height: 1.75rem;
 			opacity: 0;
 
-			// icon
 			&::before {
 				content: '';
 				width: 1rem;
@@ -299,45 +312,25 @@ $filterRoles: (
 			}
 		}
 
-		input {
-			position: absolute;
-			opacity: 0;
-			pointer-events: none;
-		}
-	}
-
-	// Repeats the same style for Include and Exclude toggles
-	@each $role, $style in $filterRoles {
-		$hue: map-get($style, hue);
-		$saturation: map-get($style, saturation);
-
-		// Active option count
-		.badge[data-#{$role}] {
-			background: hsl($hue $saturation 60%);
-		}
-
-		.list li {
-			// Include/Exclude icon
-			[data-role="#{$role}"] i::before {
-				background-color: hsl($hue $saturation 30%);
-				@include icon-mask('/web/img/#{map-get($style, icon)}_icon.svg');
-			}
-
-			// Active option
-			&.#{$role} {
-				background: hsl($hue $saturation 90%);
-
-				// icon background
-				[data-role="#{$role}"] i {
+		input:not([value^="-"]):checked {
+			&~label {
+				background: hsl(var(--c-filter-badge-in) 90%);
+				i {
 					opacity: 1;
-					background: hsl($hue $saturation 60%);
+					background: hsl(var(--c-filter-badge-in) 60%);
 				}
 			}
-
-			// icon background on hover
-			[data-role="#{$role}"]:hover i {
-				background: hsl($hue $saturation map-get($style, hover));
+			&:hover label i { background: hsl(var(--c-filter-badge-in) 75%); }
+		}
+		input[value^="-"]:checked {
+			&~label {
+				background: hsl(var(--c-filter-badge-ex) 90%);
+				i {
+					opacity: 1;
+					background: hsl(var(--c-filter-badge-ex) 60%);
+				}
 			}
+			&:hover button i { background: hsl(var(--c-filter-badge-ex) 78%); }
 		}
 	}
 

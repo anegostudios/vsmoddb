@@ -2,12 +2,8 @@
 	<summary class="head">
 		<span class="title">{$title}</span>
 		<span class="badges"{if $filter['count'] == 0} hidden{/if}>
-			<span class="badge" data-in{if $filter['inCount'] == 0} hidden{/if}>{$filter['inCount']}</span>
-			{if !empty($exclude)}
-				<span class="badge" data-ex{if $filter['exCount'] == 0} hidden{/if}>
-					{$filter['exCount']}
-				</span>
-			{/if}
+			<span class="badge in" {if $filter['inCount'] == 0} hidden{/if}>{$filter['inCount']}</span>
+			<span class="badge ex" {if $filter['exCount'] == 0} hidden{/if}>{$filter['exCount']}</span>
 		</span>
 		<span class="trailing">
 			<button type="button" class="reset" aria-label="Reset {$title} filter"{if $filter['count'] == 0} hidden tabindex="-1"{/if}>
@@ -30,18 +26,16 @@
 			<ul class="list{if !empty($expandable) && $tagsListExpanded} expanded{/if}" id="{$id}-list">
 				{foreach from=$options item=option key=key}
 					<li class="{if !empty($option['sub'])}sub{/if}{if isset($filter['in'][$key])} in{/if}{if isset($filter['ex'][$key])} ex{/if}" data-text="{$option['label']}">
-						<button type="button" data-role="in" aria-label="Include {$option['label']}">
-							<span class="label">{$option['label']}</span>
+						<input type="checkbox" id="{$name}-{$key}" name="{$name}" value="{$option['value'] ?? $key}" {if isset($filter['in'][$key])} checked{/if} />
+						<label for="{$name}-{$key}" aria-label="Include {$option['label']}">
+							<span>{$option['label']}</span>
 							<i></i>
-						</button>
-
-						<input type="checkbox" name="{$name}" value="{$option['value'] ?? $key}" data-role="in"{if isset($filter['in'][$key])} checked{/if} />
+						</label>
 
 						{if !empty($exclude)}
-							<button type="button" data-role="ex" aria-label="Exclude {$option['label']}">
-								<i></i>
-							</button>
-							<input type="checkbox" name="{$name}" value="-{$option['value'] ?? $key}" data-role="ex"{if isset($filter['ex'][$key])} checked{/if} />
+						<button type="button" aria-label="Exclude {$option['label']}">
+							<i></i>
+						</button>
 						{/if}
 					</li>
 				{/foreach}

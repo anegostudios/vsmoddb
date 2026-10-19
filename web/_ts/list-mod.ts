@@ -12,7 +12,6 @@ function setShown(el: HTMLElement | null, shown: boolean) {
 	if (el instanceof HTMLButtonElement) el.tabIndex = shown ? 0 : -1;
 }
 
-// MARK: ModListFilters
 class ModListFilters {
 	private debounce?: ReturnType<typeof setTimeout>;
 	private readonly text: HTMLInputElement;
