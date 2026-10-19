@@ -125,6 +125,7 @@ $modCategories = [
 	// CATEGORY_NOT_SPECIFIED skipped, it's not a valid input
 	CATEGORY_GAME_MOD      => 'Game Mod',
 	CATEGORY_SERVER_TWEAK  => 'Server-Specific Tweak',
+	CATEGORY_LIBRARY       => 'Library',
 	CATEGORY_EXTERNAL_TOOL => 'External Tool',
 	CATEGORY_OTHER         => 'Other',
 ];

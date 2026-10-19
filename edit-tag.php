@@ -42,6 +42,7 @@ if ($save) {
 	}
 }
 else if ($delete) {
+	if ($user['roleCode'] !== 'admin') showErrorPage(HTTP_FORBIDDEN);
 	$con->execute('DELETE FROM tags WHERE tagId = ?', [$tagId]);
 	header('Location: /list/tag?deleted=1');
 	exit();

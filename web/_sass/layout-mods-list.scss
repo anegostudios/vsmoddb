@@ -1,0 +1,449 @@
+$breakingPoint: 768px;
+
+$filterRoles: (
+	in: (hue: 120, saturation: 35%, hover: 75%, icon: 'v'),
+	ex: (hue: 0, saturation: 45%, hover: 78%, icon: 'x'),
+);
+
+// Using a mask allows us to change the color at will
+// used for search, the chevrons, and the include/exclude filters
+@mixin icon-mask($url) {
+	-webkit-mask: url($url) center / contain no-repeat;
+	mask: url($url) center / contain no-repeat;
+}
+
+@mixin icon($size, $url) {
+	display: block;
+	flex-shrink: 0;
+	width: $size;
+	height: $size;
+	background-color: hsl(0 0% 50%);
+	@include icon-mask($url);
+}
+
+.mod-list {
+	display: grid;
+	grid-template-columns: minmax(240px, 300px) 1fr;
+	gap: 1.5rem;
+	align-items: start;
+
+	.scroll-hint {
+		display: none;
+	}
+
+	&[data-init] {
+		.load-more {
+			 display: none;
+		}
+
+		.scroll-hint {
+			display: block;
+		}
+	}
+
+	form {
+		display: flex;
+		flex-direction: column;
+		gap: .5em;
+	}
+
+	.top {
+		display: flex;
+		justify-content: space-between;
+
+		h2 {
+			margin: 0;
+			font-size: 24px;
+			font-weight: bold;
+		}
+	}
+
+	.search {
+		display: flex;
+		align-items: center;
+		width: 100%;
+		height: 1.75rem;
+		padding: 0 .75rem;
+		border: 1px solid var(--color-border);
+		background-color: var(--color-input);
+
+		&:focus-within {
+			border-color: var(--color-border-active);
+		}
+
+		input {
+			flex: 1; 
+			height: 100%; 
+			border: none; 
+			background: transparent;
+			font-size: .875rem; 
+		}
+
+		&.big {
+			height: 3rem;
+
+			input {
+				font-size: 1rem;
+			}
+		}
+
+		.icon {
+			@include icon(1rem, '/web/img/search_icon.svg');
+			margin-right: .35rem; 
+		}
+	}
+
+	.reset {
+		display: block;
+		max-width: 100%;
+		height: 1.5rem;
+		padding: 0 .5rem;
+		border: none;
+		background: transparent;
+		color: black;
+		font-size: .75rem;
+		cursor: pointer;
+		user-select: none;
+		transition: color .1s ease-in-out, padding .3s ease-in-out, max-width .3s ease-in-out;
+
+		&:hover {
+			background: hsl(0 0% 80%);
+		}
+	}
+
+	.filter {
+		border: 1px solid var(--color-border);
+
+		&.active {
+			border-color: var(--color-border-active);
+		}
+
+		&[open] .head .chevron {
+			transform: rotate(180deg);
+		}
+	}
+
+	.head {
+		display: flex;
+		align-items: center;
+		padding: .75rem 1rem;
+		font-size: 1.25rem;
+		font-weight: bold;
+		list-style: none;
+		cursor: pointer;
+
+		&::-webkit-details-marker {
+			display: none;
+		}
+
+		&:hover .chevron {
+			background-color: hsl(0 0% 20%);
+		}
+
+		.title {
+			z-index: 3;
+			min-width: 0;
+			padding-right: .5rem;
+			background-color: white;
+		}
+
+		.trailing {
+			display: flex;
+			flex-direction: row;
+			justify-content: flex-end;
+			align-items: center;
+			gap: .5rem;
+			margin-left: auto;
+		}
+	}
+
+	.chevron {
+		@include icon(1.25rem, '/web/img/chevron_big_icon.svg');
+	}
+
+	.badges {
+		display: flex;
+		align-items: center;
+		overflow: hidden;
+		transform: translateX(0);
+		user-select: none;
+	}
+
+	.badge {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		max-width: 2rem;
+		height: 1rem;
+		padding: 0 .25rem;
+		color: black;
+		font-size: .875rem;
+		font-weight: bold;
+		transition: all .3s ease-in-out;
+	}
+
+	.reset[hidden], .badge[hidden] {
+		max-width: 0;
+		padding: 0;
+		color: transparent;
+	}
+
+	.body {
+		display: flex;
+		flex-direction: column;
+		padding: 0 .75rem 1rem;
+
+		// contributor
+		select {
+			width: 100%;
+		}
+	}
+
+	.list {
+		max-height: max(20rem, 20vh);
+		padding: .5rem 0 0;
+		overflow: hidden auto;
+
+		&.expanded {
+			max-height: none;
+		}
+
+		&.expanded + .expand .chevron {
+			transform: rotate(180deg);
+		}
+	}
+
+	.expand {
+		display: flex;
+		justify-content: center;
+		width: 100%;
+		padding: .25rem 0;
+		border: none;
+		cursor: pointer;
+
+		.chevron {
+			@include icon(1rem, '/web/img/chevron_small_icon.svg');
+		}
+	}
+
+	.list li {
+		display: flex;
+		align-items: center;
+		margin: 0;
+
+		&.sub {
+			padding-left: 1.25rem;
+		}
+
+		&[hidden] {
+			display: none;
+		}
+
+		&:hover {
+			background: rgba(0, 0, 0, .1);
+			
+			i {
+				display: flex;
+				opacity: 1;
+			}
+		}
+
+		&.in i, &.ex i {
+			display: flex;
+		}
+
+		button {
+			display: flex;
+			align-items: center;
+			min-width: 0;
+			padding: 0;
+			overflow: hidden;
+			border: 0;
+			background: transparent;
+			text-align: left;
+			white-space: nowrap;
+			cursor: pointer;
+
+			&:active {
+				background: rgba(0, 0, 0, .2);
+			}
+
+			&[data-role="in"] {
+				flex: 1;
+			}
+		}
+
+		.label {
+			flex: 1;
+			min-width: 0;
+			padding-left: .5rem;
+			overflow: hidden;
+			font-size: .875rem;
+			text-overflow: ellipsis;
+		}
+
+		// Include/Exclude icon background
+		i {
+			display: none;
+			align-items: center;
+			justify-content: center;
+			width: 1.75rem;
+			height: 1.75rem;
+			opacity: 0;
+
+			// icon
+			&::before {
+				content: '';
+				width: 1rem;
+				height: 1rem;
+			}
+		}
+
+		input {
+			position: absolute;
+			opacity: 0;
+			pointer-events: none;
+		}
+	}
+
+	// Repeats the same style for Include and Exclude toggles
+	@each $role, $style in $filterRoles {
+		$hue: map-get($style, hue);
+		$saturation: map-get($style, saturation);
+
+		// Active option count
+		.badge[data-#{$role}] {
+			background: hsl($hue $saturation 60%);
+		}
+
+		.list li {
+			// Include/Exclude icon
+			[data-role="#{$role}"] i::before {
+				background-color: hsl($hue $saturation 30%);
+				@include icon-mask('/web/img/#{map-get($style, icon)}_icon.svg');
+			}
+
+			// Active option
+			&.#{$role} {
+				background: hsl($hue $saturation 90%);
+
+				// icon background
+				[data-role="#{$role}"] i {
+					opacity: 1;
+					background: hsl($hue $saturation 60%);
+				}
+			}
+
+			// icon background on hover
+			[data-role="#{$role}"]:hover i {
+				background: hsl($hue $saturation map-get($style, hover));
+			}
+		}
+	}
+
+	.open-filters, .backdrop {
+		display: none;
+	}
+
+	@media (max-width: $breakingPoint) {
+		grid-template-columns: 1fr;
+
+		.filters {
+			position: fixed;
+			inset: 0 0 0 auto;
+			z-index: 1000;
+			width: calc(100vw - 2rem);
+			max-width: 85vw;
+			padding: 1rem;
+			overflow-y: auto;
+			background: var(--color-content-bg, #fff);
+			box-shadow: 2px 0 12px rgb(0 0 0 / .15);
+			transform: translateX(100%);
+			transition: transform .25s ease;
+		}
+
+		.head {
+			padding: 1rem 1.25rem;
+			font-size: 1.125rem;
+		}
+
+		.list li button[data-role="in"] {
+			min-height: 2.75rem;
+		}
+
+		.list li i {
+			display: flex;
+			width: 2.75rem;
+			height: 2.75rem;
+			opacity: 1;
+			
+			&::before {
+				width: 1.25rem;
+				height: 1.25rem;
+			}
+		}
+
+		.reset {
+			min-height: 2.75rem;
+			padding: 0 .75rem;
+			font-size: .875rem;
+		}
+
+		.search {
+			height: 2.75rem;
+
+			&.big {
+				height: 3.25rem;
+			}
+		}
+
+		.backdrop {
+			display: block;
+			position: fixed;
+			inset: 0;
+			z-index: 999;
+			background: rgb(0 0 0 / .45);
+			opacity: 0;
+			visibility: hidden;
+			pointer-events: none;
+			transition: opacity .25s ease;
+		}
+
+		.open-filters {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: fixed;
+			
+			right: max(1rem, env(safe-area-inset-right));
+			bottom: max(1rem, env(safe-area-inset-bottom));
+
+			z-index: 998;
+			padding: 1.5rem;
+			border: none;
+			box-shadow: 0 2px 12px rgb(0 0 0 / .25);
+			background-color: rgb(30, 101, 84);
+			color: white;
+			font-size: 1.125rem;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+		&.open {
+			.filters {
+				transform: translateX(0);
+			}
+
+			.backdrop {
+				opacity: 1;
+				visibility: visible;
+				pointer-events: auto;
+			}
+
+			.open-filters {
+				visibility: hidden;
+				pointer-events: none;
+			}
+		}
+	}
+}

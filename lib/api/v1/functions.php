@@ -274,6 +274,7 @@ function mapCategoryToType($category)
 		case CATEGORY_OTHER: return 'other';
 		case CATEGORY_GAME_MOD:
 		case CATEGORY_SERVER_TWEAK: // Keep it as 'mod' for now, would have been used that way before.
+		case CATEGORY_LIBRARY:
 		default:
 			return 'mod';
 	}

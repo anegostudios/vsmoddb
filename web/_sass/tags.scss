@@ -94,3 +94,12 @@
 		}
 	}
 }
+
+.tag-tree-name {
+	padding-left: calc(0.5em + var(--tag-depth, 0) * 1.5em);
+}
+
+.tag-tree-branch {
+	color: var(--color-border);
+	margin-right: .25em;
+}

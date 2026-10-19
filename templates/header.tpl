@@ -27,7 +27,7 @@
 	<link nonce="{$cspNonce}" href="/web/js/tinymce/skins/ui/oxide/content.min.css?v=2" as="style">
 	<link nonce="{$cspNonce}" href="/web/css/editor_content.css?ver=4" as="style">
 
-	<link nonce="{$cspNonce}" href="/web/css/style.css?v=e1f7168e8d9cfcffa96981337e2a3b03" rel="stylesheet" type="text/css">
+	<link nonce="{$cspNonce}" href="/web/css/style.css?v=7a81678bef57e3111b8b4224c93cdf9a" rel="stylesheet" type="text/css">
 
 	<? if(!empty(CDN_ASSETSERVER_BASE_URL) && str_starts_with(CDN_ASSETSERVER_BASE_URL, 'http')): ?><link rel="dns-prefetch" href="<?= CDN_ASSETSERVER_BASE_URL ?>" /><? endif; ?>
 
@@ -52,8 +52,16 @@
 		
 		<nav id="main-nav">
 			<a href="/home"{if $headerHighlight === HEADER_HIGHLIGHT_HOME} class="active"{/if}>Home</a>
-			<a href="/list/mod"{if $headerHighlight === HEADER_HIGHLIGHT_MODS} class="active"{/if}>All Mods</a>
-			<a href="/list/mod?c=s"{if $headerHighlight === HEADER_HIGHLIGHT_TWEAKS} class="active"{/if}>Server Tweaks</a>
+			<a href="/list/mod"{if $headerHighlight === HEADER_HIGHLIGHT_MODS} class="active"{/if}>Mods</a>
+			<span class="submenu mod-browse{if $headerHighlight === HEADER_HIGHLIGHT_LIBRARY || $headerHighlight === HEADER_HIGHLIGHT_TWEAKS || $headerHighlight === HEADER_HIGHLIGHT_EXTERNAL_TOOL || $headerHighlight === HEADER_HIGHLIGHT_OTHER} active{/if}" tabindex="0">
+				<span>Browse…</span>
+				<nav>
+					<a href="/list/mod?c=l"{if $headerHighlight === HEADER_HIGHLIGHT_LIBRARY} class="active"{/if}>Libraries</a>
+					<a href="/list/mod?c=s"{if $headerHighlight === HEADER_HIGHLIGHT_TWEAKS} class="active"{/if}>Server tweaks</a>
+					<a href="/list/mod?c=e"{if $headerHighlight === HEADER_HIGHLIGHT_EXTERNAL_TOOL} class="active"{/if}>External tools</a>
+					<a href="/list/mod?c=o"{if $headerHighlight === HEADER_HIGHLIGHT_OTHER} class="active"{/if}>Others</a>
+				</nav>
+			</span>
 			{if (!empty($user))}
 				<a href="/edit/mod" class="strikethrough-when-banned strikethrough-when-readonly{if $headerHighlight === HEADER_HIGHLIGHT_SUBMIT_MOD} active{/if}"><img src="/web/img/upload.png"><span>Submit a mod</span></a>
 			{/if}

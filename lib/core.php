@@ -1128,6 +1128,9 @@ const HEADER_HIGHLIGHT_SUBMIT_MOD    = 4;
 const HEADER_HIGHLIGHT_NOTIFICATIONS = 5;
 const HEADER_HIGHLIGHT_ADMIN_TOOLS   = 6;
 const HEADER_HIGHLIGHT_CURRENT_USER  = 7;
+const HEADER_HIGHLIGHT_LIBRARY       = 8;
+const HEADER_HIGHLIGHT_EXTERNAL_TOOL = 9;
+const HEADER_HIGHLIGHT_OTHER         = 10;
 
 
 const TAG_KIND_PREDEFINED   = 2;
@@ -1135,14 +1138,15 @@ const TAG_KIND_USER_DEFINED = 3;
 
 // A game mod and server tweak share a lot of logic.
 // CATEGORY_GAME_MOD & CATEGORY__MASK === CATEGORY_SERVER_TWEAK & CATEGORY__MASK
-const CATEGORY__MASK = 0b01111111;
+const CATEGORY__MASK = 0b00011111;
 
 const CATEGORY_NOT_SPECIFIED = 0; // Used to force the user to select something, not a valid value in the db.
 const CATEGORY_GAME_MOD      = 1;
 const CATEGORY_EXTERNAL_TOOL = 2;
 const CATEGORY_OTHER         = 3;
+const CATEGORY_LIBRARY       = CATEGORY_GAME_MOD | (1 << 6);
 const CATEGORY_SERVER_TWEAK  = CATEGORY_GAME_MOD | (1 << 7);
-
+// TODO: Future category: Compatibility_patch, Translation.
 
 /**
  * @param int $category
@@ -1155,6 +1159,7 @@ function stringifyCategory($category)
 		case CATEGORY_EXTERNAL_TOOL: return 'External Tool';
 		case CATEGORY_OTHER:         return 'Other';
 		case CATEGORY_SERVER_TWEAK:  return 'Server Tweak';
+		case CATEGORY_LIBRARY:       return 'Library';
 		default: return strval($category);
 	}
 }
