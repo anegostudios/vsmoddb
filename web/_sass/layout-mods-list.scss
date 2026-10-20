@@ -116,6 +116,15 @@ $breakingPoint: 768px;
 		&[open] .head .chevron {
 			transform: rotate(180deg);
 		}
+
+		&:not(.active) {
+			.reset {
+				display: none;
+			}
+			.badges {
+				display: none;
+			}
+		}
 	}
 
 	.head {
@@ -178,6 +187,10 @@ $breakingPoint: 768px;
 
 		&.in { background: hsl(var(--c-filter-badge-in) 60%); }
 		&.ex { background: hsl(var(--c-filter-badge-ex) 60%); }
+
+		&:empty {
+			display: none;
+		}
 	}
 
 	.reset[hidden], .badge[hidden] {
@@ -229,6 +242,7 @@ $breakingPoint: 768px;
 		align-items: center;
 		margin: 0;
 		height: 1.75rem;
+		user-select: none;
 
 		&.sub {
 			padding-left: 1.25rem;
@@ -320,12 +334,17 @@ $breakingPoint: 768px;
 					background: hsl(var(--c-filter-badge-in) 60%);
 				}
 			}
+			&~button {
+				background: hsl(var(--c-filter-badge-in) 90%);
+			}
 			&:hover label i { background: hsl(var(--c-filter-badge-in) 75%); }
 		}
 		input[value^="-"]:checked {
 			&~label {
 				background: hsl(var(--c-filter-badge-ex) 90%);
-				i {
+			}
+			&~button {
+				> i {
 					opacity: 1;
 					background: hsl(var(--c-filter-badge-ex) 60%);
 				}

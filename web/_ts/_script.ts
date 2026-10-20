@@ -12,5 +12,4 @@
 /// <reference path="consent.ts" />
 /// <reference path="on-dom-loaded.ts" />
 /// <reference path="ays-beforeunload-shim.js" />
-/// <reference path="list-mod.ts" />
-/// <reference path="list-mod-pagination.ts" />
+/// <reference path="layout-mods-list.ts" />

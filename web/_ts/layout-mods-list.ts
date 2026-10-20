@@ -1,27 +1,36 @@
 const SCROLL_ROOT_MARGIN_PX = 300;
 const MOD_LIST_TEXT_SEARCH_DEBOUNCE_MS = 350;
 
-function attachModListInteractions() : void
-{
-	const wrapperEl = document.getElementsByClassName('results')[0] as HTMLElement;
+type ModListArgs = {
+	baseUrl : string,
+	cursor : string,
+	statusDefaults: number[],
+}
 
-	const orderByLabelEl = R.get('list-status')!;
+function attachModListInteractions(args : ModListArgs) : void
+{
+	const orderByLabelEl = R.get('order-by-lbl')!;
 	const sortWrapperEl = document.getElementsByClassName('sort')[0];
 
 	const listWrapperEl = R.get('mods-paging-wrapper')!;
 	const cellContainerEl = listWrapperEl.firstElementChild!;
 	const fetchTriggerEl = listWrapperEl.lastElementChild!;
 
-	const currentUrl = new URL(wrapperEl.dataset.baseUrl!); // mutated during input change name
+	const fetchStatusLabel = fetchTriggerEl;
+
+	let fetchInvalidationCtrl = new AbortController();
+	const currentUrl = new URL(args.baseUrl, window.location.toString());
+	let fetchCursor = args.cursor;
+	let hasMoreResults = cellContainerEl.childElementCount > 0;
 
 	const inputsFormEl = R.get<HTMLFormElement>('filter-inputs')!;
 	const searchInputEl = inputsFormEl.querySelector<HTMLInputElement>('input[name="text"]')!;
-	const contributorWrapperEl = R.get('contributor')!;
+	const contributorWrapperEl = R.get('contributor-panel')!;
 	const contributorSelectEl = contributorWrapperEl.querySelector<HTMLSelectElement>('select[name="a"]')!;
 	const $contributorSelectEl = $(contributorSelectEl);
 
 	const resetAllEl = R.get('filters-reset-all')!;
-	const badgeEls = wrapperEl.getElementsByClassName('badge');
+	const badgeEls = inputsFormEl.getElementsByClassName('badge');
 
 	// --- 
 
@@ -36,13 +45,12 @@ function attachModListInteractions() : void
 		}, MOD_LIST_TEXT_SEARCH_DEBOUNCE_MS);
 	})
 
+	$contributorSelectEl.chosen();
 	attachRemoteSearchHandler(contributorWrapperEl);
 	$contributorSelectEl.on('change', () => {
-		const selectedIds = $contributorSelectEl.val();
 		currentUrl.searchParams.delete('a');
-		if(selectedIds)
-			for(const v of selectedIds)
-				currentUrl.searchParams.append('a', v);
+		const val = $contributorSelectEl.val();
+		if(val) currentUrl.searchParams.set('a', val);
 
 		updateStateAndRestartFetching();
 	});
@@ -54,27 +62,71 @@ function attachModListInteractions() : void
 
 		if(button.id === 'filters-reset-all') {
 			clearTimeout(textDebounceTimer);
-
 			searchInputEl.value = '';
-			for(const el of wrapperEl.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>)
+
+			for(const el of inputsFormEl.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>) {
 				el.checked = false;
+				if(el.value.startsWith('-')) el.value = el.value.slice(1);
+
+				if(el.name === 'st') {
+					for(const status of args.statusDefaults) {
+						if(el.value === String(status)) el.checked = true;
+					}
+				}
+			}
 
 			contributorSelectEl.value = '';
 			$contributorSelectEl.trigger('chosen:updated');
 
-			{ const el = wrapperEl.querySelector<HTMLInputElement>('input[name="st"][value="2"]'); if(el) el.checked = true; } // STATUS_RELEASED
-			{ const el = wrapperEl.querySelector<HTMLInputElement>('input[name="st"][value="4"]'); if(el) el.checked = true; } // STATUS_LOCKED
+			for(const el of inputsFormEl.getElementsByClassName('filter'))
+				el.classList.remove('active');
+
+			for(const el of badgeEls)
+				el.textContent = '';
+			const statusBadgeEl = inputsFormEl.querySelector('#status-panel .badge.in');
+			if(statusBadgeEl) statusBadgeEl.textContent = String(args.statusDefaults.length);
+
+			for(const k of Array.from(currentUrl.searchParams.keys())) // bit ugly, but searchParams is readonly
+				currentUrl.searchParams.delete(k);
 
 			resetAllEl.hidden = true;
 			updateStateAndRestartFetching();
 		}
 		else if(button.classList.contains('reset')) {
 			e.preventDefault();
-			const filterPanel = button.closest('.filter');
-			if(!filterPanel) return;
+			const sectionWrapperEl = button.closest('.filter');
+			if(!sectionWrapperEl) return;
 
-			for(const el of filterPanel.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>)
-				el.checked = false;
+			const badgeInEl = sectionWrapperEl.getElementsByClassName('badge in')[0];
+			badgeInEl.textContent = '';
+			sectionWrapperEl.getElementsByClassName('badge ex')[0].textContent = '';
+
+			if(sectionWrapperEl.id === 'contributor-panel') {
+				currentUrl.searchParams.delete('a');
+
+				contributorSelectEl.value = '';
+				$contributorSelectEl.trigger('chosen:updated');
+			}
+			else {
+				for(const el of sectionWrapperEl.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>) {
+					currentUrl.searchParams.delete(el.name);
+
+					el.checked = false;
+					if(el.value.startsWith('-')) el.value = el.value.slice(1);
+				}
+
+				if(sectionWrapperEl.id === 'status-panel') {
+					for(const el of inputsFormEl.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>) {
+						if(args.statusDefaults.includes(parseInt(el.value, 10))) {
+							currentUrl.searchParams.append(el.name, el.value);
+							el.checked = true;
+						}
+						badgeInEl.textContent = String(args.statusDefaults.length);
+					}
+				}
+			}
+
+			sectionWrapperEl.classList.remove('active');
 
 			hideGlobalResetIfNothingActive();
 			updateStateAndRestartFetching();
@@ -85,12 +137,15 @@ function attachModListInteractions() : void
 
 			const checkboxEl = optionEl.firstElementChild as HTMLInputElement;
 
-			if(checkboxEl.value.startsWith('-')) checkboxEl.checked = false;
+			if(checkboxEl.value.startsWith('-')) {
+				checkboxEl.value = checkboxEl.value.slice(1);
+				checkboxEl.checked = false;
+			}
 			else {
 				checkboxEl.value = '-'+checkboxEl.value;
 				checkboxEl.checked = true;
-				//TODO manually fire change event?
 			}
+			checkboxEl.dispatchEvent(new Event('change', { bubbles: true }));
 
 			//updateStateAndRestartFetching(); // handled in change handler
 		}
@@ -100,37 +155,28 @@ function attachModListInteractions() : void
 		const target = e.target as HTMLInputElement;
 		if(target.type !== 'checkbox') return;
 
-		const sectionWrapperEl = target.closest('filter')!;
+		const sectionWrapperEl = target.closest('.filter')!;
 		const badgeInEl = sectionWrapperEl.getElementsByClassName('badge in')[0];
 		const badgeExEl = sectionWrapperEl.getElementsByClassName('badge ex')[0];
 
 		const isExclude = target.value.startsWith('-');
+		const inverseValue = isExclude ? target.value.slice(1) : '-'+target.value;
+
 		if(target.checked) {
-			const inverseValue = isExclude ? target.value.slice(1) : '-'+target.value;
 			currentUrl.searchParams.delete(target.name, inverseValue);
 			currentUrl.searchParams.append(target.name, target.value);
 
-			const includeValue = isExclude ? inverseValue : target.value;
-			let cIn = 0, cEx = 0;
-			const valuesWithThisName = currentUrl.searchParams.getAll(target.name);
-			for(const v of valuesWithThisName)
-				if(v === includeValue)
-					cIn++;
-			cEx = valuesWithThisName.length - cIn;
-
-			badgeInEl.textContent = cIn ? String(cIn) : '';
-			badgeExEl.textContent = cEx ? String(cEx) : '';
+			updateBadges(badgeInEl, badgeExEl, target.name);
 
 			sectionWrapperEl.classList.add('active');
 			resetAllEl.hidden = false;
 		}
 		else {
+			currentUrl.searchParams.delete(target.name, inverseValue);
 			currentUrl.searchParams.delete(target.name, target.value);
 
-			const targetBadge = isExclude ? badgeExEl : badgeInEl;
-			const newCounter = parseInt(targetBadge.textContent!, 10) - 1;
-			
-			targetBadge.textContent = newCounter ? String(newCounter) : '';
+			//NOTE(Rennorb): unchecking always sets to the include value
+			updateBadges(badgeInEl, badgeExEl, target.name);
 
 			if(!(badgeExEl.textContent || badgeInEl.textContent)) {
 				sectionWrapperEl.classList.remove('active');
@@ -146,7 +192,7 @@ function attachModListInteractions() : void
 	window.addEventListener('popstate', () => {
 		const search = new URLSearchParams(location.search);
 
-		for(const k of currentUrl.searchParams.keys()) // bit ugly, but searchParams is readonly
+		for(const k of Array.from(currentUrl.searchParams.keys())) // bit ugly, but searchParams is readonly
 			currentUrl.searchParams.delete(k);
 		for(const [k, v] of search)
 			currentUrl.searchParams.append(k, v);
@@ -181,7 +227,20 @@ function attachModListInteractions() : void
 		updateStateAndRestartFetching(/* pushHistory: */ false)
 	});
 
-	function hideGlobalResetIfNothingActive()
+	function updateBadges(badgeInEl : Element, badgeExEl : Element, paramName : string) : void
+	{
+		let cIn = 0, cEx = 0;
+		const valuesWithThisName = currentUrl.searchParams.getAll(paramName);
+		for(const v of valuesWithThisName)
+			if(v.startsWith('-'))
+				cEx++;
+		cIn = valuesWithThisName.length - cEx;
+
+		badgeInEl.textContent = cIn ? String(cIn) : '';
+		badgeExEl.textContent = cEx ? String(cEx) : '';
+	}
+
+	function hideGlobalResetIfNothingActive() : void
 	{
 		let anyActive = !!searchInputEl.value;
 		anyActive = anyActive || !!contributorSelectEl.value;
@@ -189,9 +248,11 @@ function attachModListInteractions() : void
 		if(!anyActive) resetAllEl.hidden = true;
 	}
 
-	function updateStateAndRestartFetching(pushHistory : boolean = true)
+	function updateStateAndRestartFetching(pushHistory : boolean = true) : void
 	{
-		searchGeneration++;
+		fetchInvalidationCtrl.abort();
+		fetchInvalidationCtrl = new AbortController();
+
 		cellContainerEl.replaceChildren(); // clear
 		hasMoreResults = true;
 		fetchCursor = '';
@@ -212,51 +273,41 @@ function attachModListInteractions() : void
 	}
 
 	// ---
-
-	let fetchCursor = wrapperEl.dataset.initialCursor!;
-
-	let hasMoreResults = cellContainerEl.childElementCount > 0;
 	
 	let isFetching = false;
-	let searchGeneration = 0;
 	/** @returns true if more should be fetched, false if done. */
-	async function fetchAndAppendNextPage() : Promise<boolean>
+	async function fetchAndAppendNextPage(signal : AbortSignal) : Promise<boolean>
 	{
-		const _searchGeneration = searchGeneration;
-
 		if(cellContainerEl.childElementCount === 0) {
-			orderByLabelEl.textContent = 'Loading...';
+			fetchStatusLabel.textContent = 'Loading more…';
 		}
 
 		let fetchUrl = new URL(currentUrl);
+		fetchUrl.searchParams.append('paging', '1');
 		for(const [k, v] of new URLSearchParams(fetchCursor))
 			fetchUrl.searchParams.append(k, v);
 
-		const response = await fetch(fetchUrl);
-		if(_searchGeneration !== searchGeneration) return true; // Stale data (search changed since request started). Don't append but still continue requesting more.
+		const response = await fetch(fetchUrl, { signal });
 
 		if(!response.ok) {
+			if(signal.aborted) return true;
+
 			R.addMessage(MSG_CLASS_ERROR, 'Failed to fetch more results.', false);
 			hasMoreResults = false;
 			return false;
 		}
 
 		let html = await response.text();
-		if(_searchGeneration !== searchGeneration) return true;
 
 		fetchCursor = response.headers.get('X-Fetch-Cursor') || '';
 		hasMoreResults = !!fetchCursor;
 
 		if(html = html.trim()) {
-			if(cellContainerEl.childElementCount === 0) {
-				orderByLabelEl.textContent = 'List of mods, ordered by '+'something'; // TODO
-			}
-
 			cellContainerEl.append(document.createRange().createContextualFragment(html));
 		}
 		else {
 			if(cellContainerEl.childElementCount === 0 && !hasMoreResults) {
-				orderByLabelEl.textContent = 'No mods found :(';
+				fetchStatusLabel.textContent = 'No mods found :(';
 			}
 		}
 
@@ -271,7 +322,7 @@ function attachModListInteractions() : void
 		(async () => {
 			// Repeatedly fetch more until the screen has been filled, regardless of page size:
 			for (let i = 0; hasMoreResults && i < 20; i++) {
-				await fetchAndAppendNextPage();
+				await fetchAndAppendNextPage(fetchInvalidationCtrl.signal);
 
 				const triggerPosition = fetchTriggerEl.getBoundingClientRect().top;
 				if(triggerPosition >= window.innerHeight + SCROLL_ROOT_MARGIN_PX) break;
@@ -302,7 +353,7 @@ function attachModListInteractions() : void
 		loadMoreButton.addEventListener('click', () => {
 			loadMoreButton.disabled = true;
 			isFetching = true;
-			fetchAndAppendNextPage()
+			fetchAndAppendNextPage(fetchInvalidationCtrl.signal)
 				.finally(() => {
 					loadMoreButton.disabled = false;
 					isFetching = false;

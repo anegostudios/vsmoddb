@@ -28,52 +28,45 @@ const MOD_LIST_FILTER_STATI = [
 	STATUS_LOCKED   => ['label' => 'Locked'],
 ];
 
-/** Reads a filter param where excluded values are prefixed with '-'. If a value is both included and excluded, it is included.
- * @param string $searchParamKey
- * @param callable $validateFn function that receives the value of a search param item without the '-' prefix, returns the validated value, or null if invalid.
- * @return array{in:array, ex:array}|false false if any value is invalid.
+/**
+ * @param array<string>|array<int> $array
+ * @param callable|null $predicate - return false to discard item, any other value to accept that transformed value. only used for string values
+ * @return array{in: array, ex: array}|false
  */
-function parseIncludeExcludeParam($searchParamKey, $validateFn)
+function parseAsIncludeExclude($array, $predicate = null)
 {
-	$rawValue = $_REQUEST[$searchParamKey];
-	if(is_string($rawValue)) {
-		$searchParamValue = explode(',', $rawValue);
-	}
-	elseif(is_array($rawValue)) {
-		$searchParamValue = $rawValue; // support old URL
-	}
-	else {
-		return false;
-	}
+	if(empty($array)) return ['in' => [], 'ex' => []];
 
 	$include = [];
 	$exclude = [];
-	
-	foreach($searchParamValue as $item) {
-		if(!is_string($item)) return false;
-		$item = trim($item);
-		if($item === '') continue;
 
-		$isExclude = str_starts_with($item, '-');
+	if(is_string($array[0])) {
+		foreach($array as $element) {
+			$isExclude = str_starts_with($element, '-');
 
-		// Validation is different for every search params.
-		// The validation is delegated to $validateFn(), passed in validateModSearchInputs().
-		$value = $validateFn($isExclude ? substr($item, 1) : $item);
-		if($value === null) return false;
+			$element = $isExclude ? substr($element, 1) : $element;
+			$element = $predicate($element);
+			if($element === false) return false;
 
-		if($isExclude) $exclude[] = $value;
-		else $include[] = $value;
+			if($isExclude) $exclude[] = $element;
+			else $include[] = $element;
+		}
+	}
+	else {
+		foreach($array as $element) {
+			$isExclude = $element < 0;
+
+			if($isExclude) $exclude[] = -$element;
+			else $include[] = $element;
+		}
 	}
 
-	// Making sure every item is unique, and if one is present in both, $include wins.
-	$include = array_unique($include);
-	$exclude = array_diff(array_unique($exclude), $include);
-	
 	return ['in' => $include, 'ex' => $exclude];
 }
 
 /** Validates current GET/POST inputs and creates a filter params object.
- * @param string|array{
+ * @param array|null &$outParams
+ * @param-out array{
  *  order:array{0:string, 1:'asc'|'desc'},
  *  filters:array{
  *   text?:string,
@@ -88,7 +81,7 @@ function parseIncludeExcludeParam($searchParamKey, $validateFn)
  *  },
  *  limit:int,
  *  cursor:array{0:mixed, 1:int}
- * } &$outParams
+ * } $outParams
  * @param bool $trimText if set, the search text will be trimmed of leading / trailing whitespace and multiple whitespaces will be collapsed.
  * @return null|string error message
  */
@@ -131,9 +124,16 @@ function validateModSearchInputs(&$outParams, $trimText)
 	}
 
 	if(!empty($_REQUEST['tg'])) {
-		$tags = parseIncludeExcludeParam('tg', fn($v) => ctype_digit($v) && $v !== '0' ? intval($v) : null);
-		if($tags === false) return 'Invalid tg: '.print_r($_REQUEST['tg'], true);
-		$outParams['filters']['tags'] = $tags;
+		$tags = forceArrayOfInts($_REQUEST['tg']);
+		if($tags === false) return 'Invalid tg: '.print_r($_REQUEST['tg'], true).'.';
+
+		$outParams['filters']['tags'] = parseAsIncludeExclude($tags);
+	}
+	else if(!empty($_REQUEST['tagids'])) { // @legacy
+		$tags = forceArrayOfInts($_REQUEST['tagids']);
+		if($tags === false)  return 'Invalid tagids: '.print_r($_REQUEST['tagids'], true).'.';
+
+		$outParams['filters']['tags'] = ['in' => $tags, 'ex' => []];
 	}
 
 	if(!empty($_REQUEST['a'])) {
@@ -145,9 +145,17 @@ function validateModSearchInputs(&$outParams, $trimText)
 	}
 
 	if(!empty($_REQUEST['sd'])) {
-		$sides = parseIncludeExcludeParam('sd', fn($v) => array_key_exists($v, MOD_LIST_FILTER_SIDES) ? $v : null);
-		if($sides === false) return 'Invalid sd: '.print_r($_REQUEST['sd'], true);
+		$sides = filter_var($_REQUEST['sd'], FILTER_UNSAFE_RAW, FILTER_FORCE_ARRAY);
+		$sides = parseAsIncludeExclude($sides, fn($v) => array_key_exists($v, MOD_LIST_FILTER_SIDES) ? $v : false);
+		if($sides === false)  return 'Invalid sd: '.print_r($_REQUEST['sd'], true).'.';
+
 		$outParams['filters']['sides'] = $sides;
+	}
+	else if(!empty($_REQUEST['side'])) { // @legacy
+		$rSide = $_REQUEST['side'];
+		if(!array_key_exists($rSide, MOD_LIST_FILTER_SIDES)) return "Invalid side: '".print_r($rSide, true)."'.";
+
+		$outParams['filters']['side'] = $rSide;
 	}
 
 	if(!empty($_REQUEST['c'])) {
@@ -163,17 +171,22 @@ function validateModSearchInputs(&$outParams, $trimText)
 	}
 
 	if(!empty($_REQUEST['t'])) {
-		$types = parseIncludeExcludeParam('t', fn($v) => array_key_exists($v, MOD_LIST_FILTER_TYPES) ? $v : null);
-		if($types === false) return 'Invalid t: '.print_r($_REQUEST['t'], true);
+		$types = filter_var($_REQUEST['t'], FILTER_UNSAFE_RAW, FILTER_FORCE_ARRAY);
+		$types = parseAsIncludeExclude($types, fn($v) => array_key_exists($v, MOD_LIST_FILTER_TYPES) ? $v : false);
+		if($types === false)  return 'Invalid types: '.print_r($_REQUEST['t'], true).'.';
+
 		$outParams['filters']['types'] = $types;
 
+		// force the mod type to mod, since we are looking for a specific kind of mod
 		if(!in_array($outParams['filters']['category'], ['m', 'l'], true)) $outParams['filters']['category'] = 'm';
 	}
 	
 	if(!empty($_REQUEST['gv'])) {
-		$gameversions = parseIncludeExcludeParam('gv', fn($v) => compileSemanticVersion($v) ?: null);
-		if($gameversions === false) return 'Invalid gv: '.print_r($_REQUEST['gv'], true);
-		$outParams['filters']['gameversions'] = $gameversions;
+		$gameVersions = filter_var($_REQUEST['gv'], FILTER_UNSAFE_RAW, FILTER_FORCE_ARRAY);
+		$gameVersions = parseAsIncludeExclude($gameVersions, 'compileSemanticVersion');
+		if($gameVersions === false)  return 'Invalid gvs: '.print_r($_REQUEST['gv'], true).'.';
+
+		$outParams['filters']['gameversions'] = $gameVersions;
 	}
 
 	if(!empty($_REQUEST['mv'])) {
@@ -236,7 +249,22 @@ function queryModSearchForModCards($searchParams)
 
 /** Execute a search query based on the provided search params.
  *  Params MUST BE SQL SAFE (with exception of the 'text' filter)!
- * @param string|array{order:array{0:string, 1:'asc'|'desc'}, filters:array{text?:string, tags?:int[], 'a.createdbyuserid'?:int, 'side'?:'client'|'server'|'both', gameversions?:int[]}, limit:int, cursor:array{0:mixed, 1:int}} $searchParams Params created from validateInputs MUST BE SQL SAFE!
+ * @param array{
+ *  order:array{0:string, 1:'asc'|'desc'},
+ *  filters:array{
+ *   text?:string,
+ *   category?:'m'|'s'|'l'|'e'|'o'|'a',
+ *   tags?:array{in:int[], ex:int[]},
+ *   sides?:array{in:string[], ex:string[]},
+ *   types?:array{in:string[], ex:string[]},
+ *   stati?:array{in:int[], ex:int[]},
+ *   contributor?:string,
+ *   gameversions?:array{in:int[], ex:int[]},
+ *   majorversion?:int,
+ *  },
+ *  limit:int,
+ *  cursor:array{0:mixed, 1:int}
+ * } $searchParams Params created from validateInputs MUST BE SQL SAFE!
  * @return array
  */
 function queryModSearch($searchParams)
@@ -498,6 +526,44 @@ function queryModSearch($searchParams)
 	// Only filter joins (tags, gameversions, type) can multiply rows; base joins all hit PK/UNIQUE.
 	$dedup = $joinsMultiplyRows ? 'DISTINCT' : '';
 	$groupBy = $joinsMultiplyRows ? 'GROUP BY m.modId' : '';
+
+	dump(["
+		SELECT $dedup
+			$matchScoreSelect
+			a.createdByUserId,
+			a.name,
+			a.created,
+			a.lastModified,
+			m.modId,
+			m.assetId,
+			m.urlAlias,
+			m.cardLogoFileId,
+			m.summary,
+			m.downloads,
+			m.follows,
+			m.trendingPoints,
+			m.comments,
+			m.side,
+			m.category,
+			m.lastReleased,
+			l.cdnPath AS logoCdnPath,
+			l.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
+			c.name AS `from`,
+			s.code AS statusCode,
+			f.userId AS following
+		FROM mods m
+		JOIN assets a ON a.assetId = m.assetId
+		LEFT JOIN users c ON c.userId = a.createdByUserId
+		LEFT JOIN status s ON s.statusId = a.statusId
+		LEFT JOIN userFollowedMods f ON f.modId = m.modId and f.userId = $currentUserId
+		LEFT JOIN files l ON l.fileId = m.cardLogoFileId
+		$joinClauses
+		$whereClauses
+		$groupBy
+		$havingClauses
+		ORDER BY $orderBy
+		$limitClause
+	", $sqlParams]);
 
 	return $con->getAll("
 		SELECT $dedup

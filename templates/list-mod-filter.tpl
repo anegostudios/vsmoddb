@@ -1,14 +1,12 @@
 <details id="{$id}-panel" class="filter{if $filter['count'] > 0} active{/if}" open{if !empty($defaults)} data-defaults="{$defaults}"{/if}>
 	<summary class="head">
 		<span class="title">{$title}</span>
-		<span class="badges"{if $filter['count'] == 0} hidden{/if}>
-			<span class="badge in" {if $filter['inCount'] == 0} hidden{/if}>{$filter['inCount']}</span>
-			<span class="badge ex" {if $filter['exCount'] == 0} hidden{/if}>{$filter['exCount']}</span>
+		<span class="badges">
+			<span class="badge in">{$filter['inCount'] || ''}</span>
+			<span class="badge ex">{$filter['exCount'] || ''}</span>
 		</span>
 		<span class="trailing">
-			<button type="button" class="reset" aria-label="Reset {$title} filter"{if $filter['count'] == 0} hidden tabindex="-1"{/if}>
-				Reset
-			</button>
+			<button type="button" class="reset" aria-label="Reset {$title} filter">Reset</button>
 			<span class="chevron"></span>
 		</span>
 	</summary>
@@ -26,8 +24,8 @@
 			<ul class="list{if !empty($expandable) && $tagsListExpanded} expanded{/if}" id="{$id}-list">
 				{foreach from=$options item=option key=key}
 					<li class="{if !empty($option['sub'])}sub{/if}{if isset($filter['in'][$key])} in{/if}{if isset($filter['ex'][$key])} ex{/if}" data-text="{$option['label']}">
-						<input type="checkbox" id="{$name}-{$key}" name="{$name}" value="{$option['value'] ?? $key}" {if isset($filter['in'][$key])} checked{/if} />
-						<label for="{$name}-{$key}" aria-label="Include {$option['label']}">
+						<input type="checkbox" id="{$_name}-{$key}" name="{$_name}[]" value="{$option['value'] ?? $key}" {if isset($filter['in'][$key])} checked{/if} />
+						<label for="{$_name}-{$key}" aria-label="Include {$option['label']}">
 							<span>{$option['label']}</span>
 							<i></i>
 						</label>

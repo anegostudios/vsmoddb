@@ -17,7 +17,7 @@
 
 				<div class="top">
 					<h2>Filters</h2>
-					<button type="button" id="filters-reset-all" class="reset" hidden tabindex="-1">Reset</button>
+					<button type="button" id="filters-reset-all" class="reset" {if !$strippedQuery}hidden{/if}>Reset</button>
 				</div>
 
 				<label class="search big" title="Search mods...">
@@ -25,12 +25,12 @@
 					<input type="search" name="text" value="{$selectedParams['text']}" placeholder="Search mods...">
 				</label>
 
-				{include file="list-mod-filter" id="gameversion" title="Game version" name="gv" filter=$selectedParams['gameversions'] options=$gameVersionOptions search="1"}
+				{include file="list-mod-filter" id="gameversion" title="Game version" _name="gv" filter=$selectedParams['gameversions'] options=$gameVersionOptions search="1"}
 
-				{include file="list-mod-filter" id="tag" title="Tags" name="tg" filter=$selectedParams['tags'] options=$tagOptions search="1" exclude="1" expandable="1"}
+				{include file="list-mod-filter" id="tag" title="Tags" _name="tg" filter=$selectedParams['tags'] options=$tagOptions search="1" exclude="1" expandable="1"}
 
 				{capture name="contributorSelect"}
-					<select name="a" data-url="/api/v2/users/by-name/\{name}?contributors-only=1" data-placeholder="Search Users">
+					<select name="a" data-url="/api/v2/users/by-name/\{name}?contributors-only=1" data-placeholder="Search Users" class="no-chosen">
 						<option value="">-</option>
 						{if $selectedParams['contributor']['count'] > 0}
 							<option value="{$selectedParams['contributor']['hash']}" selected>
@@ -41,19 +41,19 @@
 				{/capture}
 				{include file="list-mod-filter" id="contributor" title="Contributor" filter=$selectedParams['contributor'] body=$contributorSelect}
 
-				{include file="list-mod-filter" id="side" title="Mod side" name="sd" filter=$selectedParams['sides'] options=$sideOptions exclude="1"}
+				{include file="list-mod-filter" id="side" title="Mod side" _name="sd" filter=$selectedParams['sides'] options=$sideOptions exclude="1"}
 
 				{if $selectedParams['category'] === 'm' || $selectedParams['category'] === 'l'}
-					{include file="list-mod-filter" id="type" title="Mod type" name="t" filter=$selectedParams['types'] options=$typeOptions exclude="1"}
+					{include file="list-mod-filter" id="type" title="Mod type" _name="t" filter=$selectedParams['types'] options=$typeOptions exclude="1"}
 				{/if}
 
 				{if canModerate(null, $user)}
-					{include file="list-mod-filter" id="status" title="Mod status" name="st" filter=$selectedParams['stati'] options=$statusOptions exclude="1" defaults=$moderatorDefaultStatiString}
+					{include file="list-mod-filter" id="status" title="Mod status" _name="st" filter=$selectedParams['stati'] options=$statusOptions exclude="1" defaults=$moderatorDefaultStatiString}
 				{/if}
 			</form>
 		</aside>
 
-		<div class="results" data-base-url="?{$strippedQuery}" data-initial-cursor="{$fetchCursorJS}">
+		<div class="results">
 			<p id="warn-missing-data"{if $selectedParams['types']['count'] === 0} hidden{/if}>
 				<small>"Mod type" : Mod releases from before July 1st 2025 do not have this information available and will not show up when this filter is selected. This data will become available in the future.</small>
 			</p>
@@ -73,13 +73,13 @@
 			</div>
 
 
-			<p id="list-status">List of mods, ordered by {$sortOptions[$selectedParams['order'][0]][$selectedParams['order'][1] === 'asc' ? 2 : 1]}</p>
+			<p id="order-by-lbl">List of mods, ordered by {$sortOptions[$selectedParams['order'][0]][$selectedParams['order'][1] === 'asc' ? 2 : 1]}</p>
 			<div id="mods-paging-wrapper" >
 				<div class="mods">
 					{foreach from=$mods item=mod}{include file="list-mod-entry"}{/foreach}
 				</div>
 
-				<div class="fetch-trigger">Loading more…</div>
+				<div class="fetch-trigger">{if count($mods)}Loading more…{else}No mods found :({/if}</div>
 			</div>
 		</div>
 
@@ -90,7 +90,11 @@
 	</div>
 
 	<script nonce="{$cspNonce}" type="text/javascript">
-		attachModListInteractions();
+		$(function() \{ attachModListInteractions(\{
+			baseUrl: '?{$strippedQuery}',
+			cursor: '{$fetchCursorJS}',
+			statusDefaults: [<?= STATUS_RELEASED ?>, <?= STATUS_DRAFT ?>],
+		}); });
 	</script>
 
 {include file="footer"}
