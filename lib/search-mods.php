@@ -218,10 +218,11 @@ function validateModSearchInputs(&$outParams, $trimText)
 	global $user;
 	if(canModerate(null, $user)) {
 		$outParams['filters']['stati'] = ['in' => [STATUS_RELEASED, STATUS_LOCKED], 'ex' => []]; // default for moderators
+
 		if(!empty($_REQUEST['st'])) {
-			$stati = parseIncludeExcludeParam('st', fn($v) => ctype_digit($v) && array_key_exists(intval($v), MOD_LIST_FILTER_STATI) ? intval($v) : null);
+			$stati = forceArrayOfInts($_REQUEST['st']);
 			if($stati === false) return 'Invalid st: '.print_r($_REQUEST['st'], true);
-			$outParams['filters']['stati'] = $stati;
+			$outParams['filters']['stati'] = parseAsIncludeExclude($stati);;
 		}
 	}
 	else {
@@ -526,44 +527,6 @@ function queryModSearch($searchParams)
 	// Only filter joins (tags, gameversions, type) can multiply rows; base joins all hit PK/UNIQUE.
 	$dedup = $joinsMultiplyRows ? 'DISTINCT' : '';
 	$groupBy = $joinsMultiplyRows ? 'GROUP BY m.modId' : '';
-
-	dump(["
-		SELECT $dedup
-			$matchScoreSelect
-			a.createdByUserId,
-			a.name,
-			a.created,
-			a.lastModified,
-			m.modId,
-			m.assetId,
-			m.urlAlias,
-			m.cardLogoFileId,
-			m.summary,
-			m.downloads,
-			m.follows,
-			m.trendingPoints,
-			m.comments,
-			m.side,
-			m.category,
-			m.lastReleased,
-			l.cdnPath AS logoCdnPath,
-			l.created < '".SQL_MOD_CARD_TRANSITION_DATE."' AS hasLegacyLogo,
-			c.name AS `from`,
-			s.code AS statusCode,
-			f.userId AS following
-		FROM mods m
-		JOIN assets a ON a.assetId = m.assetId
-		LEFT JOIN users c ON c.userId = a.createdByUserId
-		LEFT JOIN status s ON s.statusId = a.statusId
-		LEFT JOIN userFollowedMods f ON f.modId = m.modId and f.userId = $currentUserId
-		LEFT JOIN files l ON l.fileId = m.cardLogoFileId
-		$joinClauses
-		$whereClauses
-		$groupBy
-		$havingClauses
-		ORDER BY $orderBy
-		$limitClause
-	", $sqlParams]);
 
 	return $con->getAll("
 		SELECT $dedup

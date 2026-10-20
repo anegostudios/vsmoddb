@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @var object $con
+ * @var object $view
+ */
+
 require(SRC_ROOT.'/lib/search-mods.php');
 
 if(isset($_GET['paging'])) {
@@ -27,14 +32,15 @@ $searchParams['limit'] = MOD_SEARCH_INITIAL_RESULTS;
 $mods = queryModSearchForModCards($searchParams);
 
 $filters = &$searchParams['filters'];
-$flipFilter = fn($filter) => [
-	'in' => array_flip($filter['in']),
-	'ex' => array_flip($filter['ex']),
-	'inCount' => count($filter['in']),
-	'exCount' => count($filter['ex']),
-	'count' => count($filter['in']) + count($filter['ex']),
-];
-$noFilter = ['in' => [], 'ex' => []];
+function _prepareFilter($filters, $name) {
+	if(empty($filters[$name])) return  ['in' => [], 'ex' => []];
+
+	$filter = $filters[$name];
+	return [
+		'in' => array_flip($filter['in']),
+		'ex' => array_flip($filter['ex']),
+	];
+}
 $selectedParams = [
 	'order'   => $searchParams['order'],
 	'category'=> $filters['category'] ?? '',
@@ -43,20 +49,14 @@ $selectedParams = [
 		? [
 			'hash' => $filters['contributor'],
 			'name' => escapeHtml($con->getOne('SELECT `name` FROM users WHERE `hash` = UNHEX(?)', [$filters['contributor']])),
-			'count' => 1,
-			'inCount' => 1,
-			'exCount' => 0
 		]
 		: [
-			'count' => 0,
-			'inCount' => 0,
-			'exCount' => 0
 		],
-	'gameversions' => $flipFilter($filters['gameversions'] ?? $noFilter),
-	'tags'  => $flipFilter($filters['tags']  ?? $noFilter),
-	'sides' => $flipFilter($filters['sides'] ?? $noFilter),
-	'types' => $flipFilter($filters['types'] ?? $noFilter),
-	'stati' => $flipFilter($filters['stati'] ?? $noFilter),
+	'gameversions' => _prepareFilter($filters, 'gameversions'),
+	'tags'         => _prepareFilter($filters, 'tags'),
+	'sides'        => _prepareFilter($filters, 'sides'),
+	'types'        => _prepareFilter($filters, 'types'),
+	'stati'        => _prepareFilter($filters, 'stati'),
 ];
 unset($filters);
 
@@ -91,13 +91,15 @@ unset($version);
 
 cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/list/mod {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/ {$_SERVER['HTTP_HOST']}/api/v2/tags/by-name/");
 
-$headerHighlight = HEADER_HIGHLIGHT_MODS;
-if($selectedParams['category'] === 's') $headerHighlight = HEADER_HIGHLIGHT_TWEAKS;
-if($selectedParams['category'] === 'l') $headerHighlight = HEADER_HIGHLIGHT_LIBRARY;
-if($selectedParams['category'] === 'e') $headerHighlight = HEADER_HIGHLIGHT_EXTERNAL_TOOL;
-if($selectedParams['category'] === 'o') $headerHighlight = HEADER_HIGHLIGHT_OTHER;
+switch($selectedParams['category']) {
+	case 's': $headerHighlight = HEADER_HIGHLIGHT_TWEAKS;        break;
+	case 'l': $headerHighlight = HEADER_HIGHLIGHT_LIBRARY;       break;
+	case 'e': $headerHighlight = HEADER_HIGHLIGHT_EXTERNAL_TOOL; break;
+	case 'o': $headerHighlight = HEADER_HIGHLIGHT_OTHER;         break;
+	default:  $headerHighlight = HEADER_HIGHLIGHT_MODS;
+}
 
-$view->assign('headerHighlight', $headerHighlight, null, true );
+$view->assign('headerHighlight', $headerHighlight, null, true);
 $view->assign('selectedParams', $selectedParams, null, true);
 $view->assign('strippedQuery', $strippedQuery, null, true);
 $view->assign('fetchCursorJS', $fetchCursorJS, null, true);

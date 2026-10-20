@@ -15,7 +15,7 @@
 		assettypeid = {$asset['assetTypeId'] ?? 0};
 		actiontoken = "{$user['actionToken'] ?? ''}";
 	</script>
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/script.js?v=0ff1fb566ab625fdeb3f42030f7ed231"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/script.js?v=a9b30cb7d2f6ab58282830de9417aa65"></script>
 	{if !empty($footerjs)}{$footerjs}{/if}
 
 	<footer>

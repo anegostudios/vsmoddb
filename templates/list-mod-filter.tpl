@@ -1,9 +1,9 @@
-<details id="{$id}-panel" class="filter{if $filter['count'] > 0} active{/if}" open{if !empty($defaults)} data-defaults="{$defaults}"{/if}>
+<details id="{$id}-panel" class="filter{if $filter['in'] || $filter['ex']} active{/if}" open>
 	<summary class="head">
 		<span class="title">{$title}</span>
 		<span class="badges">
-			<span class="badge in">{$filter['inCount'] || ''}</span>
-			<span class="badge ex">{$filter['exCount'] || ''}</span>
+			<span class="badge in">{count($filter['in']) || ''}</span>
+			<span class="badge ex">{count($filter['ex']) || ''}</span>
 		</span>
 		<span class="trailing">
 			<button type="button" class="reset" aria-label="Reset {$title} filter">Reset</button>

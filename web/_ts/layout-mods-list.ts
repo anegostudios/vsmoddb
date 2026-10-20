@@ -52,6 +52,12 @@ function attachModListInteractions(args : ModListArgs) : void
 		const val = $contributorSelectEl.val();
 		if(val) currentUrl.searchParams.set('a', val);
 
+		const sectionWrapperEl = contributorSelectEl.closest('.filter');
+		if(!sectionWrapperEl) return;
+
+		const badgeInEl = sectionWrapperEl.getElementsByClassName('badge in')[0];
+		badgeInEl.textContent = val ? '1' : '';
+
 		updateStateAndRestartFetching();
 	});
 
