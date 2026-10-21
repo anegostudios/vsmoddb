@@ -9,19 +9,18 @@ type ModListArgs = {
 
 function attachModListInteractions(args : ModListArgs) : void
 {
-	const orderByLabelEl = R.get('order-by-lbl')!;
 	const sortWrapperEl = document.getElementsByClassName('sort')[0];
 
 	const listWrapperEl = R.get('mods-paging-wrapper')!;
 	const cellContainerEl = listWrapperEl.firstElementChild!;
-	const fetchTriggerEl = listWrapperEl.lastElementChild!;
+	const fetchTriggerEl = listWrapperEl.lastElementChild! as HTMLElement;
 
-	const fetchStatusLabel = fetchTriggerEl;
+	const fetchStatusLabelEl = fetchTriggerEl;
 
 	let fetchInvalidationCtrl = new AbortController();
 	const currentUrl = new URL(args.baseUrl, window.location.toString());
 	let fetchCursor = args.cursor;
-	let hasMoreResults = cellContainerEl.childElementCount > 0;
+	let hasMoreResults = !!fetchCursor;
 
 	const inputsFormEl = R.get<HTMLFormElement>('filter-inputs')!;
 	const searchInputEl = inputsFormEl.querySelector<HTMLInputElement>('input[name="text"]')!;
@@ -122,7 +121,7 @@ function attachModListInteractions(args : ModListArgs) : void
 				}
 
 				if(sectionWrapperEl.id === 'status-panel') {
-					for(const el of inputsFormEl.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>) {
+					for(const el of sectionWrapperEl.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>) {
 						if(args.statusDefaults.includes(parseInt(el.value, 10))) {
 							currentUrl.searchParams.append(el.name, el.value);
 							el.checked = true;
@@ -262,7 +261,7 @@ function attachModListInteractions(args : ModListArgs) : void
 		cellContainerEl.replaceChildren(); // clear
 		hasMoreResults = true;
 		fetchCursor = '';
-		startFetchingAndAppending();
+		startFetchingAndAppending(fetchInvalidationCtrl.signal);
 		if(pushHistory) history.pushState(null, '', currentUrl.toString());
 		updateSortByLinks();
 	}
@@ -285,7 +284,8 @@ function attachModListInteractions(args : ModListArgs) : void
 	async function fetchAndAppendNextPage(signal : AbortSignal) : Promise<boolean>
 	{
 		if(cellContainerEl.childElementCount === 0) {
-			fetchStatusLabel.textContent = 'Loading more…';
+			fetchStatusLabelEl.textContent = 'Loading more…';
+			fetchTriggerEl.hidden = false;
 		}
 
 		let fetchUrl = new URL(currentUrl);
@@ -310,25 +310,29 @@ function attachModListInteractions(args : ModListArgs) : void
 
 		if(html = html.trim()) {
 			cellContainerEl.append(document.createRange().createContextualFragment(html));
+
+			if(!hasMoreResults) {
+				fetchTriggerEl.hidden = true;
+			}
 		}
 		else {
 			if(cellContainerEl.childElementCount === 0 && !hasMoreResults) {
-				fetchStatusLabel.textContent = 'No mods found :(';
+				fetchStatusLabelEl.textContent = 'No mods found :(';
 			}
 		}
 
 		return hasMoreResults;
 	}
 
-	function startFetchingAndAppending() : void
+	function startFetchingAndAppending(signal : AbortSignal) : void
 	{
 		if(isFetching) return;
 		isFetching = true;
 
 		(async () => {
 			// Repeatedly fetch more until the screen has been filled, regardless of page size:
-			for (let i = 0; hasMoreResults && i < 20; i++) {
-				await fetchAndAppendNextPage(fetchInvalidationCtrl.signal);
+			for (let i = 0; hasMoreResults && i < 20 && !signal.aborted; i++) {
+				await fetchAndAppendNextPage(signal);
 
 				const triggerPosition = fetchTriggerEl.getBoundingClientRect().top;
 				if(triggerPosition >= window.innerHeight + SCROLL_ROOT_MARGIN_PX) break;
@@ -344,7 +348,7 @@ function attachModListInteractions(args : ModListArgs) : void
 				if(isFetching) return;
 				if(!entries.some(e => e.intersectionRatio !== 0)) return;
 
-				startFetchingAndAppending();
+				startFetchingAndAppending(fetchInvalidationCtrl.signal);
 			},
 			{
 				root: document.body,

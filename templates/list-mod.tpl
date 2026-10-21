@@ -87,7 +87,7 @@
 					{foreach from=$mods item=mod}{include file="list-mod-entry"}{/foreach}
 				</div>
 
-				<div class="fetch-trigger">{if count($mods)}Loading more…{else}No mods found :({/if}</div>
+				<div class="fetch-trigger"{if !$fetchCursorJS} hidden{/if}>{if count($mods)}Loading more…{else}No mods found :({/if}</div>
 			</div>
 		</div>
 
@@ -101,7 +101,7 @@
 		$(function() \{ attachModListInteractions(\{
 			baseUrl: '?{$strippedQuery}',
 			cursor: '{$fetchCursorJS}',
-			statusDefaults: [<?= STATUS_RELEASED ?>, <?= STATUS_DRAFT ?>],
+			statusDefaults: [<?= STATUS_RELEASED ?>, <?= STATUS_LOCKED ?>],
 		}); });
 	</script>
 
