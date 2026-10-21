@@ -8,7 +8,9 @@
 		<p>These mods do not modify the game by themselves. They are sometimes required by other mods.</p>
 	{/if}
 
-	<div class="mod-list" id="mod-list">
+	<div class="mod-list">
+		<input id="drawer-trigger" class="trigger" type="checkbox" autocomplete="off" />
+
 		<aside class="filters" id="filters" >
 			<form id="filter-inputs" method="get" action="/list/mod" autocomplete="off" onsubmit="return false;">
 				<input type="hidden" name="sortby" value="{$selectedParams['order'][0]}">
@@ -91,10 +93,8 @@
 			</div>
 		</div>
 
-		<button type="button" class="open-filters" id="open-filters" aria-controls="filters" aria-expanded="false">
-			Filters
-		</button>
-		<div class="backdrop" id="backdrop"></div>
+		<label id="open-filters" for="drawer-trigger" aria-controls="filters" aria-expanded="false">Filters</label>
+		<label id="backdrop" for="drawer-trigger"></label>
 	</div>
 
 	<script nonce="{$cspNonce}" type="text/javascript">

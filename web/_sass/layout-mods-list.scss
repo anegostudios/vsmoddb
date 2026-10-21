@@ -265,10 +265,6 @@ $breakingPoint: 768px;
 			display: flex;
 		}
 
-		>input[type="checkbox"] {
-			display: none;
-		}
-
 		>label {
 			display: flex;
 			align-items: center;
@@ -353,7 +349,7 @@ $breakingPoint: 768px;
 		}
 	}
 
-	.open-filters, .backdrop {
+	#open-filters, #backdrop {
 		display: none;
 	}
 
@@ -379,19 +375,21 @@ $breakingPoint: 768px;
 			font-size: 1.125rem;
 		}
 
-		.list li button[data-role="in"] {
-			min-height: 2.75rem;
-		}
+		.list li {
+			>label, >button {
+				min-height: 2.75rem;
+			}
 
-		.list li i {
-			display: flex;
-			width: 2.75rem;
-			height: 2.75rem;
-			opacity: 1;
-			
-			&::before {
-				width: 1.25rem;
-				height: 1.25rem;
+			i {
+				display: flex;
+				width: 2.75rem;
+				height: 2.75rem;
+				opacity: 1;
+				
+				&::before {
+					width: 1.25rem;
+					height: 1.25rem;
+				}
 			}
 		}
 
@@ -409,19 +407,19 @@ $breakingPoint: 768px;
 			}
 		}
 
-		.backdrop {
+		#backdrop {
 			display: block;
 			position: fixed;
 			inset: 0;
 			z-index: 999;
-			background: rgb(0 0 0 / .45);
+			background: var(--color-backdrop);
 			opacity: 0;
 			visibility: hidden;
 			pointer-events: none;
 			transition: opacity .25s ease;
 		}
 
-		.open-filters {
+		#open-filters {
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -439,20 +437,22 @@ $breakingPoint: 768px;
 			font-size: 1.125rem;
 			font-weight: bold;
 			cursor: pointer;
+
+			user-select: none;
 		}
 
-		&.open {
-			.filters {
+		>#drawer-trigger:checked {
+			~.filters {
 				transform: translateX(0);
 			}
 
-			.backdrop {
+			~#backdrop {
 				opacity: 1;
 				visibility: visible;
 				pointer-events: auto;
 			}
 
-			.open-filters {
+			~#open-filters {
 				visibility: hidden;
 				pointer-events: none;
 			}

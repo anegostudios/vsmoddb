@@ -24,7 +24,7 @@
 			<ul class="list{if !empty($expandable) && $tagsListExpanded} expanded{/if}" id="{$id}-list">
 				{foreach from=$options item=option key=key}
 					<li class="{if !empty($option['sub'])}sub{/if}{if isset($filter['in'][$key])} in{/if}{if isset($filter['ex'][$key])} ex{/if}" data-text="{$option['label']}">
-						<input type="checkbox" id="{$_name}-{$key}" name="{$_name}[]" value="{$option['value'] ?? $key}" {if isset($filter['in'][$key])} checked{/if} />
+						<input type="checkbox" id="{$_name}-{$key}" class="trigger" name="{$_name}[]" value="{$option['value'] ?? $key}" {if isset($filter['in'][$key])} checked{/if} />
 						<label for="{$_name}-{$key}" aria-label="Include {$option['label']}">
 							<span>{$option['label']}</span>
 							<i></i>

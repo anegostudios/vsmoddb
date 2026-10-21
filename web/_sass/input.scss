@@ -451,3 +451,8 @@ details.version-selector {
 		cursor: pointer;
 	}
 }
+
+
+input.trigger[type="checkbox"] {
+	display: none;
+}
