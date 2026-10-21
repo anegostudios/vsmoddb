@@ -2,8 +2,8 @@
 	<summary class="head">
 		<span class="title">{$title}</span>
 		<span class="badges">
-			<span class="badge in">{count($filter['in']) || ''}</span>
-			<span class="badge ex">{count($filter['ex']) || ''}</span>
+			<span class="badge in">{count($filter['in']) ?: ''}</span>
+			<span class="badge ex">{count($filter['ex']) ?: ''}</span>
 		</span>
 		<span class="trailing">
 			<button type="button" class="reset" aria-label="Reset {$title} filter">Reset</button>
