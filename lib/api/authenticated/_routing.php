@@ -18,7 +18,7 @@ function validateUserNotBanned()
 function validateActionToken()
 {
 	global $user;
-	if(!isset($_REQUEST['at']) || $user['actionToken'] != $_REQUEST['at'])  fail(HTTP_FORBIDDEN, ['error' => 'Invalid action token. Need to log in again?']);
+	if(!isset($_REQUEST['at']) || $user['actionToken'] !== $_REQUEST['at'])  fail(HTTP_FORBIDDEN, ['error' => 'Invalid action token. Need to log in again?']);
 }
 
 switch($urlparts[0]) {
