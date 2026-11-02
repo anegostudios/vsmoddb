@@ -7,13 +7,14 @@ $fileId = intval($_GET['fileid'] ?? $urlparts[1] ?? 0);
 if($fileId === 0) showErrorPage(HTTP_BAD_REQUEST, 'Missing fileid.');
 
 $file = $con->getRow(<<<SQL
-	SELECT f.assetId, f.cdnPath, f.name, r.modId, rr.reason AS retractionReason
+	SELECT f.assetId, f.cdnPath, f.name, r.modId, rr.reason AS retractionReason, f.userId
 	FROM files f
 	LEFT JOIN modReleases r ON r.assetId = f.assetId
 	LEFT JOIN modReleaseRetractions rr ON rr.releaseId = r.releaseId
 	WHERE f.fileId = ?
 SQL, [$fileId]);
 if(!$file) showErrorPage(HTTP_NOT_FOUND, 'File not found.');
+if(!$file['assetId'] && (empty($user) || $file['userId'] !== $user['userId']) /*TODO(Rennorb) @cleanup: remove cast to int, do it globally. */) showErrorPage(HTTP_NOT_FOUND, 'File not found.'); // floating files are only accessible for the users that uploaded them
 if($file['retractionReason'] && (empty($user) || !canModerate(null, $user))) showErrorPage(HTTP_GONE, '<h4>This release has been retracted. Reason:</h4>'.$file['retractionReason'], false, true);
 
 if(!DB_READONLY) {

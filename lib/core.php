@@ -266,6 +266,8 @@ function createADOConnection()
 {
 	$con = ADONewConnection("mysqli");
 
+	$con->setConnectionParameter(MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
+
 	$result = $con->NConnect(DB_HOST, DB_USER, DB_PASS, DB_DATABASE);
 
 	if (!$result) {
