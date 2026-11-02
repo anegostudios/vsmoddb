@@ -32,7 +32,7 @@
 		<span id="contributor-box" data-label="Contributor">
 			<select style="width:10em;" name="a" data-url="/api/v2/users/by-name/\{name}?contributors-only=1" data-placeholder="Search Users">
 				<option value="">-</option>
-				{if !empty($selectedParams['contributor'])}<option value="{$selectedParams['contributor'][0]}" selected="true">{$selectedParams['contributor'][1]}</option>{/if}
+				{if !empty($selectedParams['contributor'])}<option value="{$selectedParams['contributor'][0]}" selected="true">{escapeHtml($selectedParams['contributor'][1])}</option>{/if}
 			</select>
 		</span>
 		

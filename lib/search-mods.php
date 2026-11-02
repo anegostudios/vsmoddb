@@ -76,7 +76,7 @@ function validateModSearchInputs(&$outParams, $trimText)
 
 	if(!empty($_REQUEST['a'])) {
 		$contributorHash = filter_var($_REQUEST['a'], FILTER_UNSAFE_RAW | FILTER_FLAG_STRIP_LOW);
-		if($contributorHash !== $_REQUEST['a']) {
+		if($contributorHash !== $_REQUEST['a'] || !ctype_alnum($contributorHash)) {
 			return "Invalid contributor hash: '{$_REQUEST['a']}'.";
 		}
 		$outParams['filters']['contributor'] = $contributorHash;

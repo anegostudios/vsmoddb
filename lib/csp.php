@@ -8,6 +8,7 @@ $_csp = [
 	// No fetchign at all. Must be enabled manually via cspReplaceAllowedFetchSources.
 	// This also disallowes inline event handlers (onload=".."), which must be manually whitelisted via the 'unsafe-hashes' directive as they cannot have nonces.
 	'connect-src' => "'none'",
+	'base-uri' => "'none'",
 	// Allow inline styles, as well as ones generated from js.
 	'style-src-attr' => "'unsafe-inline' 'unsafe-eval'",
 	// Allow all images served from us or any http(s) domain, as well as inlined data images. Effectively all images.
