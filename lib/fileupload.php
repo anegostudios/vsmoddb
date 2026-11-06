@@ -14,20 +14,10 @@ require_once(SRC_ROOT.'/lib/modinfo.php');
 function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 	global $con, $user;
 	
-	switch($file['error']) {
-		case UPLOAD_ERR_OK:
-			break;
-
-		case UPLOAD_ERR_INI_SIZE: 
-		case UPLOAD_ERR_FORM_SIZE: 
-			return array("status" => "error", "errormessage" => 'File too large! Limit is ' . (parseMaxUploadSizeFromIni() / MB) . "MB");
-
-		case UPLOAD_ERR_CANT_WRITE:
-			return array("status" => "error", "errormessage" => 'Cannot write file to temporary files folder. No free space left?');
-
-		default:
-			return array("status" => "error", "errormessage" => sprintf('A unexpected error occurred while uploading. Error number %s', $file['error']));
-	}	
+	$uploadError = checkFileUploadError($file);
+	if($uploadError) {
+		return array("status" => "error", "errormessage" => $uploadError['error']);
+	}
 	
 	if(empty($assetTypeId)) {
 		return array("status" => "error", "errormessage" => 'Missing assettypeid');
@@ -71,15 +61,9 @@ function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 		}
 	}
 
-	if($file['size'] > $limits['individualSize']) {
-		return array("status" => "error", "errormessage" => 'File too large! Limit is ' . formatByteSize($limits['individualSize']));
-	}
-
-	splitOffExtension($file["name"], $filebasename, $ext);
-	$allowedExts = $limits['allowedTypes'];
-	
-	if(!in_array($ext, $allowedExts)) {
-		return array("status" => "error", "errormessage" => 'File type not allowed! Allowed are ' . formatGrammaticallyCorrectEnumeration($allowedExts).'.');
+	$sizeOrTypeError = checkFileSizeAndType($file, $limits, $filebasename, $ext);
+	if($sizeOrTypeError) {
+		return array("status" => "error", "errormessage" => $sizeOrTypeError['error']);
 	}
 	
 	if($parentAssetId) {
@@ -159,9 +143,7 @@ function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 
 	if($assetTypeId === ASSETTYPE_RELEASE) {
 		$ok = modpeek($localPath, $modInfo);
-		$con->Execute('INSERT INTO modPeekResults (fileId, errors, modIdentifier, modVersion, type, side, requiredOnClient, requiredOnServer, networkVersion, description, website, iconPath, rawAuthors, rawContributors, rawBackgroundPaths, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-			[$fileId, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['side'], $modInfo['requiredOnClient'], $modInfo['requiredOnServer'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['iconPath'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawBackgroundPaths'], $modInfo['rawDependencies']]
-		);
+		insertModPeekResults($fileId, $modInfo);
 
 		$minCompat = findMinCompatibleGameVersion($modInfo['rawDependencies']);
 		if($minCompat !== null) $data['gameversiondep'] = $minCompat;
@@ -181,4 +163,66 @@ function processFileUpload($file, $assetTypeId, $parentAssetId, $parentModId) {
 	unlink($localPath);
 
 	return $data;
+}
+
+/**
+ * Checks the php upload status of a file.
+ * @param array{error:int} $file One entry in $_FILES format.
+ * @return array{ok:false, status:int, error:string}|null Null if the file was uploaded without issues.
+ */
+function checkFileUploadError($file)
+{
+	switch($file['error']) {
+		case UPLOAD_ERR_OK:
+			return null;
+
+		case UPLOAD_ERR_INI_SIZE: 
+		case UPLOAD_ERR_FORM_SIZE: 
+			return ['ok' => false, 'status' => HTTP_PAYLOAD_TOO_LARGE, 'error' => 'File too large! Limit is ' . (parseMaxUploadSizeFromIni() / MB) . "MB"];
+
+		case UPLOAD_ERR_CANT_WRITE:
+			return ['ok' => false, 'status' => HTTP_INTERNAL_ERROR, 'error' => 'Cannot write file to temporary files folder. No free space left?'];
+
+		default:
+			return ['ok' => false, 'status' => HTTP_BAD_REQUEST, 'error' => sprintf('A unexpected error occurred while uploading. Error number %s', $file['error'])];
+	}
+}
+
+/**
+ * Checks the size and extension of a file against the given limits.
+ * @param array{name:string, size:int} $file One entry in $_FILES format.
+ * @param array{allowedTypes:string[], individualSize:int} $limits One entry of UPLOAD_LIMITS, with potential overwrites already applied.
+ * @param string &$out_basename
+ * @param-out string $out_basename The original file name without extension.
+ * @param string &$out_ext
+ * @param-out string $out_ext
+ * @return array{ok:false, status:int, error:string}|null Null if the file is within the limits.
+ */
+function checkFileSizeAndType($file, $limits, &$out_basename, &$out_ext)
+{
+	if($file['size'] > $limits['individualSize']) {
+		return ['ok' => false, 'status' => HTTP_PAYLOAD_TOO_LARGE, 'error' => 'File too large! Limit is ' . formatByteSize($limits['individualSize'])];
+	}
+
+	splitOffExtension($file["name"], $out_basename, $out_ext);
+	$allowedExts = $limits['allowedTypes'];
+	
+	if(!in_array($out_ext, $allowedExts)) {
+		return ['ok' => false, 'status' => HTTP_BAD_REQUEST, 'error' => 'File type not allowed! Allowed are ' . formatGrammaticallyCorrectEnumeration($allowedExts).'.'];
+	}
+
+	return null;
+}
+
+/**
+ * @param int   $fileId
+ * @param array $modInfo As produced by modpeek().
+ */
+function insertModPeekResults($fileId, $modInfo)
+{
+	global $con;
+
+	$con->Execute('INSERT INTO modPeekResults (fileId, errors, modIdentifier, modVersion, type, side, requiredOnClient, requiredOnServer, networkVersion, description, website, iconPath, rawAuthors, rawContributors, rawBackgroundPaths, rawDependencies) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+		[$fileId, $modInfo['errors'], $modInfo['id'], $modInfo['version'], $modInfo['type'], $modInfo['side'], $modInfo['requiredOnClient'], $modInfo['requiredOnServer'], $modInfo['networkVersion'], $modInfo['description'], $modInfo['website'], $modInfo['iconPath'], $modInfo['rawAuthors'], $modInfo['rawContributors'], $modInfo['rawBackgroundPaths'], $modInfo['rawDependencies']]
+	);
 }

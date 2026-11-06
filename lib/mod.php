@@ -235,6 +235,7 @@ function updateModTeamMembers($mod, $currentlyBeingTransferredTo, $newMembers, $
 		}
 		else if (boolval($oldMembers[$newMemberId]['canEdit']) !== boolval($editBit)) {
 			$con->execute('UPDATE modTeamMembers SET canEdit = ? WHERE teamMemberId = ?', [$editBit ? 1 : 0, $oldMembers[$newMemberId]['teamMemberId']]);
+			if(!$editBit)  revokeModApiTokensOfUser($mod['modId'], $newMemberId, $logCommonFlags);
 
 			array_push($logValues, AUDIT_LOG_KIND_MOD_MEMBER_PERMISSION_CHANGED, "$newMemberId", ($editBit ? AUDIT_LOG_FLAG_WITH_EDIT_PERMISSIONS : 0) | $logCommonFlags);
 		}
@@ -250,6 +251,7 @@ function updateModTeamMembers($mod, $currentlyBeingTransferredTo, $newMembers, $
 
 	foreach ($oldMembers as $member) {
 		$con->Execute('DELETE FROM modTeamMembers WHERE teamMemberId = ?', [$member['teamMemberId']]);
+		revokeModApiTokensOfUser($mod['modId'], $member['userId'], $logCommonFlags);
 
 		array_push($logValues, AUDIT_LOG_KIND_MOD_MEMBER_REMOVED, "{$member['userId']}", ($member['canEdit'] ? AUDIT_LOG_FLAG_WITH_EDIT_PERMISSIONS : 0) | $logCommonFlags);
 	}

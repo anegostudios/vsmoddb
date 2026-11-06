@@ -62,3 +62,7 @@ _define_default("MOD_REPORT_LIMIT_LOW_EFFORT_WEIGHT", .1); // The amount of repo
 
 _define_default("COMMENT_REPORT_DEDUPLICATION_TS_DAYS", 7); // days
 _define_default("COMMENT_REPORT_LIMIT_PER_WEEK", 50); // counts open and dismissed reports, but not accepted ones.
+
+_define_default("API_TOKEN_MAX_ACTIVE_PER_USER_PER_MOD", 5); // non-expired tokens a single user may hold for one mod
+_define_default("API_TOKEN_MAX_LIFETIME_DAYS", 365); // days
+_define_default("API_RELEASE_LIMIT_PER_MOD_PER_HOUR", 10); // releases created via api tokens, per mod, in a rolling hour
