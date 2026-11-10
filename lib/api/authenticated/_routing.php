@@ -28,6 +28,7 @@ switch($urlparts[0]) {
 	case 'mods':
 	case 'game-versions':
 	case 'tickets':
+	case 'files':
 		$part = array_shift($urlparts);
 		require(__DIR__."/{$part}.php");
 		break;

@@ -3,12 +3,12 @@
 /**
  * @security: Does not perform validation!
  * @param array{modId:int, type:int} $mod The mod the release is to be associated with.
- * @param array{text:string, identifier?:string, version:int, status:int} $newData
+ * @param array{text:string, identifier?:string, version:int, status:int} $release
  * @param int[] $newCompatibleGameVersions
  * @param array{assetId:int, fileId:int} $file
  * @return int The assetId of the newly created release. Zero on failure, very unlikely to fail.
  */
-function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
+function createNewRelease($mod, $release, $newCompatibleGameVersions, $file)
 {
 	global $con, $user;
 
@@ -17,18 +17,15 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 	$con->execute(<<<SQL
 		INSERT INTO assets (assetTypeId, numSaved, created, text, createdByUserId, editedByUserId)
 		VALUES(2, 1, NOW(), ?, ?, ?)
-	SQL, [$newData['text'], $user['userId'], $user['userId']]);
+	SQL, [$release['text'], $user['userId'], $user['userId']]);
 	$assetId = $con->insert_ID();
 	
-	$con->execute('INSERT INTO modReleases (modId, assetId, identifier, `version`, `status`) VALUES(?, ?, ?, ?, ?)', [$mod['modId'], $assetId, $newData['identifier'] ?? NULL, $newData['version'], $newData['status']]);
+	$con->execute('INSERT INTO modReleases (modId, assetId, identifier, `version`, `status`) VALUES(?, ?, ?, ?, ?)', [$mod['modId'], $assetId, $release['identifier'] ?? NULL, $release['version'], $release['status']]);
 	$releaseId = $con->insert_ID();
 
-	// attach hovering files
-	if($file['assetId'] == 0) {
-		$con->execute('UPDATE files SET assetId = ? WHERE fileId = ?', [$assetId, $file['fileId']]);
-	}
+	$con->execute("UPDATE files SET assetId = ?, `order` = ? WHERE fileId = ?", [$assetId, $file['order'], $file['fileId']]);
 
-	$logInfo = 'v'.formatSemanticVersion($newData['version']);
+	$logInfo = 'v'.formatSemanticVersion($release['version']);
 
 	$requiresReview = false;
 	if(($mod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
@@ -36,9 +33,9 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 		// @security: Version numbers and releaseIds are numeric and therefore SQL Inert.
 		$con->execute("INSERT INTO modReleaseCompatibleGameVersions (releaseId, gameVersion) VALUES $folded");
 
-		$logInfo .= " for {$newData['identifier']} with compatible game versions ".formatGrammaticallyCorrectEnumeration(array_map('formatSemanticVersion', $newCompatibleGameVersions));
+		$logInfo .= " for {$release['identifier']} with compatible game versions ".formatGrammaticallyCorrectEnumeration(array_map('formatSemanticVersion', $newCompatibleGameVersions));
 
-		if($newData['status'] == RELEASE_STATUS_AWAITING_REVIEW) {
+		if($release['status'] == RELEASE_STATUS_AWAITING_REVIEW) {
 			$requiresReview = true;
 
 			$logInfo .= ' requiring manual review';
@@ -55,6 +52,7 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 		$con->execute('UPDATE mods set lastReleased = NOW() WHERE modId = ?', [$mod['modId']]);
 	}
 
+
 	$con->Execute("
 		INSERT INTO notifications (userId, kind, recordId)
 		SELECT userId, ".NOTIFICATION_NEW_RELEASE.", ?
@@ -68,52 +66,53 @@ function createNewRelease($mod, $newData, $newCompatibleGameVersions, $file)
 /**
  * @security: Does not perform validation!
  * @param array{modId:int, type:int} $mod The mod the release is to be associated with.
- * @param array{releaseId:int, assetId:int, text:string, identifier:string|null, version:int} $existingRelease
- * @param array{text:string, identifier?:string, version:int} $newData
+ * @param array{releaseId:int, assetId:int, text:string, identifier:string|null, version:int} $oldReleaseData
+ * @param array{text:string, identifier?:string, version:int} $release
+ * @param array $file
  * @param int[] $newCompatibleGameVersions
  * @return bool Indicates if the release did in fact get created. Very unlikely to not succeed.
  */
-function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersions)
+function updateRelease($mod, $oldReleaseData, $release, $file, $newCompatibleGameVersions)
 {
 	global $con, $user;
 
 	$actualChanges = [];
-	foreach($newData as $k => $newVal) {
-		if($existingRelease[$k] != $newVal) $actualChanges[$k] = $newVal;
+	foreach($release as $k => $newVal) {
+		if($oldReleaseData[$k] != $newVal) $actualChanges[$k] = $newVal;
 	}
 
 	$compatibleGameVersionsChange = false;
 	if(($mod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
-		$oldCompatibleGameVersions = array_map('intval', $con->getCol('SELECT gameVersion FROM modReleaseCompatibleGameVersions WHERE releaseId = ? ORDER BY gameVersion', [$existingRelease['releaseId']]));
+		$oldCompatibleGameVersions = array_map('intval', $con->getCol('SELECT gameVersion FROM modReleaseCompatibleGameVersions WHERE releaseId = ? ORDER BY gameVersion', [$oldReleaseData['releaseId']]));
 		sort($newCompatibleGameVersions); // Order the arrays the same way for the comparison.
 		$compatibleGameVersionsChange = $newCompatibleGameVersions !== $oldCompatibleGameVersions;
 	}
 
 	$ok = true;
 	if($actualChanges || $compatibleGameVersionsChange) {
-		$releaseId = intval($existingRelease['releaseId']);
+		$releaseId = intval($oldReleaseData['releaseId']);
 		$changesToLog = [];
 
 		$con->startTrans();
 
 		if(isset($actualChanges['text'])) {
 			$con->execute('UPDATE assets SET text = ?, editedByUserId = ? WHERE assetId = ?',
-				[$actualChanges['text'], $user['userId'], $existingRelease['assetId']]
+				[$actualChanges['text'], $user['userId'], $oldReleaseData['assetId']]
 			);
 
-			array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_CHANGELOG, createAuditLogDiff($existingRelease['text'], $actualChanges['text']));
+			array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_CHANGELOG, createAuditLogDiff($oldReleaseData['text'], $actualChanges['text']));
 		}
 		if(isset($actualChanges['identifier']) || isset($actualChanges['version'])) {
 			$con->execute('UPDATE modReleases SET identifier = ?, version = ? WHERE releaseId = ?', [
-				$actualChanges['identifier'] ?? $existingRelease['identifier'],
-				$actualChanges['version']    ?? $existingRelease['version'],
-				$existingRelease['releaseId']],
+				$actualChanges['identifier'] ?? $oldReleaseData['identifier'],
+				$actualChanges['version']    ?? $oldReleaseData['version'],
+				$oldReleaseData['releaseId']],
 			);
 
 			if(isset($actualChanges['identifier']))
-				array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_IDENTIFIER, createAuditLogDiff($existingRelease['identifier'], $actualChanges['identifier']));
+				array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_IDENTIFIER, createAuditLogDiff($oldReleaseData['identifier'], $actualChanges['identifier']));
 			if(isset($actualChanges['version'])) 
-				array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_VERSION, createAuditLogDiff(formatSemanticVersion($existingRelease['version']), formatSemanticVersion($actualChanges['version'])));
+				array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_VERSION, createAuditLogDiff(formatSemanticVersion($oldReleaseData['version']), formatSemanticVersion($actualChanges['version'])));
 		}
 
 		if($compatibleGameVersionsChange) {
@@ -128,7 +127,7 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 			array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_COMPAT, createAuditLogDiff($old, $new));
 		}
 
-		$con->execute('UPDATE assets SET numSaved = numSaved + 1, editedByUserId = ? WHERE assetId = ?', [$user['userId'], $existingRelease['assetId']]);
+		$con->execute('UPDATE assets SET numSaved = numSaved + 1, editedByUserId = ? WHERE assetId = ?', [$user['userId'], $oldReleaseData['assetId']]);
 
 		$logFlags = canModerate(null, $user) ? AUDIT_LOG_FLAG_MODACTION : 0; // @correctness this check needs to filter out team members.
 		$logPlaceholders = substr(str_repeat("({$logFlags}, {$releaseId}, {$user['userId']}, ?, ?),", count($changesToLog) / 2), 0, -1);
@@ -136,6 +135,12 @@ function updateRelease($mod, $existingRelease, $newData, $newCompatibleGameVersi
 
 		updateGameVersionsCached($mod['modId']);
 		$con->execute('UPDATE mods set lastReleased = NOW() WHERE modId = ?', [$mod['modId']]);
+
+		if($oldReleaseData['attachedFile']['fileId'] !== $file['fileId']) {
+			$con->execute("UPDATE files SET assetId = NULL, `order` = 0x7f WHERE fileId = ?", [$oldReleaseData['attachedFile']['fileId']]);
+		}
+
+		$con->execute("UPDATE files SET assetId = ?, `order` = ? WHERE fileId = ?", [$release['assetId'], $file['order'], $file['fileId']]);
 
 		$ok = $con->completeTrans();
 	}

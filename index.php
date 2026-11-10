@@ -91,8 +91,6 @@ switch($urlparts[0]) { // :ReservedUrlPrefixes
 	case 'accountsettings':
 	case 'login':
 	case 'logout':
-	case 'edit-uploadfile':
-	case 'edit-deletefile':
 
 	case 'download':
 	case 'notifications':

@@ -13,3 +13,5 @@
 /// <reference path="consent.ts" />
 /// <reference path="on-dom-loaded.ts" />
 /// <reference path="ays-beforeunload-shim.js" />
+/// <reference path="layout-mod-edit.ts" />
+/// <reference path="layout-release-edit.ts" />

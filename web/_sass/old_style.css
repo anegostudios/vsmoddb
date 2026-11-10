@@ -361,68 +361,6 @@ h2 .title {
 	}
 }
 
-
-/* file box */
-
-.file {
-	min-width: calc(15ch * 2 + .5em);;
-	position: relative;
-
-	background-color: hsl(var(--c-accent) 86%);
-  padding: .25rem;
-	padding-right: 2.5rem;
-  border: 1px solid hsl(var(--c-accent) 58%);
-}
-
-.file>a {
-	text-decoration: none;
-	display: flex;
-	flex-direction: row;
-	gap: .5em;
-}
-.file>a>div:nth-of-type(2) {
-	flex-grow: 1;
-}
-
-.file img {
-	width: 60px;
-	height: 60px;
-	object-fit: contain;
-}
-.file .fi {
-	height: 50px;
-}
-
-.file .details>* {
-	display: block;
-}
-
-.file small {
-	font-size: x-small;
-}
-
-.file .delete,
-.file .download {
-	position: absolute;
-	z-index: 5;
-	right: .25em;
-
-	width: 1em; height: 1em;
-	line-height: .65em;
-	padding: 2px;
-	text-align: center;
-}
-
-.file .delete {
-	bottom: .25em;
-	line-height: .55em;
-}
-
-.file .download {
-	font-weight: bold;
-	top: .25em;
-}
-
 /* from here on: todo @cleanup */
 
 .ck.ck-editor {

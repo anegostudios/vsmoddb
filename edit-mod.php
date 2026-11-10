@@ -74,13 +74,13 @@ if(isset($_GET['assetid'])) {
 		$currentlyBeingTransferredTo = [ 'userId' => 0 ];
 	}
 
-	$filesInOrder = $con->getAll(<<<SQL
-		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
+	$attachedFilesInOrder = $con->getAssoc(<<<SQL
+		SELECT f.fileId, f.*, i.hasThumbnail, concat(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
 		FROM files f
 		LEFT JOIN fileImageData i ON i.fileId = f.fileId
-		WHERE assetId = ?
-		ORDER BY `order` ASC
-	SQL, [$mod['assetId']]);
+		WHERE f.assetId = {$mod['assetId']}
+		ORDER BY f.`order`
+	SQL);
 }
 else { // New mod
 	$assetId = 0;
@@ -111,8 +111,20 @@ else { // New mod
 	];
 	$canEditAsOwner = true;
 	$currentlyBeingTransferredTo = [ 'userId' => 0 ];
-	$filesInOrder = getHoveringFilesOfUser($user['userId'], ASSETTYPE_MOD);
+	$attachedFilesInOrder = [];
 }
+$foldedTypes = implode(',', UPLOAD_LIMITS[ASSETTYPE_MOD]['allowedTypes']);
+$hoveringFilesInOrder = $con->getAssoc(<<<SQL
+	SELECT f.fileId, f.*, i.hasThumbnail, concat(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
+	FROM files f
+	LEFT JOIN fileImageData i ON i.fileId = f.fileId
+	WHERE f.assetId IS NULL AND f.type IN ($foldedTypes) AND f.userId = {$user['userId']}
+	ORDER BY f.`order`
+SQL);
+
+foreach($attachedFilesInOrder as $fileId => &$file) $file['fileId'] = $fileId; unset($file); //TODO(Rennorb) @cleanup
+foreach($hoveringFilesInOrder as $fileId => &$file) $file['fileId'] = $fileId; unset($file); //TODO(Rennorb) @cleanup
+$mergedFiles = array_replace($attachedFilesInOrder, $hoveringFilesInOrder); // replace instead of merge to preserve keys.
 
 $stati = [
 	MOD_STATUS_DRAFT     => 'Draft',
@@ -297,33 +309,40 @@ else if(!empty($_POST['save'])) {
 		$newEditorMemberHashes = [];
 	}
 
-	$fileOrder = getInputArrayOfInts(INPUT_POST, 'fileIds');
-	if($fileOrder) do {
-		if(count($fileOrder) !== count($filesInOrder)) {
-			addMessage(MSG_CLASS_ERROR, "Error trying to set image order, mismatch between client and server.");
+	// Files:
+	$oldModData['attachedFilesInOrder'] = $attachedFilesInOrder;
+	$filesToAttachInOrder = getInputArrayOfInts(INPUT_POST, 'attachedFileIds');
+	if($filesToAttachInOrder) do {
+		if(count($filesToAttachInOrder) > UPLOAD_LIMITS[ASSETTYPE_MOD]['attachmentCount']) {
+			addMessage(MSG_CLASS_ERROR, "Trying to attach too many images.");
 			break;
 		}
 
-		// Validate that the image ids supplied for ordering actually belong to this mod:
-		$filtered = [];
-		foreach($fileOrder as $i => $fileId) {
-			foreach($filesInOrder as &$file) {
-				if($file['fileId'] == $fileId) {
-					$file['order'] = intval($i);
-					$filtered[] = $fileId;
-					break;
-				}
-			}
-			unset($file);
-		}
-
-		if(count($filtered) !== count($fileOrder)) {
-			addMessage(MSG_CLASS_ERROR, "Error trying to set image order, mismatch between client and server.");
+		if(count($filesToAttachInOrder) > count($mergedFiles)) {
+			addMessage(MSG_CLASS_ERROR, "Error trying to attach files, mismatch between client and server.");
 			break;
 		}
 
-		usort($filesInOrder, fn($f1, $f2) => $f1['order'] - $f2['order']);
+		// Validate that the file ids supplied for ordering actually belong to this mod:
+		$flippedOrder = array_flip($filesToAttachInOrder);
+		$newFiles = array_intersect_key($mergedFiles, $flippedOrder);
+		if(count($newFiles) !== count($filesToAttachInOrder)) {
+			addMessage(MSG_CLASS_ERROR, "Error trying to attach files, mismatch between client and server.");
+			break;
+		}
+
+		foreach($newFiles as $fileId => &$file) {
+			$file['order'] = $flippedOrder[$fileId];
+		}
+		unset($file);
+
+		uasort($newFiles, fn($f1, $f2) => $f1['order'] - $f2['order']);
+
+		$attachedFilesInOrder = $newFiles;
 	} while(0);
+
+	$clientFileSet = getInputArrayOfInts(INPUT_POST, 'fileIds');
+	$filesToDelete = array_diff_key($mergedFiles, array_flip($clientFileSet));
 
 
 	// Images:
@@ -335,8 +354,8 @@ else if(!empty($_POST['save'])) {
 	$foundDbImage = !$mod['cardLogoFileId'];
 	$foundExternalImage = !$mod['embedLogoFileId'];
 	$dbImage = [];
-	foreach($filesInOrder as $file) {
-		if($file['fileId'] === $mod['cardLogoFileId']) {
+	foreach($attachedFilesInOrder as $fileId => $file) {
+		if($fileId === $mod['cardLogoFileId']) {
 			$foundDbImage = true;
 
 			if($file['imageSize'] !== '480x320' && $file['imageSize'] !== '480x480') {
@@ -350,9 +369,9 @@ else if(!empty($_POST['save'])) {
 
 			if($foundExternalImage) break;
 			// In case both images are the same we don't need to check that again, but we do need to flag it as found.
-			if($file['fileId'] === $mod['embedLogoFileId']) $foundExternalImage = true;
+			if($fileId === $mod['embedLogoFileId']) $foundExternalImage = true;
 		}
-		else if($file['fileId'] === $mod['embedLogoFileId']) {
+		else if($fileId === $mod['embedLogoFileId']) {
 			$foundExternalImage = true;
 
 			if($file['imageSize'] !== '480x320' && $file['imageSize'] !== '480x480') {
@@ -450,7 +469,7 @@ else if(!empty($_POST['save'])) {
 
 		$con->execute(
 			'INSERT INTO files (assetId, assetTypeId, userId, name, cdnPath, `order`, `size`) VALUES (?, ?, ?, ?, ?, ?, ?)',
-			[$dbImage['assetId'], ASSETTYPE_MOD, $dbImage['userId'], $croppedFilename, $cdnPath, count($filesInOrder), $croppedFileSize]
+			[$dbImage['assetId'], ASSETTYPE_MOD, $dbImage['userId'], $croppedFilename, $cdnPath, count($attachedFilesInOrder), $croppedFileSize]
 		);
 		$fileId = $con->Insert_ID();
 		$con->execute('INSERT INTO fileImageData (fileId, hasThumbnail, size) VALUES (?, 1, POINT(480, 320))', [$fileId]);
@@ -514,15 +533,19 @@ if(isset($_POST['revokenewownership'])) {
 }
 else if(!empty($_POST['save'])) {
 	if(count($messages) === $oldMsgCount) { // no errors occurred
+		if($filesToDelete) {
+			tryDeleteFiles($filesToDelete);
+		}
+		
 		if($mod['modId']) {
-			updateMod($oldModData, $mod, $currentlyBeingTransferredTo, $filesInOrder, $newMembers, $newEditorMemberHashes);
+			updateMod($oldModData, $mod, $currentlyBeingTransferredTo, $attachedFilesInOrder, $newMembers, $newEditorMemberHashes);
 
 			setcookie('saved', $saveCookie, 0, '/'); // :GlobalSavedCookie
 			forceRedirectAfterPOST();
 			exit();
 		}
 		else {
-			$assetId = createNewMod($mod, $filesInOrder, $newMembers, $newEditorMemberHashes);
+			$assetId = createNewMod($mod, $attachedFilesInOrder, $newMembers, $newEditorMemberHashes);
 
 			setcookie('saved', $saveCookie, 0, '/'); // :GlobalSavedCookie
 			forceRedirect('/edit/mod/?assetid='.$assetId);
@@ -609,7 +632,7 @@ if($mod['status'] == MOD_STATUS_LOCKED) {
 	if($nextStepHint) addMessage(MSG_CLASS_OK.' permanent', $nextStepHint);
 }
 
-foreach ($filesInOrder as &$file) {
+foreach($mergedFiles as $fileId => &$file) {
 	$file['created'] = date('M jS Y, H:i:s', strtotime($file['created']));
 
 	$file['ext'] = pathinfo($file['name'], PATHINFO_EXTENSION);
@@ -627,7 +650,7 @@ unset($file);
 	// This should be a relatively sparse process, and therefore not overwhelm the server.
 	// In the future we can run a derivate of this function to clean up any remaining files, potentially using the still existing backup files on the drive from before we used a CDN.
 
-	foreach($filesInOrder as &$file) {
+	foreach($attachedFilesInOrder as &$file) {
 		if($file['imageSize'] === null) {
 			$localpath = tempnam(sys_get_temp_dir(), '');
 			$originalfile = @file_get_contents(formatCdnUrl($file));
@@ -664,7 +687,7 @@ cspPushAllowedInlineHandlerHash('sha256-nTlTeikEEupAQmSPlHWFcoJvMdPCIBu+Zu+G64E7
 cspPushAllowedInlineHandlerHash('sha256-HAn3sRp/DKqkhccjWmi+mt2NzQCTHLzeSlhZ0T2cDuY='); // javascript:submitDelete()
 cspPushAllowedInlineHandlerHash('sha256-gm6HYxb4KKRA00NNRahEknJJISDZhG84Ufzc3V9kavo='); // lockModDlg(this); return false;
 cspPushAllowedInlineHandlerHash('sha256-pPW2xHtSs5JcxvsK0Ea5c0vZ+6wqwo4IfpaUv24cHuo='); // releaseSizeLimitDlg(this); return false;
-$fs = "{$_SERVER['HTTP_HOST']}/edit-deletefile {$_SERVER['HTTP_HOST']}/edit-uploadfile {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/";
+$fs = "{$_SERVER['HTTP_HOST']}/api/v2/files {$_SERVER['HTTP_HOST']}/api/v2/files/ {$_SERVER['HTTP_HOST']}/api/v2/users/by-name/";
 if(canModerate(null, $user) && $mod['modId']) {
 	$fs .= " {$_SERVER['HTTP_HOST']}/api/v2/mods/{$mod['modId']}/lock {$_SERVER['HTTP_HOST']}/api/v2/mods/{$mod['modId']}/releases/upload-limit";
 }
@@ -675,7 +698,6 @@ $screenshotsDisclaimer = '';
 //NOTE(Rennorb): Mobile doesn't really have working drag and drop, nor does it make sense on non-pointer devices (TVs or consoles).
 // The js still gets attached, but we don't put the hint here so users don't get confused if it doesn't work.
 if(!isTVPlatform() && !isTouchPlatform()) $screenshotsDisclaimer .= 'drag to reorder';
-if($mod['modId']) { if($screenshotsDisclaimer) $screenshotsDisclaimer .= ', '; $screenshotsDisclaimer .= 'upload / delete changes apply immediately!'; }
 if($screenshotsDisclaimer) $screenshotsDisclaimer = "<small>($screenshotsDisclaimer)</small>";
 $view->assign('screenshotsDisclaimer', $screenshotsDisclaimer, null, true);
 
@@ -705,6 +727,6 @@ $view->assign('mod', $mod);
 $view->assign('asset', ['assetId' => $mod['assetId'], 'assetTypeId' => ASSETTYPE_MOD], null, true); //TODO(Rennorb) @cleanup: only here for the footer js / file upload code
 $view->assign('teamMembers', $teamMembers);
 if($canEditAsOwner && $currentlyBeingTransferredTo['userId'])  $view->assign("ownershipTransferUser", $currentlyBeingTransferredTo['name']);
-$view->assign('files', $filesInOrder);
+$view->assign('files', $mergedFiles);
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_SUBMIT_MOD, null, true);
 $view->display('edit-mod');

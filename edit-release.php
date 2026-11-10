@@ -12,16 +12,16 @@ if(DB_READONLY) showReadonlyPage();
 if (empty($user))   showErrorPage(HTTP_UNAUTHORIZED);
 validateUserNotBanned();
 
-
+require(SRC_ROOT.'/lib/modinfo.php');
 require(SRC_ROOT.'/lib/edit-release.php');
+require(SRC_ROOT.'/lib/file.php');
 
-$existingRelease = null;
 $targetMod = null;
 $pushedErrorForCurrentFile = false; // This is here so we can push the errors even if the file is not submitted, but dont duplicate the error message in case it is.
 
 // /edit/release/?assetid=32 (edit existing release)
 if(!empty($_REQUEST['assetid'])) {
-	$existingRelease = $con->getRow("
+	$release = $con->getRow("
 		SELECT a.assetId, a.text, a.numSaved, r.*,
 			createdBy.name AS createdByUsername,
 			lastEditedBy.name AS lastEditedByUsername,
@@ -38,17 +38,29 @@ if(!empty($_REQUEST['assetid'])) {
 		WHERE r.assetId = ?
 	", [ROLE_ADMIN, ROLE_MODERATOR, $_REQUEST['assetid']]);
 
-	if($existingRelease) {
+	if($release) {
 		$targetMod = $con->getRow(<<<SQL
 			SELECT a.assetId, a.createdByUserId, a.name, m.modId, m.category, m.uploadLimitOverwrite, m.urlAlias
 			FROM mods m
 			JOIN assets a ON a.assetId = m.assetId
 			WHERE m.modId = ?
-		SQL, [$existingRelease['modId']]);
+		SQL, [$release['modId']]);
 	}
 }
 // /edit/release/?modid=32  (add new release)
 else if(!empty($_REQUEST['modid'])) {
+	$release = [
+		'releaseId' => 0,
+		'assetId'   => 0,
+		'status'    => RELEASE_STATUS_RELEASED,
+		'numSaved'  => 0,
+		'compatibleGameVersions' => [],
+		'retractionReason' => null,
+		'identifier' => '',
+		'version'    => null,
+		'text'       => '',
+	];
+
 	$targetMod = $con->getRow(<<<SQL
 		SELECT a.assetId, a.createdByUserId, a.name, m.modId, m.category, m.uploadLimitOverwrite, m.urlAlias
 		FROM mods m
@@ -61,113 +73,131 @@ else if(!empty($_REQUEST['modid'])) {
 if(!$targetMod)   showErrorPage(HTTP_NOT_FOUND, 'Target mod was not found.');
 if(!canEditMod($targetMod, $user))   showErrorPage(HTTP_FORBIDDEN);
 
+if($release['releaseId']) {
+	$attachedFiles = $con->getAssoc(<<<SQL
+		SELECT f.fileId, f.assetId, f.name, f.created, f.size, f.cdnPath, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.rawDependencies
+		FROM files f
+		LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
+		WHERE f.assetId = ?
+	SQL, [$release['assetId']]);
+}
+else {
+	$attachedFiles = [];
+}
+
+// hovering files
+$foldedTypes = implode(',', UPLOAD_LIMITS[ASSETTYPE_RELEASE]['allowedTypes']);
+$hoveringFiles = $con->getAssoc(<<<SQL
+	SELECT f.fileId, f.assetId, f.name, f.created, f.size, f.cdnPath, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.errors, mpr.rawDependencies
+	FROM files f
+	LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
+	WHERE f.assetId IS NULL AND f.type IN ($foldedTypes) AND f.userId = ?
+SQL, [$user['userId']]);
+
+foreach($attachedFiles as $fileId => &$file) {
+	$file['fileId'] = $fileId;
+	$file['gameVersionDep'] = findMinCompatibleGameVersion($file['rawDependencies']);
+}
+unset($file); //TODO(Rennorb) @cleanup
+foreach($hoveringFiles as $fileId => &$file) {
+	$file['fileId'] = $fileId;
+	$file['gameVersionDep'] = findMinCompatibleGameVersion($file['rawDependencies']);
+}
+unset($file); //TODO(Rennorb) @cleanup
+$mergedFiles = array_replace($attachedFiles, $hoveringFiles); // replace instead of merge to preserve keys.
+
+
+$canCurrentlyBeEdited = !$release['releaseId']; //TODO
+
 //
 // Actions
 //
 
-if(!$existingRelease && !empty($_POST['save'])) {
+if(!empty($_POST['save'])) {
 	validateActionToken();
 
+	$oldReleaseData = $release;
+
 	$oldMsgCount = count($messages);
-	$newData = [];
 
 	//
 	// Validate
 	//
 
-	//TODO(Rennorb) @cleanup @correctness: Attach files on save instead of on upload.
-	if($existingRelease) {
-		$currentFiles = $con->getAll(<<<SQL
-			SELECT f.assetId, f.fileId, mpr.modIdentifier, mpr.modVersion, mpr.capabilities
-			FROM files f
-			LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
-			WHERE f.assetId = ?
-		SQL, [$existingRelease['assetId']]);
+	if(!$canCurrentlyBeEdited) {
+		addMessage(MSG_CLASS_ERROR, 'This release is public and cannot be edited.');
 	}
-	else {
-		// hovering files
-		$currentFiles = $con->getAll(<<<SQL
-			SELECT f.assetId, f.fileId, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.errors
-			FROM files f
-			LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
-			WHERE f.assetId IS NULL AND f.assetTypeId = 2 AND f.userId = ?
-		SQL, [$user['userId']]);
-
-		if(!empty($currentFiles[0]['errors']) && ($targetMod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
-			addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$currentFiles[0]['errors'], true);
-			$pushedErrorForCurrentFile = true;
-		}
-
-		$newData['status'] = RELEASE_STATUS_RELEASED;
-	}
-	/** @var array{'assetId':int, 'fileId':int, 'modIdentifier':string|null, 'modVersion':string|null}[] $currentFiles */
-
-	//TODO(Rennorb) @cleanup: This exists for the case that the user used the "Browse" button instead of drag and drop, that doesn't immediately upload the file. 
-	if(!empty($_FILES['newfile']) && $_FILES['newfile']['error'] != UPLOAD_ERR_NO_FILE) {
-		if($currentFiles) {
-			addMessage(MSG_CLASS_ERROR, 'Only one file can be attached to a release.');
-		}
-		else {
-			$assetId = $existingRelease['assetId'] ?? 0;
-			$processedFile = processFileUpload($_FILES['newfile'], ASSETTYPE_RELEASE, $assetId, $targetMod['modId']);
-
-			if($processedFile['status'] === 'error') {
-				addMessage(MSG_CLASS_ERROR, 'Failed to process uploaded file: '.$processedFile['errormessage'], true);
-			}
-			else if(($targetMod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
-				if($processedFile['modparse'] === 'error') {
-					addMessage(MSG_CLASS_ERROR, 'Failed to parse modinfo: '.$processedFile['parsemsg'], true);
-					$pushedErrorForCurrentFile = true;
-				}
-				else {
-					$currentFiles[] = [
-						'assetId'            => $assetId,
-						'fileId'             => $processedFile['fileid'],
-						'modIdentifier'      => $processedFile['modid'],
-						'modVersion'         => $processedFile['modversion'],
-						'capabilities'       => $processedFile['capabilities'],
-					];
-				}
-			}
-			else {
-				$currentFiles[] = [
-					'assetId' => $assetId,
-					'fileId'  => $processedFile['fileid'],
-				];
-			}
-		}
-	}
-
-	if(!$currentFiles && (empty($_FILES['newfile']) || $_FILES['newfile']['error'] === 4)) { // Release needs a file, but don't emit the message if the parsing failed.
-		addMessage(MSG_CLASS_ERROR, 'Release is missing a file.');
-	}
-
 
 	if(isset($_POST['text'])) {
-		$newData['text'] = trimHtml(sanitizeHtml($_POST['text']));
+		$release['text'] = trimHtml(sanitizeHtml($_POST['text']));
 
-		$textLen = strlen($newData['text']);
+		$textLen = strlen($release['text']);
 		if($textLen > 65535) { // TEXT column max length in assets.text
 			$sizeKb = floor($textLen / 1024);
 			$reason = "Excessive size ({$sizeKb}KB).";
-			if(str_contains($newData['text'], 'src="data:image')) $reason .= " You cannot paste large images directly. If you need a large image, upload it to an external site and link to that.";
+			if(str_contains($release['text'], 'src="data:image')) $reason .= " You cannot paste large images directly. If you need a large image, upload it to an external site and link to that.";
 			addMessage(MSG_CLASS_ERROR, $reason);
 		}
 	}
+
+	// Files:
+	$release['attachedFile'] = reset($attachedFiles);
+	$filesToAttachInOrder = getInputArrayOfInts(INPUT_POST, 'attachedFileIds');
+	if($filesToAttachInOrder) do {
+		assert(UPLOAD_LIMITS[ASSETTYPE_RELEASE]['attachmentCount'] === 1);
+		
+		if(count($filesToAttachInOrder) > UPLOAD_LIMITS[ASSETTYPE_RELEASE]['attachmentCount']) {
+			addMessage(MSG_CLASS_ERROR, "Trying to attach too many files.");
+			break;
+		}
+
+		if(count($filesToAttachInOrder) > count($mergedFiles)) {
+			addMessage(MSG_CLASS_ERROR, "Error trying to attach files, mismatch between client and server.");
+			break;
+		}
+
+		// Validate that the file ids supplied for ordering actually belong to this mod:
+		$flippedOrder = array_flip($filesToAttachInOrder);
+		$newFiles = array_intersect_key($mergedFiles, $flippedOrder);
+		if(count($newFiles) !== count($filesToAttachInOrder)) {
+			addMessage(MSG_CLASS_ERROR, "Error trying to attach files, mismatch between client and server.");
+			break;
+		}
+
+		foreach($newFiles as $fileId => &$file) {
+			$file['order'] = $flippedOrder[$fileId];
+			$file['assetId'] = -1; // Needs to be fake, releases currently being created do not have a assetid to attach to.
+		}
+		unset($file);
+
+		// uasort($newFiles, fn($f1, $f2) => $f1['order'] - $f2['order']);
+
+		$attachedFiles = $newFiles;
+
+		$mergedFiles = array_replace($mergedFiles, $attachedFiles); // replace instead of merge to preserve keys.
+	} while(0);
+	else {
+		addMessage(MSG_CLASS_ERROR, "Missing release file.");
+	}
+
+	$clientFileSet = getInputArrayOfInts(INPUT_POST, 'fileIds');
+	$filesToDelete = array_diff_key($mergedFiles, array_flip($clientFileSet));
+
+	$firstAttachedFile = reset($attachedFiles);
 
 	$newCompatibleGameVersions = null;
 
 	if(($targetMod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
 		// Mods take modid and version from the attached file. We no longer allow manual entry.
-		if($currentFiles) {
-			$newData['identifier'] = $currentFiles[0]['modIdentifier'];
-			$newData['version']    = $currentFiles[0]['modVersion'];
+		if($attachedFiles) {
+			$release['identifier'] = $firstAttachedFile['modIdentifier'];
+			$release['version']    = $firstAttachedFile['modVersion'];
 
-			if (in_array($newData['identifier'], ["game", "creative", "survival"])) { // Reserve special mod ids
-				addMessage(MSG_CLASS_ERROR, "This modid ('{$newData['identifier']}') is reserved.");
+			if (in_array($release['identifier'], ["game", "creative", "survival"])) { // Reserve special mod ids
+				addMessage(MSG_CLASS_ERROR, "This modid ('{$release['identifier']}') is reserved.");
 			}
 			else {
-				$sqlIgnoreExistingRelease = $existingRelease ? "r.releaseId != {$existingRelease['releaseId']} AND" : ''; // @security $existingRelease['releaseId'] comes from the database and is numeric, therefore sql inert.
+				$sqlIgnoreExistingRelease = $release ? "r.releaseId != {$release['releaseId']} AND" : ''; // @security $release['releaseId'] comes from the database and is numeric, therefore sql inert.
 				$inUseBy = $con->getRow(<<<SQL
 					SELECT a.assetId, r.modId, r.version, m.assetId as modAssetId, m.urlAlias
 					FROM modReleases r
@@ -175,15 +205,15 @@ if(!$existingRelease && !empty($_POST['save'])) {
 					JOIN mods m ON m.modId = r.modId
 					WHERE $sqlIgnoreExistingRelease r.identifier = ? AND (r.modId != ? || r.version = ?)
 					LIMIT 1
-				SQL, [$newData['identifier'], $targetMod['modId'], $newData['version']]);
+				SQL, [$release['identifier'], $targetMod['modId'], $release['version']]);
 
 				if ($inUseBy) {
-					if($inUseBy['modId'] == $targetMod['modId'] && $inUseBy['version'] == $newData['version']) {
-						$rv = formatSemanticVersion(intval($newData['version']));
+					if($inUseBy['modId'] == $targetMod['modId'] && $inUseBy['version'] == $release['version']) {
+						$rv = formatSemanticVersion(intval($release['version']));
 						addMessage(MSG_CLASS_ERROR, "This version ($rv) of the mod has already been released (<a href='/edit/release/?assetid={$inUseBy['assetId']}'>link</a>).");
 					}
 					else {
-						$mid = escapeHtml($newData['identifier']);
+						$mid = escapeHtml($release['identifier']);
 						$mpath = formatModPath(['urlAlias' => $inUseBy['urlAlias'], 'assetId' => $inUseBy['modAssetId']]);
 						addMessage(MSG_CLASS_ERROR, "This modid ('$mid') is already in use by another mod (<a href='$mpath' target='_blank'>link</a>).");
 					}
@@ -201,9 +231,9 @@ if(!$existingRelease && !empty($_POST['save'])) {
 		}
 
 		// If the release itself is ok, but the caps are extensive, hold the release for review:
-		if(count($messages) === $oldMsgCount && $currentFiles) {
-			if($currentFiles[0]['capabilities'] & MOD_CAPS_REQUIRING_REVIEW) {
-				$newData['status'] = RELEASE_STATUS_AWAITING_REVIEW;
+		if(count($messages) === $oldMsgCount && $attachedFiles) {
+			if($firstAttachedFile['capabilities'] & MOD_CAPS_REQUIRING_REVIEW) {
+				$release['status'] = RELEASE_STATUS_AWAITING_REVIEW;
 			}
 		}
 	}
@@ -218,7 +248,7 @@ if(!$existingRelease && !empty($_POST['save'])) {
 				addMessage(MSG_CLASS_ERROR, 'Malformed version.<br/>Version numbers must follow semantic versioning, formatted as <code>n.n.n[-{rc|pre|dev}.n]</code><br/>Examples: <code>1.0.1</code> or <code>1.5.2-rc.1</code>');
 			}
 			else {
-				$newData['version'] = $version;
+				$release['version'] = $version;
 			}
 		}
 	}
@@ -228,16 +258,20 @@ if(!$existingRelease && !empty($_POST['save'])) {
 		// Save
 		//
 
-		if($existingRelease) {
-			$ok = updateRelease($targetMod, $existingRelease, $newData, $newCompatibleGameVersions);
+		if($filesToDelete) {
+			tryDeleteFiles($filesToDelete);
+		}
+
+		if($oldReleaseData['releaseId']) {
+			$ok = updateRelease($targetMod, $oldReleaseData, $release, $firstAttachedFile, $newCompatibleGameVersions);
 			if($ok) {
 				if(!empty($_POST['saveandback'])) forceRedirect(formatModPath($targetMod).'#tab-files');
 				else                              forceRedirectAfterPOST();
 				exit();
 			}
 		}
-		else { // adding a new release, no $existingRelease
-			$assetId = createNewRelease($targetMod, $newData, $newCompatibleGameVersions, $currentFiles[0]);
+		else { // adding a new release, no $release
+			$assetId = createNewRelease($targetMod, $release, $newCompatibleGameVersions, $firstAttachedFile);
 			if($assetId) {
 				if(!empty($_POST['saveandback'])) forceRedirect(formatModPath($targetMod).'#tab-files');
 				else                              forceRedirect('/edit/release/?assetid='.$assetId);
@@ -252,41 +286,21 @@ if(!$existingRelease && !empty($_POST['save'])) {
 // Prepare data for display
 //
 
-if($existingRelease) {
-	switch($existingRelease['status']) {
+if($release['releaseId']) {
+	switch($release['status']) {
 		case RELEASE_STATUS_AWAITING_CHANGES: addMessage(MSG_CLASS_WARN.' permanent', "The reviewer has requested changes to this release."); break;
 	}
 
-	$files = $con->getAll(<<<SQL
-		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize, mpr.capabilities
-		FROM files f
-		LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
-		LEFT JOIN fileImageData i ON i.fileId = f.fileId
-		WHERE f.assetId = ?
-	SQL, [$existingRelease['assetId']]);
-
-	$compatibleGameVersions = $con->getCol('SELECT gameVersion FROM modReleaseCompatibleGameVersions WHERE releaseId = ?', $existingRelease['releaseId']);
-	$existingRelease['compatibleGameVersions'] = array_flip(array_map('intval', $compatibleGameVersions));
+	$compatibleGameVersions = $con->getCol('SELECT gameVersion FROM modReleaseCompatibleGameVersions WHERE releaseId = ?', $release['releaseId']);
+	$release['compatibleGameVersions'] = array_flip(array_map('intval', $compatibleGameVersions));
 }
 else {
-	// hovering files
-	$files = $con->getAll(<<<SQL
-		SELECT f.*, i.hasThumbnail, CONCAT(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize, mpr.modIdentifier, mpr.modVersion, mpr.rawDependencies, mpr.errors, mpr.capabilities
-		FROM files f
-		LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
-		LEFT JOIN fileImageData i ON i.fileId = f.fileId
-		WHERE f.assetId IS NULL AND f.assetTypeId = 2 AND f.userId = ?
-	SQL, [$user['userId']]);
-
-	if(!$pushedErrorForCurrentFile && !empty($files[0]['errors'])) {
-		addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$files[0]['errors'], true);
-	}
-	if($files && $files[0]['capabilities'] & MOD_CAPS_REQUIRING_REVIEW) {
-		addMessage(MSG_CLASS_WARN, 'This mod uses potentially dangerous features of the dotnet runtime, and will require manual review.<br>A request for review will be submitted for you automatically after completing the release.', false);
+	if(!$pushedErrorForCurrentFile && !empty(reset($mergedFiles)['errors'])) {
+		addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$mergedFiles[0]['errors'], true);
 	}
 }
 
-foreach($files as &$file) {
+foreach($mergedFiles as &$file) {
 	$file['created'] = date('M jS Y, H:i:s', strtotime($file['created']));
 
 	$file['ext'] = substr($file['name'], strrpos($file['name'], '.')+1); // no clue why pathinfo doesnt work here
@@ -304,49 +318,45 @@ foreach($allGameVersions as &$gameVersion) {
 unset($gameVersion);
 
 
-$auditLogs = $existingRelease ? $con->getAll(<<<SQL
+$auditLogs = $release ? $con->getAll(<<<SQL
 	SELECT l.kind, l.info, l.created, u.name AS username, l.flags
 	FROM auditLogs l
 	JOIN users u ON u.userId = l.initiatorUserId
-	WHERE l.referenceId = {$existingRelease['releaseId']}
+	WHERE l.referenceId = {$release['releaseId']}
 	ORDER BY l.created DESC
 	LIMIT 20
 SQL) : [];
 
 
 
-if(!$existingRelease) {
-	$existingRelease = [
-		'assetId'    => 0,
-		'releaseId'  => 0,
-		'text'       => $_POST['text'] ?? '',
-		'numSaved'   => 0,
-		'compatibleGameVersions' => empty($_POST['cgvs']) ? [] : array_flip(array_filter(array_map('compileSemanticVersion', $_POST['cgvs']))),
-		'retractionReason' => null,
-	];
-
+if(!$release['releaseId']) {
 	if(($targetMod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
-		// Pre-select values from hovering file:
-		$existingRelease['identifier'] = $files ? $files[0]['modIdentifier'] : '';
-		$existingRelease['version']    = $files ? formatSemanticVersion(intval($files[0]['modVersion'])) : '';
+		// Pre-select values from hovering file, but only if this is a post-bounce or we only have one file:
+		$candidateFile = null;
+		if(!empty($firstAttachedFile)) $candidateFile = $firstAttachedFile;
+		else if(count($mergedFiles) === 1) $candidateFile = reset($mergedFiles);
 
-		if(!$existingRelease['compatibleGameVersions'] && $files && ($minCompat = findMinCompatibleGameVersion($files[0]['rawDependencies'])) && $minCompat !== null) {
-			$detectedCompat = [];
-			foreach($allGameVersions as $version) { // Order is descending, so the filter is trivial.
-				if($version['version'] >= $minCompat) $detectedCompat[] = $version['version'];
-				else break;
+		if($candidateFile) {
+			if($candidateFile['capabilities'] & MOD_CAPS_REQUIRING_REVIEW) {
+				addMessage(MSG_CLASS_WARN, 'This mod uses potentially dangerous features of the dotnet runtime, and will require manual review.<br>A request for review will be submitted for you automatically after completing the release.', false);
 			}
-			$existingRelease['compatibleGameVersions'] = array_flip($detectedCompat);
+
+			$release['identifier'] = $candidateFile['modIdentifier'];
+			$release['version']    = intval($candidateFile['modVersion']);
+
+			if(!$release['compatibleGameVersions'] && ($minCompat = findMinCompatibleGameVersion($candidateFile['rawDependencies'])) && $minCompat !== null) {
+				$detectedCompat = [];
+				foreach($allGameVersions as $version) { // Order is descending, so the filter is trivial.
+					if($version['version'] >= $minCompat) $detectedCompat[] = $version['version'];
+					else break;
+				}
+				$release['compatibleGameVersions'] = array_flip($detectedCompat);
+			}
 		}
 	}
-	else {
-		$existingRelease['identifier'] = '';
-		$existingRelease['version']    = $_POST['modversion'] ?? '';
-	}
 }
-else {
-	$existingRelease['version'] = formatSemanticVersion(intval($existingRelease['version']));
-}
+
+if($release['version'] !== null) $release['version'] = formatSemanticVersion($release['version']);
 
 $allGameVersionsTree = [];
 foreach($allGameVersions as $gameVersion) {
@@ -367,16 +377,17 @@ $view->assign('uploadSizeLimit', min($maxUploadSizeLimit, $uploadSizeLimitOfThis
 cspAllowTinyMceFull();
 cspPushAllowedInlineHandlerHash('sha256-nTlTeikEEupAQmSPlHWFcoJvMdPCIBu+Zu+G64E7uC4='); // javascript:submitForm(0)
 cspPushAllowedInlineHandlerHash('sha256-XKuSPEJjbu3T+mAY9wlP6dgYQ4xJL1rP4m3GrDwZ68c='); // javascript:submitForm(1)
-cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/edit-deletefile {$_SERVER['HTTP_HOST']}/edit-uploadfile {$_SERVER['HTTP_HOST']}/api/v2/mods/{$targetMod['modId']}/releases/{$existingRelease['releaseId']}/retraction");
+cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/api/v2/files {$_SERVER['HTTP_HOST']}/api/v2/files/ {$_SERVER['HTTP_HOST']}/api/v2/mods/{$targetMod['modId']}/releases/{$release['releaseId']}/retraction");
 
 
 $view->assign('allGameVersionsTree', $allGameVersionsTree, null, true);
 
 $view->assign('mod', $targetMod);
 $view->assign('doFileValidation', ($targetMod["category"] & CATEGORY__MASK) === CATEGORY_GAME_MOD, null, true);
-$view->assign('release', $existingRelease);
-$view->assign('asset', ['assetId' => $existingRelease['assetId'], 'assetTypeId' => ASSETTYPE_RELEASE], null, true); //TODO(Rennorb) @cleanup: only here for the footer js / file upload code
-$view->assign('files', $files);
+$view->assign('canCurrentlyBeEdited', $canCurrentlyBeEdited, null, true);
+$view->assign('attachedFileRequiresReview', !empty($firstAttachedFile) && $firstAttachedFile['capabilities'] & MOD_CAPS_REQUIRING_REVIEW, null, true);
+$view->assign('release', $release);
+$view->assign('files', $mergedFiles);
 
 $view->assign('auditLogs', $auditLogs, null, true);
 

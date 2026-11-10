@@ -394,6 +394,34 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 	- `404`: The specified request does not exist.
 	- `200`: Successfully posted new message to the ticket.
 
+### /api/v2/files
+- `post`: `auth` `at`
+	- Args:
+		- Post arg `file`: the file to be uploaded, form encoded.
+	- `400`: Missing or malformed file.
+	- `403`: Active user is currently restricted.
+	- `201`: Successfully created the file.
+		responds with information about the file:
+		```json
+		{
+
+		}
+		```
+
+### /api/v2/files/{fileId}
+- `get`
+	- Args:
+		- Path arg `{fileId}`
+	- `404`: File not found.
+	- `200`: Information about the file:
+
+- `delete`: `auth` `at`
+	- Args:
+		- Path arg `{fileId}`
+	- `403`: Active user is currently restricted.
+	- `404`: File not found.
+	- `200`: Successfully deleted the file.
+
 # Development setup
 Requirements:
 - [Docker](https://www.docker.com/)

@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS `files` (
   `name`         VARCHAR(255)     NULL,
   `cdnPath`      VARCHAR(255)     NULL,
   `size`         INT UNSIGNED NOT NULL,
+  `type`         TINYINT UNSIGNED NOT NULL,
   `order`        TINYINT      NOT NULL,
   `created`      DATETIME     NOT NULL DEFAULT NOW(),
   `lastModified` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

@@ -41,7 +41,7 @@ unset($mod);
 if (canModerate($shownUser, $user)) {
 	$logs = $con->getAll("
 		SELECT l.created, l.kind, l.flags, l.referenceId,
-		COALESCE(l.info, c.textShort, IF(l.kind = ".AUDIT_LOG_KIND_REPORT_RESOLVE.", req.resolution, req.request)) AS info,
+		COALESCE(l.info, c.textShort, IF(l.kind = ".AUDIT_LOG_KIND_REPORT_RESOLVE.", evtMsgRes.textSearchable, evtMsgReq.textSearchable)) AS info,
 		HEX(u.hash) AS `hash`,
 		COALESCE(ma.name, u.name) AS referencedName,
 		COALESCE(c.assetId, m.assetId, r.assetId, l.referenceId) AS assetId
@@ -54,6 +54,8 @@ if (canModerate($shownUser, $user)) {
 		LEFT JOIN comments c ON l.kind IN (".AUDIT_LOG_KIND_COMMENT_CREATE.','.AUDIT_LOG_KIND_COMMENT_DELETE.','.AUDIT_LOG_KIND_COMMENT_EDIT.") AND c.commentId = l.referenceId
 		LEFT JOIN mods rm ON rm.modId = r.modId
 		LEFT JOIN moderationRequests req ON l.kind IN (".AUDIT_LOG_KIND_REPORT_CREATE.','.AUDIT_LOG_KIND_REPORT_RESOLVE.") AND req.requestId = l.referenceId
+		LEFT JOIN moderationRequestMessages evtMsgReq ON evtMsgReq.eventId = req.requestEvt
+		LEFT JOIN moderationRequestMessages evtMsgRes ON evtMsgReq.eventId = req.resolutionEvt
 		LEFT JOIN assets ma ON ma.assetId = COALESCE(m.assetId, c.assetId, rm.assetId)
 		WHERE l.initiatorUserId = {$shownUser['userId']}
 		ORDER BY l.created DESC

@@ -24,23 +24,24 @@ $oldData = $con->getRow("SELECT kind, stateFlags, initiatorUserId, referenceId F
 
 if(!$oldData)  fail(HTTP_NOT_FOUND, 'Request not found.');
 if($oldData['initiatorUserId'] !== $user['userId'] && !$isModerator)   fail(HTTP_FORBIDDEN, 'You do not have access to this request.');
-if($oldData['stateFlags'] & MOD_REQUEST_FLAG_CLOSED)   fail(HTTP_BAD_REQUEST, 'Request was already closed.');
 
 $newState = filter_input(INPUT_POST, 'newState', FILTER_UNSAFE_RAW);
 switch($newState) {
 	case 'solved':
 		if(!$isModerator)  fail(HTTP_BAD_REQUEST, 'Only moderators may transition states explicitly.');
+		if($oldData['stateFlags'] & MOD_REQUEST_FLAG_CLOSED)   fail(HTTP_BAD_REQUEST, 'Request was already closed.');
 
 		$newState = MOD_REQUEST_FLAG_CLOSED;
 		$auditLog = AUDIT_LOG_KIND_REPORT_RESOLVE;
 		$auditLogFlags = AUDIT_LOG_FLAG_SOLVED;
 		$newReleaseState = RELEASE_STATUS_RELEASED;
 
-		$sqlEventValues = "($requestId, {$user['userId']}, ".REPORT_EVENT_CHANGE_STAUS.", $newState)";
+		$sqlEventValues[] = "($requestId, {$user['userId']}, ".REPORT_EVENT_CHANGE_STAUS.", $newState)";
 		break;
 
 	case 'requireAction':
 		if(!$isModerator)  fail(HTTP_BAD_REQUEST, 'Only moderators may transition states explicitly.');
+		if($oldData['stateFlags'] & MOD_REQUEST_FLAG_CLOSED)   fail(HTTP_BAD_REQUEST, 'Request was already closed.');
 
 		$newState = MOD_REQUEST_FLAG_USER_ACTION_REQUIRED;
 		$auditLog = 0;
@@ -53,24 +54,24 @@ switch($newState) {
 	case 'wontFix':
 		// The user that opened the request may dismiss it aswell.
 		//if(!$isModerator)  fail(HTTP_BAD_REQUEST, 'Only moderators may transition states explicitly.');
+		if($oldData['stateFlags'] & MOD_REQUEST_FLAG_CLOSED)   fail(HTTP_BAD_REQUEST, 'Request was already closed.');
 
 		$newState = MOD_REQUEST_FLAG_CLOSED | MOD_REQUEST_FLAG_WONTFIX;
 		$auditLog = AUDIT_LOG_KIND_REPORT_RESOLVE;
 		$auditLogFlags = AUDIT_LOG_FLAG_WONT_FIX;
 		$newReleaseState = RELEASE_STATUS_NOT_ACCEPTABLE; // unreachable
-		$reason = trimHtml(sanitizeHtml($_POST['reason']));
 
 		$sqlEventValues[] = "($requestId, {$user['userId']}, ".REPORT_EVENT_CHANGE_STAUS.", $newState)";
 		break;
 		
 	case 'spam':
 		if(!$isModerator)  fail(HTTP_BAD_REQUEST, 'Only moderators may transition states explicitly.');
+		if($oldData['stateFlags'] & MOD_REQUEST_FLAG_CLOSED)   fail(HTTP_BAD_REQUEST, 'Request was already closed.');
 
 		$newState = MOD_REQUEST_FLAG_CLOSED | MOD_REQUEST_FLAG_SPAM;
 		$auditLog = AUDIT_LOG_KIND_REPORT_RESOLVE;
 		$auditLogFlags = AUDIT_LOG_FLAG_SPAM;
 		$newReleaseState = RELEASE_STATUS_NOT_ACCEPTABLE;
-		$reason = trimHtml(sanitizeHtml($_POST['reason']));
 
 		$sqlEventValues[] = "($requestId, {$user['userId']}, ".REPORT_EVENT_CHANGE_STAUS.", $newState)";
 		break;

@@ -2,9 +2,11 @@
 
 require_once(SRC_ROOT.'/lib/file.php');
 
-const RESERVED_URL_PREFIXES = ['api', 'home', 'terms', 'accountsettings', 'login', 'logout', 'edit-uploadfile', 'edit-deletefile', 'download', 'notifications', 'updateversiontags', 'notification', 'list', 'show', 'edit', 'moderate', 'cmd', 't', 'webhooks']; // :ReservedUrlPrefixes
+const RESERVED_URL_PREFIXES = ['api', 'home', 'terms', 'accountsettings', 'login', 'logout', 'download', 'notifications', 'updateversiontags', 'notification', 'list', 'show', 'edit', 'moderate', 'cmd', 't', 'webhooks']; // :ReservedUrlPrefixes
 
 /**
+ * @param array $mod
+ * @param array<int, array> $filesInOrder
  * @param array<string, int> $newMembers
  * @param array<string, 1> $newEditorMemberHashes
  * @return int createdAssetId or zero on failure
@@ -35,10 +37,8 @@ function createNewMod($mod, $filesInOrder, $newMembers, $newEditorMemberHashes)
 	$modId = intval($con->Insert_ID());
 	logAuditEvent(AUDIT_LOG_KIND_MOD_CREATE, $modId);
 
-	// Attach hovering files to this mod. Needs to be done for new mods, as it cannot happen during upload because at that point the asset doesn't yet exist to have files attached to it.
-	// Not that the attaching should happen during upload in the first place...
-	foreach($filesInOrder as $i => $file) {
-		$con->execute("UPDATE files SET assetId = ?, `order` = ? WHERE fileId = ?", [$assetId, $i, $file['fileId']]);
+	foreach($filesInOrder as $fileId => $file) {
+		$con->execute("UPDATE files SET assetId = ?, `order` = ? WHERE fileId = ?", [$assetId, $file['order'], $fileId]);
 	}
 
 	updateModTags($modId, [], array_keys($mod['tags'])); // @perf: This could use a simpler path
@@ -54,6 +54,7 @@ function createNewMod($mod, $filesInOrder, $newMembers, $newEditorMemberHashes)
  * @param array<string, mixed> $oldModData
  * @param array<string, mixed> $mod
  * @param array{userId:int, notificationId:int} $currentlyBeingTransferredTo
+ * @param array<int, array> $filesInOrder
  * @param array<string, int> $newMembers
  * @param array<string, 1> $newEditorMemberHashes
  */
@@ -66,17 +67,17 @@ function updateMod($oldModData, $mod, $currentlyBeingTransferredTo, $filesInOrde
 	$con->startTrans();
 	
 	$con->execute(
-		'UPDATE assets SET `status` = ?, `name` = ?, `text` = ?, editedByUserId = ?, numSaved = numSaved + 1 WHERE assetId = ?',
-		[$mod['status'], $mod['name'], $mod['text'], $user['userId'], $mod['assetId']]
+		'UPDATE assets SET `name` = ?, `text` = ?, editedByUserId = ?, numSaved = numSaved + 1 WHERE assetId = ?',
+		[$mod['name'], $mod['text'], $user['userId'], $mod['assetId']]
 	);
 	$con->execute(<<<SQL
 		UPDATE mods
-		SET urlAlias = ?, cardLogoFileId = ?, embedLogoFileId = ?, 
+		SET `status` = ?, urlAlias = ?, cardLogoFileId = ?, embedLogoFileId = ?, 
 			homepageUrl = ?, sourceCodeUrl = ?, trailerVideoUrl = ?, issueTrackerUrl = ?, wikiUrl = ?, donateUrl = ?,
 			summary = ?, descriptionSearchable = ?, side = ?, category = ?
 		WHERE modId = $modId
 	SQL, [
-		$mod['urlAlias'], $mod['cardLogoFileId'], $mod['embedLogoFileId'],
+		$mod['status'], $mod['urlAlias'], $mod['cardLogoFileId'], $mod['embedLogoFileId'],
 		$mod['homepageUrl'], $mod['sourceCodeUrl'], $mod['trailerVideoUrl'], $mod['issueTrackerUrl'], $mod['wikiUrl'], $mod['donateUrl'],
 		$mod['summary'], textContent($mod['text']), $mod['side'], $mod['category'],
 	]);
@@ -127,8 +128,13 @@ function updateMod($oldModData, $mod, $currentlyBeingTransferredTo, $filesInOrde
 
 	updateModTags($modId, $oldModData['tags'], array_keys($mod['tags']));
 
-	foreach($filesInOrder as $i => $file) {
-		$con->execute("UPDATE files SET `order` = ? WHERE fileId = ?", [$i, $file['fileId']]);
+	$removedFiles = array_diff_key($oldModData['attachedFilesInOrder'], $filesInOrder);
+	foreach($removedFiles as $fileId => $file) {
+		$con->execute("UPDATE files SET assetId = NULL, `order` = 0x7f WHERE fileId = ?", [$fileId]);
+	}
+
+	foreach($filesInOrder as $fileId => $file) {
+		$con->execute("UPDATE files SET assetId = ?, `order` = ? WHERE fileId = ?", [$mod['assetId'], $file['order'], $fileId]);
 	}
 	
 	if(canEditMod($oldModData, $user, false)) {

@@ -23,7 +23,7 @@ IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='mod
   ALTER TABLE assets DROP COLUMN statusId;
   DROP TABLE `status`;
 
-  ---
+
 
   CREATE TABLE IF NOT EXISTS `moderationRequestEvents` (
     `eventId`     INT           NOT NULL AUTO_INCREMENT,
@@ -107,7 +107,18 @@ IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='mod
   ALTER TABLE moderationRequests DROP COLUMN requestSearchable;
 
 
-  ---
+
+  ALTER TABLE files ADD COLUMN `type` TINYINT UNSIGNED NOT NULL AFTER `size`;
+  UPDATE files SET `type` = CASE substring_index(`name`,'.',-1) 
+    WHEN 'cs'   THEN 1
+    WHEN 'dll'  THEN 2
+    WHEN 'zip'  THEN 3
+    WHEN 'png'  THEN 4
+    WHEN 'jpg'  THEN 5
+    WHEN 'gif'  THEN 6
+    WHEN 'webp' THEN 8 -- kinda wrong but the safe option
+    ELSE 0
+  END;
 
 END IF;
 

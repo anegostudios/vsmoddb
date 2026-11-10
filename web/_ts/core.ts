@@ -1,5 +1,6 @@
 var R = {
 get : <T extends HTMLElement = HTMLElement>(id : string) : T|null => document.getElementById(id) as T,
+getC : <T extends HTMLElement = HTMLElement>(selector : string) : T|null => document.getElementsByClassName(selector)[0] as T,
 getQ : <T extends HTMLElement = HTMLElement>(selector : string) : T|null => document.querySelector<T>(selector),
 make : function<T extends HTMLElement = HTMLElement>(spec : string, ...children : (string|Node)[]) : T {
 	const [nodeName, ...classes] = spec.split('.');
@@ -14,7 +15,15 @@ formatByteSize : function(size : number) : string {
 	if(size > 1024) return (size / 1024).toFixed(2) + ' KB';
 	return size + ' B';
 },
-compileSemanticVersion : function(versionStr : string) : BigInt|false {
+formatGrammaticallyCorrectEnumeration : function(enumeration : string[], lastJoiner = 'and') : string {
+	switch(enumeration.length) {
+		case 0: return '';
+		case 1: return enumeration[0];
+		case 2: return `${enumeration[0]} ${lastJoiner} ${enumeration[1]}`;
+		default: return `${enumeration.slice(0, -1).join(', ')} ${lastJoiner} ${enumeration[enumeration.length - 1]}`;
+	}
+},
+compileSemanticVersion : function(versionStr : string) : bigint|false {
 	const matches = /^(\d+)\.(\d+)\.(\d+)(?:-(dev|pre|rc)\.(\d+))?$/.exec(versionStr); // @perf
 	if(!matches) return false;
 	let compliedSuffix = 0xffffn; // non pre-release sorts after pre-release
@@ -31,6 +40,19 @@ compileSemanticVersion : function(versionStr : string) : BigInt|false {
 			| ((BigInt(matches[2]) & 0xffffn) << 32n)
 			| ((BigInt(matches[3]) & 0xffffn) << 16n)
 			| compliedSuffix;
+},
+formatSemanticVersion : function(versionNum : bigint) : string {
+	const major   = (versionNum >> 48n /*& 0xffff*/);
+	const minor   = (versionNum >> 32n & 0xffffn);
+	const release = (versionNum >> 16n & 0xffffn);
+	let preRelease : bigint|string = versionNum & 0xffffn;
+	switch (Number((preRelease & 0xf000n) >> 12n)) {
+		case  4: preRelease = '-dev.'+(preRelease & 0x0fffn); break;
+		case  8: preRelease = '-pre.'+(preRelease & 0x0fffn); break;
+		case 12: preRelease =  '-rc.'+(preRelease & 0x0fffn); break;
+		default: preRelease = '';
+	}
+	return `${major}.${minor}.${release}${preRelease}`;
 },
 onDOMLoaded : function(callback : () => void) {
 	if(document.readyState !== 'loading') callback();

@@ -1,5 +1,96 @@
 <?php
 
+const FILE_TYPE_CS          = 1;
+const FILE_TYPE_DLL         = 2;
+const FILE_TYPE_ZIP         = 3;
+const FILE_TYPE_PNG         = 4;
+const FILE_TYPE_JPEG        = 5;
+const FILE_TYPE_GIF         = 6;
+const FILE_TYPE_WEBP_STATIC = 7;
+const FILE_TYPE_WEBP_ANIM   = 8;
+
+/**
+ * @param array{name:string, tmp_name:string} $file
+ * @param resource $fileStream
+ * @return int FILE_TYPE_* or zero
+ */
+function extractFileType($file, $fileStream)
+{
+	$fileHeader = fread($fileStream, 12);
+
+	switch($first4bytes = substr($fileHeader, 0, 4)) {
+		case "\xFF\xD8\xFF\xE0":
+		case "\xFF\xD8\xFF\xDB":
+		case "\xFF\xD8\xFF\xEE":
+			$lowerName = strtolower($file['name']);
+			if(str_ends_with($lowerName, '.jpg')) return FILE_TYPE_JPEG;
+			if(str_ends_with($lowerName, '.jpeg')) return FILE_TYPE_JPEG;
+
+			return 0;
+
+		case "\xFF\xD8\xFF\xE1":
+			if(substr($fileHeader, 6, 6) !== "\x45\x78\x69\x66\x00\x00")
+				return 0;
+
+			$lowerName = strtolower($file['name']);
+			if(str_ends_with($lowerName, '.jpg')) return FILE_TYPE_JPEG;
+			if(str_ends_with($lowerName, '.jpeg')) return FILE_TYPE_JPEG;
+
+			return 0;
+
+		case "\x89\x50\x4e\x47":
+			$fullMagic = substr($fileHeader, 0, 8);
+			$lowerName = strtolower($file['name']);
+			if($fullMagic === "\x89\x50\x4e\x47\x0d\x0a\x1a\x0a" && str_ends_with($lowerName, '.png')) return FILE_TYPE_PNG;
+
+			return 0;
+
+		case "RIFF": // https://developers.google.com/speed/webp/docs/riff_container#webp_file_header
+			$secondMagic = substr($fileHeader, 8, 4);
+			$lowerName = strtolower($file['name']);
+			if($secondMagic === "WEBP" && str_ends_with($lowerName, '.webp')) {
+				$end = filesize($file['tmp_name']);
+
+				for($o = ftell($fileStream); $o + 8 < $end; ) {
+					$chunkHeader = unpack('a4magic/Vlength', fread($fileStream, 8));
+					switch($chunkHeader['magic']) {
+						case 'ANIM':
+							return FILE_TYPE_WEBP_ANIM;
+						case 'VP8X':
+							if($o + 12 <= $end) {
+								if(ord(fread($fileStream, 1)) & 0x02) return FILE_TYPE_WEBP_ANIM;
+							}
+							break;
+					}
+
+					$o += 8 + $chunkHeader['length'];
+					if($chunkHeader['length'] % 2 !== 0) $o += 1;
+					fseek($fileStream, $o);
+				}
+				return FILE_TYPE_WEBP_STATIC;
+			}
+
+			return 0;
+
+		case "PK\x03\x04": // zip """header""" https://en.wikipedia.org/wiki/ZIP_(file_format)#Structure
+			return FILE_TYPE_ZIP;
+
+		default:
+			if(unpack('v', $first4bytes)[0] === 0x5A4D) { // dos header
+				return FILE_TYPE_DLL;
+			}
+			else if(str_ends_with($file['name'], '.cs')) {
+				fseek($fileStream, 0);
+				$data = fread($fileStream, 200 * MB); //TODO(Rennorb) @correctness @hack
+				if(ctype_print($data)) {
+					return FILE_TYPE_CS;
+				}
+			}
+
+			return 0;
+	}
+}
+
 /**
  * Try to delete a set of files. This will check if the file happens to still be used somewhere, and issue a deletion if its not.
  * 
@@ -52,21 +143,3 @@ function tryDeleteFiles($files)
 
 	$con->completeTrans();
 }
-
-/**
- * @param int $userId
- * @param int $assetType
- * @return array
- */
-function getHoveringFilesOfUser($userId, $assetType)
-{
-	global $con;
-	return $con->getAll(<<<SQL
-		SELECT f.*, i.hasThumbnail, concat(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
-		FROM files f
-		LEFT JOIN fileImageData i ON i.fileId = f.fileId
-		WHERE f.assetId IS NULL AND f.assetTypeId = ? AND f.userId = ?
-		ORDER BY f.`order`
-	SQL, [$assetType, $userId]);
-}
-
