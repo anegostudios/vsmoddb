@@ -48,6 +48,7 @@ const MOD_REQUEST_KIND_MANUAL_REVIEW  = 3;
 
 // 8 bit
 //const MOD_REQUEST_FLAG_ASSIGNED = 1 << 0;
+const MOD_REQUEST_FLAG_LOCKED               = 1 << 3;
 const MOD_REQUEST_FLAG_USER_ACTION_REQUIRED = 1 << 4;
 const MOD_REQUEST_FLAG_SPAM                 = 1 << 5;
 const MOD_REQUEST_FLAG_WONTFIX              = 1 << 6;
@@ -59,32 +60,16 @@ const MOD_REQUEST_FLAG_CLOSED               = 1 << 7;
  * @param int $flags
  * @return string
  */
-function _stringifyModerationRequestStateForUser($requestKind, $flags)
+function stringifyModerationRequestState($requestKind, $flags)
 {
 	$result = 'Open';
 	if($flags & MOD_REQUEST_FLAG_WONTFIX) $result = $requestKind === MOD_REQUEST_KIND_MANUAL_REVIEW ? 'Rejected' : 'Wont Fix';
 	else if($flags & MOD_REQUEST_FLAG_SPAM) $result = $requestKind === MOD_REQUEST_KIND_MANUAL_REVIEW ? 'Rejected' : 'Closed';
 	else if($flags & MOD_REQUEST_FLAG_CLOSED) $result = $requestKind === MOD_REQUEST_KIND_MANUAL_REVIEW ? 'Granted' : 'Solved';
 	else if($flags & MOD_REQUEST_FLAG_USER_ACTION_REQUIRED) $result = 'User Action Required';
-	return $result;
-}
 
-/**
- * @param int $requestKind
- * @param int $flags
- * @return string
- */
-function stringifyModerationRequestState($requestKind, $flags)
-{
-	global $user;
-	if(canModerate(null, $user)) return _stringifyModerationRequestStateForUser($requestKind, $flags);
-	
-	// else
-	$result = 'Open';
-	if($flags & MOD_REQUEST_FLAG_WONTFIX) $result = $requestKind === MOD_REQUEST_KIND_MANUAL_REVIEW ? 'Rejected' : 'Wont Fix';
-	else if($flags & MOD_REQUEST_FLAG_SPAM) $result = $requestKind === MOD_REQUEST_KIND_MANUAL_REVIEW ? 'Rejected' : 'Spam';
-	else if($flags & MOD_REQUEST_FLAG_CLOSED) $result = $requestKind === MOD_REQUEST_KIND_MANUAL_REVIEW ? 'Granted' : 'Solved';
-	else if($flags & MOD_REQUEST_FLAG_USER_ACTION_REQUIRED) $result = 'User Action Required';
+	if($flags & MOD_REQUEST_FLAG_LOCKED) $result .= ' (Locked)';
+
 	return $result;
 }
 

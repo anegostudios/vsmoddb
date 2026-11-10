@@ -83,7 +83,6 @@ switch($ticket['kind']) {
 	</ol>
 </div>
 
-<? if($isModerator || (~$ticket['stateFlags'] & MOD_REQUEST_FLAG_CLOSED)): ?>
 <form class="buttons" method="post" action="/api/v2/tickets/{$ticket['requestId']}" autocomplete="off">
 	<h3>Response:</h3>
 	<div>
@@ -98,21 +97,33 @@ switch($ticket['kind']) {
 	<div>
 		<? if($isModerator): ?>
 			<button class="button large shine" >Send</button>
-			<? if($ticket['kind'] == MOD_REQUEST_KIND_MANUAL_REVIEW): ?>
-				<button class="button large shine" name="newState" value="solved">Send and Grant</button>
-				<button class="button large shine" name="newState" value="requireAction">Send and Request Changes</button>
+			<? if($ticket['stateFlags'] & MOD_REQUEST_FLAG_CLOSED): ?>
+				<button class="button large shine" name="newState" value="open">Send and Reopen<br>(always Notifies)</button>
 			<? else: ?>
-				<button class="button large shine" name="newState" value="solved">Send and Close as 'Solved'</button>
-				<button class="button large shine" name="newState" value="wontFix">Send and Close as 'Wont Fix'</button>
+				<? if($ticket['kind'] == MOD_REQUEST_KIND_MANUAL_REVIEW): ?>
+					<button class="button large shine" name="newState" value="solved">Send and Grant</button>
+					<button class="button large shine" name="newState" value="requireAction">Send and Request Changes</button>
+				<? else: ?>
+					<button class="button large shine" name="newState" value="solved">Send and Close as 'Solved'</button>
+					<button class="button large shine" name="newState" value="wontFix">Send and Close as 'Wont Fix'</button>
+				<? endif; ?>
 				<label for="cb-send-notification" style="line-height: 3em; user-select: none;"><label class="toggle" for="cb-send-notification"><input id="cb-send-notification" type="checkbox" name="sendNotification" value="1"></label> Send notification to user</label>
+				<input type="hidden" name="lock" value="false" />
+				<label for="cb-lock" style="line-height: 3em; user-select: none;"><label class="toggle" for="cb-lock"><input id="cb-lock" type="checkbox" name="lock" value="true"<?= $ticket['stateFlags'] & MOD_REQUEST_FLAG_LOCKED ? ' checked' : '' ?>></label> Lock request</label>
 			<? endif; ?>
-			<button class="button large btndelete shine" name="newState" value="spam" style="margin-left:auto;">Dismiss as Spam</button>
+			<button class="button large btndelete shine" name="newState" value="spam" style="margin-left:auto;">Dismiss as Spam<br>(always Locks)</button>
 		<? else: ?>
 			<button class="button large shine">Send</button>
-			<? if($ticket['stateFlags'] & MOD_REQUEST_FLAG_USER_ACTION_REQUIRED): ?>
-			<button class="button large shine" name="newState" value="open">Send and Mark as Addressed</button>
+			<? if($ticket['stateFlags'] & MOD_REQUEST_FLAG_CLOSED): ?>
+				<? if(!(~$ticket['stateFlags'] & MOD_REQUEST_FLAG_LOCKED)): ?>
+					<button class="button large shine" name="newState" value="open">Send and Reopen</button>
+				<? endif; ?>
+			<? else: ?>
+				<? if($ticket['stateFlags'] & MOD_REQUEST_FLAG_USER_ACTION_REQUIRED): ?>
+					<button class="button large shine" name="newState" value="open">Send and Mark as Addressed</button>
+				<? endif; ?>
+				<button class="button large shine" name="newState" value="wontFix" style="margin-left:auto;">Send and Retract Request</button>
 			<? endif; ?>
-			<button class="button large shine" name="newState" value="wontFix" style="margin-left:auto;">Send and Retract Request</button>
 		<? endif; ?>
 	</div>
 </form>
@@ -120,6 +131,5 @@ switch($ticket['kind']) {
 <script nonce="<?= $cspNonce ?>">
 $(function() \{ attachMRMessageSendHandlers(document.getElementsByClassName('buttons')[0]); });
 </script>
-<? endif; ?>
 
 {include file="footer"}
