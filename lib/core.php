@@ -14,7 +14,6 @@ require(SRC_ROOT.'/lib/img.php');
 require(SRC_ROOT.'/lib/3rdparty/adodb5/adodb-exceptions.inc.php');
 require(SRC_ROOT.'/lib/3rdparty/adodb5/adodb.inc.php');
 
-require(SRC_ROOT.'/lib/fileupload.php');
 require(SRC_ROOT.'/lib/version.php');
 
 //mysqli_report(MYSQLI_REPORT_ERROR);
@@ -1045,6 +1044,7 @@ const HTTP_NOT_FOUND             = 404;
 const HTTP_WRONG_METHOD          = 405;
 const HTTP_CONFLICT              = 409;
 const HTTP_GONE                  = 410;
+const HTTP_TOO_LARGE             = 413;
 const HTTP_TOO_MANY_REQUESTS     = 429;
 const HTTP_INTERNAL_ERROR        = 500;
 const HTTP_NOT_IMPLEMENTED       = 501;

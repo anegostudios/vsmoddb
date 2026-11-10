@@ -1,12 +1,14 @@
 // Defined in footer.tpl
-declare const assetid : number;
-declare const assettypeid : number;
 declare const actiontoken : string;
 // Only on some pages
 declare const modId : number | undefined;
 
 // Silence qjqeury linter complains
 declare const $ : any;
+type JQElement = {
+	[k : number]: HTMLElement | undefined,
+	[k : string]: any,
+};
 
 interface jqXHR extends XMLHttpRequest {
 	done : (cb : (response : any, textStatus : string, xhr : jqXHR) => void) => jqXHR,
@@ -27,4 +29,11 @@ interface User {
 
 interface Window { // extend global window interface
 	user : User,
+}
+
+interface UploadLimits {
+	allowedTypes      : number[],  // FILE_TYPE_*
+	allowedExtensions : string[],
+	attachmentCount   : number,
+	individualSize    : number,
 }

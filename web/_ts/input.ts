@@ -254,3 +254,114 @@ function stopSubmissionSpinner(button : HTMLButtonElement, ...content : (Node|st
 	clearInterval(parseInt(button.dataset.interval!))
 	button.replaceChildren(...content)
 }
+
+
+interface FileInteractions {
+	containerEl         : Node,
+	onDelete?           : (fileEl : HTMLElement, fileId : number) => false|any,
+	onChangeAttachment? : (fileEl : HTMLElement, fileId : number, goingToAttach : boolean) => false|any,
+}
+
+function _attachFileInteractions(args : FileInteractions)
+{
+	args.containerEl.addEventListener('click', e => {
+		let buttonEl = e.target as HTMLElement;
+		{
+			let i = 0;
+			for(; i < 3 && buttonEl && buttonEl.nodeName !== 'BUTTON' && buttonEl.nodeName !== 'LABEL'; i++)
+				buttonEl = buttonEl.parentElement!;
+			if(i >= 3) return;
+		}
+		
+		if(buttonEl.classList.contains('delete')) {
+			const fileEl = buttonEl.closest<HTMLElement>('.file')!;
+
+			if(!fileEl.classList.contains('error')) {
+				if(args.onDelete) {
+					const fileId = parseInt(fileEl.querySelector<HTMLInputElement>('[name="fileIds[]"]')!.value, 10);
+					if(args.onDelete(fileEl, fileId) === false) return;
+				}
+			}
+
+			fileEl.remove();
+		}
+		else if(buttonEl.nodeName === 'LABEL') {
+			const checkboxEl = (buttonEl as HTMLLabelElement).control as HTMLInputElement;
+
+			if(args.onChangeAttachment) {
+				const fileEl = buttonEl.closest<HTMLElement>('.file')!;
+
+				const fileId = parseInt(fileEl.querySelector<HTMLInputElement>('[name="fileIds[]"]')!.value, 10);
+				if(args.onChangeAttachment(fileEl, fileId, !checkboxEl.checked) === false) {
+					e.preventDefault();
+					return;
+				}
+			}
+
+			buttonEl.title = checkboxEl.checked ? 'Attach' : 'Detach';
+		}
+	});
+}
+
+function makeReorderable(containerEl : HTMLElement)
+{
+	let movingEl;
+	const dragStart = (e) => {
+		movingEl = e.currentTarget;
+		e.dataTransfer.effectAllowed = 'move';
+		e.dataTransfer.setDragImage(e.currentTarget, e.offsetX, e.offsetY);
+	};
+	const dragOver = (e) => {
+		if(!movingEl || e.currentTarget.parentNode !== movingEl.parentNode) return;
+		const p = movingEl.parentNode;
+		const i = Array.prototype.indexOf.call(p.children, e.currentTarget);
+		const j = Array.prototype.indexOf.call(p.children, movingEl);
+		p.insertBefore(movingEl, i < j ? e.currentTarget : e.currentTarget.nextSibling);
+	};
+	
+	for(const item of containerEl.children) {
+		if(item.classList.contains('immovable')) return;
+		item.addEventListener('dragover', dragOver);
+		item.addEventListener('dragstart', dragStart);
+		(item as HTMLElement).draggable = true;
+	}
+}
+
+
+
+function submitForm(returntolist) {
+	var good = true;
+	$(".required").each(function () {
+		if ($(this).parents(".template").length != 0 || $(this)[0].hasAttribute('disabled')) return;
+
+		if (!$(this).val()) {
+			$(this).addClass("bg-error");
+			$(this).next(".chosen-container").find(".chosen-single,.chosen-choices").css("background", "#f6d2ca");
+			good = false;
+		}
+	});
+
+	$('form.are-you-sure').trigger('reinitialize.areYouSure');
+
+	if (!good) {
+		alert("Please fill in all required fields");
+		return;
+	}
+
+
+	if (returntolist) {
+		$('input[name="saveandback"]').val(1);
+	}
+	const f1 = document['form1'];
+	const statusSelect = f1.querySelector('select[name="status"]'); // @hack might be locked and disabled. If it is it wont be submitted, so we just briefly unlock it. 
+	if(statusSelect) statusSelect.removeAttribute('disabled')
+	f1.submit();
+}
+
+function submitDelete() { //TODO(Rennorb) look at the other one
+	var cf = prompt("Really delete this entry? Type DELETE to confirm");
+	if (cf == "DELETE") {
+		document['deleteform'].submit();
+	}
+}
+

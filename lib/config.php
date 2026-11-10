@@ -41,24 +41,40 @@ _define_default('CDN_ASSETSERVER_BASE_URL', '');
 
 _define_default('AUTHSERVER_BASE_URL', 'auth.vintagestory.at');
 
-_define_default("MOD_SEARCH_INITIAL_RESULTS", 200);
-_define_default("MOD_SEARCH_PAGE_SIZE", 200);
+_define_default('MOD_SEARCH_INITIAL_RESULTS', 200);
+_define_default('MOD_SEARCH_PAGE_SIZE', 200);
 
-_define_default("DOWNLOAD_DEDUPLICATION_TS_SECS", 24*3600);
+_define_default('DOWNLOAD_DEDUPLICATION_TS_SECS', 24*3600);
 
 
 
 _define_default('DISABLE_USER_TAGS', true);
-define("TAG_MODAUTHOR_VOTES", 1); // Not yet fully implemented, keep this at one.
-_define_default("TAG_DOWNVOTED_THRESHOLD", 0);
-_define_default("TAG_HIDE_THRESHOLD", -20);
+define('TAG_MODAUTHOR_VOTES', 1); // Not yet fully implemented, keep this at one.
+_define_default('TAG_DOWNVOTED_THRESHOLD', 0);
+_define_default('TAG_HIDE_THRESHOLD', -20);
 
-_define_default("MOD_SEARCH_VALIDATE_LIMIT_MIN", 1);
-_define_default("MOD_SEARCH_VALIDATE_LIMIT_MAX", 20);
+_define_default('MOD_SEARCH_VALIDATE_LIMIT_MIN', 1);
+_define_default('MOD_SEARCH_VALIDATE_LIMIT_MAX', 20);
 
-_define_default("MOD_REPORT_DEDUPLICATION_TS_DAYS", 7); // days
-_define_default("MOD_REPORT_LIMIT_PER_WEEK", 10); // counts open and dismissed reports, but not accepted ones.
-_define_default("MOD_REPORT_LIMIT_LOW_EFFORT_WEIGHT", .1); // The amount of reports a "low effort ai" report is counted as for the sake of rate limiting.
+_define_default('MOD_REPORT_DEDUPLICATION_TS_DAYS', 7); // days
+_define_default('MOD_REPORT_LIMIT_PER_WEEK', 10); // counts open and dismissed reports, but not accepted ones.
+_define_default('MOD_REPORT_LIMIT_LOW_EFFORT_WEIGHT', .1); // The amount of reports a "low effort ai" report is counted as for the sake of rate limiting.
 
-_define_default("COMMENT_REPORT_DEDUPLICATION_TS_DAYS", 7); // days
-_define_default("COMMENT_REPORT_LIMIT_PER_WEEK", 50); // counts open and dismissed reports, but not accepted ones.
+_define_default('COMMENT_REPORT_DEDUPLICATION_TS_DAYS', 7); // days
+_define_default('COMMENT_REPORT_LIMIT_PER_WEEK', 50); // counts open and dismissed reports, but not accepted ones.
+
+_define_default('PER_USER_FLOATING_STORAGE_BUDGET', 500 * 1024 * 1024);
+_define_default('UPLOAD_LIMITS', [
+	1 => [ // ASSETTYPE_MOD
+		'allowedTypes'      => [4, 5, 6, 7, 8], // FILE_TYPE_PNG, FILE_TYPE_JPEG, FILE_TYPE_GIF, FILE_TYPE_WEBP_STATIC, FILE_TYPE_WEBP_ANIM
+		'allowedExtensions' => ['png', 'jpg', 'gif', 'webp'],
+		'attachmentCount'   => 12,
+		'individualSize'    => 2 * 1024 * 1024,
+	],
+	2 => [ // ASSETTYPE_RELEASE
+		'allowedTypes'      => [1, 2, 3], // FILE_TYPE_CS, FILE_TYPE_DLL, FILE_TYPE_ZIP
+		'allowedExtensions' => ['dll', 'zip', 'cs'],
+		'attachmentCount'   => 1,
+		'individualSize'    => 40 * 1024 * 1024,
+	],
+]);

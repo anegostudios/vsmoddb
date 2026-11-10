@@ -48,6 +48,7 @@ if(DB_READONLY) {
 			break;
 
 		default:
+			//TODO(Rennorb) @cleanup: do action token check here.
 			header('Retry-After: 1800' /* 30min */, true, HTTP_SERVICE_UNAVAILABLE);
 			header('Content-Type: application/json');
 			exit('{"error": "We are currently in readonly mode."}');

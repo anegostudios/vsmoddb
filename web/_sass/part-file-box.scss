@@ -1,0 +1,81 @@
+.file {
+	>div {
+		min-width: calc(15ch * 2 + .5em);
+		display: flex;
+		flex-direction: row;
+		flex-wrap: nowrap;
+
+		background-color: hsl(var(--c-accent) 86%);
+		padding: .25rem;
+		border: 1px solid hsl(var(--c-accent) 58%);
+
+		@at-root .file>.trigger:not(:checked) ~ div {
+			border-style: dashed;
+		}
+
+		>a {
+			flex-grow: 1;
+
+			text-decoration: none;
+			display: flex;
+			flex-direction: row;
+			gap: .5em;
+		}
+		
+		img {
+			width: 60px;
+			height: 60px;
+			object-fit: contain;
+		}
+		.fi {
+			height: 50px;
+		}
+		
+		.details{
+			flex-grow: 1;
+
+			>* {
+				display: block;
+			}
+		}
+		
+		small {
+			font-size: x-small;
+		}
+
+		>.buttons {
+			display: flex;
+			flex-direction: column;
+			gap: .25em;
+			justify-content: space-between;
+
+			>* {
+				width: 1.75rem;
+				height: 1.75rem;
+
+				font-size: 1rem;
+
+				cursor: pointer;
+
+				padding: 0;
+				text-align: center;
+
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			>button, >label {
+				border: solid var(--color-border) 1px;
+				border-radius: 3px;
+				box-shadow: none;
+			}
+
+			>.delete {
+				border-color: var(--color-input-r);
+				color: var(--color-input-r);
+			}
+		}
+	}
+	>.trigger         ~ div>.buttons>label>i::before { content: "\e9ba"; }
+	>.trigger:checked ~ div>.buttons>label>i::before { content: "\e9b6"; }
+}

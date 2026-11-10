@@ -111,34 +111,39 @@
 		<h3 class="flex-fill">Screenshots {$screenshotsDisclaimer}<small style="float:right;">(drag&drop to upload)</small></h3>
 		<ol class="no-mark files flex-list reorderable">
 			{foreach from=$files item=file}
-				<li class="file">
+				<li class="file" data-image-size="{$file['imageSize']}">
 					<input type="hidden" name="fileIds[]" value="{$file['fileId']}" />
-					{if $file['hasThumbnail']}
-						<a data-fancybox="gallery" href="{$file['url']}">
-							<img src="{formatCdnUrl($file, '_55_60')}"/>
-							<div class="details">
-								<h5 class="filename">{$file["name"]}</h5>
-								<small class="uploaddate">{$file["created"]}</small>
-								<small>
-									<span class="imagesize">{$file["imageSize"]} px</span>
-									{if $file["size"]} - <span class="size">{formatByteSize($file["size"])}</span>{/if}
-								</small>
-							</div>
-						</a>
-					{else}
-						<a href="{$file['url']}">
-							<div class="fi fi-{$file['ext']}">
-								<div class="fi-content">{$file['ext']}</div>
-							</div>
-							<div class="details">
-								<h5 class="filename">{$file["name"]}</h5>
-								<small class="uploaddate">{$file["created"]}</small>
-								{if $file["size"]}<small class="size">{formatByteSize($file["size"])}</small>{/if}
-							</div>
-						</a>
-					{/if}
-					<a href="#" class="delete" data-fileid="{$file['fileId']}"></a>
-					<a href="{formatDownloadTrackingUrl($file)}" class="download">&#11123;</a>
+					<input id="file-tgr-{$file['fileId']}" class="trigger" type="checkbox" name="attachedFileIds[]" value="{$file['fileId']}"{if $file['assetId'] } checked{/if} />
+					<div>
+						{if $file['hasThumbnail']}
+							<a data-fancybox="gallery" href="{$file['url']}">
+								<img src="{formatCdnUrl($file, '_55_60')}"/>
+								<div class="details">
+									<h5 class="filename">{$file["name"]}</h5>
+									<small class="uploaddate">{$file["created"]}</small>
+									<small>
+										<span class="imagesize">{$file["imageSize"]} px</span>
+										{if $file["size"]} - <span class="size">{formatByteSize($file["size"])}</span>{/if}
+									</small>
+								</div>
+							</a>
+						{else}
+							<a href="{$file['url']}">
+								<div class="fi fi-{$file['ext']}">
+									<div class="fi-content">{$file['ext']}</div>
+								</div>
+								<div class="details">
+									<h5 class="filename">{$file["name"]}</h5>
+									<small class="uploaddate">{$file["created"]}</small>
+									{if $file["size"]}<small class="size">{formatByteSize($file["size"])}</small>{/if}
+								</div>
+							</a>
+						{/if}
+						<div class="buttons">
+							<label for="file-tgr-{$file['fileId']}" class="button" title="{if $file['assetId'] }Detach{else}Attach{/if}"><i class="bx"></i></label>
+							<button type="button" class="delete" title="Delete"><i class="bx bx-trash"></i></button>
+						</div>
+					</div>
 				</li>
 			{/foreach}
 		</ol>
@@ -299,8 +304,16 @@
 		
 		{if $canEditTeamMembers}R.onDOMLoaded(() => attachRemoteSearchHandler(R.get('teammembers-box')));{/if}
 
+		R.onDOMLoaded(() => \{
+			createEditor(R.getQ("textarea.editor"), tinymceSettings);
+			attachTeamMemberSelections();
+			mod_attachFileInteractions(<?= json_encode(UPLOAD_LIMITS[ASSETTYPE_MOD]) ?>);
+		});
+		makeReorderable(R.getC('reorderable'));
+
 		{if $mod['modId'] && canModerate(null, $user)}
-		R.onDOMLoaded(() => { createEditor(R.getQ('#lock-mdl textarea'), tinymceSettingsCmt) });
+		R.onDOMLoaded(() => \{ createEditor(R.getQ('#lock-mdl textarea'), tinymceSettingsCmt); });
+
 		attachDialogSendHandler(R.get('lock-mdl'), (form, data) => \{
 			if(!data.get('reason')) \{
 				R.markAsErrorElement(form.getElementsByClassName('tox-tinymce')[0]);
@@ -434,43 +447,6 @@
 				}
 			}
 		}
-
-		function onUploadFinished(response) {
-			function addOption($select) {
-				const opt = document.createElement('option');
-				opt.value = response.fileid;
-				opt.textContent = `${response.filename} [${response.imagesize} px]`;
-				opt.dataset.url = response.filepath;
-
-				$select.append(opt);
-				$select.trigger("chosen:updated");
-			}
-
-			if(['480x320', '480x480'].includes(response.imagesize)) {
-				addOption($cardLogoSelect);
-				addOption($embedLogoSelect);
-			}
-		}
-
-		function onFileDelete($fileEl, fileid) {
-			function removeOpt($select, previewBox) {
-				const opt = $select[0].querySelector(`option[value="${fileid}"]`);
-				if(opt) {
-					const previewImage = previewBox.getElementsByTagName('img')[0];
-					if(previewImage && previewBox.dataset.fid == opt.value) {
-						previewImage.src = '/web/img/mod-default.png';
-					}
-
-					opt.remove();
-					$select.trigger("chosen:updated");
-				}
-			}
-
-			removeOpt($cardLogoSelect, cardPreviewBoxEl);
-			removeOpt($embedLogoSelect, embedPreviewBoxEl);
-		}
-
-		window.allowdrop = true;
 	</script>
 	<style nonce="{$cspNonce}">
 		#preview-box-embed>div {
@@ -487,7 +463,6 @@
 	</style>
 
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/prism.min.js?v=0" data-manual=""></script>
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=46" async></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 

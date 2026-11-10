@@ -18,8 +18,6 @@
 	<form method="post" name="form1" enctype="multipart/form-data" autocomplete="off" class="flex-list are-you-sure">
 		<input type="hidden" name="at" value="{$user['actionToken']}">
 		<input type="hidden" name="save" value="1">
-		<input type="hidden" name="assetid" value="{$release['assetId']}">
-		<input type="hidden" name="modid" value="{$mod['modId']}">
 		<input type="hidden" name="numsaved" value="{$release['numSaved']}">
 		<input type="hidden" name="saveandback" value="0">
 		
@@ -101,7 +99,7 @@
 		{else}
 			<div class="editbox">
 				<label>Version Number</label>
-				<label for="inp-modversion" class="prefixed-input" data-prefix="v"><input id="inp-modversion" type="text" name="modversion" value="{$release['version']}" class="required" style="width: 10ch" /></label>
+				<label for="inp-modversion" class="prefixed-input" data-prefix="v"><input id="inp-modversion" type="text" name="modversion" value="{$release['version']}" class="required" style="width: 10ch"{if !$canCurrentlyBeEdited} disabled{/if} /></label>
 			</div>
 		{/if}
 		
@@ -111,12 +109,14 @@
 			<textarea name="text" class="editor" data-editorname="text" style="width: 100%; height: auto;">{$release['text']}</textarea>
 		</div>
 
-		<h3 class="flex-fill">File <small>(cannot be altered after release is submitted)</small>{if !$release['assetId']}<small style="float:right;">(drag&drop to upload)</small>{/if}</h3>
+		<h3 class="flex-fill">File <small>(max {formatByteSize($uploadSizeLimit)}, cannot be altered after release is submitted)</small>{if !$release['assetId']}<small style="float:right;">(drag&drop to upload)</small>{/if}</h3>
 
 		<ol class="no-mark files flex-list">
 			{foreach from=$files item=file}
-				<li class="file">
+				<li class="file" data-mod-id="{$file['modIdentifier']}" data-mod-version="{$file['modVersion']}" data-game-version-dep="{$file['gameVersionDep']}" data-requires-review="<?= ($file['capabilities'] & MOD_CAPS_REQUIRING_REVIEW) ? 'true' : 'false' ?>">
 					<input type="hidden" name="fileIds[]" value="{$file['fileId']}" />
+					<input id="file-tgr-{$file['fileId']}" class="trigger" type="checkbox" name="attachedFileIds[]" value="{$file['fileId']}"{if $file['assetId'] } checked{/if} />
+					<div>
 						<a href="{$file['url']}">
 							<div class="fi fi-{$file['ext']}">
 								<div class="fi-content">{$file['ext']}</div>
@@ -127,17 +127,13 @@
 								{if $file["size"]}<small class="size">{formatByteSize($file["size"])}</small>{/if}
 							</div>
 						</a>
-						{if !$release['assetId']}<a href="#" class="delete" data-fileid="{$file['fileId']}"></a>{/if}
-					<a href="{formatDownloadTrackingUrl($file)}" class="download">&#11123;</a>
+						<div class="buttons">
+							{if $canCurrentlyBeEdited}<label for="file-tgr-{$file['fileId']}" class="button" title="{if $file['assetId'] }Detach{else}Attach{/if}"><i class="bx"></i></label>{else}<span></span>{/if}
+							{if $canCurrentlyBeEdited || !$file['assetId']}<button type="button" class="delete" title="Delete"><i class="bx bx-trash"></i></button>{/if}
+						</div>
+					</div>
 				</li>
 			{/foreach}
-			
-			{if !$release['assetId']}
-				<li class="editbox file-upload immovable">
-					<label>Upload new file (or drag and drop, max file size: {formatByteSize($uploadSizeLimit)})</label>
-					<input type="file" name="newfile" style="height: unset; padding: .25em;">
-				</li>
-			{/if}
 		</ol>
 	</form>
 
@@ -199,7 +195,7 @@
 		}
 	}
 	else \{
-		if($files && ($files[0]['capabilities'] & MOD_CAPS_REQUIRING_REVIEW)): ?>
+		if($attachedFileRequiresReview): ?>
 			<a class="button large submit shine btn-submit" href="javascript:submitForm(0)">Submit for Review</a>
 			<a class="button large submit shine btn-submit" href="javascript:submitForm(1)">Submit for Review + Back</a>
 		<? else: ?>
@@ -267,48 +263,17 @@
 	{/if}
 
 	{if $doFileValidation} \{
-		function onUploadFinished(file) \{
-			if (file.modparse == "error") \{
-				R.addMessage(MSG_CLASS_ERROR, 'Failed to parse mod information from this file: '+file.parsemsg, true);
-			} else \{
-				$("input[name='modidstr']").val(file.modid);
-				$("input[name='modversion']").val(file.modversion);
-				if(file.gameversiondep) \{
-					const versionInputs = document.querySelectorAll('.version-selector input[name="cgvs[]"]');
-					const labelEl = document.getElementsByClassName('count-label')[0];
-					let c = 0;
-					for(const box of versionInputs) {
-						box.checked = R.compileSemanticVersion(box.value) >= file.gameversiondep;
-						if(box.checked) c++;
-					}
-					labelEl.textContent = `${c} Version${c !== 1 ? 's' : ''} Selected`;
-					R.addMessage(MSG_CLASS_OK, `Automatically selected ${c} compatible game version${c !== 1 ? 's' : ''}.`, false);
-				}
-				var buttons = document.getElementsByClassName('btn-submit');
-				if(file.requiresReview) \{
-					R.addMessage(MSG_CLASS_WARN, 'This mod uses potentially dangerous features of the dotnet runtime, and will require manual review.<br>A request for review will be submitted for you automatically after completing the release.', false);
-					buttons[0].textContent = 'Submit for Review';
-					buttons[1].textContent = 'Submit for Review + Back';
-				}
-				else \{
-					buttons[0].textContent = 'Save';
-					buttons[1].textContent = 'Save + Back';
-				}
-			}
-		}
-
 		attachVersionSelectorHandlers(document.getElementsByClassName('version-selector')[0]);
 	} {/if}
 	
-	$(document).ready(function() {
-		$('form[name=commentformtemplate]').areYouSure();
+	$(document).ready(function() \{
+		createEditor(R.getQ("textarea.editor"), tinymceSettings);
 	});
 
-	window.allowdrop = {$release['assetId'] ? 'false' : 'true'};
+	release_attachFileInteractions(<?= $uploadSizeLimit ?>, <?= json_encode(UPLOAD_LIMITS[ASSETTYPE_RELEASE]['allowedExtensions']) ?>, {$doFileValidation ? 'true' : 'false'});
 </script>
 
 <script nonce="{$cspNonce}" type="text/javascript" src="/web/js/prism.min.js?v=0" data-manual=""></script>
-<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=46" async></script>
 <script nonce="{$cspNonce}" type="text/javascript" src="/web/js/jquery.fancybox.min.js" async></script>
 {/capture}
 

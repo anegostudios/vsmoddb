@@ -1,22 +1,19 @@
 interface DropHandler {
 	target         : HTMLElement,
-	destUrl        : string,
-	additionalData : Map<string, any>,
+	additionalData : { [k : symbol|string|number] : any },
 	// You cannot access file properties here, only type and kind.
 	onPrefilter    : (item : DataTransferItem) => boolean,
 	onValidate     : (file : File) => boolean,
-	onStart        : (e : any) => any,
-	onProgress     : (e : any | { userData : any }) => void,
-	onComplete     : (e : any | { userData : any }) => void,
+	onStart        : (e : ExtendedProgressEvent1) => any,
+	onProgress     : (e : ExtendedProgressEvent2) => void,
+	onComplete     : (e : ExtendedProgressEvent2) => void,
 }
+
+type ExtendedProgressEvent1 = ProgressEvent<XMLHttpRequest> & { file : File }
+type ExtendedProgressEvent2 = ExtendedProgressEvent1 & { userData : any }
 
 function attachDropHandler(args : DropHandler)
 {
-	// const isAllowedByExt = (file : File) => {
-	// 	const ext = file.name.slice(file.name.lastIndexOf('.') + 1);
-	// 	return args.allowedExtensions.includes(ext);
-	// };
-
 	args.target.addEventListener('dragover', e => {
 		let hasFiles = false;
 
@@ -48,11 +45,10 @@ function attachDropHandler(args : DropHandler)
 	});
 
 	args.target.addEventListener('drop', e => {
-		debugger;
 		const files = Array.from(e.dataTransfer!.files).filter(args.onValidate);
-		if(!files.length) return;
 
 		e.preventDefault();
+		if(!files.length) return;
 
 		for(const file of files) {
 			const data = new FormData();
@@ -64,21 +60,141 @@ function attachDropHandler(args : DropHandler)
 
 			const xhr = new XMLHttpRequest();
 			xhr.upload.addEventListener('loadstart', e => {
-				(e as any).file = file;
-				userData = args.onStart(e)
+				(e as ExtendedProgressEvent1).file = file;
+				userData = args.onStart(e as ExtendedProgressEvent1)
 			});
 			xhr.upload.addEventListener('progress', e => {
-				(e as any).file = file;
-				(e as any).userData = userData;
-				args.onProgress(e);
+				(e as ExtendedProgressEvent2).file = file;
+				(e as ExtendedProgressEvent2).userData = userData;
+				args.onProgress(e as ExtendedProgressEvent2);
 			});
 			xhr.addEventListener('loadend', e => {
-				(e as any).file = file;
-				(e as any).userData = userData;
-				args.onComplete(e);
+				(e as ExtendedProgressEvent2).file = file;
+				(e as ExtendedProgressEvent2).userData = userData;
+				args.onComplete(e as ExtendedProgressEvent2);
 			});
-			xhr.open('POST', args.destUrl, true);
+			xhr.open('POST', '/api/v2/files', true);
 			xhr.send(data);
 		}
+	});
+}
+
+type UploadResponse = {
+	id               : number,
+	name             : string,
+	url              : string,
+	thumbUrl?        : string,
+	imgWidth?        : number,
+	imgHeight?       : number,
+	gameVersionDep?  : bigint,
+	requiresReview?  : boolean,
+	modParse?        : 'ok'|'error',
+	modId?           : string,
+	modVersion?      : bigint,
+	parseMsg?        : string,
+
+	error?           : string,
+}
+
+
+
+function attachDefaultDropHandler(maxSize : number, allowedExtensions : string[], canAttach : boolean, onUploadFinished : (response : UploadResponse, $elem : JQElement) => void)
+{
+	attachDropHandler({
+		target: (window as any as HTMLElement),
+		additionalData: {
+			at: window.user.at,
+		},
+		onPrefilter : function(item) {
+			return true;
+		},
+		onValidate: function(file) {
+			const containerEl = R.getC('files')!;
+			let attachedCount = 0; 
+			for(const childEl of containerEl.children) {
+				if((childEl.getElementsByClassName('trigger')[0] as HTMLInputElement).checked)
+					attachedCount++;
+			}
+
+			if(file.size > maxSize) {
+				R.addMessage(MSG_CLASS_ERROR, `${file.name}: File too large. Must be below ${R.formatByteSize(maxSize)}.`, true);
+				return false;
+			}
+
+			const extIdx = file.name.lastIndexOf('.');
+			const ext = extIdx < 0 ? '' : file.name.slice(extIdx + 1)
+			if(!allowedExtensions.includes(ext)) {
+				R.addMessage(MSG_CLASS_ERROR, `${file.name}: Wrong extension. Must be one of ${R.formatGrammaticallyCorrectEnumeration(allowedExtensions)}.`, true);
+				return false;
+			}
+
+			return true;
+		},
+		onStart: function (e) {
+			const file = e.file;
+			const extIdx = file.name.lastIndexOf('.');
+			const ext = extIdx < 0 ? '' : file.name.slice(extIdx + 1)
+
+			const $elem = $(".file.template").clone();
+			$elem.removeClass("template");
+
+			$(".filename", $elem).text(file.name);
+			$(".fi", $elem).addClass("fi-" + ext);
+			$(".fi-content", $elem).html(ext);
+
+			$(".files").append($elem);
+
+			return $elem;
+		},
+		onProgress: function (e) {
+			const progress = e.lengthComputable ? Math.round((e.loaded * 100) / e.total) : '???';
+			$(".uploadprogress", e.userData).text(progress + "%");
+		},
+		onComplete: function (e) {
+			const $elem = e.userData;
+			let response : UploadResponse = null!;
+			try { response = JSON.parse(e.target!.response) as UploadResponse; }
+			catch(ex) {
+				console.error(ex);
+
+				$(".filename", $elem).html("Unable to upload file.<br>" + ex.message).addClass("text-error");
+				$elem.addClass("error");
+
+				response = { error: ex.message } as UploadResponse;
+			}
+
+			$(".uploadprogress", $elem).hide();
+
+			if(response) {
+				if(response.thumbUrl) {
+					$(".fi", $elem).remove();
+					$("img", $elem).attr("src", response.thumbUrl).show();
+					$("a", $elem).attr("data-fancybox", 'gallery');
+				}
+				$("a", $elem).attr("href", response.url);
+
+				const triggerId = 'file-tgr-'+response.id;
+
+				$('[name="fileIds[]"]', $elem).val(response.id);
+				$('.trigger', $elem).val(response.id).attr('id', triggerId);
+				const $attachToggle = $('label', $elem).attr('for', triggerId);
+				
+				$(".uploaddate", $elem).text('Just now');
+				if(response.imgWidth) {
+					$(".imagesize", $elem).text(`${response.imgWidth}x${response.imgHeight}px`).after(' - ');
+				}
+				$(".size", $elem).text(R.formatByteSize(e.file.size));
+
+				if(response.error || response.modParse === "error" || !canAttach) {
+					$attachToggle.replaceWith('<span></span>');
+				}
+			}
+
+			onUploadFinished(response, $elem);
+
+			if(response) {
+				$(".buttons", $elem).show();
+			}
+		},
 	});
 }

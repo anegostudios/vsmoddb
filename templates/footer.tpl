@@ -11,11 +11,9 @@
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/tinymce/tinymce.min.js?v=2"></script>
 
 	<script nonce="{$cspNonce}" type="text/javascript">
-		assetid = {$asset['assetId'] ?? 0};
-		assettypeid = {$asset['assetTypeId'] ?? 0};
 		actiontoken = "{$user['actionToken'] ?? ''}";
 	</script>
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/script.js?v=c34c26338d8be27648bc57a090c31dd7"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/script.js?v=a7332f4056e1675187e1e46a7668b728"></script>
 	{if !empty($footerjs)}{$footerjs}{/if}
 
 	<footer>

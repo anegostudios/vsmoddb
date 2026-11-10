@@ -40,16 +40,3 @@ function parseIniSize($size) {
 }
 
 
-const UPLOAD_LIMITS = [
-	ASSETTYPE_MOD => [
-		'allowedTypes'    => ['png', 'jpg', 'gif', 'webp'],
-		'attachmentCount' => 12,
-		'individualSize'  => 2 * MB,
-	],
-	ASSETTYPE_RELEASE => [
-		'allowedTypes'    => ['dll', 'zip', 'cs'],
-		'attachmentCount' => 1,
-		'individualSize'  => 40 * MB,
-	],
-];
-
