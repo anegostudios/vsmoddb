@@ -199,8 +199,11 @@ else if(!empty($_POST['save'])) {
 		addMessage(MSG_CLASS_WARN, "The new mod tags contain invalid tags.");
 	}
 	else {
-		//NOTE(Rennorb): This is missing the name and color fields, but for new values we only need the keys to be correct so don't bother getting those.
-		$mod['tags'] = array_flip($tags);
+		$tagKeys = array_flip($tags);
+		$oldTags = array_intersect_key($mod['tags'], $tagKeys);
+		$newTags = array_diff_key($tagKeys, $oldTags);
+		foreach($newTags as &$tag) $tag = ['votes' => 0]; unset($tag);
+		$mod['tags'] = array_replace($oldTags, $newTags); // don't use array_merge to preserve keys
 	}
 
 	$mod['name'] = $_POST['name'];
