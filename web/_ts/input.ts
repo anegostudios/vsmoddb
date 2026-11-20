@@ -305,26 +305,35 @@ function _attachFileInteractions(args : FileInteractions)
 
 function makeReorderable(containerEl : HTMLElement)
 {
-	let movingEl;
-	const dragStart = (e) => {
-		movingEl = e.currentTarget;
-		e.dataTransfer.effectAllowed = 'move';
-		e.dataTransfer.setDragImage(e.currentTarget, e.offsetX, e.offsetY);
-	};
-	const dragOver = (e) => {
-		if(!movingEl || e.currentTarget.parentNode !== movingEl.parentNode) return;
-		const p = movingEl.parentNode;
-		const i = Array.prototype.indexOf.call(p.children, e.currentTarget);
-		const j = Array.prototype.indexOf.call(p.children, movingEl);
-		p.insertBefore(movingEl, i < j ? e.currentTarget : e.currentTarget.nextSibling);
-	};
-	
-	for(const item of containerEl.children) {
-		if(item.classList.contains('immovable')) return;
-		item.addEventListener('dragover', dragOver);
-		item.addEventListener('dragstart', dragStart);
-		(item as HTMLElement).draggable = true;
+	for(const childEl of containerEl.children as HTMLCollectionOf<HTMLElement>) {
+		if(childEl.classList.contains('immovable')) continue;
+		childEl.addEventListener('dragstart', reorderable_dragStartHandler);
+		childEl.addEventListener('dragover', reorderable_dragOverHandler);
+		(childEl as HTMLElement).draggable = true;
 	}
+}
+
+function reorderable_dragStartHandler(e : DragEvent)
+{
+	const itemEl = e.currentTarget as HTMLElement;
+	if(!itemEl.draggable) return;
+	if(itemEl.classList.contains('immovable')) return;
+
+	R._movingEl = itemEl;
+	e.dataTransfer!.effectAllowed = 'move';
+	e.dataTransfer!.setDragImage(R._movingEl, e.offsetX, e.offsetY);
+}
+
+function reorderable_dragOverHandler(e : DragEvent)
+{
+	const itemEl = e.currentTarget as HTMLElement;
+	if(itemEl.classList.contains('immovable')) return;
+
+	if(!R._movingEl || itemEl.parentNode !== R._movingEl.parentNode) return;
+	const p = R._movingEl.parentNode!;
+	const i = Array.prototype.indexOf.call(p.children, itemEl);
+	const j = Array.prototype.indexOf.call(p.children, R._movingEl);
+	p.insertBefore(R._movingEl, i < j ? itemEl : itemEl.nextSibling);
 }
 
 

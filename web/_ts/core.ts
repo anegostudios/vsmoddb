@@ -117,13 +117,14 @@ trimTrailingEmptyLines : function(element : Node) : void {
 		lastChild = element.lastChild;
 	}
 },
-_isSafari : undefined as unknown as boolean,
+_isSafari : undefined as boolean|undefined,
 isSafari : function() : boolean {
 	if(R._isSafari === undefined) {
 		R._isSafari = Boolean(navigator.vendor) && navigator.vendor.includes('Apple');
 	}
 	return R._isSafari;
 },
+_movingEl : undefined as HTMLElement|undefined,
 };
 
 //NOTE(Rennorb) This script is included after the body, so this always already exists to be grabbed.

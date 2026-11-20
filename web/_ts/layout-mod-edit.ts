@@ -96,6 +96,10 @@ function mod_attachFileInteractions(uploadLimits : UploadLimits) : void
 		const fileEl = $elem[0]!;
 		fileEl.dataset.imageSize = `${response.imgWidth}x${response.imgHeight}`;
 
+		fileEl.addEventListener('dragstart', reorderable_dragStartHandler);
+		fileEl.addEventListener('dragover', reorderable_dragOverHandler);
+		fileEl.draggable = true;
+
 		if(_canAttachMore()) {
 			$('.trigger', $elem)[0].checked = true;
 			_changeAttachment(response, fileEl.dataset.imageSize, true);

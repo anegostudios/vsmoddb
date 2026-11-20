@@ -13,7 +13,7 @@
 	<script nonce="{$cspNonce}" type="text/javascript">
 		actiontoken = "{$user['actionToken'] ?? ''}";
 	</script>
-	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/script.js?v=2773b32223554234aadccf769a834c6b"></script>
+	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/script.js?v=d26b6d63488b315da9bb39f2daa40429"></script>
 	{if !empty($footerjs)}{$footerjs}{/if}
 
 	<footer>
