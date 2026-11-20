@@ -111,7 +111,7 @@
 		<h3 class="flex-fill">Screenshots {$screenshotsDisclaimer}<small style="float:right;">(drag&drop to upload)</small></h3>
 		<ol class="no-mark files flex-list reorderable">
 			{foreach from=$files item=file}
-				<li class="file" data-image-size="{$file['imageSize']}">
+				<li class="file" data-image-size="{$file['imageSize']}"{if $file['userId'] !== $user['userId']} data-will-loose-access{/if}>
 					<input type="hidden" name="fileIds[]" value="{$file['fileId']}" />
 					<input id="file-tgr-{$file['fileId']}" class="trigger" type="checkbox" name="attachedFileIds[]" value="{$file['fileId']}"{if $file['assetId'] } checked{/if} />
 					<div>
@@ -125,6 +125,7 @@
 										<span class="imagesize">{$file["imageSize"]} px</span>
 										{if $file["size"]} - <span class="size">{formatByteSize($file["size"])}</span>{/if}
 									</small>
+									<small class="owner">Owned by <span>{$file['ownerName']}</span></small>
 								</div>
 							</a>
 						{else}
@@ -136,6 +137,7 @@
 									<h5 class="filename">{$file["name"]}</h5>
 									<small class="uploaddate">{$file["created"]}</small>
 									{if $file["size"]}<small class="size">{formatByteSize($file["size"])}</small>{/if}
+									<small class="owner">Owned by <span>{$file['ownerName']}</span></small>
 								</div>
 							</a>
 						{/if}

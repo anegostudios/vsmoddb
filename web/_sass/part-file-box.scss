@@ -12,6 +12,20 @@
 		@at-root .file>.trigger:not(:checked) ~ div {
 			border-style: dashed;
 		}
+		@at-root .file[data-will-loose-access]>.trigger:not(:checked) ~ div {
+			border-color: var(--color-input-r);
+			
+			.owner {
+				>span {
+					color: var(--color-input-r);
+				}
+				&::after {
+					display: block;
+					content: 'You will loose access to this file if you save now!';
+					color: var(--color-input-r);
+				}
+			}
+		}
 
 		>a {
 			flex-grow: 1;

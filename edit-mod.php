@@ -75,8 +75,9 @@ if(isset($_GET['assetid'])) {
 	}
 
 	$attachedFilesInOrder = $con->getAssoc(<<<SQL
-		SELECT f.fileId, f.*, i.hasThumbnail, concat(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
+		SELECT f.fileId, f.*, i.hasThumbnail, concat(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize, `owner`.name AS ownerName
 		FROM files f
+		JOIN users `owner` ON `owner`.userId = f.userId
 		LEFT JOIN fileImageData i ON i.fileId = f.fileId
 		WHERE f.assetId = {$mod['assetId']}
 		ORDER BY f.`order`
@@ -115,16 +116,25 @@ else { // New mod
 }
 $foldedTypes = implode(',', UPLOAD_LIMITS[ASSETTYPE_MOD]['allowedTypes']);
 $hoveringFilesInOrder = $con->getAssoc(<<<SQL
-	SELECT f.fileId, f.*, i.hasThumbnail, concat(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize
+	SELECT f.fileId, f.*, i.hasThumbnail, concat(ST_X(i.size), 'x', ST_Y(i.size)) AS imageSize, `owner`.name AS ownerName
 	FROM files f
+	JOIN users `owner` ON `owner`.userId = f.userId
 	LEFT JOIN fileImageData i ON i.fileId = f.fileId
 	WHERE f.assetId IS NULL AND f.type IN ($foldedTypes) AND f.userId = {$user['userId']}
 	ORDER BY f.`order`
 SQL);
 
-foreach($attachedFilesInOrder as $fileId => &$file) $file['fileId'] = $fileId; unset($file); //TODO(Rennorb) @cleanup
-foreach($hoveringFilesInOrder as $fileId => &$file) $file['fileId'] = $fileId; unset($file); //TODO(Rennorb) @cleanup
-$mergedFiles = array_replace($attachedFilesInOrder, $hoveringFilesInOrder); // replace instead of merge to preserve keys.
+$mergedFiles = [];
+foreach($attachedFilesInOrder as $fileId => &$file) {
+	$file['fileId'] = $fileId; 
+	$mergedFiles[$fileId] = &$file;
+}
+unset($file);
+foreach($hoveringFilesInOrder as $fileId => &$file) {
+	$file['fileId'] = $fileId;
+	$mergedFiles[$fileId] = &$file;
+}
+unset($file);
 
 $stati = [
 	MOD_STATUS_DRAFT     => 'Draft',
@@ -313,14 +323,12 @@ else if(!empty($_POST['save'])) {
 	}
 
 	// Files:
+	$clientFileSet = getInputArrayOfInts(INPUT_POST, 'fileIds');
+	$filesToDelete = array_diff_key($mergedFiles, array_flip($clientFileSet));
+
 	$oldModData['attachedFilesInOrder'] = $attachedFilesInOrder;
 	$filesToAttachInOrder = getInputArrayOfInts(INPUT_POST, 'attachedFileIds');
-	if($filesToAttachInOrder) do {
-		if(count($filesToAttachInOrder) > UPLOAD_LIMITS[ASSETTYPE_MOD]['attachmentCount']) {
-			addMessage(MSG_CLASS_ERROR, "Trying to attach too many images.");
-			break;
-		}
-
+	do {
 		if(count($filesToAttachInOrder) > count($mergedFiles)) {
 			addMessage(MSG_CLASS_ERROR, "Error trying to attach files, mismatch between client and server.");
 			break;
@@ -334,19 +342,31 @@ else if(!empty($_POST['save'])) {
 			break;
 		}
 
-		foreach($newFiles as $fileId => &$file) {
+		$attachedFilesInOrder = $newFiles; // Already assign here. From here on we want to keep the user input in case of further error.
+		foreach($attachedFilesInOrder as &$file) {
+			$file['assetId'] = $mod['assetId'];
+		}
+		unset($file);
+
+		foreach($filesToDelete as $fileId => $_) {
+			unset($mergedFiles[$fileId]);
+		}
+
+		foreach($mergedFiles as $fileId => &$file) {
+			if(!array_key_exists($fileId, $attachedFilesInOrder)) $file['assetId'] = null; // detach in the error case
+		}
+		unset($file);
+
+		foreach($attachedFilesInOrder as $fileId => &$file) {
 			$file['order'] = $flippedOrder[$fileId];
 		}
 		unset($file);
 
-		uasort($newFiles, fn($f1, $f2) => $f1['order'] - $f2['order']);
-
-		$attachedFilesInOrder = $newFiles;
+		if(count($filesToAttachInOrder) > UPLOAD_LIMITS[ASSETTYPE_MOD]['attachmentCount']) {
+			addMessage(MSG_CLASS_ERROR, "Trying to attach too many images.");
+			break;
+		}
 	} while(0);
-
-	$clientFileSet = getInputArrayOfInts(INPUT_POST, 'fileIds');
-	$filesToDelete = array_diff_key($mergedFiles, array_flip($clientFileSet));
-
 
 	// Images:
 	$mod['cardLogoFileId']  = intval($_POST['cardLogoFileId'])  ?: null;

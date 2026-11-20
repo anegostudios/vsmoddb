@@ -113,7 +113,7 @@
 
 		<ol class="no-mark files flex-list">
 			{foreach from=$files item=file}
-				<li class="file" data-mod-id="{$file['modIdentifier']}" data-mod-version="{$file['modVersion']}" data-game-version-dep="{$file['gameVersionDep']}" data-requires-review="<?= ($file['capabilities'] & MOD_CAPS_REQUIRING_REVIEW) ? 'true' : 'false' ?>">
+				<li class="file" data-mod-id="{$file['modIdentifier']}" data-mod-version="{$file['modVersion']}" data-game-version-dep="{$file['gameVersionDep']}" data-requires-review="<?= ($file['capabilities'] & MOD_CAPS_REQUIRING_REVIEW) ? 'true' : 'false' ?>"{if $file['userId'] !== $user['userId']} data-will-loose-access{/if}>
 					<input type="hidden" name="fileIds[]" value="{$file['fileId']}" />
 					<input id="file-tgr-{$file['fileId']}" class="trigger" type="checkbox" name="attachedFileIds[]" value="{$file['fileId']}"{if $file['assetId'] } checked{/if} />
 					<div>
@@ -125,6 +125,7 @@
 								<h5 class="filename">{$file["name"]}</h5>
 								<small class="uploaddate">{$file["created"]}</small>
 								{if $file["size"]}<small class="size">{formatByteSize($file["size"])}</small>{/if}
+								<small class="owner">Owned by <span>{$file['ownerName']}</span></small>
 							</div>
 						</a>
 						<div class="buttons">

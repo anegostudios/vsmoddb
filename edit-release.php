@@ -75,8 +75,9 @@ if(!canEditMod($targetMod, $user))   showErrorPage(HTTP_FORBIDDEN);
 
 if($release['releaseId']) {
 	$attachedFiles = $con->getAssoc(<<<SQL
-		SELECT f.fileId, f.assetId, f.name, f.created, f.size, f.cdnPath, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.rawDependencies
+		SELECT f.fileId, f.assetId, f.name, f.created, f.size, f.cdnPath, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.rawDependencies, `owner`.name AS ownerName
 		FROM files f
+		JOIN users `owner` ON `owner`.userId = f.userId
 		LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
 		WHERE f.assetId = ?
 	SQL, [$release['assetId']]);
@@ -88,8 +89,9 @@ else {
 // hovering files
 $foldedTypes = implode(',', UPLOAD_LIMITS[ASSETTYPE_RELEASE]['allowedTypes']);
 $hoveringFiles = $con->getAssoc(<<<SQL
-	SELECT f.fileId, f.assetId, f.name, f.created, f.size, f.cdnPath, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.errors, mpr.rawDependencies
+	SELECT f.fileId, f.assetId, f.name, f.created, f.size, f.cdnPath, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.errors, mpr.rawDependencies, `owner`.name AS ownerName
 	FROM files f
+	JOIN users `owner` ON `owner`.userId = f.userId
 	LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
 	WHERE f.assetId IS NULL AND f.type IN ($foldedTypes) AND f.userId = ?
 SQL, [$user['userId']]);

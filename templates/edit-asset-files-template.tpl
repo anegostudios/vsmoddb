@@ -14,6 +14,7 @@
 					<span class="imagesize"></span>
 					<span class="size"></span>
 				</small>
+				<small class="owner">Owned by <span>You</span></small>
 			</div>
 		</a>
 		<div class="buttons" style="display: none;">
