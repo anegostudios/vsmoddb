@@ -90,7 +90,7 @@ function mod_attachFileInteractions(uploadLimits : UploadLimits) : void
 		onDelete: _removeThumbOption,
 	});
 
-	attachDefaultDropHandler(uploadLimits.individualSize, uploadLimits.allowedExtensions, (response, $elem) => {
+	attachDefaultDropHandler(uploadLimits.individualSize, uploadLimits.allowedExtensions, true, (response, $elem) => {
 		if(!response || response.error) return;
 
 		const fileEl = $elem[0]!;
