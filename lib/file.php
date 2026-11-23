@@ -143,3 +143,66 @@ function tryDeleteFiles($files)
 
 	$con->completeTrans();
 }
+
+
+/**
+ * @param array<int, array> &$mergedFiles - array of refs to arrays
+ * @param array<int, array> &$attachedFilesInOrder
+ * @param int $assetType ASSETTYPE_*
+ * @param int $assetId
+ * @param null &$filesToDelete
+ * @param-out array<int, array> $filesToDelete
+ */
+function processFileChanges(&$mergedFiles, &$attachedFilesInOrder, $assetType, $assetId, &$filesToDelete)
+{
+	$clientFileSet = getInputArrayOfInts(INPUT_POST, 'fileIds') ?? [];
+	$filesToDelete = array_diff_key($mergedFiles, array_flip($clientFileSet));
+
+	$filesToAttachInOrder = getInputArrayOfInts(INPUT_POST, 'attachedFileIds') ?? [];
+
+	if(count($filesToAttachInOrder) > count($mergedFiles)) {
+		addMessage(MSG_CLASS_ERROR, "Error trying to attach files, mismatch between client and server.");
+		return;
+	}
+
+	// Validate that the file ids supplied for ordering actually belong to this asset:
+	$flippedOrder = array_flip($filesToAttachInOrder);
+	$newFiles = array_intersect_key($mergedFiles, $flippedOrder);
+	if(count($newFiles) !== count($filesToAttachInOrder)) {
+		addMessage(MSG_CLASS_ERROR, "Error trying to attach files, mismatch between client and server.");
+		return;
+	}
+
+	foreach($newFiles as $fileId => &$file) {
+		$file['order'] = $flippedOrder[$fileId];
+		$file['assetId'] = $assetId;
+	}
+	unset($file);
+
+	$attachedFilesInOrder = $newFiles; // Already assign here. From here on we want to keep the user input in case of further error.
+
+	foreach($attachedFilesInOrder as &$file) {
+		$file['assetId'] = $assetId;
+	}
+	unset($file);
+
+	foreach($filesToDelete as $fileId => $_) {
+		unset($mergedFiles[$fileId]);
+	}
+
+	foreach($mergedFiles as $fileId => &$file) {
+		if(!array_key_exists($fileId, $attachedFilesInOrder)) $file['assetId'] = null; // detach in the error case
+	}
+	unset($file);
+
+	foreach($attachedFilesInOrder as $fileId => &$file) {
+		$file['order'] = $flippedOrder[$fileId];
+	}
+	unset($file);
+	
+	if(count($filesToAttachInOrder) > UPLOAD_LIMITS[$assetType]['attachmentCount']) {
+		addMessage(MSG_CLASS_ERROR, "Trying to attach too many files.");
+		return;
+	}
+}
+

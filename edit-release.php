@@ -74,8 +74,9 @@ if(!$targetMod)   showErrorPage(HTTP_NOT_FOUND, 'Target mod was not found.');
 if(!canEditMod($targetMod, $user))   showErrorPage(HTTP_FORBIDDEN);
 
 if($release['releaseId']) {
-	$attachedFiles = $con->getAssoc(<<<SQL
-		SELECT f.fileId, f.assetId, f.name, f.created, f.size, f.cdnPath, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.rawDependencies, `owner`.name AS ownerName
+	$attachedFilesInOrder = $con->getAssoc(<<<SQL
+		SELECT f.fileId, f.assetId, f.name, f.created, f.size, f.cdnPath, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.rawDependencies,
+			f.userId, `owner`.name AS ownerName
 		FROM files f
 		JOIN users `owner` ON `owner`.userId = f.userId
 		LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
@@ -83,30 +84,33 @@ if($release['releaseId']) {
 	SQL, [$release['assetId']]);
 }
 else {
-	$attachedFiles = [];
+	$attachedFilesInOrder = [];
 }
 
 // hovering files
 $foldedTypes = implode(',', UPLOAD_LIMITS[ASSETTYPE_RELEASE]['allowedTypes']);
 $hoveringFiles = $con->getAssoc(<<<SQL
-	SELECT f.fileId, f.assetId, f.name, f.created, f.size, f.cdnPath, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.errors, mpr.rawDependencies, `owner`.name AS ownerName
+	SELECT f.fileId, f.assetId, f.name, f.created, f.size, f.cdnPath, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.errors, mpr.rawDependencies,
+		f.userId, `owner`.name AS ownerName
 	FROM files f
 	JOIN users `owner` ON `owner`.userId = f.userId
 	LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
 	WHERE f.assetId IS NULL AND f.type IN ($foldedTypes) AND f.userId = ?
 SQL, [$user['userId']]);
 
-foreach($attachedFiles as $fileId => &$file) {
+$mergedFiles = [];
+foreach($attachedFilesInOrder as $fileId => &$file) {
 	$file['fileId'] = $fileId;
 	$file['gameVersionDep'] = findMinCompatibleGameVersion($file['rawDependencies']);
+	$mergedFiles[$fileId] = &$file;
 }
-unset($file); //TODO(Rennorb) @cleanup
+unset($file);
 foreach($hoveringFiles as $fileId => &$file) {
 	$file['fileId'] = $fileId;
 	$file['gameVersionDep'] = findMinCompatibleGameVersion($file['rawDependencies']);
+	$mergedFiles[$fileId] = &$file;
 }
-unset($file); //TODO(Rennorb) @cleanup
-$mergedFiles = array_replace($attachedFiles, $hoveringFiles); // replace instead of merge to preserve keys.
+unset($file);
 
 
 $canCurrentlyBeEdited = !$release['releaseId']; //TODO
@@ -143,55 +147,23 @@ if(!empty($_POST['save'])) {
 	}
 
 	// Files:
-	$release['attachedFile'] = reset($attachedFiles);
-	$filesToAttachInOrder = getInputArrayOfInts(INPUT_POST, 'attachedFileIds');
-	if($filesToAttachInOrder) do {
-		assert(UPLOAD_LIMITS[ASSETTYPE_RELEASE]['attachmentCount'] === 1);
-		
-		if(count($filesToAttachInOrder) > UPLOAD_LIMITS[ASSETTYPE_RELEASE]['attachmentCount']) {
-			addMessage(MSG_CLASS_ERROR, "Trying to attach too many files.");
-			break;
-		}
+	$release['attachedFile'] = reset($attachedFilesInOrder);
 
-		if(count($filesToAttachInOrder) > count($mergedFiles)) {
-			addMessage(MSG_CLASS_ERROR, "Error trying to attach files, mismatch between client and server.");
-			break;
-		}
+	// assetId = -1 : Needs to be fake, releases currently being created do not have a assetid to attach to.
+	processFileChanges($mergedFiles, $attachedFilesInOrder, ASSETTYPE_RELEASE, $release['assetId'] ?: -1, $filesToDelete);
 
-		// Validate that the file ids supplied for ordering actually belong to this mod:
-		$flippedOrder = array_flip($filesToAttachInOrder);
-		$newFiles = array_intersect_key($mergedFiles, $flippedOrder);
-		if(count($newFiles) !== count($filesToAttachInOrder)) {
-			addMessage(MSG_CLASS_ERROR, "Error trying to attach files, mismatch between client and server.");
-			break;
-		}
-
-		foreach($newFiles as $fileId => &$file) {
-			$file['order'] = $flippedOrder[$fileId];
-			$file['assetId'] = -1; // Needs to be fake, releases currently being created do not have a assetid to attach to.
-		}
-		unset($file);
-
-		// uasort($newFiles, fn($f1, $f2) => $f1['order'] - $f2['order']);
-
-		$attachedFiles = $newFiles;
-
-		$mergedFiles = array_replace($mergedFiles, $attachedFiles); // replace instead of merge to preserve keys.
-	} while(0);
-	else {
-		addMessage(MSG_CLASS_ERROR, "Missing release file.");
+	assert(UPLOAD_LIMITS[ASSETTYPE_RELEASE]['attachmentCount'] === 1);
+	if (!$attachedFilesInOrder) {
+		addMessage(MSG_CLASS_ERROR, "Missing release file. Upload / attach a file to this release.");
 	}
 
-	$clientFileSet = getInputArrayOfInts(INPUT_POST, 'fileIds');
-	$filesToDelete = array_diff_key($mergedFiles, array_flip($clientFileSet));
-
-	$firstAttachedFile = reset($attachedFiles);
+	$firstAttachedFile = reset($attachedFilesInOrder);
 
 	$newCompatibleGameVersions = null;
 
 	if(($targetMod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD) {
 		// Mods take modid and version from the attached file. We no longer allow manual entry.
-		if($attachedFiles) {
+		if($attachedFilesInOrder) {
 			$release['identifier'] = $firstAttachedFile['modIdentifier'];
 			$release['version']    = $firstAttachedFile['modVersion'];
 
@@ -233,7 +205,7 @@ if(!empty($_POST['save'])) {
 		}
 
 		// If the release itself is ok, but the caps are extensive, hold the release for review:
-		if(count($messages) === $oldMsgCount && $attachedFiles) {
+		if(count($messages) === $oldMsgCount && $attachedFilesInOrder) {
 			if($firstAttachedFile['capabilities'] & MOD_CAPS_REQUIRING_REVIEW) {
 				$release['status'] = RELEASE_STATUS_AWAITING_REVIEW;
 			}
@@ -340,7 +312,7 @@ if(!$release['releaseId']) {
 
 		if($candidateFile) {
 			if($candidateFile['capabilities'] & MOD_CAPS_REQUIRING_REVIEW) {
-				addMessage(MSG_CLASS_WARN, 'This mod uses potentially dangerous features of the dotnet runtime, and will require manual review.<br>A request for review will be submitted for you automatically after completing the release.', false);
+				addMessage(MSG_CLASS_WARN, 'This mod uses potentially dangerous features of the dotnet runtime and will require manual review.<br>A request for review will be submitted for you automatically after completing the release.', false);
 			}
 
 			$release['identifier'] = $candidateFile['modIdentifier'];

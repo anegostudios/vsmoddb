@@ -33,7 +33,7 @@ function release_attachFileInteractions(uploadSizeLimit : number, allowedExtensi
 				const oldWarningMessage = R.getC('msg-require-review');
 				if(response.requiresReview) {
 					if(!oldWarningMessage) {
-						R.addMessage(MSG_CLASS_WARN+'.msg-require-review', 'This mod uses potentially dangerous features of the dotnet runtime, and will require manual review.<br>A request for review will be submitted for you automatically after completing the release.', false);
+						R.addMessage(MSG_CLASS_WARN+'.msg-require-review', 'This mod uses potentially dangerous features of the dotnet runtime and will require manual review.<br>A request for review will be submitted for you automatically after completing the release.', false);
 					}
 					submitButtonEls[0].textContent = 'Submit for Review';
 					submitButtonEls[1].textContent = 'Submit for Review + Back';
@@ -86,7 +86,7 @@ function release_attachFileInteractions(uploadSizeLimit : number, allowedExtensi
 				modId         : fileEl.dataset.modId,
 				modVersion    : fileEl.dataset.modVersion ? BigInt(fileEl.dataset.modVersion) : undefined,
 				gameVersionDep: fileEl.dataset.gameVersionDep ? BigInt(fileEl.dataset.gameVersionDep) : undefined,
-				requiresReview: !!fileEl.dataset.requiresReview,
+				requiresReview: fileEl.dataset.requiresReview?.toLowerCase() === "true",
 			}, goingToAttach);
 		}
 	});
