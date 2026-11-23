@@ -17,7 +17,7 @@ function release_attachFileInteractions(uploadSizeLimit : number, allowedExtensi
 		if(nowAttached) {
 			if(validateFileUploads) {
 				modIdInputEl.value = response.modId || '';
-				modVersionInputEl.value = response.modVersion ? R.formatSemanticVersion(response.modVersion) : '';
+				modVersionInputEl.value = response.modVersion ? R.formatSemanticVersion(BigInt(response.modVersion)) : '';
 				if(response.gameVersionDep) {
 					const versionInputs = document.querySelectorAll<HTMLInputElement>('.version-selector input[name="cgvs[]"]');
 					const labelEl = document.getElementsByClassName('count-label')[0];

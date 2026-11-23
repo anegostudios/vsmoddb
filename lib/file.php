@@ -76,15 +76,18 @@ function extractFileType($file, $fileStream)
 			return FILE_TYPE_ZIP;
 
 		default:
-			if(unpack('v', $first4bytes)[0] === 0x5A4D) { // dos header
+			if(unpack('v', $first4bytes)[1] === 0x5A4D) { // dos header
 				return FILE_TYPE_DLL;
 			}
 			else if(str_ends_with($file['name'], '.cs')) {
 				fseek($fileStream, 0);
-				$data = fread($fileStream, 200 * MB); //TODO(Rennorb) @correctness @hack
-				if(ctype_print($data)) {
-					return FILE_TYPE_CS;
+				while(!feof($fileStream)) {
+					$chunk = fread($fileStream, 16 * MB);
+					//TODO(Rennorb) @correctness: Technically there might be a multibyte character right at the edge of th e chunk
+					// which could get detected as invalid and fail this check. But... show me a 16 meg source file first, then we can fix this.
+					if(!mb_check_encoding($chunk, 'utf-8'))  return 0;
 				}
+				return FILE_TYPE_CS;
 			}
 
 			return 0;

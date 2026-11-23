@@ -271,7 +271,7 @@
 		createEditor(R.getQ("textarea.editor"), tinymceSettings);
 	});
 
-	release_attachFileInteractions(<?= $uploadSizeLimit ?>, <?= json_encode(UPLOAD_LIMITS[ASSETTYPE_RELEASE]['allowedExtensions']) ?>, {$doFileValidation ? 'true' : 'false'});
+	release_attachFileInteractions(<?= $uploadSizeLimit ?>, <?= json_encode(UPLOAD_LIMITS[ASSETTYPE_RELEASE]['allowedExtensions']) ?>, {$doFileValidation ? 'true' : 'false'}, {$canCurrentlyBeEdited ? 'true' : 'false'});
 </script>
 
 <script nonce="{$cspNonce}" type="text/javascript" src="/web/js/prism.min.js?v=0" data-manual=""></script>

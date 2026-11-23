@@ -233,6 +233,9 @@ if(!empty($_POST['save'])) {
 		//
 
 		if($filesToDelete) {
+			foreach($filesToDelete as &$file)
+				$file['hasThumbnail'] = false; // required for deletion
+			unset($file);
 			tryDeleteFiles($filesToDelete);
 		}
 
@@ -272,6 +275,10 @@ else {
 	if(!$pushedErrorForCurrentFile && !empty(reset($mergedFiles)['errors'])) {
 		addMessage(MSG_CLASS_ERROR, 'There are issues with the current file: '.$mergedFiles[0]['errors'], true);
 	}
+}
+
+if(!$canCurrentlyBeEdited) {
+	$mergedFiles = array_filter($mergedFiles, fn($file) => $file['assetId']); // hide hovering files if we cannot't edit the release
 }
 
 foreach($mergedFiles as &$file) {

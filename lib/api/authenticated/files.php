@@ -94,7 +94,7 @@ if(empty($urlparts)) { // POST api/v2/files -> create new
 		fail(HTTP_INTERNAL_ERROR, 'CDN Error: '.$uploadresult['error']);
 	}
 
-	$assetTypeId = $acceptedImage ? ASSETTYPE_MOD : ASSETTYPE_RELEASE;
+	$assetTypeId = $acceptedImage ? ASSETTYPE_MOD : ASSETTYPE_RELEASE; // @hack
 	$con->execute("INSERT INTO files (assetTypeId, userId, `name`, cdnPath, `size`, `type`, `order`) VALUES ($assetTypeId, {$user['userId']}, ?, ?, $fileSize, $type, 0x7f)", [$file['name'], $cdnFilePath]);
 	$fileId = $con->Insert_ID();
 

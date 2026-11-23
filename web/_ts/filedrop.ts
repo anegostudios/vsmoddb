@@ -86,11 +86,11 @@ type UploadResponse = {
 	thumbUrl?        : string,
 	imgWidth?        : number,
 	imgHeight?       : number,
-	gameVersionDep?  : bigint,
+	gameVersionDep?  : number|bigint,
 	requiresReview?  : boolean,
 	modParse?        : 'ok'|'error',
 	modId?           : string,
-	modVersion?      : bigint,
+	modVersion?      : number|bigint,
 	parseMsg?        : string,
 
 	error?           : string,
@@ -156,10 +156,6 @@ function attachDefaultDropHandler(maxSize : number, allowedExtensions : string[]
 			try { response = JSON.parse(e.target!.response) as UploadResponse; }
 			catch(ex) {
 				console.error(ex);
-
-				$(".filename", $elem).html("Unable to upload file.<br>" + ex.message).addClass("text-error");
-				$elem.addClass("error");
-
 				response = { error: ex.message } as UploadResponse;
 			}
 
@@ -184,6 +180,15 @@ function attachDefaultDropHandler(maxSize : number, allowedExtensions : string[]
 					$(".imagesize", $elem).text(`${response.imgWidth}x${response.imgHeight}px`).after(' - ');
 				}
 				$(".size", $elem).text(R.formatByteSize(e.file.size));
+
+				if(response.error) {
+					$elem.addClass("error");
+					$(".filename", $elem).text(response.error).addClass("text-error");
+				}
+				if(response.modParse === "error") {
+					$elem.addClass("error");
+					$(".filename", $elem).text(response.parseMsg).addClass("text-error");
+				}
 
 				if(response.error || response.modParse === "error" || !canAttach) {
 					$attachToggle.replaceWith('<span></span>');
