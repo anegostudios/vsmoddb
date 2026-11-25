@@ -135,7 +135,7 @@ else if(!($newState & MOD_REQUEST_FLAG_SPAM))   fail(HTTP_BAD_REQUEST, 'Missing 
 $con->startTrans();
 
 $con->execute("INSERT INTO moderationRequestEvents (requestId, userId, kind, data) VALUES ".implode(',', $sqlEventValues));
-$eventId = $con->insert_ID(); // first event should be message if that exists.
+$eventId = $con->insert_ID(); // first event should be message if that exists. :MessageBeforeStateChange
 
 if($message) $con->execute("INSERT INTO moderationRequestMessages (eventId, text, textSearchable) VALUES (?, ?, ?)", [$eventId, $message, textContent($message)]);
 

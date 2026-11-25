@@ -332,16 +332,7 @@ switch($urlparts[1]) {
 
 		$con->startTrans();
 
-		$con->execute("INSERT INTO moderationRequests (referenceId, kind, category, initiatorUserId) VALUES ($modId, ".MOD_REQUEST_KIND_REPORT_MOD.", $category, {$user['userId']})");
-		$requestId = intval($con->insert_ID());
-
-		$con->execute("INSERT INTO moderationRequestEvents (requestId, userId, kind, `data`) VALUES ($requestId, {$user['userId']}, ". REPORT_EVENT_MESSAGE .", 0)");
-		$InitialEventId = intval($con->insert_ID());
-		$con->execute("UPDATE moderationRequests SET requestEvt = $InitialEventId WHERE requestId = $requestId");
-
-		$con->execute("INSERT INTO moderationRequestMessages (eventId, `text`, textSearchable) VALUES ($InitialEventId, ?, ?)", [$requestHtml, $requestSearchable]);
-
-		logAuditEvent(AUDIT_LOG_KIND_REPORT_CREATE, $requestId);
+		$requestId = moderationRequestCreateWithMessage($modId, MOD_REQUEST_KIND_REPORT_MOD, $category, $requestHtml, $requestSearchable);
 
 		$ok = $con->completeTrans();
 		if(!$ok) fail(HTTP_INTERNAL_ERROR, 'Internal database error.');

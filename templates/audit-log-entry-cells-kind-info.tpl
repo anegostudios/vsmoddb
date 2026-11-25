@@ -178,7 +178,7 @@ case AUDIT_LOG_KIND_RELEASE_CHANGE_COMPAT: ?>
 
 case AUDIT_LOG_KIND_RELEASE_CHANGE_FILE: ?>
 <td>Changed Release File</td>
-<td class="info"><?= formatAuditLogDiff($logEntry['info']) ?></td>
+<td class="info"><?= escapeHtml($logEntry['info']) //TODO(Rennorb) @completeness: this is just the fileid for now ?></td>
 	<? break;
 
 

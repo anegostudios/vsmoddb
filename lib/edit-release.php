@@ -40,8 +40,8 @@ function createNewRelease($mod, $release, $newCompatibleGameVersions, $file)
 
 			$logInfo .= ' requiring manual review';
 
-			$con->execute("INSERT INTO moderationRequests (referenceId, kind, category, initiatorUserId, request, requestSearchable) 
-				VALUES ($releaseId, ".MOD_REQUEST_KIND_MANUAL_REVIEW.", 0, {$user['userId']}, '', '')");
+			$con->execute("INSERT INTO moderationRequests (referenceId, kind, category, initiatorUserId) 
+				VALUES ($releaseId, ".MOD_REQUEST_KIND_MANUAL_REVIEW.", 0, {$user['userId']})");
 		}
 	}
 
@@ -95,24 +95,30 @@ function updateRelease($mod, $oldReleaseData, $release, $file, $newCompatibleGam
 
 		$con->startTrans();
 
+		$moderatorLogFlag = canModerate(null, $user) ? AUDIT_LOG_FLAG_MODACTION : 0; // @correctness this check needs to filter out team members.
+
 		if(isset($actualChanges['text'])) {
 			$con->execute('UPDATE assets SET text = ?, editedByUserId = ? WHERE assetId = ?',
 				[$actualChanges['text'], $user['userId'], $oldReleaseData['assetId']]
 			);
 
-			array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_CHANGELOG, createAuditLogDiff($oldReleaseData['text'], $actualChanges['text']));
+			array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_CHANGELOG, createAuditLogDiff($oldReleaseData['text'], $actualChanges['text']), $moderatorLogFlag);
 		}
-		if(isset($actualChanges['identifier']) || isset($actualChanges['version'])) {
-			$con->execute('UPDATE modReleases SET identifier = ?, version = ? WHERE releaseId = ?', [
+
+		if(isset($actualChanges['identifier']) || isset($actualChanges['version']) || isset($actualChanges['status'])) {
+			$con->execute('UPDATE modReleases SET identifier = ?, `version` = ?, `status` = ? WHERE releaseId = ?', [
 				$actualChanges['identifier'] ?? $oldReleaseData['identifier'],
 				$actualChanges['version']    ?? $oldReleaseData['version'],
+				$actualChanges['status']     ?? $oldReleaseData['status'],
 				$oldReleaseData['releaseId']],
 			);
 
 			if(isset($actualChanges['identifier']))
-				array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_IDENTIFIER, createAuditLogDiff($oldReleaseData['identifier'], $actualChanges['identifier']));
+				array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_IDENTIFIER, createAuditLogDiff($oldReleaseData['identifier'], $actualChanges['identifier']), $moderatorLogFlag);
 			if(isset($actualChanges['version'])) 
-				array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_VERSION, createAuditLogDiff(formatSemanticVersion($oldReleaseData['version']), formatSemanticVersion($actualChanges['version'])));
+				array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_VERSION, createAuditLogDiff(formatSemanticVersion($oldReleaseData['version']), formatSemanticVersion($actualChanges['version'])), $moderatorLogFlag);
+			if(isset($actualChanges['status'])) 
+				array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_STATUS, null, ($actualChanges['status'] << 1) | $moderatorLogFlag);
 		}
 
 		if($compatibleGameVersionsChange) {
@@ -124,21 +130,42 @@ function updateRelease($mod, $oldReleaseData, $release, $file, $newCompatibleGam
 
 			$old = implode("\n", array_map('formatSemanticVersion', $oldCompatibleGameVersions));
 			$new = implode("\n", array_map('formatSemanticVersion', $newCompatibleGameVersions));
-			array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_COMPAT, createAuditLogDiff($old, $new));
+			array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_COMPAT, createAuditLogDiff($old, $new), $moderatorLogFlag);
 		}
 
 		$con->execute('UPDATE assets SET numSaved = numSaved + 1, editedByUserId = ? WHERE assetId = ?', [$user['userId'], $oldReleaseData['assetId']]);
 
-		$logFlags = canModerate(null, $user) ? AUDIT_LOG_FLAG_MODACTION : 0; // @correctness this check needs to filter out team members.
-		$logPlaceholders = substr(str_repeat("({$logFlags}, {$releaseId}, {$user['userId']}, ?, ?),", count($changesToLog) / 2), 0, -1);
-		$con->execute('INSERT INTO auditLogs (flags, referenceId, initiatorUserId, kind, info) VALUES '.$logPlaceholders, $changesToLog);
+		if($oldReleaseData['attachedFile']['fileId'] !== $file['fileId']) {
+			$con->execute("UPDATE files SET assetId = NULL, `order` = 0x7f WHERE fileId = ?", [$oldReleaseData['attachedFile']['fileId']]);
+			array_push($changesToLog, AUDIT_LOG_KIND_RELEASE_CHANGE_FILE, $file['fileId'], $moderatorLogFlag);
+
+			// also means we have an active manual review request, so update it:
+			if($release['status'] === RELEASE_STATUS_AWAITING_REVIEW) {
+				$con->execute("UPDATE moderationRequests SET stateFlags = stateFlags & ~".MOD_REQUEST_FLAG_USER_ACTION_REQUIRED." WHERE requestId = {$release['requestId']}");
+				$con->execute("INSERT INTO moderationRequestEvents (requestId, userId, kind, data) VALUES 
+					({$release['requestId']}, {$user['userId']}, ".REPORT_EVENT_CHANGE_STAUS.", (SELECT stateFlags FROM moderationRequests WHERE requestId = {$release['requestId']}))
+				");
+			}
+			else {
+				assert($release['status'] === RELEASE_STATUS_RELEASED);
+
+				$con->execute("UPDATE moderationRequests SET stateFlags = (stateFlags & ~".MOD_REQUEST_FLAG_USER_ACTION_REQUIRED.") | ".MOD_REQUEST_FLAG_CLOSED." WHERE requestId = {$release['requestId']}");
+				$con->execute("INSERT INTO moderationRequestEvents (requestId, userId, kind, data) VALUES 
+					({$release['requestId']}, {$user['userId']}, ".REPORT_EVENT_MESSAGE.", 0),
+					({$release['requestId']}, {$user['userId']}, ".REPORT_EVENT_CHANGE_STAUS.", (SELECT stateFlags FROM moderationRequests WHERE requestId = {$release['requestId']}))
+				");
+				$eventId = $con->insert_ID();  // :MessageBeforeStateChange
+
+				$closingMessage = '[System] Request for review was closed by replacing the attached file with one that does not require review.';
+				$con->execute("INSERT INTO moderationRequestMessages (eventId, text, textSearchable) VALUES (?, ?, ?)", [$eventId, $closingMessage, $closingMessage]);
+			}
+		}
+
+		$logPlaceholders = substr(str_repeat("({$releaseId}, {$user['userId']}, ?, ?, ?),", count($changesToLog) / 2), 0, -1);
+		$con->execute('INSERT INTO auditLogs (referenceId, initiatorUserId, kind, info, flags) VALUES '.$logPlaceholders, $changesToLog);
 
 		updateGameVersionsCached($mod['modId']);
 		$con->execute('UPDATE mods set lastReleased = NOW() WHERE modId = ?', [$mod['modId']]);
-
-		if($oldReleaseData['attachedFile']['fileId'] !== $file['fileId']) {
-			$con->execute("UPDATE files SET assetId = NULL, `order` = 0x7f WHERE fileId = ?", [$oldReleaseData['attachedFile']['fileId']]);
-		}
 
 		$con->execute("UPDATE files SET assetId = ?, `order` = ? WHERE fileId = ?", [$release['assetId'], $file['order'], $file['fileId']]);
 

@@ -12,6 +12,7 @@ if(empty($user['userId']))   showErrorPage(HTTP_UNAUTHORIZED);
 $requestId = intval($urlparts[1]);
 if(!$requestId)   showErrorPage(HTTP_BAD_REQUEST, 'Missing or malformed request id.');
 
+require(SRC_ROOT.'/lib/modinfo.php');
 
 $queryFilterOwnTickets = canModerate(null, $user) ? '' : ' AND r.initiatorUserId = '.$user['userId']; // @security: $user['userId'] comes form the database and is int, therefore sql inert.
 //TODO(Rennorb) @cleanup: probably split this into two calls, where the second one is different based in the kind. This is turning into a mess.
@@ -19,7 +20,7 @@ $ticket = $con->getRow("
 	SELECT r.requestId, r.kind, r.category, r.requestEvt, r.resolutionEvt, r.stateFlags, r.initiatorUserId, r.referenceId, COALESCE(`mod`.modId, modc.modId) AS modId, am.assetId, am.name AS modName,
 		i.name AS `initiatorName`, HEX(i.hash) AS `initiatorHash`, 
 		m.name AS `resolverName`, HEX(m.hash) AS `resolverHash`,
-		rel.assetId AS releaseAssetId, rel.version, mpr.capabilities
+		rel.assetId AS releaseAssetId, rel.version, mpr.capabilities, r.created
 	FROM moderationRequests r
 	LEFT JOIN users i ON i.userId = r.initiatorUserId
 	LEFT JOIN users m ON m.userId = r.resolverUserId
@@ -44,79 +45,6 @@ $events = $con->getAssoc("
 ");
 
 $ticket['events'] = $events;
-
-if(!empty($_POST['resolution'])) {
-	validateActionToken();
-	validateUserNotBanned();
-	if(!canModerate(null, $user))   showErrorPage(HTTP_FORBIDDEN);
-	if($user['isBanned'])  showErrorPage(HTTP_FORBIDDEN, 'You are currently banned.');
-
-	$oldMsgCount = count($messages);
-
-	if($ticket['stateFlags'] & MOD_REQUEST_FLAG_CLOSED) {
-		addMessage(MSG_CLASS_ERROR, 'Ticket was already closed, sorry.'); // @hack, but good enough to prevent accidents.
-	}
-
-	switch($_POST['resolution']) {
-		case 'solved':
-			$newState = MOD_REQUEST_FLAG_CLOSED;
-			$logFlags = AUDIT_LOG_FLAG_SOLVED;
-			$newReleaseState = RELEASE_STATUS_RELEASED;
-			$reason = trimHtml(sanitizeHtml($_POST['reason']));
-			if(!$reason)  addMessage(MSG_CLASS_ERROR, 'Please provide a reason.');
-			break;
-
-		case 'requireaction':
-			$newState = MOD_REQUEST_FLAG_USER_ACTION_REQUIRED;
-			$logFlags = 0;
-			$newReleaseState = RELEASE_STATUS_AWAITING_CHANGES;
-			$reason = trimHtml(sanitizeHtml($_POST['reason']));
-			if(!$reason)  addMessage(MSG_CLASS_ERROR, 'Please provide a reason.');
-			break;
-
-		case 'wontfix':
-			$newState = MOD_REQUEST_FLAG_CLOSED | MOD_REQUEST_FLAG_WONTFIX;
-			$logFlags = AUDIT_LOG_FLAG_WONT_FIX;
-			$newReleaseState = RELEASE_STATUS_NOT_ACCEPTABLE; // unreachable
-			$reason = trimHtml(sanitizeHtml($_POST['reason']));
-			if(!$reason)  addMessage(MSG_CLASS_ERROR, 'Please provide a reason.');
-			break;
-
-		case 'spam':
-			$newState = MOD_REQUEST_FLAG_CLOSED | MOD_REQUEST_FLAG_SPAM;
-			$logFlags = AUDIT_LOG_FLAG_SPAM;
-			$newReleaseState = RELEASE_STATUS_NOT_ACCEPTABLE;
-			$reason = trimHtml(sanitizeHtml($_POST['reason']));
-			// The reason is allowed to be empty here.
-			break;
-
-		default: showErrorPage(HTTP_BAD_REQUEST, 'Invalid resolution.');
-	}
-
-	if(count($messages) === $oldMsgCount) {
-		$con->startTrans();
-
-		$con->execute('UPDATE moderationRequests SET stateFlags = stateFlags | ?, resolved = NOW(), resolverUserId = ?, resolution = ? WHERE requestId = ?', [$newState, $user['userId'], $reason, $requestId]);
-
-		if(!empty($_POST['sendNotification']) || $ticket['kind'] == MOD_REQUEST_KIND_MANUAL_REVIEW) {
-			$con->execute('INSERT INTO notifications (kind, userId, recordId) VALUES ('.NOTIFICATION_REQUEST_RESOLVED.', ?, ?) ', [$ticket['initiatorUserId'], $requestId]);
-		}
-
-		if($ticket['kind'] == MOD_REQUEST_KIND_MANUAL_REVIEW) {
-			$con->execute("UPDATE modReleases SET `status` = $newReleaseState WHERE releaseId = {$ticket['referenceId']}");
-			logAuditEvent(AUDIT_LOG_KIND_RELEASE_CHANGE_STATUS, $ticket['referenceId'], null, ($newReleaseState << 1) | AUDIT_LOG_FLAG_MODACTION);
-		}
-
-		logAuditEvent(AUDIT_LOG_KIND_REPORT_RESOLVE, $requestId, null, $logFlags | AUDIT_LOG_FLAG_MODACTION);
-
-		$ok = $con->completeTrans();
-		if(!$ok) addMessage(MSG_CLASS_ERROR, 'Internal database error');
-		else {
-			forceRedirectAfterPOST();
-			exit();
-		}
-	}
-}
 
 cspReplaceAllowedFetchSources("{$_SERVER['HTTP_HOST']}/api/v2/tickets/{$requestId}");
 cspAllowTinyMceComment();

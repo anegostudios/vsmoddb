@@ -151,3 +151,55 @@ function stringifyModerationRequestCategory($request)
 
 const REPORT_EVENT_CHANGE_STAUS = 1;
 const REPORT_EVENT_MESSAGE      = 2;
+
+
+
+/**
+ * @param int    $referenceId
+ * @param int    $requestKind     MOD_REQUEST_KIND_*
+ * @param int    $requestCategory REPORT_CATEGORY_*
+ * @param string $textRaw
+ * @param string $textSearchable
+ * @return int   $requestId
+ */
+function moderationRequestCreateWithMessage($referenceId, $requestKind, $requestCategory, $textRaw, $textSearchable)
+{
+	global $con, $user;
+	/** @var object $con */
+	/** @var array|null $user */
+
+	$con->execute(
+		"INSERT INTO moderationRequests (referenceId, kind, category, initiatorUserId)
+		 VALUES ($referenceId, $requestKind, $requestCategory, {$user['userId']})",
+	);
+	$requestId = intval($con->insert_ID());
+
+	$eventId = moderationRequestAppendMessage($requestId, $textRaw, $textSearchable);
+
+	$con->execute("UPDATE moderationRequests SET requestEvt = $eventId WHERE requestId = $requestId");
+
+	logAuditEvent(AUDIT_LOG_KIND_REPORT_CREATE, $requestId);
+
+	return $requestId;
+}
+
+/**
+ * @param int    $requestId
+ * @param string $textRaw
+ * @param string $textSearchable
+ * @return int   $eventId
+ */
+function moderationRequestAppendMessage($requestId, $textRaw, $textSearchable)
+{
+	global $con, $user;
+	/** @var object $con */
+	/** @var array|null $user */
+
+	$con->execute("INSERT INTO moderationRequestEvents (requestId, userId, kind, `data`) VALUES ($requestId, {$user['userId']}, ".REPORT_EVENT_MESSAGE.", 0)");
+	$eventId = intval($con->insert_ID());
+
+	$con->execute("INSERT INTO moderationRequestMessages (eventId, text, textSearchable) VALUES ($eventId, ?, ?)", [$textRaw, $textSearchable]);
+
+	return $eventId;
+}
+

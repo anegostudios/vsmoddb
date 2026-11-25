@@ -36,6 +36,7 @@ if(!empty($_REQUEST['assetid'])) {
 		LEFT JOIN users lastRetractedBy ON lastRetractedBy.userId = rr.lastModifiedBy
 		LEFT JOIN moderationRequests mr ON mr.kind = ".MOD_REQUEST_KIND_MANUAL_REVIEW." AND mr.referenceId = r.releaseId
 		WHERE r.assetId = ?
+		ORDER BY mr.created DESC
 	", [ROLE_ADMIN, ROLE_MODERATOR, $_REQUEST['assetid']]);
 
 	if($release) {
@@ -75,16 +76,19 @@ if(!canEditMod($targetMod, $user))   showErrorPage(HTTP_FORBIDDEN);
 
 if($release['releaseId']) {
 	$attachedFilesInOrder = $con->getAssoc(<<<SQL
-		SELECT f.fileId, f.assetId, f.name, f.created, f.size, f.cdnPath, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.rawDependencies,
+		SELECT f.fileId, f.assetId, f.assetTypeId, f.name, f.created, f.size, f.cdnPath, mpr.modIdentifier, mpr.modVersion, mpr.capabilities, mpr.rawDependencies,
 			f.userId, `owner`.name AS ownerName
 		FROM files f
 		JOIN users `owner` ON `owner`.userId = f.userId
 		LEFT JOIN modPeekResults mpr ON mpr.fileId = f.fileId
 		WHERE f.assetId = ?
 	SQL, [$release['assetId']]);
+
+	$canCurrentlyBeEdited = $release['status'] === RELEASE_STATUS_AWAITING_CHANGES; // all other cases should be readonly
 }
 else {
 	$attachedFilesInOrder = [];
+	$canCurrentlyBeEdited = true;
 }
 
 // hovering files
@@ -111,9 +115,6 @@ foreach($hoveringFiles as $fileId => &$file) {
 	$mergedFiles[$fileId] = &$file;
 }
 unset($file);
-
-
-$canCurrentlyBeEdited = !$release['releaseId']; //TODO
 
 //
 // Actions
@@ -147,7 +148,7 @@ if(!empty($_POST['save'])) {
 	}
 
 	// Files:
-	$release['attachedFile'] = reset($attachedFilesInOrder);
+	$oldReleaseData['attachedFile'] = reset($attachedFilesInOrder);
 
 	// assetId = -1 : Needs to be fake, releases currently being created do not have a assetid to attach to.
 	processFileChanges($mergedFiles, $attachedFilesInOrder, ASSETTYPE_RELEASE, $release['assetId'] ?: -1, $filesToDelete);
@@ -205,9 +206,12 @@ if(!empty($_POST['save'])) {
 		}
 
 		// If the release itself is ok, but the caps are extensive, hold the release for review:
-		if(count($messages) === $oldMsgCount && $attachedFilesInOrder) {
+		if(count($messages) === $oldMsgCount && $firstAttachedFile && (!$release['releaseId'] || $oldReleaseData['attachedFile']['fileId'] !== $firstAttachedFile['fileId'])) {
 			if($firstAttachedFile['capabilities'] & MOD_CAPS_REQUIRING_REVIEW) {
 				$release['status'] = RELEASE_STATUS_AWAITING_REVIEW;
+			}
+			else {
+				$release['status'] = RELEASE_STATUS_RELEASED;
 			}
 		}
 	}
@@ -265,7 +269,32 @@ if(!empty($_POST['save'])) {
 
 if($release['releaseId']) {
 	switch($release['status']) {
-		case RELEASE_STATUS_AWAITING_CHANGES: addMessage(MSG_CLASS_WARN.' permanent', "The reviewer has requested changes to this release."); break;
+		case RELEASE_STATUS_AWAITING_REVIEW:
+			addMessage(MSG_CLASS_WARN.' permanent', <<<HTML
+				<h3 style='text-align: center;'>Currently being reviewed.</h3>
+				<p>Because this release uses potentially dangerous APIs it needs to be reviewed before it will be made public.</p>
+			HTML, escapeMessage: false);
+			break;
+
+		case RELEASE_STATUS_AWAITING_CHANGES:
+			$reviewInfo = $con->getRow("
+				SELECT msg.text
+				FROM moderationRequestEvents evt
+				LEFT JOIN moderationRequestMessages msg ON msg.eventId = evt.eventId - 1 -- :MessageBeforeStateChange
+				WHERE evt.requestId = {$release['requestId']}
+					AND evt.kind = ".REPORT_EVENT_CHANGE_STAUS." AND (evt.data & ".MOD_REQUEST_FLAG_USER_ACTION_REQUIRED.")
+				ORDER BY evt.created DESC
+			");
+
+			addMessage(MSG_CLASS_WARN.' permanent', <<<HTML
+				<h3 style='text-align: center;'>The reviewer has requested changes to this release.</h3>
+				<p>
+					<h4 style='margin-bottom: 0.25em;'>Requested Changes (<a href="/t/{$release['requestId']}">#{$release['requestId']}</a>):</h4>
+					<blockquote>{$reviewInfo['text']}</blockquote>
+				</p>
+				<p>Address the request and submit for a review to get your release published.</p>
+			HTML, escapeMessage: false);
+			break;
 	}
 
 	$compatibleGameVersions = $con->getCol('SELECT gameVersion FROM modReleaseCompatibleGameVersions WHERE releaseId = ?', $release['releaseId']);
@@ -304,7 +333,7 @@ $auditLogs = $release ? $con->getAll(<<<SQL
 	FROM auditLogs l
 	JOIN users u ON u.userId = l.initiatorUserId
 	WHERE l.referenceId = {$release['releaseId']}
-	ORDER BY l.created DESC
+	ORDER BY l.created DESC, l.logId DESC
 	LIMIT 20
 SQL) : [];
 

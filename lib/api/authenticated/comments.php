@@ -51,14 +51,7 @@ switch($urlparts[1] ?? null) {
 
 		$con->startTrans();
 
-		$con->execute(
-			"INSERT INTO moderationRequests (referenceId, kind, category, initiatorUserId, request, requestSearchable)
-			 VALUES ($commentId, ".MOD_REQUEST_KIND_REPORT_COMMENT.", $category, {$user['userId']}, ?, ?)",
-			[$requestHtml, $requestSearchable]
-		);
-		$requestId = intval($con->insert_ID());
-
-		logAuditEvent(AUDIT_LOG_KIND_REPORT_CREATE, $requestId);
+		$requestId = moderationRequestCreateWithMessage($commentId, MOD_REQUEST_KIND_REPORT_COMMENT, $category, $requestHtml, $requestSearchable);
 
 		$ok = $con->completeTrans();
 		if(!$ok) fail(HTTP_INTERNAL_ERROR, 'Internal database error.');

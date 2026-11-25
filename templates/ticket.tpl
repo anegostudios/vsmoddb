@@ -22,7 +22,12 @@ switch($ticket['kind']) {
 		$targetLink = "/edit/release?assetid=\{$ticket['releaseAssetId']}";
 		$targetLabel = 'Release v'.formatSemanticVersion($ticket['version']).' of '.escapeHtml($ticket['modName']);
 
-		$ticket['request'] = 'Automated request for manual review because the mod has the capability for '.formatModCapabilities($ticket['capabilities']).'.';
+		$ticket['events'] = [-1 => [
+			'kind'    => REPORT_EVENT_MESSAGE,
+			'text'    => 'Automated request for manual review because the mod has the capability for '.formatModCapabilities($ticket['capabilities']).'.',
+			'created' => $ticket['created'],
+			'userId'  => $ticket['initiatorUserId'],
+		]] + $ticket['events']; // plus operator to avoid reindexing
 		break;
 
 	default:
