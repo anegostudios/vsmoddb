@@ -256,6 +256,66 @@
 			</div>
 		{/if}
 	</form>
+
+	{if $apiTokens !== null}
+	<form id="api-tokens" class="flex-list" autocomplete="off" method="post" data-user-name="{$user['name']}" action="/api/v2/mods/{$mod['modId']}/api-tokens">
+		<h3 class="flex-fill">API tokens</h3>
+		<p class="flex-fill">
+			<small>
+				API tokens let automated tools (e.g. a CI pipeline) upload new releases of this mod. A token can only upload releases for this mod and acts as the team member who created it.
+				Tokens expire after at most <?= API_TOKEN_MAX_LIFETIME_DAYS ?> days and are deleted if their creator loses edit permissions for this mod.
+			</small>
+			{if !$isApiTokenUploadSupported}
+				<br><small class="text-error">Uploading releases with API tokens is currently only supported for mods in the 'Game Mod' category.</small>
+			{/if}
+		</p>
+
+		<table id="api-tokens-table" class="stdtable flex-fill"{if empty($apiTokens)} hidden{/if}>
+			<thead><tr><th>Name</th><th>Created by</th><th>Created</th><th>Expires</th><th>Last used</th><th></th></tr></thead>
+			<tbody>
+				{foreach from=$apiTokens item=apiToken}
+				<tr data-token-id="{$apiToken['tokenId']}">
+					<td class="api-token-name">{$apiToken['name']}</td>
+					<td>{$apiToken['creatorName']}</td>
+					<td>{$apiToken['created']}</td>
+					<td>{$apiToken['expires']}{if $apiToken['isExpired']} <span class="text-error">(expired)</span>{/if}</td>
+					<td>{$apiToken['lastUsed']}</td>
+					<td><button type="button" class="button btndelete api-token-revoke">Revoke</button></td>
+				</tr>
+				{/foreach}
+			</tbody>
+		</table>
+		<p id="api-tokens-empty" class="flex-fill"{if !empty($apiTokens)} hidden{/if}><i>No API tokens.</i></p>
+
+		{if $canCreateApiTokens}
+			<div class="editbox">
+				<label for="api-token-name">New token name</label>
+				<input id="api-token-name" type="text" name="name" maxlength="64" required placeholder="e.g. GitHub Actions">
+			</div>
+			<div class="editbox short">
+				<label for="api-token-lifetime">Expires after</label>
+				<select id="api-token-lifetime" name="lifetimeDays" noSearch="noSearch">
+					{foreach from=$apiTokenLifetimes item=days}
+						<option value="{$days}"{if $days === API_TOKEN_MAX_LIFETIME_DAYS} selected="selected"{/if}>{$days} days</option>
+					{/foreach}
+				</select>
+			</div>
+			<div class="editbox" style="align-self: end;">
+				<button type="submit" class="button submit">Create token</button>
+			</div>
+
+			<div id="api-token-created" class="flex-fill bg-success" style="padding: .5em;" hidden>
+				<label for="api-token-value">New token <b class="api-token-created-name"></b> created. <b>Copy it now, you will not be able to see it again.</b></label>
+				<div style="display: flex; gap: .5em; margin-top: .25em;">
+					<input id="api-token-value" type="text" readonly style="flex-grow: 1; font-family: monospace;">
+					<button id="api-token-copy" type="button" class="button">Copy</button>
+				</div>
+			</div>
+
+			<p class="flex-fill"><small>Usage: <code>curl -H "Authorization: Bearer &lt;token&gt;" -F "file=@mymod.zip" -F "gameversions[]=1.21.0" {$apiTokenUploadUrl}</code></small></p>
+		{/if}
+	</form>
+	{/if}
 </div>
 
 {if $mod['modId'] && canModerate(null, $user)}
@@ -485,6 +545,102 @@
 			width: 100%;
 		}
 	</style>
+
+	{if $apiTokens !== null}
+	<script nonce="{$cspNonce}" type="text/javascript">
+		\{
+			const formEl = R.get('api-tokens');
+			const tableEl = R.get('api-tokens-table');
+			const emptyEl = R.get('api-tokens-empty');
+			const tokensUrl = '/api/v2/mods/'+modId+'/api-tokens';
+
+			function updateApiTokensEmptyState() \{
+				const isEmpty = tableEl.tBodies[0].rows.length === 0;
+				tableEl.hidden = isEmpty;
+				emptyEl.hidden = !isEmpty;
+			}
+
+			// Same format as fullDate() in lib/core.php. Dates from the api are in the same (server) timezone, so no conversion is needed.
+			function formatFullDate(sqlDate) \{
+				const m = /^(\d\{4})-(\d\{2})-(\d\{2}) (\d\{2}:\d\{2}:\d\{2})$/.exec(sqlDate);
+				if(!m) return sqlDate;
+				const day = parseInt(m[3]);
+				const suffix = (day >= 11 && day <= 13) ? 'th' : (['th', 'st', 'nd', 'rd'][day % 10] ?? 'th');
+				const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(m[2]) - 1];
+				return `$\{month} $\{day}$\{suffix} $\{m[1]}, $\{m[4]}`;
+			}
+
+			tableEl.addEventListener('click', e => \{
+				const btnEl = e.target.closest('.api-token-revoke');
+				if(!btnEl) return;
+				const rowEl = btnEl.closest('tr');
+				const name = rowEl.querySelector('.api-token-name').textContent;
+				if(!confirm(`Revoke the API token '$\{name}'?\nAnything still using it will no longer be able to upload releases. This cannot be undone.`)) return;
+
+				btnEl.disabled = true;
+				const xhr = $.ajax(\{ method: 'DELETE', url: tokensUrl+'/'+rowEl.dataset.tokenId, data: \{ 'at': actiontoken } });
+				R.attachDefaultFailHandler(xhr, 'Failed to revoke API token');
+				xhr.fail(() => btnEl.disabled = false)
+				.done(() => \{
+					rowEl.remove();
+					updateApiTokensEmptyState();
+					R.addMessage(MSG_CLASS_OK, `API token '$\{name}' revoked.`);
+				});
+			});
+
+			const createdEl = R.get('api-token-created');
+			if(createdEl) \{ // only present for users that may create tokens
+				const nameInputEl = R.get('api-token-name');
+				const lifetimeSelectEl = R.get('api-token-lifetime');
+				const tokenValueEl = R.get('api-token-value');
+				const submitBtnEl = formEl.querySelector('button[type="submit"]');
+
+				formEl.addEventListener('submit', e => \{
+					e.preventDefault(); // never submit this form normally, and it is separate from the mod form so it can't trigger a mod save either
+
+					const name = nameInputEl.value.trim();
+					submitBtnEl.disabled = true;
+					const xhr = $.post(tokensUrl, \{ 'name': name, 'lifetimeDays': lifetimeSelectEl.value, 'at': actiontoken });
+					R.attachDefaultFailHandler(xhr, 'Failed to create API token');
+					xhr.always(() => submitBtnEl.disabled = false)
+					.done(data => \{
+						// The token is only ever shown here, it can't be retrieved again.
+						createdEl.querySelector('.api-token-created-name').textContent = name;
+						tokenValueEl.value = data.token;
+						createdEl.hidden = false;
+						tokenValueEl.focus();
+						tokenValueEl.select();
+						nameInputEl.value = '';
+
+						const rowEl = tableEl.tBodies[0].insertRow(0);
+						rowEl.dataset.tokenId = data.tokenId;
+						for(const text of [name, formEl.dataset.userName, 'just now', formatFullDate(data.expires), 'never']) \{
+							rowEl.insertCell().textContent = text;
+						}
+						rowEl.cells[0].className = 'api-token-name';
+						const revokeBtnEl = document.createElement('button');
+						revokeBtnEl.type = 'button';
+						revokeBtnEl.className = 'button btndelete api-token-revoke';
+						revokeBtnEl.textContent = 'Revoke';
+						rowEl.insertCell().append(revokeBtnEl);
+						updateApiTokensEmptyState();
+					});
+				});
+
+				R.get('api-token-copy').addEventListener('click', () => \{
+					tokenValueEl.select();
+					if(!navigator.clipboard) \{
+						R.addMessage(MSG_CLASS_ERROR, 'Copying is not available here, please copy the selected token manually.');
+						return;
+					}
+					navigator.clipboard.writeText(tokenValueEl.value)
+						.then(() => R.addMessage(MSG_CLASS_OK, 'API token copied to the clipboard.'))
+						.catch(() => R.addMessage(MSG_CLASS_ERROR, 'Failed to copy, please copy the selected token manually.'));
+				});
+			}
+		}
+	</script>
+	{/if}
 
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/prism.min.js?v=0" data-manual=""></script>
 	<script nonce="{$cspNonce}" type="text/javascript" src="/web/js/edit-asset.js?version=46" async></script>

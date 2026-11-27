@@ -114,6 +114,29 @@ else { // New mod
 	$filesInOrder = getHoveringFilesOfUser($user['userId'], ASSETTYPE_MOD);
 }
 
+// Api tokens (for uploading releases from CI). Only for existing mods, and computed from the unmodified mod data, before any input is applied to $mod.
+// Mod owner, moderators and admins see all tokens of the mod, team members with edit permissions only their own. :ApiTokenPermissions
+$apiTokens = null;
+$canCreateApiTokens = false;
+$isApiTokenUploadSupported = false;
+if($mod['modId']) {
+	$seesAllApiTokens = $user['userId'] == $mod['createdByUserId'] || canModerate(null, $user);
+	$isOwnerOrEditor = isModOwnerOrEditor($mod, $user);
+	if($seesAllApiTokens || $isOwnerOrEditor) {
+		$apiTokens = listModApiTokens($mod['modId'], $seesAllApiTokens ? null : $user['userId']);
+		foreach($apiTokens as &$apiToken) {
+			$apiToken['created']  = fullDate($apiToken['created']);
+			$apiToken['expires']  = fullDate($apiToken['expires']);
+			$apiToken['lastUsed'] = $apiToken['lastUsed'] ? fullDate($apiToken['lastUsed']) : 'never';
+		}
+		unset($apiToken);
+
+		$isApiTokenUploadSupported = ($mod['category'] & CATEGORY__MASK) === CATEGORY_GAME_MOD; // same check as the upload and token creation endpoints
+		// Moderators can see and revoke tokens, but only the owner and editors may create them.
+		$canCreateApiTokens = $isOwnerOrEditor && $isApiTokenUploadSupported;
+	}
+}
+
 $stati = [
 	STATUS_DRAFT     => 'Draft',
 	STATUS_RELEASED  => 'Published',
@@ -670,6 +693,10 @@ $fs = "{$_SERVER['HTTP_HOST']}/edit-deletefile {$_SERVER['HTTP_HOST']}/edit-uplo
 if(canModerate(null, $user) && $mod['modId']) {
 	$fs .= " {$_SERVER['HTTP_HOST']}/api/v2/mods/{$mod['modId']}/lock {$_SERVER['HTTP_HOST']}/api/v2/mods/{$mod['modId']}/releases/upload-limit";
 }
+if($apiTokens !== null) {
+	// The path without trailing slash only matches exactly (create), the one with the slash matches all paths below it (revoke).
+	$fs .= " {$_SERVER['HTTP_HOST']}/api/v2/mods/{$mod['modId']}/api-tokens {$_SERVER['HTTP_HOST']}/api/v2/mods/{$mod['modId']}/api-tokens/";
+}
 cspReplaceAllowedFetchSources($fs);
 cspAllowTinyMceFull();
 
@@ -708,5 +735,15 @@ $view->assign('asset', ['assetId' => $mod['assetId'], 'assetTypeId' => ASSETTYPE
 $view->assign('teamMembers', $teamMembers);
 if($canEditAsOwner && $currentlyBeingTransferredTo['userId'])  $view->assign("ownershipTransferUser", $currentlyBeingTransferredTo['name']);
 $view->assign('files', $filesInOrder);
+
+$view->assign('apiTokens', $apiTokens);
+$view->assign('canCreateApiTokens', $canCreateApiTokens, null, true);
+$view->assign('isApiTokenUploadSupported', $isApiTokenUploadSupported, null, true);
+if($canCreateApiTokens) {
+	$apiTokenLifetimes = array_values(array_filter([30, 90, 180, 365], fn($d) => $d < API_TOKEN_MAX_LIFETIME_DAYS));
+	$apiTokenLifetimes[] = API_TOKEN_MAX_LIFETIME_DAYS;
+	$view->assign('apiTokenLifetimes', $apiTokenLifetimes, null, true);
+	$view->assign('apiTokenUploadUrl', "https://{$_SERVER['HTTP_HOST']}/api/v2/mods/{$mod['modId']}/releases");
+}
 $view->assign('headerHighlight', HEADER_HIGHLIGHT_SUBMIT_MOD, null, true);
 $view->display('edit-mod');

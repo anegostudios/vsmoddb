@@ -83,6 +83,7 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 > [!IMPORTANT]  
 > Endpoints marked as `auth` require authentication and response with `401` if it is missing.  
 > Endpoints marked as `at` additionally require a valid actiontoken and response with `400` if it is missing. The token can be provided as a query parameter or in the POST body.  
+> Endpoints marked as `token` require a mod api token in an `Authorization: Bearer <token>` header instead of a login session, and respond with `401` if it is missing, unknown or expired. If such a header is present any session cookie is ignored, and every other endpoint that requires authentication responds with `403`. See [Uploading releases from CI](#uploading-releases-from-ci).  
 
 ### /api/v2/mods/install-information
 - `get`:
@@ -151,6 +152,54 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 			},
 		}
 		```
+- `post`: `token`
+	- Creates and immediately publishes a new release, the same way the "Add release" form does. Followers of the mod get notified. The release is attributed to the user who created the token.
+	- Only supported for mods in the "Game Mod" category. Also works for draft mods.
+	- Args:
+		- Path arg `{modid}` (numeric): Must be the mod the token belongs to.
+		- Request body: `multipart/form-data` with the fields
+			- `file`: The mod file. Exactly one file per request. The mod identifier and version of the release are read from the modinfo in this file, they cannot be passed separately.
+			- `gameversions[]`: Compatible game version, e.g. `1.20.4`. Repeat the field for multiple versions. At least one is required, each one must be a known game version (see `GET /api/v2/game-versions`).
+			- Optional `changelog`: Changelog html. It gets sanitized the same way as in the web form and may be at most 65535 bytes afterwards.
+	- `400`: Content-Type is not `multipart/form-data`.
+	- `400`: The mod is not in the "Game Mod" category.
+	- `400`: Missing file, or more than one file.
+	- `400`: Missing, malformed or unknown game versions.
+	- `400`: Malformed or too large changelog.
+	- `400`: File type not allowed, or the modinfo in the file could not be parsed.
+	- `400`: The mod identifier is reserved (`game`, `creative`, `survival`).
+	- `401`: Missing, malformed, unknown or expired token.
+	- `403`: The token belongs to a different mod.
+	- `403`: The creator of the token is currently banned, or is no longer the owner or a team member with edit permissions of the mod.
+	- `403`: The mod is locked by a moderator.
+	- `404`: Mod not found.
+	- `409`: This version of the mod identifier has already been released for this mod, or the mod identifier is already in use by another mod.
+	- `413`: The request or the file is too large. The file size limit is the same as in the web form, including per mod upload limit overrides.
+	- `429`: More than 10 releases (`API_RELEASE_LIMIT_PER_MOD_PER_HOUR`) were created for this mod using api tokens within the last hour. The `Retry-After` header contains the number of seconds until the next release can be created. Failed uploads and releases created through the web form do not count towards this limit.
+	- `503`: The site is in readonly mode. Contains a `Retry-After` header.
+	- `201`: The release was created. The `Location` header contains the path of the new release (`/api/v2/mods/{modid}/releases/{releaseid}`), the body contains the release in the same format as `GET /api/v2/mods/{modid}/releases/{releaseid}`:
+		```json
+		{
+			"releaseId": 456,
+			"identifier": "modidentifier",
+			"version": "1.2.3",
+			"compatibleGameVersions": ["1.20.5", "1.20.4"],
+			"created": 1758291166,
+			"fileName": "modidentifier-1.2.3.zip",
+			"fileUrl": "/download/123/modidentifier-1.2.3.zip"
+		}
+		```
+		The `Location` is served by the public endpoint, which responds with `404` as long as the mod is still a draft.
+	- Errors respond with a json object of the form `{"error": "message"}`.
+	- Example:
+		```sh
+		curl -H "Authorization: Bearer $VSMODDB_TOKEN" \
+			-F file=@mymod-1.2.3.zip \
+			-F 'gameversions[]=1.20.4' -F 'gameversions[]=1.20.5' \
+			--form-string 'changelog=<p>Fixes</p>' \
+			https://mods.vintagestory.at/api/v2/mods/1234/releases
+		```
+		Use `--form-string` for the changelog: with `-F` curl treats a value starting with `<` as a file to read the value from.
 
 ### /api/v2/mods/{modid}/releases/{releaseid}
 - `get`
@@ -191,10 +240,6 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 - `get`: Path arg `{modid}`
 	- `400`: Not implemented
 
-### /api/v2/mods/{modid}/releases/new `auth` `at`
-- `put`: Path arg `{modid}`
-	- `400`: Not implemented
-
 ### /api/v2/mods/{modid}/releases/{releaseid}/retraction `auth` `at`
 - `put`: 
 	- Args:
@@ -222,6 +267,60 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 	- `400`: Invalid action token or malformed request.
 	- `404`: Target mod does not exist.
 	- `200`: Limit was successfully updated.
+
+### /api/v2/mods/{modid}/api-tokens `auth` `at`
+Management of the mod api tokens used by `POST /api/v2/mods/{modid}/releases`. All responses are sent with `Cache-Control: no-store`.
+- `get`:
+	- Args:
+		- Path arg `{modid}` (numeric)
+	- `403`: Invalid action token, or the user is neither the mod owner, a team member with edit permissions, nor a moderator / admin.
+	- `404`: Target mod does not exist.
+	- `200`: Json array of tokens, newest first. The mod owner, moderators and admins get all tokens of the mod, team members with edit permissions (and banned users) only their own. Expired tokens are included until they are revoked. The token itself is never returned.
+		```json
+		[
+			{
+				"tokenId": 12,
+				"modId": 1234,
+				"userId": 56,
+				"creatorName": "Username",
+				"name": "GitHub Actions",
+				"created": "2026-10-01 12:00:00",
+				"expires": "2027-10-01 12:00:00",
+				"lastUsed": null,
+				"isExpired": false
+			}
+		]
+		```
+- `post`:
+	- Only the mod owner and team members with edit permissions may create tokens. Moderators and admins can not create tokens for mods they are not part of. Tokens can only be created for mods in the "Game Mod" category.
+	- Args:
+		- Path arg `{modid}` (numeric)
+		- Post arg `name`: Name of the token, 1 to 64 characters of valid UTF-8 without control characters.
+		- Post arg `lifetimeDays`: Number of days until the token expires, between 1 and 365 (`API_TOKEN_MAX_LIFETIME_DAYS`). Required, tokens always expire.
+	- `400`: Name or lifetime missing, malformed or out of range, or the mod is not in the "Game Mod" category.
+	- `403`: Invalid action token, the user is currently banned, or the user is not the mod owner or a team member with edit permissions.
+	- `404`: Target mod does not exist.
+	- `409`: The user already has 5 (`API_TOKEN_MAX_ACTIVE_PER_USER_PER_MOD`) non-expired tokens for this mod.
+	- `201`: Token was created. This is the only time the token is returned, only a hash of it is stored.
+		```json
+		{
+			"tokenId": 12,
+			"token": "vsmoddb_...",
+			"expires": "2027-10-01 12:00:00"
+		}
+		```
+
+### /api/v2/mods/{modid}/api-tokens/{tokenid} `auth` `at`
+- `delete`: Revokes (deletes) the token. The action token can be provided as a query parameter or in a form encoded body.
+	- Args:
+		- Path arg `{modid}` (numeric)
+		- Path arg `{tokenid}` (numeric)
+	- Allowed for the creator of the token, the mod owner, moderators and admins. Banned users may only revoke their own tokens.
+	- `400`: Malformed `{tokenid}` or request body.
+	- `403`: Invalid action token.
+	- `404`: Target mod does not exist.
+	- `404`: The token does not exist for this mod, or the user is not allowed to revoke it. Both cases give the same response.
+	- `200`: Token was revoked.
 
 ### /api/v2/mods/{modid}/comments
 - `get`: Path arg `{modid}`
@@ -380,6 +479,49 @@ String example: http://mods.vintagestory.at/api/mod/carrycapacity
 	- `403`: Active user is currently restricted or does not have permissions to delete the game-version.
 	- `404`: The specified version does not exist.
 	- `200`: Successfully deleted the specified game-version.
+
+## Uploading releases from CI
+Mod authors can upload new releases from a CI pipeline with a mod api token and `POST /api/v2/mods/{modid}/releases`. This is currently only supported for mods in the "Game Mod" category.
+
+To create a token, open the edit page of the mod, enter a name in the "API tokens" section below the main form, pick an expiry and click "Create token". Copy the token right away, it is only shown once. The numeric `{modid}` of the mod is the `modid` value in the "Add release" link (`/edit/release/?modid=...`) on the mod page.
+
+What a token can do:
+- It belongs to one mod and can only create new releases for that mod. It cannot be used for anything else, including editing or retracting releases.
+- It acts as the user who created it: releases are attributed to them. It stops working while that user is banned. As soon as they are no longer the owner or a team member with edit permissions of the mod (removed from the team, edit permissions taken away, or demoted / removed during an ownership transfer), all their tokens for that mod are deleted and do not come back if they get edit permissions again.
+- It expires after at most 365 days. Each user can have at most 5 non-expired tokens per mod.
+- It can be revoked on the mod edit page at any time by its creator, the mod owner, moderators and admins.
+- Only a hash of the token is stored. Creating and revoking tokens is recorded in the audit log, and audit log entries of releases created with a token are marked as such.
+
+Since the mod identifier and version are read from the modinfo in the uploaded file, the version in the modinfo has to be bumped for every upload, otherwise the upload fails with `409`.
+
+Example GitHub Actions workflow that uploads a release whenever a tag starting with `v` is pushed. Store the token as a repository secret named `VSMODDB_TOKEN`, and replace the build step, the file path, the game versions and the mod id with your own:
+```yaml
+name: Publish release
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build
+        run: ./build.sh # placeholder, has to produce dist/mymod.zip
+
+      - name: Upload to the mod db
+        env:
+          VSMODDB_TOKEN: ${{ secrets.VSMODDB_TOKEN }}
+        run: |
+          curl --fail-with-body \
+            -H "Authorization: Bearer $VSMODDB_TOKEN" \
+            -F "file=@dist/mymod.zip" \
+            -F "gameversions[]=1.20.4" \
+            --form-string "changelog=<p>Release $GITHUB_REF_NAME</p>" \
+            https://mods.vintagestory.at/api/v2/mods/1234/releases
+```
+`--fail-with-body` makes the step fail on an error response while still printing the error message.
 
 # Development setup
 Requirements:
